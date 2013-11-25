@@ -1,0 +1,592 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0;background-color:#242424; }
+        </style>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <link type='text/css' href='css/demo.css' rel='stylesheet' media='screen'
+        />
+        <link type='text/css' href='css/basic.css' rel='stylesheet' media='screen'
+        />
+        <script type='text/javascript' src='js/jquery.simplemodal.js'>
+        </script>
+        
+         <SCRIPT LANGUAGE="VBScript">
+		    //三个按钮的提示框
+            //确定返回 6  否返回 7 其它返回 2
+            function MyVbconfirm2() 
+			result = msgbox("是否检查IP冲突？", 3, "提示信息") 
+			MyVbconfirm2 =result 
+			end function
+        </SCRIPT>
+        <script language="javascript">
+            var isvalid = new Array(); //数据无效的数组。每个不合法项的ID 组成的数组。
+            function changeLanguage(lang) {
+                TranslatePage(lang);
+            }
+			
+			
+			function successfunc(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.cgiFncCmd=="GetIpInfo")
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							
+							if(PackDate.Content.Dhcp=="0")
+							{
+								$("input[name='iptype'][value=0]").attr("checked","checked");
+								$("#40ip_addr").val(PackDate.Content.IpAddress);
+								$("#40network_mask").val(PackDate.Content.SubNetMask);
+								$("#40gateway_addr").val(PackDate.Content.GateWay);
+								$("#40dns_addr").val(PackDate.Content.Dns.split(" ")[0]);
+								$("#40dns_addr_backup").val(PackDate.Content.Dns.split(" ")[1]);
+								$("#macaddress").val(PackDate.Content.HwAddress);
+	
+							}
+							else
+							{
+								$("input[name='iptype'][value=1]").attr("checked","checked");
+							}
+						}
+					}
+					if(PackDate.cgiFncCmd=="SetIpInfo")
+					{
+					    if(PackDate.Content.RetCode=="0")
+						{
+							   
+                                $('#basic-modal-content').modal({
+                                    closeHTML: "",
+                                    containerCss: {
+
+                                        height: 140,
+                                        //padding:0,
+                                        width: 350
+                                    }
+                                }
+
+                                );
+
+                                startclock();
+                                
+						}
+						else
+					    {
+							alert("设置失败");
+						}
+					}
+					
+					
+				}
+			}
+            $(document).ready(function() {
+                // 调用模版也方法
+                parent.innerCallMe(true);
+                //语言初始化
+                //isLogin();
+                initLang();
+                //初始化 get
+				if(parent.isZY)
+				{
+					$("#httpPort").val("8080");
+				}
+               GetAndSet("GetIpInfo","json","{SessionId:"+parent.id+",AuthValue:0}", successfunc);
+
+                //ip 校验
+                $("#40ip_addr,#40network_mask,#40gateway_addr,#40dns_addr,#40dns_addr_backup").bind("blur",
+                function(e) {
+                    var id = this.id;
+                    var isok = check_ip(this.value);
+                    if (!isok) {
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+                });
+                //取消
+                $("#reset").bind("click",
+                function(e) {
+                   GetAndSet("GetIpInfo","json","{SessionId:"+parent.id+",AuthValue:0}", "successfunc");
+                    //去除红色边框
+                    for (var i = 0; i < isvalid.length; i++) {
+                        $("#" + isvalid[i]).css("border", "1px solid black");
+                    }
+                    isvalid.length = []; //数组清空
+                });
+				
+				//点击确定
+                $("#submit").bind("click",
+                function(e) {
+                    if (isvalid.length == 0) {
+						//IP地址
+						var ipaddr = $("#40ip_addr").val();
+						/*
+						//子网掩码
+						var SubNetMask = $("#40network_mask").val();
+						//默认网关
+						var GateWay = $("#40gateway_addr").val();
+						//首选DNS
+						var MRDns = $("#40dns_addr").val();
+						//备用DNS
+						var BYDns = $("#40dns_addr_backup").val();
+						*/
+						
+                       var ipType = $("input[name='iptype']:checked").val();
+                        var isconfirmIP = false;
+                        if (ipType == "0") {
+							//如果IP地址没有改变则不提供检测IP，直接修改
+							var ipstmp = parent.parent.getip();
+							if(ipaddr == ipstmp)
+							{
+								ipSet(ipType);
+								return;
+							}
+                            isconfirmIP = MyVbconfirm2();
+                        
+						//检测IP冲突
+                        if (isconfirmIP == 6) {
+                           	$("#testIP").text("正在检测……");
+							//基本权限
+				  			var  content={};
+				  			content.SessionId=parent.parent.id;
+				  			content.AuthValue=parent.parent.Authvalue;
+							content.IpAddr = ipaddr;
+							contentstr=jsonToString(content);
+							GetAndSet("CheckIPExist","json",contentstr, sucess_CheckIP);
+							return;
+                        } 
+						//不检测IP冲突  直接修改
+						else if (isconfirmIP == 7) {
+                            ipSet(ipType);
+                        }
+						//取消修改IP
+						else if (isconfirmIP == 2)
+						{
+							return;
+					    }
+						}
+						//dhcp 设置
+						else
+						{
+							 ipSet(ipType);
+						}
+                    } else {
+                        alert("请按照要求输入各项内容");
+                        return;
+                    }
+                });
+				//检测IP是否冲突回调函数
+				function sucess_CheckIP(data)
+				{
+					var PackDate=new UnPackData(data);
+						if(PackDate.Content!=null)
+						{
+							if(PackDate.Content.RetCode=="0")
+							{
+								//成功返回
+								$("#testIP").text("测试");
+								var ipType = $("input[name='iptype']:checked").val();
+								ipSet(ipType);
+								return;
+								
+							}
+							else if(PackDate.Content.RetCode!="0")
+							{
+								//错误返回
+								$("#testIP").text("测试");
+								alert("IP冲突，请更换IP地址!");	
+								return;
+							}
+					}						
+				}
+                $("#testIP").bind("click",
+                function(e) {
+                    //testIP($("#40ip_addr").val());
+                           	$("#testIP").text("正在检测……");
+							//基本权限
+				  			var  content={};
+				  			content.SessionId=parent.parent.id;
+				  			content.AuthValue=parent.parent.Authvalue;
+							content.IpAddr = $("#40ip_addr").val();
+							contentstr=jsonToString(content);
+							GetAndSet("CheckIPExist","json",contentstr, sucess_TestCheckIP);
+                });
+            });
+			//检测按钮回调函数
+			function sucess_TestCheckIP(data)
+			{
+					var PackDate=new UnPackData(data);
+						if(PackDate.Content!=null)
+						{
+							if(PackDate.Content.RetCode=="0")
+							{
+								//成功返回
+								$("#testIP").text("测试");
+								alert("可用的IP地址!");
+								return;								
+							}
+							else if(PackDate.Content.RetCode!="0")
+							{
+								//错误返回
+								$("#testIP").text("测试");
+								alert("IP冲突，请更换IP地址!");	
+								return;
+							}
+					}		
+			}
+//------------
+var c = 0;
+var t;
+var IPNOW;
+function StarTimewk()
+{
+	c = c+1;
+	
+	IPNOW = parent.parent.getip();
+	if(IPNOW = $("#40ip_addr").val())
+	{
+		
+		if(c >= 15)
+		{
+			//修改成功
+			StopTimewk();
+                    var iptype = $(":radio[name='iptype'][checked='checked']").val();
+                    if (iptype == 0) {
+                        var port = "";
+                        var oldhost = window.location.host;
+                        var ipport = oldhost.split(":");
+                        if (ipport.length > 1); {
+                            port = oldhost.split(":")[1];
+                        }
+                        var newIP = $("#40ip_addr").val();
+                        var newhost = newIP;
+                        if (port != "" && port != undefined) {
+                            newhost += ":" + port;
+                        }
+                        if (port == undefined) {
+                            port = "80";
+                        }
+                        //alert(oldhost);
+                        var oldurl = window.location.href;
+                        var newurl = oldurl.replace(oldhost, newhost);
+                        window.location.href = newurl;
+                        ipchange(newIP, port, true);
+						StopTimewk();	
+						return;
+                    } else {
+						StopTimewk();	
+                        alert("设置成功！请使用摄像机搜索工具重新搜索IP地址！");
+						return;
+                    }	
+		}
+		
+		//startclock();
+
+	}
+	//超过20s，则关闭定时器
+	if(c>=20)
+	{
+		StopTimewk();	
+	}
+	t=setTimeout('StarTimewk()',1000);
+}
+
+function StopTimewk()
+{
+	c = 0;
+	clearTimeout(t);
+}
+//------------
+            function ipSet(ipType) {
+				 var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=0;
+				  //DHCP
+				  if(ipType==0)
+				  {
+					  content.Dhcp=0;
+				  }
+				  else
+				  {
+					  content.Dhcp=1;
+				  }
+				  //IP地址
+				  content.IpAddress=$("#40ip_addr").val();	
+				  //子网掩码
+				  content.SubNetMask= $("#40network_mask").val();
+				  //网关
+				  content.GateWay=$("#40gateway_addr").val();
+				  //DNS
+				  content.Dns=$("#40dns_addr").val()+" "+$("#40dns_addr_backup").val()+" 0.0.0.0";
+				  //网卡名字，以太网—"eth0"
+				  //content.InterfName = "eth0";
+				  //物理地址
+				  //content.HwAddress = ;
+				  contentstr=jsonToString(content);
+				 GetAndSet("SetIpInfo","json",contentstr, success_SetIpAdrr);
+				 //startclock();
+				 //开始计时
+				 //StarTimewk();
+								//成功返回
+                                //$.modal.defaults.closeClass = "modalC",
+                                $('#basic-modal-content').modal({
+                                    closeHTML: "",
+                                    containerCss: {
+
+                                        height: 130,
+                                        //padding:0,
+                                        width: 350
+                                    }
+                                }
+
+                                );
+
+                                startclock();
+                
+            }
+			//设置IP成功
+			function success_SetIpAdrr(data)
+			{
+					var PackDate=new UnPackData(data);
+						if(PackDate.Content!=null)
+						{
+							if(PackDate.Content.RetCode=="0")
+							{
+								
+							
+							}
+							else if(PackDate.Content.RetCode!="0")
+							{
+								//错误返回
+								StopTimewk();
+								$("#testIP").text("测试");
+								alert("IP设置失败！");	
+								return;
+							}
+					}		
+			}
+            function reloadpage() {
+                var host = window.location.host;
+                var url = window.location.href;
+                alert(host + "===" + url);
+            }
+
+            //倒计时		 
+            var secs = 15;
+            var timerID = null;
+            var timerRunning = false;
+
+            function showtime() {
+
+                if (secs > -1) {
+                    Temp = secs;
+                    $("#secs").val(secs);
+                    timerID = setTimeout("showtime()", 1000);
+                    secs = secs - 1;
+                    timerRunning = true;
+                } else {
+                    stopclock();
+                    $.modal.close();
+                    var iptype = $(":radio[name='iptype'][checked='checked']").val();
+                    if (iptype == 0) {
+                        var port = "";
+                        var oldhost = window.location.host;
+                        var ipport = oldhost.split(":");
+                        if (ipport.length > 1); {
+                            port = oldhost.split(":")[1];
+                        }
+                        var newIP = $("#40ip_addr").val();
+                        var newhost = newIP;
+                        if (port != "" && port != undefined) {
+                            newhost += ":" + port;
+                        }
+                        if (port == undefined) {
+                            port = "80";
+                        }
+                        //alert(oldhost);
+                        var oldurl = window.location.href;
+                        var newurl = oldurl.replace(oldhost, newhost);
+                        window.location.href = newurl;
+                        ipchange(newIP, port, true);
+                    } else {
+                        alert("设置成功！请使用摄像机搜索工具重新搜索IP地址！");
+                    }
+                }
+            }
+            function stopclock() {
+                if (timerRunning) clearTimeout(timerID);
+                timerRunning = false;
+            }
+            function startclock() {
+                stopclock();
+                showtime();
+            }
+			  // ip设置后调用此方法
+            function ipchange(ip, port, isToLogin) {
+                var isToLogin = isToLogin || false;
+                var newhost = ip;
+                if (port != "") {
+                    newhost += ":" + port;
+                }
+                var oldhost = window.location.host;
+                var oldurl = window.location.href;
+                var newurl = oldurl.replace(oldhost, newhost);
+                //alert(newurl);
+                if (isToLogin) {
+                    newurl = "http://" + newhost + "/login.html";
+                }
+                //recordLoginOutLog();
+				isOut=true;
+                top.location.href = newurl;
+            }
+			
+			//检验IP 子网掩码 网关 是否合法
+			function CheckNetSet(ip,netmask,gateway)
+			{
+				if(gateway == "" || gateway == null)
+				{
+					alert("请设置网关！");
+					return;
+				}
+				
+				if(((netmask&ip)!=0)&&((netmask&gateway) != 0))
+				{
+					if((netmask&ip)==(netmask&gateway))
+					{
+						
+					}
+					else 
+					{
+						alert("设置不合法！");
+						return;	
+					}
+				}
+				else
+				{
+					alert("设置不合法！");
+					return;
+				}
+			}
+        </script>
+       
+    </head>
+    
+    <body>
+        <div class="bit-stream">
+            <h3>
+                IP设置
+            </h3>
+        </div>
+        <fieldset class="motion_det_fil_1">
+            <legend>
+                网络设置
+            </legend>
+            <div class="down_main_content">
+                <div class="ip_set_main">
+                    <h1>
+                        <input class="ip_set_main_in_sel" name="iptype" type="radio" id="40dhcp_enable"
+                        value="1" />
+                        <div style="float:left; line-height:24px;">
+                            通过DHCP获取IP地址
+                        </div>
+                    </h1>
+                    <h1>
+                        <input class="ip_set_main_in_sel" name="iptype" type="radio" id="40dhcp_enable"
+                        value="0" />
+                        <div style="float:left; line-height:24px;">
+                            使用下面IP地址
+                        </div>
+                    </h1>
+                    <div class="ip_set_main_down">
+                        <ul>
+                            <li>
+                                <div class="ip_name">
+                                    IP地址：
+                                </div>
+                                <input id="40ip_addr" />
+                                <div class="ip_test">
+                                    <a class="btn22" id="testIP" >
+                                        测试
+                                    </a>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="ip_name">
+                                    子网掩码：
+                                </div>
+                                <input id="40network_mask" />
+                            </li>
+                            <li>
+                                <div class="ip_name">
+                                    默认网关：
+                                </div>
+                                <input id="40gateway_addr" />
+                            </li>
+                            <li>
+                                <div class="ip_name">
+                                    首选DNS服务器：
+                                </div>
+                                <input id="40dns_addr" disabled="disabled"/>
+                            </li>
+                            <li>
+                                <div class="ip_name">
+                                    备用DNS服务器：
+                                </div>
+                                <input id="40dns_addr_backup" disabled="disabled"/>
+                            </li>
+                            <li>
+                                <div class="ip_name">
+                                    物理地址：
+                                </div>
+                                <input id="macaddress" disabled="disabled"/>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        <div class="bottom-action">
+            <input type="button" class="btn3" id="submit" value="确定" />
+            <input type="reset" class="btn3" value="取消" id="reset" />
+        </div>
+        <div id="basic-modal-content" style="height:130px;">
+            <h3>
+                页面15秒后自动关闭 请稍候：
+            </h3>
+            <p>
+                页面刷新剩余时间:
+                <input type="text" id="secs" style="width:20px" disabled="disabled" />
+                秒
+            </p>
+        </div>
+        <div id="loading">
+        </div>
+    </body>
+
+</html>

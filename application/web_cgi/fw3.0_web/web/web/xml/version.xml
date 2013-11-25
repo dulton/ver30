@@ -1,0 +1,9 @@
+<xml version='1.0' encoding='utf-8'>
+<FileVersion>
+	<Platform name="win32">
+		<PreviewOCX.ocx>1,0,0,1</PreviewOCX.ocx>
+		<GIPCQuartz.dll>2,5,4,20629</GIPCQuartz.dll>
+		<GIPCPlayer.dll>2,5,4,30621</GIPCPlayer.dll>
+		<GIPCamera.dll>3,0,0,30918</GIPCamera.dll>
+	</Platform>
+</FileVersion>

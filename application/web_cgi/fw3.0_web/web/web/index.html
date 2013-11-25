@@ -1,0 +1,751 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <script type="text/javascript" src="js/js_cookie.js">
+    </script>
+    <script>
+	//debugger;
+       // var isL = isLogin(); //判断是否登录
+		//document.execCommand("BackgroundImageCache", false, true);
+    </script>
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>
+           网络摄像机
+        </title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link href="css/common.css" rel="stylesheet" type="text/css" />
+        <link href="css/menu.css" rel="stylesheet" type="text/css" />
+        <link href="css/inner.css" rel="stylesheet" type="text/css" />
+        <link href="css/wkadd.css" rel="stylesheet" type="text/css" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/select-option-disabled-emulation.js">
+        </script>
+        <script type="text/javascript" src="js/ui.core.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.slider.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/menu.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <script type="text/javascript" src="js/system.js"></script>
+        <script>
+			//验证是否登录
+			//首先判断URL 如果是纯IP则跳转LOgin 不是再验证s
+			//debugger;
+				Isurl();
+				function Isurl(){
+				var sURL = window.document.URL;
+
+				var patt1 = new RegExp("html");
+				
+				var result = patt1.test(sURL);
+				if(!result)
+				{
+					top.location.href="login.html";	
+				}
+			}
+
+			
+            //加载完成 开始
+			var id=0;
+			var ip="";
+			//SDK port
+			var port="";
+			var Authvalue = "";
+			var UserLevel = "";
+			var UpdatePort = "";
+			//设备能力集码流数
+			var StreamNum_NLJ = 0;
+			//抓图路径
+			var picpath= "";
+			//录像路径
+			var recordpath="";
+			//录像格式
+			var recordtype="";
+			//图片格式
+			var pictype="";
+			//网络播放性能
+			var NetPlay = "";//getCookie("frame");
+
+//			if(typeof(NetPlay) == "undefined" ||NetPlay == null)
+//			{
+//				//设置默认播放模式
+//				NetPlay	= "0";
+//			}
+
+
+			//获取本地配置
+			function getLocalSet()
+			{
+				
+			try
+			{
+				var fso = new ActiveXObject("Scripting.FileSystemObject");
+				var f;// = fso.OpenTextFile("c:\\Program Data\\config.txt",2);
+				//判断文件夹是否存在
+				if(!fso.FolderExists("c:\\Program Data\\"))
+				{
+					//创建
+					fso.CreateFolder ("c:\\Program Data\\");
+				}
+
+				//判断文件是否存在
+				if(!fso.FileExists("c:\\Program Data\\config.txt"))
+				{
+					//创建文件
+					fso.CreateTextFile("c:\\Program Data\\config.txt", true);
+					f = fso.OpenTextFile("c:\\Program Data\\config.txt", 2);
+					var stmp = "<recordpath>C:\\Program Data\\IPC\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>0</netplay>";
+				recordpath = "C:\\Program Data\\IPC\media\\";
+				picpath = "C:\\Program Data\\IPC\\Image\\";
+				recordtype = "MP4";
+				pictype = "bmp";
+				NetPlay = 50;
+					f.WriteLine(stmp);
+					f.Close();	
+					return;
+				}
+				f = fso.OpenTextFile("c:\\Program Data\\config.txt",1);
+ 				var s = "";
+ 				while (!f.AtEndOfStream)
+ 				s += f.ReadLine()+"\n";
+ 				f.Close();
+				//转换成json
+				var configXmlJson = xmlToJson.parser(s.replace(/;/g,""));
+				recordpath = configXmlJson.recordpath;
+				picpath = configXmlJson.pictruepath;
+				recordtype = configXmlJson.recordtype;
+				pictype = configXmlJson.pictruetype;
+				NetPlay = configXmlJson.netplay;
+				
+ 					
+			}
+			catch(e)
+			{
+				//读取cookie
+				recordpath = getCookie("recordPath");//"C:\\Program Data\\IPC\media\\";
+				picpath = getCookie("picPath");//"C:\\Program Data\\IPC\\Image\\";
+				recordtype = getCookie("recordType");//"MP4";
+				pictype = getCookie("picType");//"bmp";
+				NetPlay = getCookie("frame");//"0";	
+				
+
+				
+			}
+				if(recordpath == "")
+				{
+					recordpath = "C:\\Program Data\\IPC\media\\";
+				}
+				if(picpath == "")
+				{
+					picpath = "C:\\Program Data\\IPC\Image\\";
+				}
+				if(recordtype == "")
+				{
+					recordtype = "MP4";
+				}
+				if(pictype == "")
+				{
+					pictype = "bmp";
+				}
+				if(NetPlay=="")
+				{
+					NetPlay = 50;
+				}
+			}
+			//获取Session值
+			id=getQueryString("id");
+			//获取Authvalue值
+			Authvalue=getQueryString("authvalue");
+			//获取身份权限
+			UserLevel = getQueryString("UserFlag");
+
+			/*
+			//验证Setion 同步验证
+			IsSessionId();
+			function IsSessionId()
+			{
+				GetAndSet("CheckSessionId","json","{SessionId:"+id+",AuthValue:0}", IsSessionIdCallback,true);
+			}
+			//验证Session回调函数
+			function IsSessionIdCallback(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						//成功返回
+					}
+					else if(PackDate.Content.RetCode!="0")
+					{
+						//错误返回
+						top.location.href="login.html";		
+					}
+				}	
+			}
+*/
+			//alert(id);
+			var currenturlcookiename = window.location.host + "currenturl"; //
+			var currentsrc= getCookie(currenturlcookiename);
+			if(currentsrc==null||currentsrc=="")
+			{
+				currentsrc="ylanzkai_1.html";
+			}
+			
+			$(document).ready(function() {
+
+			//判断是否是出错跳转
+			function IFERROR()
+			{
+				var stmp = getQueryString("id");
+				var stmp2 = getQueryString("authvalue");
+				if(stmp == "0" && stmp2 == "-1")
+				{
+					//出错
+					UserLevel = "1";
+					$("#iframe1").attr("src", "system_maintenance_1.html");
+
+
+					return;
+				}
+			}
+			IFERROR();
+
+				//var stmp = document.getElementById("vision");
+				//stmp.style.visibility = "hidden";
+				getip();
+				GetAndSet("GetNetworkPort","json","{SessionId:"+id+",AuthValue:0}", getportsuccessfunc);
+			 $("#bview").bind("click",
+                    function(e) {
+								//deleteCookie(currenturlcookiename);//IE6 cookie 限制 。先删后加。
+                                //setCookie(currenturlcookiename, "ylanzkai_1.html");
+						//$("#iframe1").attr("src", "Temp.html");
+						//sleep(1000);
+                        $("#sideNav").css("visibility", "hidden");
+						$("#bset").css("display","block");
+					    $("#bview").css("display","none");
+
+						
+                        $("#iframe1").attr("src", "ylanzkai_1.html");
+                       
+                    });
+			//获取beni配置
+			getLocalSet();
+                    $("#bset").bind("click",
+                    function(e) {
+
+						
+/*						var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("设置开始---" + h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
+						//$("#iframe1").attr("src", "Temp.html");
+						//sleep(1000);
+                        if (currentsrc == "ylanzkai_1.html") {
+
+						
+                                //$("#iframe1").attr("src", "ip_set_1.html");
+								
+								
+								
+                                //setCookie(currenturlcookiename, "ip_set_1.html");
+								
+								//$("#sideNav").css("visibility", "hidden");
+								deleteCookie(currenturlcookiename);//IE6 cookie 限制 。先删后加。
+								setCookie(currenturlcookiename, "camera_1.html");
+								$("#iframe1").attr("src", "camera_1.html");
+                            } else {
+								
+/*						var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("Set cookie begin---" + h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
+
+								
+                                
+								deleteCookie(currenturlcookiename);//IE6 cookie 限制 。先删后加。
+                                setCookie(currenturlcookiename, currentsrc);	
+								$("#iframe1").attr("src", currentsrc);
+								
+                            }
+							
+						
+						/*
+						//$("#iframe1").attr("src", "ip_set_1.html");
+						
+						deleteCookie(currenturlcookiename);//IE6 cookie 限制 。先删后加。
+                        //setCookie(currenturlcookiename, "ip_set_1.html");
+						setCookie(currenturlcookiename, "camera_1.html");
+						//$("#sideNav").css("visibility", "hidden"); 
+						 */    
+					//$("#iframe1").attr("src", "camera_1.html");
+					
+//						fso = new ActiveXObject("Scripting.FileSystemObject");
+//						f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+//						Day = new Date();
+//						h = Day.getHours();
+//						m = Day.getMinutes();
+//						s = Day.getSeconds();
+//						var ss = Day.getMilliseconds();
+//						f.WriteLine("Set cookie end---" + h+":"+m+":"+s + ":" +ss);
+//						f.WriteBlankLines(1);
+//						f.Close();
+						
+						
+                    });
+					
+					 $("#bloginout").bind("click",
+                    function(e) {
+                      GetAndSet("LogOut", "json", "{SessionId:"+id+"}",logoutsuc);
+						
+                    });
+					
+					 $("a").bind("click",
+                    function(e) {
+                        var level = this.attributes['level'].nodeValue;
+                        if (level == "1") {
+                            //donothing;
+                            return;
+                        }
+                        if (level == "2") {
+							if($("#iframe1").attr("src")!=this.name)
+							{
+								currentsrc = this.name;
+								$("#iframe1").attr("src", currentsrc);
+								setCookie(currenturlcookiename, currentsrc);
+							}
+                        }
+
+                        // document.getElementById("frame1").src=this.name;
+                    });
+			
+			});
+			//加载完成 结束
+			
+			   function innerCallMe(isSet) {
+                if (isSet) {
+                    $("#sideNav").css("visibility", "visible");
+                    $("#bset").css("display", "none");
+                    $("#bview").css("display", "block");
+                } else {
+                    $("#sideNav").css("visibility", "hidden");
+                    $("#bview").css("display", "none");
+                    $("#bset").css("display", "block");
+                }
+				
+				//出错情况
+				if(parent.id == "0" && parent.Authvalue == "-1")
+				{
+                    $("#sideNav").css("visibility", "hidden");
+					$("#bset").css("display","none");
+					$("#bview").css("display","none");
+					//$("#bview").css("display","none");
+				}
+
+            }
+			
+			function logoutsuc(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						 try
+						 {
+							 	 delete PackDate;
+								 top.location.href="login.html";
+								  window.event.returnValue=false;
+						 }
+						 catch(e)
+						 {
+							 alert(e);
+							 delete PackDate;
+						 }
+					}
+				}
+			}
+			function getip()
+			{
+				if(ip=="")
+				{
+				  var oldhost = window.location.host;
+                    var index = oldhost.indexOf(":");
+                    if (index == -1) {
+                        ip = oldhost;
+                    } else {
+                        ip = oldhost.substring(0, index);
+                    }
+				}
+				
+					ip = CheckIpPoint(ip);
+					
+					return ip;
+			}
+			//检测IP后面duo9le一个点
+			function CheckIpPoint(iptmp)
+			{
+				var stmp;
+				stmp = iptmp;
+				
+/*				var idex=0;
+				var btmp = false;
+				var ss = stmp[stmp.length-1];*/
+				if(stmp[stmp.length-1] == '.')
+				{
+					var reg=/.$/gi;
+					var sss2 = stmp.replace(reg,"");	
+					return sss2;	
+				}
+				else 
+				{
+					return stmp;
+				}		
+			}
+			function getportsuccessfunc(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						
+							port=PackDate.Content.SDK_Port;
+							UpdatePort=PackDate.Content.Upgrade_Port;
+							
+					}
+				}
+			}
+            // ip设置后调用此方法
+            function ipchange(ip, port, isToLogin) {
+                var isToLogin = isToLogin || false;
+                var newhost = ip;
+                if (port != "") {
+                    newhost += ":" + port;
+                }
+                var oldhost = window.location.host;
+                var oldurl = window.location.href;
+                var newurl = oldurl.replace(oldhost, newhost);
+                //alert(newurl);
+                if (isToLogin) {
+                    newurl = "http://" + newhost + "/login.html";
+                }
+                //recordLoginOutLog();
+				isOut=true;
+                window.location.href = newurl;
+            }
+			
+			//版本按钮失去焦点
+			function visionblur()
+			{
+				var stmp = document.getElementById("vision");
+				stmp.style.visibility = "hidden";
+			}
+			function visionclick()
+			{
+				var stmp = document.getElementById("vision");
+				stmp.style.visibility = "visible";
+			}
+			function sleep(numberMillis) { 
+				var now = new Date(); 
+				var exitTime = now.getTime() + numberMillis; 
+				while (true) { 
+					now = new Date(); 
+					if (now.getTime() > exitTime) 
+					return; 
+				} 
+			} 
+        </script>
+    </head>
+    
+    <body style="background-color:transparent;">
+        <div id="top_container">
+            <img src="images/logo.gif" />
+
+        </div>
+
+        <div id="container">
+            <div id="sideNav" style="visibility:hidden">
+                <div class="box">
+                    <ul class="menu">
+                        <li class="level1" >
+                            <a href="#none" name="camera_1.html" id="avideoset" level="1">
+                                视频设置
+                            </a>
+                          <ul class="level2">
+                                <li>
+                                    <a href="#none" name="camera_1.html" id="acameraset" level="2">
+                                        像机设置
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#none" name="inf_superimposed_1.html" id="aosd" level="2">
+                                        信息叠加(OSD)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#none" name="new_bmbj.html" id="avideocoding" level="2">
+                                        视频编码
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="level1">
+                            <a href="#none" name="sound_set_1.html" id="asoundset" level="1">
+                                音频设置
+                            </a>
+                            <ul class="level2">
+                                <li>
+                                    <a href="#none" name="sound_set_1.html" id="2soundset" level="2">
+                                        音频设置
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="level1">
+                            <a href="#none" name="media_pro_1.html" id="anetworkset" level="1">
+                                网络设置
+                            </a>
+                            <ul class="level2">
+                                <li>
+                                    <a href="#none" name="media_pro_1.html" id="amediapro" level="2">
+                                        流媒体协议
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#none" name="ip_set_1.html" id="aipset" level="2">
+                                        IP设置
+                                    </a>
+                                </li>
+                                <li  style="display:none">
+                                    <a href="#none" name="int_prot_1.html" id="aprotocolset" level="2">
+                                        通信协议
+                                    </a>
+                                </li>
+                                 <li  style="display:none">
+                                    <a href="#none" name="ddnsSet.html" id="addnsset" level="2">
+                                        DDNS设置
+                                    </a>
+                                </li>
+                                <li  style="display:none">
+                                    <a href="#none" name="alarmCenter.html" id="aalarmcenter" level="2">
+                                        报警中心
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="level1"  style="display:none">
+                            <a href="#none" name="motion_detection_1.html" id="aeventset" level="1">
+                                事件设置
+                            </a>
+                            <ul class="level2">
+                                <li>
+                                    <a href="#none" name="motion_detection_1.html" id="adetection" level="2">
+                                        移动侦测
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#none" name="video_anomaly_1.html" id="aabnormal" level="2">
+                                        视频异常
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#none" name="ioalarm_sr_1.html" id="aalarminput" level="2">
+                                        报警输入
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#none" name="IO_alarm_1.html" id="aalarmoutput" level="2">
+                                        报警输出
+                                    </a>
+                                </li>
+                                 <li>
+                                    <a href="#none" name="devicefailure.html" level="2">
+                                        设备故障
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="level1"  style="display:none">
+                            <a href="#none" name="protection_setting_1.html" id="adeployment" level="1">
+                                布防设置
+                            </a>
+                            <ul class="level2">
+                                <li>
+                                    <a href="#none" name="protection_setting_1.html" id="2deployment" level="2">
+                                        布防设置
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="level1"  style="display:none">
+                            <a href="#none" name="time_lapse_video_1.html" id="atimervideo" level="1">
+                                定时录像
+                            </a>
+                            <ul class="level2">
+                                <li>
+                                    <a href="#none" name="time_lapse_video_1.html" id="2timervideo" level="2">
+                                        定时录像
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="level1"  style="display:none">
+                            <a href="#none" name="sdcard_m_1.html" id="asdcard" level="1">
+                                SD卡管理
+                            </a>
+                            <ul class="level2">
+                                <li>
+                                    <a href="#none" name="sdcard_m_1.html" id="2sdcard" level="2">
+                                        SD卡管理
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="level1 last"  style="display:none">
+                            <a href="#none" name="log_management.html" id="alogmanagement" level="1">
+                                日志管理
+                            </a>
+                            <ul class="level2">
+                                <li>
+                                    <a href="#none" name="log_management.html" id="2logmanagement" level="2">
+                                        日志管理
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="level1 last">
+                            <a href="#none" name="user_manag_1.html" id="asystem" level="1">
+                                系统管理
+                            </a>
+                            <ul class="level2">
+                                <li  style="display:none">
+                                    <a href="#none" name="serialset.html" id="aserialset" level="2" >
+                                        串口设置
+                                    </a>
+                                </li>
+                                <li id="ligbSet" style="display:none">
+                                    <a href="#none" name="gb28181Set.html" id="agbset" level="2">
+                                        GB28181设置
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#none" name="user_manag_1.html" id="ausermanagement" level="2">
+                                        用户管理
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#none" name="date_time_1.html" id="adatetime" level="2">
+                                        日期时间
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#none" name="system_maintenance_1.html" id="asysmaintenance"
+                                    level="2">
+                                        系统维护
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#none" name="system_info_1.html" id="asysteminfo" level="2">
+                                        系统信息
+                                    </a>
+                                </li>
+                                 <li>
+                                    <a href="#none" name="localconfig.html" id="alocalconfig" level="2">
+                                        本地设置
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="level1 last"  style="display:none">
+                            <a href="#none" name="help_1.html" id="ahelp" level="1">
+                                帮助
+                            </a>
+                            <ul class="level2">
+                                <li>
+                                    <a href="#none" name="help_1.html" id="auserguide" level="2">
+                                        使用指南
+                                    </a>
+                                </li>
+                                <!--<li><a href="#none" name="about_us_1.html" id="aabout" level="2">关于我们</a></li>-->
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div id="content">
+                <div class="top-action">
+                    <ul>
+                        <li>
+                            <select class="top-action_select" id="select_language" style="display:none">
+                                <option value="zh-cn">
+                                    中文
+                                </option>
+                                <option value="en">
+                                    English
+                                </option>
+                            </select> 
+<!--                            <button class="visionbtn" value="版本" id="visionbtn" onblur= "visionblur()" onclick="visionclick()">
+                                版本
+                            </button>
+                            <li class="vision" id="vision">
+                				version：3.0.2.2
+                			</li>-->
+                                                               
+                        </li>
+                        
+                        <li style="float:right;">
+                        <button class="btn-logout" value="退出" id="bloginout">
+                                退出
+                            </button>
+                            <button class="btn-set" value="预览" id="bview" style="display:none">
+                                预览
+                            </button>
+                            <button class="btn-set" value="设置" id="bset">
+                                设置
+                            </button>
+
+
+                        </li>
+                    </ul>
+
+                </div>
+                <div class="cnt-wrap" style="background-color:#242424;">
+                    <iframe id="iframe1" width="100%" allowtransparency="true"
+                    frameborder="0" src="ylanzkai_1.html" height="100%" class="cnt-wrap_iframe"
+                    style="background-color:#242424">
+                    </iframe>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </body>
+
+</html>

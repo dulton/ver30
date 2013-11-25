@@ -1,0 +1,2684 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0; background-color:#242424; }
+        </style>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.core.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.slider.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/menu.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <link type='text/css' href='css/demo.css' rel='stylesheet' media='screen'
+        />
+        <link type='text/css' href='css/basic1.css' rel='stylesheet' media='screen'
+        />
+        <script type='text/javascript' src='js/jquery.simplemodal.js'>
+        </script>
+       
+        <script>
+            var ability; //最大值 最小值组合能力字符串。
+			//视频流ID
+			var VideoId;
+			//曝光模式
+			var Exposure;
+			//最大增益
+			var GainMax;
+			//测光模式
+			var MeteringMode;
+			//当前快门最小值
+			var ShutterMinNow;
+			//BGain
+			var BGain;
+			//RGain
+			var RGain;
+			
+			var ShutterDataMin = [['1/25','40000'],['1/30','33333'],['1/50','20000'],['1/60','16666'],['1/100','10000'],['1/120','8333'],['1/240','4166'],['1/480','2083'],['1/960','1041'],['1/1024','976'],['1/8000','125']];//,['1/16000','62'],['1/32000','31']
+
+			//当前快门最大值
+			var ShutterMaxNow;
+			//var ShutterDataMax = [['1/7.5','133333'],['1/15','66666'],['1/25','40000'],['1/30','33333'],['1/50','20000'],['1/60','16666'],['1/100','10000'],['1/120','8333'],['1/240','4166'],['1/480','2083'],['1/960','1041'],['1/1024','976'],['1/8000','125']];//,['1/16000','62'],['1/32000','31']
+
+			var ShutterDataMax = [['1/8000','125'],['1/1024','976'],['1/960','1041'],['1/480','2083'],['1/240','4166'],['1/120','8333'],['1/100','10000'],['1/60','16666'],['1/50','20000'],['1/30','33333'],['1/25','40000'],['1/15','66666'],['1/7.5','133333']];
+			var bBackLightCompFlag = false;
+			var bDcIrisFlag = false;
+			
+			var vin_vout_flip_mode_old;
+//--------------日夜模式-----
+			var DayNightMode;
+			//延时时间
+			var DurationTime;
+			//夜晚到白天
+			var NightToDayThr;
+			//白天到黑夜
+			var DayToNightThr;
+			//8天
+			var SchedEnable = [['0'],['0'],['0'],['0'],['0'],['0'],['0'],['0']];
+			//日出时间
+			var SchedStartTime = [['0'],['0'],['0'],['0'],['0'],['0'],['0'],['0']];
+			//日落时间
+			var SchedEndTime = [['0'],['0'],['0'],['0'],['0'],['0'],['0'],['0']];
+			/*....*/
+//--------------日夜模式-----
+//--------------消息发送控制-----
+			var SendData = false;//消息是否发送成功
+			var ImageData = false;
+			var AdvanceImageData = false;
+			var WhileBalanceData = false;
+			var VideoSourceMirrData = false;
+			var DayNightModeData = false;
+//--------------消息发送控制-----
+            function changeLanguage(lang) {
+                TranslatePage(lang);
+            }
+/*            $(window).bind('beforeunload',
+            function() {
+                try {
+                    var activex = document.getElementById("GMIIPCmrWebPlugIn1");
+                    if (activex != null && activex != 'null') {
+                        if (activex) activex.Stop();
+                    }
+                } catch(e) {
+                    // alert(e.message);
+                }
+            });*/
+			$(window).bind('unload',function(){
+	 			try
+	 			{
+					var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+					activeX.StopPlay();
+	 			}
+				catch(e)
+				{
+					return;
+				}
+				//alert("相机设置界面关闭!");
+			});
+            /*var shutter = [['64000', '1/8000', '25'], ['500000', '1/1024', '24'], ['533333', '1/960', '23'], ['1066667', '1/480', '22'], ['2133333', '1/240', '21'], ['4266667', '1/120', '20'], ['5120000', '1/100', '19'], ['8533333', '1/60', '18'], ['10240000', '1/50', '17'], ['17066667', '1/30', '16'], ['20480000', '1/25', '15'], ['34133333', '1/15', '12'], ['68266667', '1/7.5', '9']];
+			*/
+            //var shuttermode = [['60|1', '0'], ['60|0', '1'], ['60|2', '2'], ['60|3', '3'], ['50|1', '4'], ['50|0', '5'], ['50|2', '6'], ['50|3', '7'], ['30|1', '8'], ['30|0', '9'], ['30|2', '10'], ['30|3', '11'], ['25|1', '12'], ['25|0', '13'], ['25|2', '14'], ['25|3', '15'], ['20|1', '16'], ['20|0', '17'], ['20|2', '18'], ['20|3', '19'], ['15|1', '20'], ['15|0', '21'], ['15|2', '22'], ['15|3', '23']];
+            //var rate = [["60", "8533333"], ["30", "17066667"], ["25", "20480000"], ["20", "25600000"], ["15", "34133333"], ["10", "51200000"], ["6", "85333333"], ["5", "102400000"], ["4", "128000000"], ["3", "170666667"], ["2", "256000000"], ["1", "512000000"]];
+            var isvalid = new Array(); //数据无效的数组。每个不合法项的ID 组成的数组。
+            $(document).ready(function() {
+
+		   if(parent.port=="")
+		   {
+			   GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", getportsuccessfunc);
+			   function getportsuccessfunc(data)
+				{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							
+/*							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("相机设置：LoadImg begin(cgi)---" + h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close(); */ 
+						
+								parent.port=PackDate.Content.SDK_Port
+								LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+						}
+					}
+				}
+				delete PackDate;
+		   }
+		   else
+		   {
+/*			   							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+																
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("相机设置：LoadImg begin(no cgi)---" + h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
+						  
+		   		LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+		   }		
+
+		   
+/*			   							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+																
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("相机设置：init begin(no cgi)---"+ h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close(); */
+						
+                // 调用模版也方法
+                parent.innerCallMe(true);
+                //语言初始化
+                initLang();
+                //初始化 get
+				//$("#GMIIPCmrWebPlugIn1").attr("codebase","/activeX/gmiWeb.cab#version="+parent.ocxversion);
+
+		   //------ wk add 获取码流
+		   var SessID = parent.id;
+		   var AuthId = parent.Authvalue;
+		   //getMaxStreamNum(false,SessID,AuthId,1);
+
+		   //根据码流数填充页面元素
+           //getMaxStreams();
+
+			
+				//获取是否红外
+				init();
+				getIsIrcut();
+
+				
+/*			   							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("相机设置：int begin(no cgi)---"+ h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close(); */
+						
+                var section = 'IMAGE';
+                //GetAndSet('get', section, '', "process", true, false, 0, "1");
+				 //GetAndSet('get', "VINVOUT", '', "process");
+
+				//GetAdvanceImageData();
+				//GetImageData();
+				//GetWhiteBalanceData();
+                //取消
+                $("#reset").bind("click",
+                function(e) {
+					/*
+                    var section = 'IMAGE';
+                    GetAndSet('get', section, '', "process", true);
+					GetAndSet('get', "VINVOUT", '', "process");
+                    //去除红色边框
+                    for (var i = 0; i < isvalid.length; i++) {
+                        $("#" + isvalid[i]).css("border", "1px solid black");
+                    }
+                    isvalid.length = []; //数组清空
+					*/
+				GetAdvanceImageData();
+				GetImageData();
+				GetWhiteBalanceData();
+				GetVideoSourceMirrorData();
+				GetDayNightMode();
+				//设置控制变量
+				ImageData = false;
+				AdvanceImageData = false;
+				WhileBalanceData = false;
+				VideoSourceMirrData = false;
+				DayNightModeData = false;
+                });
+				var oldMin;//自动光圈最小值
+				var oldMax;//自动光圈最大值
+				//占空值
+                $("#01dc_iris").bind("click",
+                function(e) {
+					AdvanceImageData = true;
+					ImageData = true;
+
+					var stm = document.getElementById("01dc_iris").checked;
+					if(stm)
+					{
+						//$("#01shutter_min").attr("disabled","disabled");
+						//$("#01shutter_max").attr("disabled","disabled");	
+						$("#01shutter_min").val(10000);
+						$("#01shutter_max").val(33333);
+						
+						//灰掉占空值
+						$("#01dc_iris_duty").attr("disabled", "disabled");
+					}
+					else if(!stm)
+					{
+						//$("#01shutter_min").removeAttr("disabled","disabled");
+						//$("#01shutter_max").removeAttr("disabled","disabled");
+						//$("#01shutter_min").val(ShutterMinNow);
+						//$("#01shutter_max").val(ShutterMaxNow);	
+						$("#01shutter_min").val(125);
+						$("#01shutter_max").val(40000);	
+						//放开占空值
+						$("#01dc_iris_duty").removeAttr("disabled", "disabled");
+					}
+                    var maxvalue = $("#01shutter_max").val();
+                    var minvalue = $("#01shutter_min").val();
+				
+						$("#01shutter_max").empty();
+						var j=0;
+						for(var i=0;i<ShutterDataMax.length;i++)
+						{
+							if(minvalue == ShutterDataMax[i][1])
+							{
+								j=i;
+								break;	
+							}
+						}
+						
+						for(var m=j;m<ShutterDataMax.length;m++)
+						{
+							var option = new Option(ShutterDataMax[m][0],ShutterDataMax[m][1]);
+							$("#01shutter_max")[0].options.add(option);
+							delete option;
+						}
+					
+						$("#01shutter_min").val(minvalue);
+						$("#01shutter_max").val(maxvalue);	
+                });
+				//背光补偿
+                $("#01backlight_comp").bind("click",
+                function(e) {
+					AdvanceImageData = true;
+
+                });
+				//宽动态设置
+                $("#01local_exposure").bind("change",
+                function(e) {
+					AdvanceImageData = true;
+				});
+				//抗闪烁
+                $("#01exposure_mode").bind("change",
+                function(e) {
+					ImageData = true;
+				});
+                //最小值改变
+                $("#01shutter_min").bind("change",
+                function(e) {
+					ShutterMinNow = $("#01shutter_min").val();
+                    ImageData = true;
+					//analyzeability(ability);
+                    var maxvalue = $("#01shutter_max").val();
+                    var minvalue = $("#01shutter_min").val();
+				
+						$("#01shutter_max").empty();
+						var j=0;
+						for(var i=0;i<ShutterDataMax.length;i++)
+						{
+							if(minvalue == ShutterDataMax[i][1])
+							{
+								j=i;
+								break;	
+							}
+						}
+						
+						for(var m=j;m<ShutterDataMax.length;m++)
+						{
+							var option = new Option(ShutterDataMax[m][0],ShutterDataMax[m][1]);
+							$("#01shutter_max")[0].options.add(option);
+							delete option;
+						}
+						
+                    if ((parseInt(maxvalue)) < (parseInt(minvalue))) {
+                        //alert("max:"+maxvalue+"--min:"+minvalue);
+
+						
+						$("#01shutter_max").val(ShutterDataMax[j][1]);
+                    }
+					else
+					{
+						$("#01shutter_max").val(maxvalue);	
+					}
+					
+                });
+                //最大值改变
+                $("#01shutter_max").bind("change",
+                function(e) {
+					ImageData = true;
+                    var maxvalue = $("#01shutter_max").val();
+                    var minvalue = $("#01shutter_min").val();
+                    //alert("max:"+maxvalue+"--min:"+minvalue);
+                    if ((parseInt(maxvalue)) < (parseInt(minvalue))) {
+                        //alert("max:"+maxvalue+"--min:"+minvalue);
+                        $("#01shutter_min").val(maxvalue);
+                    }
+					ShutterMaxNow = maxvalue;
+                });
+				//日夜模式
+                $("#01dn_mode").bind("change",
+                function(e) {
+					DayNightModeData = true;
+                    if ($("#01dn_mode").val() == '2'||$("#01dn_mode").val() == '3') {
+						if($("#01dn_mode").val() == '2'&&parent.isIrcutMoresetDisabled==1)
+						{
+							$("#moreSet").attr("disabled", "disabled");
+                            $("#moreSet").css("background", "url(images/btn1.jpg) no-repeat");
+						}
+						else
+						{
+							$("#moreSet").removeAttr("disabled", "disabled");
+							$("#moreSet").css("background", "url(images/btn.jpg) no-repeat");
+						}
+                    } else {
+                        $("#moreSet").attr("disabled", "disabled");
+                        $("#moreSet").css("background", "url(images/btn1.jpg) no-repeat");
+                    }
+                });
+				//白平衡
+                $("#01wbc").bind("change",
+                function(e) {
+					WhileBalanceData = true;
+                    if ($("#01wbc").val() == '10') {
+						if(!parent.isZY)
+						{
+							$("#whiteblueSet").removeAttr("disabled", "disabled");
+							$("#whiteblueSet").css("background", "url(images/btn.jpg) no-repeat");
+						}
+						
+                    } else {
+
+                        $("#whiteblueSet").attr("disabled", "disabled");
+                        $("#whiteblueSet").css("background", "url(images/btn1.jpg) no-repeat");
+                    }
+                });
+                //恢复默认值
+                $("#bdefault").bind("click",
+                function() {
+                    if (!confirm("确认恢复默认参数吗？")) return;
+
+				  var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=parent.Authvalue;
+				  contentstr=jsonToString(content);
+					GetAndSet("SetImagingDefaultMode","json",contentstr, succfunSetImagingDefault);
+                });
+				function succfunSetImagingDefault(data)
+				{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							//跳转界面
+							//设置父窗口参数
+							alert("设置成功！");
+							GetAdvanceImageData();
+							GetImageData();
+							GetWhiteBalanceData();
+							GetVideoSourceMirrorData();
+							GetDayNightMode();
+							//设置控制变量
+							ImageData = false;
+							AdvanceImageData = false;
+							WhileBalanceData = false;
+							VideoSourceMirrData = false;
+							DayNightModeData = false;
+							delete PackDate;
+							return;
+						}
+						else
+						{
+							alert("设置失败！");
+							delete PackDate;
+							return;
+						}
+					}
+					
+				}
+                //高级设置
+                $("#moreSet").bind("click",
+                function(e) {
+                    if($("#01dn_mode").val() == '2')
+					{
+						var src = "IrCutset.html";
+						$.modal('<iframe src="' + src + '" height="300" width="360"  frameborder="0" scrolling="no"  style="">', {
+							closeHTML: "",
+							onClose: function() {
+								//alert("close");
+								$.modal.close();
+								//document.getElementById('GMIIPCmrWebPlugIn1').style.display="block";     
+							},
+							overlayClose: false
+						});
+					}
+					if($("#01dn_mode").val() == '3')
+					{
+						var src = "IrCutsetTiming.html";
+						$.modal('<iframe src="' + src + '" height="250" width="400"  frameborder="0" scrolling="no"  style="">', {
+							closeHTML: "",
+							onClose: function() {
+								//alert("close");
+								$.modal.close();
+								//document.getElementById('GMIIPCmrWebPlugIn1').style.display="block";     
+							},
+							containerCss : {height:"250px",
+							width:"400px",  
+							padding:"0"},
+							overlayClose: false
+						});
+					}
+
+                });
+                $("#whiteblueSet").bind("click",
+                function(e) {
+
+                    var src = "Whitebalence.html";
+                    $.modal('<iframe src="' + src + "?RGain="+RGain+"&BGain="+BGain+'" height="200" width="360"  frameborder="0" scrolling="no">', {
+                        containerId: 'simplemodal-container1',
+                        closeHTML: "",
+                        overlayCss: {
+                            //background: "none",
+                            backgroundColor: "#242424",
+                            filter: "progid:DXImageTransform.Microsoft.Alpha(opacity=0)"
+                        },
+
+                        position: [430],
+                        containerCss: {
+
+},
+                        dataCss: {
+
+},
+                        onClose: function() {
+                            //alert("close");
+                            $.modal.close();
+                            //document.getElementById('GMIIPCmrWebPlugIn1').style.display="block";     
+                        },
+                        overlayClose: true
+                    });
+
+                });
+				//亮度加1
+                $("#brightnessadd").bind("click",
+                function(e) {
+
+                    var oldv = $("#01brightness").val();
+                    if (oldv < 255) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+                        $("#brightness a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+						//parseInt((parseInt(newv, 10) + parseInt(255, 10)) / 510 * 100, 10) + "%";
+                        $("#01brightness").val(newv);
+                    }
+					
+//设置Image消息:亮度 对比度  锐度 色度 饱和度 抗闪烁 最小快门 最大快门  最大增益
+                SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+                });
+				//亮度减1
+                $("#brightnesssub").bind("click",
+                function(e) {
+
+                    var oldv = $("#01brightness").val();
+                    if (oldv > 0) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                        $("#brightness a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+						//parseInt((parseInt(newv, 10) + parseInt(255, 10)) / 510 * 100, 10) + "%";
+                        $("#01brightness").val(newv);
+                    }
+					
+//设置Image消息:亮度 对比度  锐度 色度 饱和度 抗闪烁 最小快门 最大快门  最大增益
+                SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+                });
+
+				//对比度+1
+                $("#contrastadd").bind("click",
+                function(e) {
+					
+                    var oldv = $("#01contrast").val();
+                    if (oldv < 255) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+                        $("#contrast a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01contrast").val(newv);
+                    }
+					
+//设置Image消息:亮度 对比度  锐度 色度 饱和度 抗闪烁 最小快门 最大快门  最大增益
+                SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+                });
+				//对比度-1
+                $("#contrastsub").bind("click",
+                function(e) {
+					
+                    var oldv = $("#01contrast").val();
+                    if (oldv > 0) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                        $("#contrast a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01contrast").val(newv);
+                    }
+					
+//设置Image消息:亮度 对比度  锐度 色度 饱和度 抗闪烁 最小快门 最大快门  最大增益
+                SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+                });
+				//锐度-1
+                $("#sharpnesssub").bind("click",
+                function(e) {
+
+                    var oldv = $("#01sharpness").val();
+                    if (oldv > 0) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                        $("#sharpness a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01sharpness").val(newv);
+                    }
+					
+//设置Image消息:亮度 对比度  锐度 色度 饱和度 抗闪烁 最小快门 最大快门  最大增益
+                SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+                });
+				//锐度+1
+                $("#sharpnessadd").bind("click",
+                function(e) {
+					
+                    var oldv = $("#01sharpness").val();
+                    if (oldv < 255) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+                        $("#sharpness a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01sharpness").val(newv);
+                    }
+					
+					//设置Image消息:亮度 对比度  锐度 色度 饱和度 抗闪烁 最小快门 最大快门  最大增益
+                SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+                });
+				//色度-1
+                $("#huesub").bind("click",
+                function(e) {
+					
+                    var oldv = $("#01hue").val();
+                    if (oldv > 0) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                        $("#hue a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+						//parseInt((parseInt(newv, 10) + parseInt(15, 10)) / 30 * 100, 10) + "%";
+                        $("#01hue").val(newv);
+                    }
+					//设置Image消息:亮度 对比度  锐度 色度 饱和度 抗闪烁 最小快门 最大快门  最大增益
+                SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+                });
+				//色度+1
+                $("#hueadd").bind("click",
+                function(e) {
+					
+                    var oldv = $("#01hue").val();
+                    if (oldv < 255) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+                        $("#hue a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+						//parseInt((parseInt(newv, 10) + parseInt(15, 10)) / 30 * 100, 10) + "%";
+                        $("#01hue").val(newv);
+                    }
+					//设置Image消息:亮度 对比度  锐度 色度 饱和度 抗闪烁 最小快门 最大快门  最大增益
+                SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+                });
+				//饱和度+1
+                $("#saturationadd").bind("click",
+                function(e) {
+					
+                    var oldv = $("#01saturation").val();
+                    if (oldv < 255) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+                        $("#saturation a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01saturation").val(newv);
+                    }
+					//设置Image消息:亮度 对比度  锐度 色度 饱和度 抗闪烁 最小快门 最大快门  最大增益
+                SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+                });
+				//饱和度-1
+                $("#saturationsub").bind("click",
+                function(e) {
+					
+                    var oldv = $("#01saturation").val();
+                    if (oldv > 0) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                        $("#saturation a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01saturation").val(newv);
+                    }
+					
+					//设置Image消息:亮度 对比度  锐度 色度 饱和度 抗闪烁 最小快门 最大快门  最大增益
+                SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+                });
+				//最大增益
+                $("#01max_gain").bind("change",
+                function(e) {
+					ImageData = true;	
+				});
+				//镜头镜像
+                $("#66vin_vout_flip_mode").bind("change",
+                function(e) {
+					VideoSourceMirrData = true;	
+				});
+                //3D噪音数字检测
+                $("#01mctf_strength").bind("change",
+                function(e) {
+					AdvanceImageData = true;	
+				});
+                $("#01mctf_strength").bind("blur",
+                function(e) {
+					AdvanceImageData = true;
+                    var id = this.id;
+                    var value = parseInt(this.value, 10);
+                    if (value < 0 || value > 255 || isNaN(value)) {
+                        alert("请按照要求输入：\n 3D降噪取值范围 0-255");
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+
+                    } else {
+                        this.style.border = "1px solid black";
+
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+                });
+				//占空值检测
+                $("#01dc_iris_duty").bind("change",
+                function(e) {
+					AdvanceImageData = true;	
+				});
+                $("#01dc_iris_duty").bind("blur",
+                function(e) {
+					AdvanceImageData = true;
+                    var id = this.id;
+                    var value = parseInt(this.value, 10);
+                    if (value < 100 || value > 999 || isNaN(value)) {
+                        //getsetStreamInfo('get', mystreamid, '');
+                        alert("请按要求输入:\n占空值取值范围：100-999");
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+                });
+				//曝光目标系数
+                $("#01ae_target_ratio").bind("change",
+                function(e) {
+					AdvanceImageData = true;	
+				});
+                $("#01ae_target_ratio").bind("blur",
+                function(e) {
+					AdvanceImageData = true;
+                    var id = this.id;
+                    var value = parseInt(this.value, 10);
+                    if (value < 25 || value > 400 || isNaN(value)) {
+                        //getsetStreamInfo('get', mystreamid, '');
+                        alert("请按要求输入:\n曝光系数取值范围：25%-400%");
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+                });
+                //滑动条代码
+                var $button = $(".drag-icon", $(".drag-bg"));
+                var sliderOpts = {
+                    //滑动停止
+                    step: 5,
+                    stop: function(e, ui) {
+
+                        sliderFunction(e, ui, this.id);
+
+                    },
+                    slide: function(e, ui) {
+                        //sliderFunction(e, ui, this.id);
+                    }
+
+                };
+                $button.slider(sliderOpts);
+                //滑动条代码结束
+                $("#submitIrCut").bind("click",
+                function(e) {
+
+                    var section = 'IMAGE';
+                    var time = $("#01dn_durtime").val();
+                    var day2nigth = $("#idn_day2night_thr").val();
+                    var nigth2day = $("#idn_night2day_thr").val();
+                    var max1 = $("#01dn_night2day_max").val();
+                    var max2 = $("#01dn_day2night_max").val();
+                    var poststr = "dn_durtime=" + time + "||";
+                    if (parseInt(max2, 10) <= parseInt(max1, 10)) {
+                        poststr += "dn_night2day_thr=" + nigth2day + "||dn_day2night_thr=" + day2nigth;
+                        $("#01dn_day2night_thr").val(day2nigth);
+                        $("#01dn_night2day_thr").val(nigth2day);
+                    } else {
+                        poststr += "dn_night2day_thr=" + day2nigth + "||dn_day2night_thr=" + nigth2day;
+                        $("#01dn_day2night_thr").val(nigth2day);
+                        $("#01dn_night2day_thr").val(day2nigth);
+                    }
+
+                    GetAndSet('set', section, poststr, "process");
+
+                });
+                $("#01exposure_mode").bind("change",
+                function(e) {
+                    //getability($("#01exposure_mode").val());
+                });
+                $("#submit").bind("click",
+                function(e) {
+
+				SendData = false;
+				//设置Image消息:亮度 对比度  锐度 色度 饱和度 抗闪烁 最小快门 最大快门  最大增益
+				if(ImageData == true)
+				{
+					SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+				}
+
+				//设置AdvanceImage 测光模式 | 背光补偿 | 自动光圈 | 宽动态设置 | 3D降噪 |占空值| 曝光目标系数
+				var stmp;
+				var bBackLightCompFlag;
+				if(AdvanceImageData == true)
+				{
+					var sss = document.getElementById("01backlight_comp").checked;
+					if( sss)
+					{
+						bBackLightCompFlag = "1";	
+					}else if(!sss)
+					{
+						bBackLightCompFlag = "0";	
+					}
+					var bDcIrisFlag;
+					//sss = document.getElementById("01dc_iris");
+					sss = document.getElementById("01dc_iris").checked;
+					if(sss)
+					{
+						bDcIrisFlag = "1";	
+					}else if(!sss)
+					{
+						bDcIrisFlag = "0";	
+					}
+					var sLocalExposure;
+					stmp = $("#01local_exposure").val();
+					switch(stmp)
+					{
+					case "0":
+						sLocalExposure = "0";
+					break;
+					case "1":
+						sLocalExposure = "1";
+					break;
+					case "3":
+						sLocalExposure = "3";
+					break;
+					case "4":
+						sLocalExposure = "4";
+					break;
+					case "5":
+						sLocalExposure = "5";
+					break;
+					default:
+						sLocalExposure = "2";
+					break;
+					}
+					var sMctfStrength = $("#01mctf_strength").val();
+					var sDcIrisDuty = $("#01dc_iris_duty").val();
+					var sAeTargetRatio = $("#01ae_target_ratio").val();
+
+					SetAdvanceImage(MeteringMode,bBackLightCompFlag,bDcIrisFlag,sLocalExposure,sMctfStrength,sDcIrisDuty,sAeTargetRatio);	
+				}
+				
+				
+				//发送白平衡
+				if(WhileBalanceData == true)
+				{
+					var sMode;
+					stmp = $("#01wbc").val();
+					sMode = stmp;
+
+					SetWhiteBalance(sMode,RGain,BGain);	
+				}
+				
+				
+				//发送镜头镜像
+				if(VideoSourceMirrData == true)
+				{
+					var Mirror;
+					stmp = $("#66vin_vout_flip_mode").val();
+					Mirror = stmp;
+
+					SetVideoSourceMirror(Mirror);	
+				}
+				
+				
+				//发送日夜模式
+				if(DayNightModeData == true)
+				{
+					var DayNightMode;
+					stmp = $("#01dn_mode").val();
+					DayNightMode = stmp;
+
+					SetDayNightMode(DayNightMode);	
+				}
+				
+				//设置控制变量
+				ImageData = false;
+				AdvanceImageData = false;
+				WhileBalanceData = false;
+				VideoSourceMirrData = false;
+				DayNightModeData = false;
+				
+				alert("设置成功！");
+				
+});
+            });
+            function closemodal() {
+                $.modal.close();
+            }
+
+            //滑动处理函数
+            var request;
+            function sliderFunction(e, ui, thisid) {
+                // $button.css("left", "-" + ui.value + "px")
+                var id = thisid;
+                var value = "";
+                if (id != "dn_night2day_thr" && id != "dn_day2night_thr") {
+                    if (id == "saturation" || id == "contrast" || id == "sharpness") //取值范围 0-255；
+                    {
+                        value = parseInt((ui.value / 100 * 255), 10);
+                    } else if (id == "hue") //取值范围-15-15；
+                    {
+                        value = parseInt((ui.value / 100 * 255), 10);
+                    } else if (id == "brightness") //取值范围-255-255；
+                    {
+                        value = parseInt((ui.value / 100 * 255), 10);
+                    } else {
+                        return;
+                    }
+
+                    $("#01" + id + "").val(value);
+                SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val(),$("#01exposure_mode").val(),$("#01shutter_min").val(),$("#01shutter_max").val(),$("#01max_gain").val());
+
+                }
+                //Ict设置
+                else {
+                    var max1 = $("#01dn_night2day_max").val();
+                    var max2 = $("#01dn_day2night_max").val();
+                    var min1 = $("#01dn_night2day_min").val();
+                    var min2 = $("#01dn_day2night_min").val();
+                    if (parseInt(max2, 10) <= parseInt(max1, 10)) {
+                        if (id == "dn_night2day_thr") {
+                            value = parseInt((ui.value / 100 * (max1 - min1)), 10);
+                        } else if (id == "dn_day2night_thr") {
+                            value = parseInt((ui.value / 100 * (max2 - min2)), 10);
+                        }
+
+                        else {
+                            return;
+                        }
+                    } else {
+                        if (id == "dn_night2day_thr") {
+                            value = parseInt((ui.value / 100 * (max2 - min2)), 10);
+                        } else if (id == "dn_day2night_thr") {
+                            value = parseInt((ui.value / 100 * (max1 - min1)), 10);
+                        }
+
+                        else {
+                            return;
+                        }
+                    }
+                    if (id == "dn_night2day_thr") {
+                        //  如果night2day 小于day2night   day2night 要随着变小 但是最小不能小到最小值
+                        if (value <= $("#idn_day2night_thr").val()) {
+                            var v = parseInt(value, 10) - parseInt(1, 10);
+                            if (v >= min2 && v >= min1) {
+                                document.getElementById("dn_day2night_thr").childNodes[0].style.left = value + "%";
+                                $("#idn_day2night_thr").val(v);
+                            } else {
+                                return;
+                            }
+                        }
+                    }
+                    if (id == "dn_day2night_thr") {
+                        if (value >= $("#idn_night2day_thr").val()) {
+                            var v = parseInt(value, 10) + parseInt(1, 10);
+                            if (v <= max2 && v <= max1) {
+                                document.getElementById("dn_night2day_thr").childNodes[0].style.left = value + "%";
+                                $("#idn_night2day_thr").val(v);
+                            } else {
+                                return;
+                            }
+                        }
+                    }
+
+                    // alert(value);
+                    $("#i" + id + "").val(value);
+                }
+                //处理最左端等于0时，滚动条与文本框值不对应问题。
+                if (ui.value == 0) {
+                    var uileft = $("#" + thisid + " a")[0].style.left;
+                    if (uileft != "0%") {
+                        $("#" + thisid + " a")[0].style.left = "0%";
+                    }
+                }
+            }
+
+            //校验100-999
+            function check_iris(iris) {
+                var re = /([1-9][0-9][0-9])/;
+                if (re.test(iris)) {
+                    return true;
+                } else {
+                    alert("请按照要求输入");
+                    return false;
+                }
+            }
+            //校验25-400
+            function check_ratio(ratio) {
+                var re = /(2[5-9])|([3-9][0-9])/;
+                var re2 = /([1-3][0-9][0-9])|400/;
+                if (ratio.length == 3) {
+                    if (re2.test(ratio)) {
+                        return true;
+                    } else {
+                        alert("请按照要求输入");
+                        return false;
+                    }
+                } else {
+                    if (re.test(ratio)) {
+                        return true;
+                    } else {
+                        alert("请按照要求输入");
+                        return false;
+                    }
+                }
+            }
+            function analyzeability(ability) {
+				
+				//alert(ability);
+                var arr = new Array(); //[[min,max,max],[min,max,max]]
+                var ablilityarr = ability.split(";");
+                if (ablilityarr.length > 0) {
+                    for (var i = 0; i < ablilityarr.length; i++) {
+                        if (ablilityarr[i] != null && ablilityarr[i] != "") {
+                            var arritem = new Array();
+                            var abilitytemp = ablilityarr[i];
+                            var abilityitems = abilitytemp.split(",");
+                            for (var j = 0; j < abilityitems.length; j++) {
+                                if (j == 0) {
+                                    var minvalue = abilityitems[j].split("+")[0];
+                                    for (var m = 0; m < shutter.length; m++) {
+                                        if (minvalue == shutter[m][2]) {
+                                            arritem.push(shutter[m][1]);
+                                            break;
+                                        }
+                                    }
+                                    var maxvalue = abilityitems[j].split("+")[1];
+                                    for (var m = 0; m < shutter.length; m++) {
+                                        if (maxvalue == shutter[m][2]) {
+                                            arritem.push(shutter[m][1]);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    var maxvalue = abilityitems[j];
+                                    for (var m = 0; m < shutter.length; m++) {
+                                        if (maxvalue == shutter[m][2]) {
+                                            arritem.push(shutter[m][1]);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            arr.push(arritem);
+                        }
+                    }
+                }
+                //生成数组结束
+                if (arr.length > 0) {
+                    //先获取当前最小值
+                    var currentmin = $("#01shutter_min").val();
+
+                    //当前最大值
+                    var currentmax = $("#01shutter_max").val();
+                    var currentmin2;
+
+                    for (var m = 0; m < shutter.length; m++) {
+                        if (currentmin == shutter[m][0]) {
+                            currentmin2 = shutter[m][1]
+                            break;
+                        }
+                    }
+                    if (currentmin2 != null) {
+						//最小值 重组
+                        $("#01shutter_min").empty();
+                        for (var i = 0; i < arr.length; i++) {
+                            
+                            for (var m = 0; m < shutter.length; m++) {
+                                if (arr[i][0] == shutter[m][1]) {
+                                    desc = shutter[m][0]
+                                    var option = new Option(arr[i][0], desc);
+                                    $("#01shutter_min")[0].options.add(option);
+									delete option;
+                                    break;
+                                }
+                            }
+							$("#01shutter_min").val(currentmin);
+                            //结束
+                            //最大值重组
+                            if (arr[i][0] == currentmin2) {
+                                $("#01shutter_max").empty();
+                                for (var j = 1; j < arr[i].length; j++) {
+                                    var desc;
+                                    for (var m = 0; m < shutter.length; m++) {
+                                        if (arr[i][j] == shutter[m][1]) {
+                                            desc = shutter[m][0]
+                                            break;
+                                        }
+                                    }
+                                    var option = new Option(arr[i][j], desc);
+                                    $("#01shutter_max")[0].options.add(option);
+									delete option;
+                                }
+								
+								//开始  解决IE9 值可能为空的问题
+								if(currentmax==null)
+								{
+									$("#01shutter_max")[0].options[0].selected=true;
+								}
+								else
+								{
+                                	$("#01shutter_max").val(currentmax);
+								}
+								if($("#01shutter_max").val()==null)
+								{
+									$("#01shutter_max")[0].options[0].selected=true;
+								}
+								//结束
+                            }
+                        }
+                    }
+
+                }
+				
+            }
+            function getability(flicke) {
+                //获取当前码流帧率
+                $.ajax({
+                    url: url,
+                    data: "Request=get" + "&Section=ENCODE" + "&exsection=0&postDataStr=" + encodeURIComponent("||"),
+                    type: "post",
+                    success: function(data) {
+                        //通用处理data  
+                        //处理后的数据 data2
+                        //返回数据中包含"\n"字符 。
+                        //$("#load").css("display","none");
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        //异步返回数据  经处理 传递给相应的函数处理。
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                        }
+                        if (Flag == 0) {
+
+                            var fps;
+                            var splitvalue = "s0_enc_fps=";
+                            var index = Info.indexOf(splitvalue);
+                            var fpstemp = Info.substring(index).split("||")[0].split("=")[1];
+                            for (var i = 0; i < rate.length; i++) {
+                                if (rate[i][1] == fpstemp) {
+                                    fps = rate[i][0];
+                                    break;
+                                }
+                            }
+                            var temp = fps + "|" + flicke;
+                            var mode;
+                            for (var i = 0; i < shuttermode.length; i++) {
+                                if (shuttermode[i][0] == temp) {
+                                    mode = shuttermode[i][1];
+                                    break;
+                                }
+                            }
+                            $.ajax({
+                                url: url,
+                                data: "Request=get" + "&Section=SHUTTERTIMERANGE" + "&exsection=" + mode + "&postDataStr=" + encodeURIComponent("||"),
+                                type: "post",
+                                success: function(data) {
+                                    //通用处理data  
+                                    //处理后的数据 data2
+                                    //返回数据中包含"\n"字符 。
+                                    //$("#load").css("display","none");
+                                    var data2 = data.replace("\n", "");
+                                    data2 = $.trim(data2);
+                                    //异步返回数据  经处理 传递给相应的函数处理。
+                                    var result = data2.split('&');
+                                    var Request;
+                                    var Section;
+                                    var Flag;
+                                    var Info;
+                                    if (result.length != 4) {
+                                        alert("返回数据解析错误");
+                                        return;
+                                    } else {
+                                        Request = result[0];
+                                        Section = result[1];
+                                        Flag = result[2];
+                                        Info = result[3];
+                                    }
+                                    if (Flag == 0) {
+                                        var index = Info.indexOf("ability=");
+
+                                        ability = Info.substring(index).split("||")[0].split("=")[1]; //获取最大最小值组合能力
+                                       // alert(ability);
+                                        //analyzeability(ability);
+                                    }
+
+                                },
+                                error: function() {
+
+}
+                            });
+
+                        }
+
+                    },
+                    error: function() {
+
+}
+                });
+            }
+			function getIsIrcut()
+			{
+				
+					$("#01dn_mode").removeAttr("disabled","disabled");
+					if(parent.noIrcut=="0")
+					{
+						$("#01dn_mode option[value='2']").remove();
+					}
+				
+			}
+			
+			function init()
+			{
+				//高球白平衡模式
+				if(parent.shield_id!=0)
+				{
+					$("#01wbc option[value='6']").remove();
+					$("#01wbc option[value='7']").remove();
+					$("#01wbc option[value='8']").remove();
+					$("#01wbc option[value='9']").remove();
+				}
+				if(parent.isWideDynamic==0)
+				{
+					$("#divwidedy").css("display","none");
+				}
+				else
+				{
+					$("#divwidedy").css("display","block");
+				}
+				if(parent.dc_iris=="0")//无自动光圈
+				{
+					$("#divzidonggq").css("display","none");
+					$("#divzidonggq2").css("display","none");
+				}
+				//翻转
+				//getVinVout();
+				GetAdvanceImageData();
+				GetImageData();
+				GetWhiteBalanceData();
+				GetVideoSourceMirrorData();
+				GetDayNightMode();
+				//设置控制变量
+				ImageData = false;
+				AdvanceImageData = false;
+				WhileBalanceData = false;
+				VideoSourceMirrData = false;
+				DayNightModeData = false;
+
+			}
+			function getVinVout()
+			{
+				 //$.ajax({});
+			}
+			
+			//设置日夜模式
+			function SetDayNightMode(DayNightMode)
+			{
+				
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					//模式
+					content.Mode = DayNightMode;
+
+					//延时时间
+					content.DurationTime = DurationTime;
+					//Night2Day
+					content.NightToDayThr = NightToDayThr;
+					//Day2Night
+					content.DayToNightThr = DayToNightThr;
+					
+					//周日
+					content.SchedEnable0 = SchedEnable[0];
+					content.SchedStartTime0 = SchedStartTime[0];
+					content.SchedEndTime0 = SchedEndTime[0];
+					//周1
+					content.SchedEnable1 = SchedEnable[1];
+					content.SchedStartTime1 = SchedStartTime[1];
+					content.SchedEndTime1= SchedEndTime[1];
+					//周2
+					content.SchedEnable2 = SchedEnable[2];
+					content.SchedStartTime2 = SchedStartTime[2];
+					content.SchedEndTime2 = SchedEndTime[2];
+					//周3
+					content.SchedEnable3 = SchedEnable[3];
+					content.SchedStartTime3 = SchedStartTime[3];
+					content.SchedEndTime3 = SchedEndTime[3];
+					//周4
+					content.SchedEnable4 = SchedEnable[4];
+					content.SchedStartTime4 = SchedStartTime[4];
+					content.SchedEndTime4 = SchedEndTime[4];
+					//周5
+					content.SchedEnable5 = SchedEnable[5];
+					content.SchedStartTime5 = SchedStartTime[5];
+					content.SchedEndTime5 = SchedEndTime[5];
+					//周6
+					content.SchedEnable6 = SchedEnable[6];
+					content.SchedStartTime6 = SchedStartTime[6];
+					content.SchedEndTime6 = SchedEndTime[6];
+					//all
+					content.SchedEnable7 = SchedEnable[7];
+					content.SchedStartTime7 = SchedStartTime[7];
+					content.SchedEndTime7 = SchedEndTime[7];
+					contentstr=jsonToString(content);
+					GetAndSet("SetDayNightMode","json",contentstr, sucess_SetDayNightMode);
+					
+					
+			}
+			function sucess_SetDayNightMode(data)
+			{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							SendData = true;	
+						}
+						else
+						{
+							alert("设置日夜模式参数失败！");
+							SendData = false;
+						}
+					}
+					delete PackDate;
+			}
+			//设置白平衡
+			function SetWhiteBalance(Mode,RGain,BGain)
+			{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					//模式
+					content.Mode = Mode;
+					//背光补偿
+					content.RGain = RGain;
+					//自动光圈
+					content.BGain = BGain;
+
+					
+					contentstr=jsonToString(content);
+					GetAndSet("SetWhiteBalanceMode","json",contentstr, sucess_SetWhiteBalanceData);	
+			}
+			function sucess_SetWhiteBalanceData(data)
+			{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							SendData = true;	
+						}
+						else
+						{
+							alert("设置白平衡参数失败！");
+							SendData = false;
+						}
+					}
+					delete PackDate;
+			}
+			//设置镜头镜像
+			function SetVideoSourceMirror(Mirror)
+			{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					//模式
+					content.Mirror = Mirror;
+
+					
+					contentstr=jsonToString(content);
+					GetAndSet("SetVideoSourceMirror","json",contentstr, sucess_SetVideoSourceData);	
+			}
+			function sucess_SetVideoSourceData(data)
+			{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							SendData = true;
+							//重新加载image
+							//
+							var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+							activeX.StopPlay();
+							LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+							//activeX.SetVideoBuffer(0,parseInt(parent.NetPlay));
+							//activeX.Play();
+							
+						}
+						else
+						{
+							alert("设置镜头镜像参数失败！");
+							SendData = false;
+						}
+					}
+					delete PackDate;	
+			}
+			//设置AdvanceImage 测光模式 | 背光补偿 | 自动光圈 | 宽动态设置 | 3D降噪 |占空值| 曝光目标系数
+			function SetAdvanceImage(MeteringMode,BackLightCompFlag,DcIrisFlag,LocalExposure,MctfStrength,DcIrisDuty,AeTargetRatio)
+			{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					//测光模式
+					content.MeteringMode = MeteringMode;
+					//背光补偿
+					content.BackLightCompFlag = BackLightCompFlag;
+					//自动光圈
+					content.DcIrisFlag = DcIrisFlag;
+					//宽动态设置
+					content.LocalExposure = LocalExposure;
+					//3D降噪
+					content.MctfStrength = MctfStrength;
+					//占空值
+					content.DcIrisDuty = DcIrisDuty;
+					//曝光目标系数
+					content.AeTargetRatio = AeTargetRatio;
+					//VidioID
+					content.VideoId=VideoId;
+					
+					contentstr=jsonToString(content);
+					GetAndSet("SetAdvancedImaging","json",contentstr, sucess_SetAdvanceImageData);		
+			}
+				function sucess_SetAdvanceImageData(data)
+				{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							SendData = true;	
+						}
+						else
+						{
+							alert("设置AdvanceImage参数失败！");
+							SendData = false;
+						}
+					}
+					delete PackDate;
+				}
+				//设置Image消息:亮度 对比度  锐度 色度 饱和度
+				function SetImage(Brightnes,Contrast,Sharpness,Hue,Saturation,ExposureMode,ShutterMin,ShutterMax,GainMax)
+				{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					//亮度
+					content.Brightness=Brightnes;
+					//对比度
+					content.Contrast=Contrast;
+					//锐度
+					
+					content.Sharpness=Sharpness;
+					//色度
+					content.Hue=Hue;
+					//饱和度
+					content.Saturation=Saturation;
+					//di8anzi快门
+					content.ShutterMax=ShutterMax;
+					content.ShutterMin=ShutterMin;
+					//VidioID
+					content.VideoId=VideoId;
+					//最大增益
+
+					content.GainMax = GainMax;
+					
+					//抗闪烁
+					content.ExposureMode = ExposureMode;
+					
+					contentstr=jsonToString(content);
+					GetAndSet("SetImageCfg","json",contentstr, sucess_SetImageData);				
+				}
+				function sucess_SetImageData(data)
+				{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							SendData = true;	
+						}
+						else
+						{
+							alert("设置Image参数失败！");
+							SendData = false;
+						}
+					}
+					delete PackDate;
+				}
+	function LoadImg(name,password,ip,port) {
+	//debugger;
+    if (window.ActiveXObject) {
+        try {
+/*			   							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("相机设置：LoadImg star---"+ h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
+
+		    var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+			activeX.SetLoginInfo(name, password, ip, port);
+
+			if(typeof(parent.NetPlay) == "undefined" ||parent.NetPlay == null || isNaN(parent.NetPlay))
+			{
+				parent.NetPlay = 10;
+			}
+			
+			//activeX.SetCapturePath("C:\\Program Data\\IPC\\Image");
+			//activeX.SetRecordPath("E:\\");
+			//activeX.SetCapturePath("E:\\");
+			//activeX.SetPtzType(0);
+			//activeX.SetStreamId(0);
+			//var str=activeX.AboutBox();
+			activeX.SetVideoBuffer(0,parseInt(parent.NetPlay));	
+
+			activeX.Play();
+
+			
+		
+		
+/*			   							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("相机设置：LoadImg end---"+ h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
+					
+			
+        } catch(e) { 
+			alert(e.message);
+            return;
+        }
+    }
+	
+}
+
+			function closeframe()
+			{
+				$.modal.close();	
+			}
+				 //获取WhiteBalance模式信息
+				 function GetWhiteBalanceData()
+				 {
+					 
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					contentstr=jsonToString(content);
+					GetAndSet("GetWhiteBalanceMode","json",contentstr, sucess_GetWhiteBalanceData);	 
+				 }
+				 //h回调函数
+				 function sucess_GetWhiteBalanceData(data)
+				 {
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							var stmp;
+							//成功返回
+							//白平衡模式
+							stmp = PackDate.Content.Mode;
+
+							switch(stmp)
+							{
+								case "0":
+									//disable
+									$("#01wbc").val(0);
+								break;
+								case "1":
+									$("#01wbc").val(1);
+								break;
+								case "2":
+									$("#01wbc").val(2);
+									//$("#01local_exposure").val("自动");
+								break;
+								case "3":
+									$("#01wbc").val(3);
+								break;
+								case "4":
+									$("#01wbc").val(4);
+								break;
+								case "5":
+									$("#01wbc").val(5);
+								break;
+								case "6":
+									$("#01wbc").val(6);
+								break;
+								case "7":
+									$("#01wbc").val(7);
+								break;
+								case "8":
+									$("#01wbc").val(8);
+								break;
+								case "9":
+									$("#01wbc").val(9);
+								break;
+								case "10":
+									$("#01wbc").val(10);
+									$("#whiteblueSet").removeAttr("disabled", "disabled");
+							        $("#whiteblueSet").css("background", "url(images/btn.jpg) no-repeat");
+								break;
+								case "11":
+									$("#01wbc").val(11);
+								break;
+								default:
+									
+								break;
+						}
+						
+						//RGain
+						RGain = PackDate.Content.RGain;
+						//RGain
+						BGain = PackDate.Content.BGain;
+						
+
+					}
+					else if(PackDate.Content.RetCode!="0")
+					{
+						//错误返回
+						alert("获取AdvanceImage数据失败!");
+						
+					}
+				}
+				
+/* 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("获取白平衡结束---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close(); */
+						
+				delete PackDate;		 
+			}
+				 //获取图像数据
+				function GetImageData()
+				{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					contentstr=jsonToString(content);
+					GetAndSet("GetImageCfg","json",contentstr, sucess_GetImageData);					
+				}
+			//设置快门下拉菜单
+			function SetShutterSelect(ShutterMin,ShutterMax)
+			{
+
+			}
+			//设置快门最大值最小值
+			function SetShutterData(ShutterMin,ShutterMax)
+			{
+				switch(ShutterMin)
+				{
+					case "40000":
+					$("#01shutter_min").val(40000);
+					break;
+					case "33333":
+					$("#01shutter_min").val(33333);
+					break;
+					case "20000":
+					$("#01shutter_min").val(20000);
+					break;
+					case "16666":
+					$("#01shutter_min").val(16666);
+					break;
+					case "10000":
+					$("#01shutter_min").val(10000);
+					break;
+					case "8333":
+					$("#01shutter_min").val(8333);
+					break;
+					case "4166":
+					$("#01shutter_min").val(4166);
+					break;
+					case "2083":
+					$("#01shutter_min").val(2083);
+					break;
+					case "1041":
+					$("#01shutter_min").val(1041);
+					break;
+					case "976":
+					$("#01shutter_min").val(976);
+					break;
+					case "125":
+					$("#01shutter_min").val(125);
+					break;
+					default:
+					break;
+					
+				}
+
+				switch(ShutterMax)
+				{
+					case "133333":
+					$("#01shutter_max").val(133333);
+					break;
+					case "66666":
+					$("#01shutter_max").val(66666);
+					break;
+					case "40000":
+					$("#01shutter_max").val(40000);
+					break;
+					case "33333":
+					$("#01shutter_max").val(33333);
+					break;
+					case "20000":
+					$("#01shutter_max").val(20000);
+					break;
+					case "16666":
+					$("#01shutter_max").val(16666);
+					break;
+					case "10000":
+					$("#01shutter_max").val(10000);
+					break;
+					case "8333":
+					$("#01shutter_max").val(8333);
+					break;
+					case "4166":
+					$("#01shutter_max").val(4166);
+					break;
+					case "2083":
+					$("#01shutter_max").val(2083);
+					break;
+					case "1041":
+					$("#01shutter_max").val(1041);
+					break;
+					case "976":
+					$("#01shutter_max").val(976);
+					break;
+					case "125":
+					$("#01shutter_max").val(125);
+					break;
+					default:
+					break;
+					
+				}
+			}
+			function sucess_GetImageData(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						var stmp;
+						//成功返回
+						//视频流ID
+						VideoId = PackDate.Content.VideoId;
+						//电子快门
+						ShutterMinNow = PackDate.Content.ShutterMin;
+						//stmp = parseFloat(stmp);
+						//stmp = stmp/1000000;
+						
+						ShutterMaxNow = PackDate.Content.ShutterMax;
+						
+						SetShutterData(ShutterMinNow,ShutterMaxNow);
+						//最大增益
+						GainMax = PackDate.Content.GainMax;
+						switch(GainMax)
+						{
+							case "30":
+								$("#01max_gain").val(30);
+							break;
+							case "36":
+								$("#01max_gain").val(36);
+							break;
+							case "42":
+								$("#01max_gain").val(42);
+							break;
+							case "48":
+								$("#01max_gain").val(48);
+							break;
+							case "54":
+								$("#01max_gain").val(54);
+							break;
+							case "60":
+								$("#01max_gain").val(60);
+							break;
+							default:
+							break;
+						}
+						//抗闪烁
+						Exposure = PackDate.Content.ExposureMode;
+						stmp= Exposure;
+						switch(stmp)
+						{
+							case "0":
+								$("#01exposure_mode").val(0);
+							break;
+							case "1":
+								$("#01exposure_mode").val(1);
+							break;
+							case "2":
+								$("#01exposure_mode").val(2);
+							break;
+							case "3":
+								$("#01exposure_mode").val(3);
+							break;
+							default:
+							break;
+						}
+
+						//饱和度
+						stmp = PackDate.Content.Saturation;
+                        $("#saturation a")[0].style.left = parseInt((parseInt(stmp, 10)) / 255 * 100, 10) + "%";
+                        $("#01saturation").val(stmp);
+						//亮度
+						stmp = PackDate.Content.Brightness;
+                        $("#brightness a")[0].style.left = parseInt((parseInt(stmp, 10)) / 255 * 100, 10) + "%";
+                        $("#01brightness").val(stmp);
+						//色度
+						stmp = PackDate.Content.Hue;
+                        $("#hue a")[0].style.left = parseInt((parseInt(stmp, 10)) / 255 * 100, 10) + "%";
+                        $("#01hue").val(stmp);
+						//对比度
+						stmp = PackDate.Content.Contrast;
+                        $("#contrast a")[0].style.left = parseInt((parseInt(stmp, 10)) / 255 * 100, 10) + "%";
+                        $("#01contrast").val(stmp);
+						//锐度
+						stmp = PackDate.Content.Sharpness;
+                        $("#sharpness a")[0].style.left = parseInt((parseInt(stmp, 10)) / 255 * 100, 10) + "%";
+                        $("#01sharpness").val(stmp);
+					}
+					else if(PackDate.Content.RetCode!="0")
+					{
+						//错误返回
+						alert("获取Image数据失败!");	
+					}
+				}	
+				
+/* 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("获取Image参数结束---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close();*/ 
+						
+				delete PackDate;
+			}
+				//获取AdvancedImaging配置信息
+				function GetAdvanceImageData()
+				{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					contentstr=jsonToString(content);
+					GetAndSet("GetAdvancedImaging","json",contentstr, sucess_GetAdvanceImageData);		
+				}
+			function sucess_GetAdvanceImageData(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						var stmp;
+						//成功返回
+						//视频流ID
+						VideoId = PackDate.Content.VideoId;
+						//占空值 01dc_iris_duty
+						stmp = PackDate.Content.DcIrisDuty;
+						$("#01dc_iris_duty").val(stmp);
+						
+						//自动光圈
+						stmp = PackDate.Content.DcIrisFlag;
+						if(stmp == "0")
+						{
+							//$("#01dc_iris").checked = false;
+							document.getElementById("01dc_iris").checked = false;
+							
+							//如果自动光圈是勾选的则灰掉占空值
+							$("#01dc_iris_duty").removeAttr("disabled", "disabled");	
+						}
+						else if(stmp == "1")
+						{
+							//$("#01dc_iris").checked = true;
+							document.getElementById("01dc_iris").checked = true;
+							//$("#01shutter_min").val(10000);
+							//$("#01shutter_max").val(33333);
+							
+							//如果自动光圈是勾选的则灰掉占空值
+							$("#01dc_iris_duty").attr("disabled", "disabled");
+						}
+						
+						//背光补偿
+						stmp = PackDate.Content.BackLightCompFlag;
+						if(stmp == "0")
+						{
+							//$("#01backlight_comp").checked = false;
+							document.getElementById("01backlight_comp").checked = false;
+						}
+						else if(stmp == "1")
+						{
+							//$("#01backlight_comp").checked = true;
+							document.getElementById("01backlight_comp").checked = true;
+						}
+
+						
+						//曝光目标系数 01ae_target_ratio
+						stmp = PackDate.Content.AeTargetRatio;
+						$("#01ae_target_ratio").val(stmp);
+						//3D降噪 01mctf_strength
+						stmp = PackDate.Content.MctfStrength;
+						$("#01mctf_strength").val(stmp);
+						
+						//宽动态设置
+						stmp = PackDate.Content.LocalExposure;
+						switch(stmp)
+						{
+							case "0":
+								//disable
+								$("#01local_exposure").val(0);
+							break;
+							case "1":
+								$("#01local_exposure").val(1);
+							break;
+							case "2":
+								//$("#01local_exposure").val("自动");
+							break;
+							case "3":
+								$("#01local_exposure").val(3);
+							break;
+							case "4":
+								$("#01local_exposure").val(4);
+							break;
+							case "5":
+								$("#01local_exposure").val(5);
+							break;
+							default:
+								$("#01local_exposure").val(0);
+							break;
+						}
+						
+						//日夜模式 01dn_mode
+						MeteringMode = PackDate.Content.MeteringMode;
+
+					}
+					else if(PackDate.Content.RetCode!="0")
+					{
+						//错误返回
+						alert("获取AdvanceImage数据失败!");	
+					}
+				}	
+				
+/* 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("获取AdvanceImage参数结束---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close(); */
+						
+				delete PackDate;
+			}
+			//获取镜头镜像
+			function GetVideoSourceMirrorData()
+			{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					contentstr=jsonToString(content);
+					GetAndSet("GetVideoSourceMirror","json",contentstr, sucess_GetVideoSourceMirror);		
+			}
+			//回调函数
+			function sucess_GetVideoSourceMirror(data)
+			{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							var stmp = PackDate.Content.Mirror;
+							switch(stmp)
+							{
+								case "0":
+								//disable
+								$("#66vin_vout_flip_mode").val(0);
+								break;
+								case "1":
+								$("#66vin_vout_flip_mode").val(1);
+								break;
+								case "2":
+								$("#66vin_vout_flip_mode").val(2);
+								break;
+								case "3":
+								$("#66vin_vout_flip_mode").val(3);
+								break;
+								default:
+								
+								break;
+							}	
+						}
+						else if(PackDate.Content.RetCode!="0")
+						{
+							alert("获取镜头镜像失败！");
+							return;
+						}
+					}
+					
+/* 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("获取镜头镜像结束---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close(); */
+						
+					delete PackDate;
+			}
+			
+			//获取日夜模式
+			function GetDayNightMode()
+			{
+				
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					contentstr=jsonToString(content);
+					GetAndSet("GetDayNightMode","json",contentstr, sucess_GetDayNightMode);	
+					
+					
+			}
+			function sucess_GetDayNightMode(data)
+			{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+
+							DayNightMode = PackDate.Content.Mode;
+							switch(DayNightMode)
+							{
+								case "0":
+								//disable
+								$("#01dn_mode").val(0);
+								$("#moreSet").attr("disabled", "disabled");
+                            	$("#moreSet").css("background", "url(images/btn1.jpg) no-repeat");
+								break;
+								case "1":
+								$("#01dn_mode").val(1);
+							
+								$("#moreSet").attr("disabled", "disabled");
+                            	$("#moreSet").css("background", "url(images/btn1.jpg) no-repeat");
+								break;
+								case "2":
+								$("#01dn_mode").val(2);
+								$("#moreSet").removeAttr("disabled", "disabled");
+								$("#moreSet").css("background", "url(images/btn.jpg) no-repeat");
+								break;
+								case "3":
+								$("#moreSet").removeAttr("disabled", "disabled");
+								$("#moreSet").css("background", "url(images/btn.jpg) no-repeat");
+								$("#01dn_mode").val(3);
+								break;
+								default:
+								
+								break;
+							}
+							//获取延时时间
+							DurationTime = PackDate.Content.DurationTime;
+							//获取night to day
+							NightToDayThr = PackDate.Content.NightToDayThr;
+							//获取day to night
+							DayToNightThr = PackDate.Content.DayToNightThr;
+							//获取SchedEnable
+							SchedEnable[0] = PackDate.Content.SchedEnable0;
+							SchedEnable[1] = PackDate.Content.SchedEnable1;
+							SchedEnable[2] = PackDate.Content.SchedEnable2;
+							SchedEnable[3] = PackDate.Content.SchedEnable3;
+							SchedEnable[4] = PackDate.Content.SchedEnable4;
+							SchedEnable[5] = PackDate.Content.SchedEnable5;
+							SchedEnable[6] = PackDate.Content.SchedEnable6;
+							SchedEnable[7] = PackDate.Content.SchedEnable7;
+							//获取SchedStartTime
+							SchedStartTime[0] = PackDate.Content.SchedStartTime0;
+							SchedStartTime[1] = PackDate.Content.SchedStartTime1;
+							SchedStartTime[2] = PackDate.Content.SchedStartTime2;
+							SchedStartTime[3] = PackDate.Content.SchedStartTime3;
+							SchedStartTime[4] = PackDate.Content.SchedStartTime4;
+							SchedStartTime[5] = PackDate.Content.SchedStartTime5;
+							SchedStartTime[6] = PackDate.Content.SchedStartTime6;
+							SchedStartTime[7] = PackDate.Content.SchedStartTime7;
+							//获取SchedEndTime
+							SchedEndTime[0] = PackDate.Content.SchedEndTime0;
+							SchedEndTime[1] = PackDate.Content.SchedEndTime1;
+							SchedEndTime[2] = PackDate.Content.SchedEndTime2;
+							SchedEndTime[3] = PackDate.Content.SchedEndTime3;
+							SchedEndTime[4] = PackDate.Content.SchedEndTime4;
+							SchedEndTime[5] = PackDate.Content.SchedEndTime5;
+							SchedEndTime[6] = PackDate.Content.SchedEndTime6;
+							SchedEndTime[7] = PackDate.Content.SchedEndTime7;
+						}
+						else if(PackDate.Content.RetCode!="0")
+						{
+							alert("获取日夜模式失败！");
+							return;	
+						}
+					}
+					
+/* 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("获取日夜模式结束---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close();*/ 
+						
+					delete PackDate;
+			}
+        </script>
+    </head>
+    
+    <body>
+        <div class="bit-stream" ><!--style="height:35px;"-->
+            <h3 id="hcameraset">
+                像机设置
+            </h3>
+<!--        </div>
+<div class="bit-stream" >-->
+            <dl id="streamInfo">
+                <dt id="dstream" style="visibility:hidden">
+                    码流
+                </dt>
+                <dd>
+                    <input type="radio" name="bitstream" value="0" id="radiostream0" checked="checked"
+                     style="visibility:hidden"/>
+                    <label id="1stream" style="visibility:hidden">
+                        码流
+                    </label>
+                    <label style="visibility:hidden">
+                        1
+                    </label>
+                </dd>
+            </dl>
+        </div>
+        <div class="down_main_content">
+            <div class="camera_top">
+                <div class="video" id="video" style="height:398px;">
+
+                   
+            <object classid="CLSID:D761DC49-4CDC-458E-ABB6-4F594E9DA1EB" codebase=""
+            width=702 height=395 align="absmiddle" id="GMIIPCmrWebPlugIn1">
+            
+            </object>
+                </div>
+                <div class="camera_top_right">
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bdaynight">
+                                日夜模式
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <select id="01dn_mode" disabled="disabled">
+                                <option value='0' id="optionday">
+                                    白天
+                                </option>
+                                <option value='1' id="optionnight">
+                                    夜晚
+                                </option>
+                                <option value='2' id="optionauto">
+                                    自动
+                                </option>
+                                <option value='3' id="optionscheduled">
+                                    定时
+                                </option>
+                            </select>
+                            <br />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                        </div>
+                        <div class="shuru">
+                            <input type="button" id="moreSet" value="高级设置" disabled="disabled" class="btn22"
+                            style="background:url(images/btn1.jpg) no-repeat; width:80px; border:#FFF 0px solid"
+                            />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bnoiseredu">
+                                3D降噪(0-255)
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <input id="01mctf_strength" class="val" name="" maxlength="3" />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list" id="divwidedy">
+                  
+                        <div class="cam_kinds">
+                            <b id="bwdrset">
+                                宽动态设置
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <select id="01local_exposure">
+                                <option value='0' id="optionclose">
+                                    关闭
+                                </option>
+                                <option value='1' id="wdroptionauto">
+                                    自动
+                                </option>
+                                <option value='3' id="optionslight">
+                                    手动 较弱
+                                </option>
+                                <option value='4' id="optionmedium">
+                                    手动 中等
+                                </option>
+                                <option value='5' id="optionstrong">
+                                    手动 较强
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bwhitebalance">
+                                白平衡
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <select id="01wbc">
+                                <option value='0' id="wboptionauto">
+                                    自动
+                                </option>
+                                <!--<option value='100' id="optionkeep">
+                                    保持
+                                </option>-->
+                                <option value='1' id="optionincandescence">
+                                    白炽
+                                </option>
+                                <option value='2'>
+                                    D4000
+                                </option>
+                                <option value='3'>
+                                    D5000
+                                </option>
+                                <option value='4' id="optionsunny">
+                                    晴朗
+                                </option>
+                                <option value='5' id="optioncloudy">
+                                    多云
+                                </option>
+                                <option value='6' id="optionflash">
+                                    闪光
+                                </option>
+                                <option value='7' id="optionfluorescence">
+                                    荧光
+                                </option>
+                                <option value='8' id="optionhfluorescence">
+                                    高荧光
+                                </option>
+                                <option value='9' id="optionunderwater">
+                                    水下
+                                </option>
+                                <option value='11'>
+                                    保持
+                                </option>
+                                <option value='10' id="optionuserdefined">
+                                    用户自定义
+                                </option>
+
+                            </select>
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                        </div>
+                        <div class="shuru">
+                            <input type="button" id="whiteblueSet" value="自定义设置" disabled="disabled"
+                            class="btn22" style="background:url(images/btn1.jpg) no-repeat; width:80px; border:#FFF 0px solid"
+                            />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bantiflicker">
+                                抗闪烁
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <select id="01exposure_mode">
+                                <option value='0'>
+                                    50Hz
+                                </option>
+                                <option value='1'>
+                                    60Hz
+                                </option>
+                                <option value='2' id="antioptionauto">
+                                    自动
+                                </option>
+                                <!--<option value='3' id="antioptionkeep">
+                                    保持
+                                </option>-->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="shuru">
+                            <b id="bbacklight">
+                                背光补偿
+                            </b>
+                        </div>
+                        <div class="cam_kinds">
+                            <input id="01backlight_comp" name="" type="checkbox" style="border:0 none; width:30px;"
+                            />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bshutter">
+                                电子快门设置
+                            </b>
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bminimum">
+                                最小值
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <select id="01shutter_min">
+                                <option value='125'>
+                                    1/8000
+                                </option>
+                                <option value='976'>
+                                    1/1024
+                                </option>
+                                <option value='1041'>
+                                    1/960
+                                </option>
+                                <option value='2083'>
+                                    1/480
+                                </option>
+                                <option value='4166'>
+                                    1/240
+                                </option>
+                                <option value='8333'>
+                                    1/120
+                                </option>
+                                <option value='10000'>
+                                    1/100
+                                </option>
+                                <option value='16666'>
+                                    1/60
+                                </option>
+                                <option value='20000'>
+                                    1/50
+                                </option>
+                                <option value='33333'>
+                                    1/30
+                                </option>
+                                <option value='40000'>
+                                    1/25
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bmaximum">
+                                最大值
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <select id="01shutter_max">
+                                <option value='125'>
+                                    1/8000
+                                </option>
+                                <option value='976'>
+                                    1/1024
+                                </option>
+                                <option value='1041'>
+                                    1/960
+                                </option>
+                                <option value='2083'>
+                                    1/480
+                                </option>
+                                <option value='4166'>
+                                    1/240
+                                </option>
+                                <option value='8333'>
+                                    1/120
+                                </option>
+                                <option value='10000'>
+                                    1/100
+                                </option>
+                                <option value='16666'>
+                                    1/60
+                                </option>
+                                <option value='20000'>
+                                    1/50
+                                </option>
+                                <option value='33333'>
+                                    1/30
+                                </option>
+                                <option value='40000'>
+                                    1/25
+                                </option>
+                                <option value='66666'>
+                                    1/15
+                                </option>
+                                <option value='133333'>
+                                    1/7.5
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list" id="divzidonggq">
+                        <div class="shuru">
+                            <b id="bautoiris">
+                                自动光圈
+                            </b>
+                        </div>
+                        <div class="cam_kinds">
+                            <input id="01dc_iris" name="" type="checkbox" style="border:0 none; width:30px;"
+                            />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list" id="divzidonggq2">
+                        <div class="cam_kinds">
+                            <b id="bdutyvalue">
+                                占空值(100-999)
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <input id="01dc_iris_duty" class="val" name="" maxlength="3" />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bsensor">
+                                传感器最大增益
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <select id="01max_gain">
+                                <option value='30'>
+                                    30db
+                                </option>
+                                <option value='36'>
+                                    36db
+                                </option>
+                                <option value='42'>
+                                    42db
+                                </option>
+                                <option value='48'>
+                                    48db
+                                </option>
+                                <option value='54'>
+                                    54db
+                                </option>
+                                <option value='60'>
+                                    60db
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bexposure">
+                                曝光目标系数
+                                <br>
+                                (25%-400%)
+                            </b>
+                        </div>
+                        <div class="shuru">
+                             <input id="01ae_target_ratio" class="val" name="" maxlength="3" />
+                        </div>
+                    </div>
+                    
+                     <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b>
+                              
+                            </b>
+                        </div>
+                        <div class="shuru">
+                           
+                        </div>
+                    </div>
+                    
+                     <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="blensflip">
+                                镜头翻转
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            
+                            <select id="66vin_vout_flip_mode">
+                                <option value='0' id="optionnormal">
+                                    正常
+                                </option>
+                                <option value='1' id="optionhorizontal">
+                                    水平翻转
+                                </option>
+                                <option value='2' id="optionvertical">
+                                    垂直翻转
+                                </option>
+                                <option value='3' id="optionhandv">
+                                    水平垂直翻转
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <!--
+                     <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bautoexposure">
+                                自动曝光
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            
+                            <select id="01ae_enable">
+                                <option value='0' id="aeoptiondisable">
+                                    关闭
+                                </option>
+                                <option value='1' id="aeoptionenable">
+                                    打开
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    -->
+                </div>
+            </div>
+            <div class="camera_down">
+                <div class="previer_zhankai" style="display:block">
+                    <dl style="width:300px">
+                        <dt id="dtsaturation">
+                            饱和度
+                        </dt>
+                        <dd style="width:250px">
+                            <div class="drag-widget">
+                                <input type="button" class="sub" id="saturationsub" style="margin-right:10px;">
+                                </input>
+                                <div class="drag-bg">
+                                    <div class="drag-icon" id="saturation">
+                                    </div>
+                                </div>
+                                <input type="button" class="add" id="saturationadd" style="margin-left:10px;">
+                                </input>
+                                <input id="01saturation" class="val" readonly="readonly" name="" />
+                            </div>
+                        </dd>
+                    </dl>
+                   
+                    <dl style="width:300px" >
+                        <dt id="dtbrightness">
+                            亮度
+                        </dt>
+                        <dd style="width:250px">
+                            <div class="drag-widget">
+                                <input type="button" class="sub" id="brightnesssub" style="margin-right:10px;">
+                                </input>
+                                <div class="drag-bg">
+                                    <div id="brightness" class="drag-icon">
+                                    </div>
+                                </div>
+                                <input type="button" class="add" id="brightnessadd" style="margin-left:10px;">
+                                </input>
+                                <input id="01brightness" class="val" readonly="readonly" name="" />
+                            </div>
+                        </dd>
+                    </dl>
+                    <dl style="width:300px" >
+                        <dt id="dthue">
+                            色度
+                        </dt>
+                        <dd style="width:250px">
+                            <div class="drag-widget">
+                                <input type="button" class="sub" id="huesub" style="margin-right:10px;">
+                                </input>
+                                <div class="drag-bg">
+                                    <div class="drag-icon" id="hue">
+                                    </div>
+                                </div>
+                                <input type="button" class="add" id="hueadd" style="margin-left:10px;">
+                                </input>
+                                <input id="01hue" class="val" readonly="readonly" name="" />
+                            </div>
+                        </dd>
+                    </dl>
+                    <dl style="width:300px">
+                        <dt id="dtcontrast">
+                            对比度
+                        </dt>
+                        <dd style="width:250px">
+                            <div class="drag-widget">
+                                <input type="button" class="sub" id="contrastsub" style="margin-right:10px;">
+                                </input>
+                                <div class="drag-bg">
+                                    <div class="drag-icon" id="contrast">
+                                    </div>
+                                </div>
+                                <input type="button" class="add" id="contrastadd" style="margin-left:10px;">
+                                </input>
+                                <input id="01contrast" class="val" readonly="readonly" name="" />
+                            </div>
+                            
+                        </dd>
+                    </dl>
+                    <dl style="width:300px">
+                        <dt id="dtsharpness">
+                            锐度
+                        </dt>
+                        <dd style="width:250px">
+                            <div class="drag-widget">
+                                <input type="button" class="sub" id="sharpnesssub" style="margin-right:10px;">
+                                </input>
+                                <div class="drag-bg">
+                                    <div class="drag-icon" id="sharpness">
+                                    </div>
+                                </div>
+                                <input type="button" class="add" id="sharpnessadd" style="margin-left:10px;">
+                                </input>
+                                <input id="01sharpness" class="val" readonly="readonly" name="" />
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="bottom-action">
+            <input type="button" id="submit" class="btn3" value="确定" />
+            <input type="reset" class="btn3" value="取消" id="reset" />
+            <input type="button" id="bdefault" name="restore" class="btn3" value="恢复默认"
+            />
+        </div>
+    </body>
+
+</html>

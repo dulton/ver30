@@ -1,0 +1,101 @@
+#---------------------------------------------------------------------
+SRC := ../source
+
+#---------------------------------------------------------------------
+CC := g++
+AR := ar
+
+#---------------------------------------------------------------------
+INCS :=\
+	-I$(SRC)/common\
+	-I$(SRC)/../include\
+	-I$(SRC)/generation \
+	-I$(SRC)/../../../../ipc_fw_v3.x/\
+	-I$(SRC)/../../../../../osal/\
+	-I$(SRC)/../../../../../osal/include\
+	-I$(SRC)/../../../../../module/gmi/rudp/include\
+	-I$(SRC)/../../../../ipc_fw_v3.x/sys_server/include\
+	-I$(SRC)/../../../../../module/gmi/log_utils/include\
+	-I$(SRC)/../../../../../module/gmi/daemon_heartbeat/include\
+	-I$(SRC)/gsoap_288/\
+	-I$(SRC)/gsoap_288/plugin\
+
+CFLAGS := -O2 $(INCS) -Wall 
+DEFS = 
+#---------------------------------------------------------------------
+FILES :=\
+	$(SRC)/gsoap_288/custom/duration.c\
+	$(SRC)/generation/soapC.c \
+ 	$(SRC)/generation/soapServer.c \
+	$(SRC)/gsoap_288/stdsoap2.c \
+	$(SRC)/gsoap_288/dom.c \
+	$(SRC)/web_server.c\
+	$(SRC)/discovery.c\
+	$(SRC)/common/md5.c \
+	$(SRC)/common/util.c \
+ 	$(SRC)/common/uuid.c \
+	$(SRC)/common/sysdep.c \
+	$(SRC)/daemon.c\
+	$(SRC)/log.c\
+	$(SRC)/rudp_session.c\
+	$(SRC)/sys_command_excute.c\
+	$(SRC)/sys_device_management_excute.c\
+	$(SRC)/sys_ptz_excute.c\
+	$(SRC)/sys_utilitly.c\
+	$(SRC)/service_device_management.c\
+	$(SRC)/service_utilitly.c\
+	$(SRC)/service_ptz.c\
+	$(SRC)/sys_device_management_api.c\
+	$(SRC)/sys_ptz_api.c\
+	$(SRC)/service_media_configruation.c\
+	$(SRC)/service_stream.c\
+		 
+OBJS :=\
+	$(SRC)/gsoap_288/custom/duration.o\
+	$(SRC)/generation/soapC.o \
+ 	$(SRC)/generation/soapServer.o \
+	$(SRC)/gsoap_288/stdsoap2.o \
+	$(SRC)/gsoap_288/dom.o \
+	$(SRC)/common/md5.o \
+	$(SRC)/common/util.o \
+ 	$(SRC)/common/uuid.o \
+	$(SRC)/common/sysdep.o \
+	$(SRC)/web_server.o\
+	$(SRC)/discovery.o\
+	$(SRC)/service_impl.o\
+	$(SRC)/daemon.o\
+	$(SRC)/log.o\
+	$(SRC)/rudp_session.o\
+	$(SRC)/sys_command_excute.o\
+	$(SRC)/sys_device_management_excute.o\
+	$(SRC)/sys_ptz_excute.o\
+	$(SRC)/sys_utilitly.o\
+	$(SRC)/service_device_management.o\
+	$(SRC)/service_utilitly.o\
+	$(SRC)/service_ptz.o\
+	$(SRC)/sys_device_management_api.o\
+	$(SRC)/sys_ptz_api.o\
+	$(SRC)/service_media_configruation.o\
+	$(SRC)/service_stream.o\
+
+
+#---------------------------------------------------------------------
+TARGETS         := onvif_server
+LDFLAGS         := -L $(SRC)/../binary
+SYS_LIBS        := -lpthread -lstdc++ \
+	../../../../../module/gmi/daemon_heartbeat/library/libheartbeat_x86_d.a\
+	../../../../../module/gmi/rudp/library/librudp_x86_d.a\
+	../../../../../module/gmi/log_utils/library/liblog_x86_d.a\
+	../../../../../module/gmi/command_pipeline/library/libcommand_pipeline_x86_d.a\
+  ../../../../../osal/library/libosal_x86_d.a
+
+all: $(TARGETS)
+
+$(TARGETS):$(OBJS)
+	$(CC) -o $@ $(DEFS) $(CFLAGS) $(LDFLAGS) $(OBJS) $(SYS_LIBS)
+  
+.PHONY:clean
+
+clean:
+	rm -f $(TARGETS) ./*/*.o ./*/*.c~ ./*/*.h~ *.o	
+	

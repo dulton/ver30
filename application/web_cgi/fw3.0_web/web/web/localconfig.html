@@ -1,0 +1,430 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0;background-color:#242424; }
+        </style>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js" >
+        </script>
+        <script type='text/javascript' src='js/jquery.simplemodal.js'>
+        </script>
+        <script>
+
+//		var configXmlStr = getXml();
+//		var configXmlJson = xmlToJson.parser(configXmlStr.replace(/;/g,""));
+		//this.Content.XmlBuf=xmlToJson.parser(this.Content.XmlBuf.replace(/;/g,""));  
+		function getXml()
+		{
+			try{
+				var fso = new ActiveXObject("Scripting.FileSystemObject");
+				var f;
+				//判断文件夹是否存在
+				if(!fso.FolderExists("c:\\Program Data\\"))
+				{
+					//创建
+					fso.CreateFolder ("c:\\Program Data\\");
+				}
+				//判断文件
+				if(!fso.FileExists("c:\\Program Data\\config.txt"))
+				{
+					fso.CreateTextFile("c:\\Program Data\\config.txt", true);
+					f = fso.OpenTextFile("c:\\Program Data\\config.txt", 2);
+					var stmp = "<recordpath>C:\\Program Data\\IPC\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>0</netplay>";
+					f.WriteLine(stmp);
+					f.Close();
+					return stmp;
+				}
+			
+				f = fso.OpenTextFile("c:\\Program Data\\config.txt",1);
+ 				var s = "";
+ 				while (!f.AtEndOfStream)
+ 				s += f.ReadLine()+"\n";
+ 				f.Close();
+ 				return s;
+			}
+			catch(e)
+			{
+				return "<recordpath>C:\\Program Data\\IPC\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>0</netplay>";
+			}
+		}
+		function changeLanguage(lang)
+        {
+	        TranslatePage(lang);
+        }
+		$(document).ready(function(){
+			    // 调用模版也方法
+				 parent.innerCallMe(true); 
+				 //语言初始化
+	            initLang();
+			var activex = document.getElementById("GMIIPCmrWebPlugIn1");
+			if(parent.isZY)
+			{
+				
+				$("#liIsHardware").css("display","block");
+				
+				var isHardwareEnabled=getCookie("isHardwareEnabled");
+				if(isHardwareEnabled!=null)
+				{
+					$("#isHardwareEnabled").val(isHardwareEnabled);
+				}
+				else
+				{
+					setCookie("isHardwareEnabled","1",getExpDate(365,0,0));
+					$("#liIsHardware").css("display","block");
+					var activex = document.getElementById("GMIIPCmrWebPlugIn1");		
+					activex.SetAcceleration(true);
+					$("#isHardwareEnabled").val("1");
+				}
+			}
+
+			//初始化值
+			
+			var recordPath=parent.recordpath;//configXmlJson.recordpath;//getCookie("recordPath");
+			if(recordPath!=null)
+			{
+				$("#recordPath").val(recordPath);
+			}
+			
+			var picPath=parent.picpath;//configXmlJson.pictruepath;//getCookie("picPath");
+			if(picPath!=null)
+			{
+				$("#picPath").val(picPath);
+			}
+			var recordType=parent.recordtype;//configXmlJson.recordtype;//getCookie("recordType");
+			if(recordType!=null)
+			{
+				$("#recordType").val(recordType);
+			}
+			var picType=parent.pictype;//configXmlJson.pictruetype;//getCookie("picType");
+			if(picType!=null)
+			{
+				$("#picType").val(picType);
+			}
+			var frame=parent.NetPlay;//configXmlJson.netplay;//getCookie("frame");
+			if(!isNaN(frame)&&frame !=undefined)
+			{
+				$("#frame").val(frame);
+			}
+			else
+			{
+				$("#frame").val(50);
+				//setCookie('frame',0,getExpDate(365,0,0));
+			}
+//			//设置父窗口全局变量
+//			parent.recordpath = configXmlJson.recordpath;
+//			parent.picpath = configXmlJson.pictruepath;
+//			parent.recordtype = configXmlJson.recordtype;
+//			parent.pictype = configXmlJson.pictruetype;
+//			parent.NetPlay = configXmlJson.netplay;
+			//初始化值结束
+		  $("#submit").bind("click",function(){
+			
+			  
+			  
+			  
+			  try
+			  {
+				  
+/*				  if(parent.isZY)
+			{
+				$("#liIsHardware").css("display","block");
+				var activex = document.getElementById("GMIIPCmrWebPlugIn1");
+				var isHardware=$("#isHardwareEnabled").val();
+				if(isHardware==1)
+				{
+					activex.SetAcceleration(true);
+				}
+				else
+				{
+					activex.SetAcceleration(false);
+				}
+				setCookie("isHardwareEnabled",isHardware,getExpDate(365,0,0));
+			}*/
+//			var fso, filehandle;
+//			fso = new ActiveXObject("Scripting.FileSystemObject");
+//			filehandle = fso.OpenTextFile("/xml/config.ini",8,true,-1);
+			
+			var recordPath=$("#recordPath").val();
+			var picPath=$("#picPath").val();
+			var recordType=$("#recordType").val();
+			var picType=$("#picType").val();
+			var frame=$("#frame").val();
+			parent.NetPlay = frame;
+//			configXmlJson.recordpath = recordPath;
+//			configXmlJson.pictruepath = picPath;
+//			configXmlJson.recordtype = recordType;
+//			configXmlJson.pictruetype = picType;
+//			configXmlJson.netplay = frame;
+			var stmp = "<recordpath>"+recordPath+"</recordpath><pictruepath>"+picPath+"</pictruepath><recordtype>"+recordType+"</recordtype><pictruetype>"+picType+"</pictruetype><netplay>"+frame+"</netplay>";
+			
+			//设置父窗口全局变量
+			parent.recordpath = recordPath;
+			parent.picpath = picPath;
+			parent.recordtype = recordType;
+			parent.pictype = picType;
+			parent.NetPlay = frame;
+			
+			try
+			{
+				var fso = new ActiveXObject("Scripting.FileSystemObject");
+				var f = fso.OpenTextFile("c:\\Program Data\\config.txt",2);
+				f.WriteLine(stmp);
+				f.Close();	
+			}
+			catch(e)
+			{
+				setCookie('recordPath', recordPath,getExpDate(365,0,0));
+				setCookie('picPath', picPath,getExpDate(365,0,0));
+				setCookie('recordType', recordType,getExpDate(365,0,0));
+				setCookie('picType', picType,getExpDate(365,0,0));
+				setCookie('frame', frame,getExpDate(365,0,0));	
+			}
+
+
+
+
+			
+			alert("设置成功！");
+			  }
+			  catch(e)
+			  {
+				  alert(e.message);
+				 }
+			  });
+			  
+		$("#reset").bind("click",function(){
+			if(parent.isZY)
+			{
+/*				$("#liIsHardware").css("display","block");
+				var isHardwareEnabled=getCookie("isHardwareEnabled");
+				//alert(isHardwareEnabled);
+				if(isHardwareEnabled!=null)
+				{
+					$("#isHardwareEnabled").val(isHardwareEnabled);
+				}
+				else
+				{
+					setCookie("isHardwareEnabled","1",getExpDate(365,0,0));
+					$("#liIsHardware").css("display","block");
+					var activex = document.getElementById("GMIIPCmrWebPlugIn1");		
+					activex.SetAcceleration(true);
+					$("#isHardwareEnabled").val("1");
+				}
+				*/
+			}
+
+			var recordPath=parent.recordpath;//configXmlJson.recordpath;//getCookie("recordPath");
+			if(recordPath!=null)
+			{
+				$("#recordPath").val(recordPath);
+			}
+			else
+			{
+				$("#recordPath").val("C:\\Program Data\\IPC\\media\\");
+			}
+			var picPath=parent.picpath;//configXmlJson.pictruepath;//getCookie("picPath");
+			if(picPath!=null)
+			{
+				$("#picPath").val(picPath);
+			}
+			else
+			{
+				$("#picPath").val("C:\\Program Data\\IPC\\Image\\");
+			}
+			var recordType=parent.recordtype;//configXmlJson.recordtype;//getCookie("recordType");
+			if(recordType!=null)
+			{
+				$("#recordType").val(recordType);
+			}
+			else
+			{
+				$("#recordType").val("MP4");
+			}
+			var picType=parent.pictype;//configXmlJson.pictruetype;//getCookie("picType");
+			if(picType!=null)
+			{
+				$("#picType").val(picType);
+			}
+			else
+			{
+				$("#picType").val("bmp");
+			}
+				
+						var frame=parent.NetPlay;//configXmlJson.netplay;//getCookie("frame");
+						if(frame!=null)
+						{
+							$("#frame").val(frame);
+						}
+						else
+						{
+							$("#frame").val("2");
+						}
+			  });
+		$("#btSelectRecordPath").bind("click",function(){
+			
+			if (window.ActiveXObject) {
+                        try {
+							var activeX=document.getElementById("filePath");
+							if(activeX!=null)
+							{
+								var filePath=activeX.showSavePath();
+								if(filePath!=null&&filePath!="")
+								{
+									$("#recordPath").val(filePath);
+								}
+							}
+							else
+							{
+								alert("控件加载失败");
+							}
+						}
+						catch(e)
+						{}
+						
+						
+			}
+			});
+		$("#btSelectPicPath").bind("click",function(){
+			if (window.ActiveXObject) {
+                        try {
+							var activeX=document.getElementById("filePath");
+							if(activeX!=null)
+							{
+								var filePath=activeX.showSavePath();
+								if(filePath!=null&&filePath!="")
+								{
+									$("#picPath").val(filePath);
+								}
+							}
+							else
+							{
+								alert("控件加载失败");
+							}
+						}
+						catch(e)
+						{}
+			}
+			});
+		 });
+
+        </script>
+    </head>
+    
+    <body>
+        <div class="bit-stream">
+            <h3>
+                本地配置
+            </h3>
+        </div>
+        
+        
+        
+        <fieldset class="motion_det_fil_1">
+      <legend>本地配置</legend>
+        <div class="down_main_content">
+            <div class="ip_set_main">
+              <div class="ip_set_main_down2">
+              <ul>
+                        <li>
+                            <div class="ip_name">
+                                录像文件保存路径：
+                            </div>
+                            <input id="recordPath" class="t_input" value="C:\Program Data\IPC\media\" disabled="disabled" readonly="readonly"/>
+                            <div class="ip_test">
+                        <input type="button" class="btn22" id="btSelectRecordPath" value="浏览">
+                            
+                        </input>
+                    </div>
+                        </li>
+                        <li>
+                            <div class="ip_name">
+                                抓图文件保存路径：
+                          </div>
+                            <input id="picPath" class="t_input"  value="C:\Program Data\IPC\Image\" disabled="disabled"/><div class="ip_test">
+                        <input type="button" class="btn22" id="btSelectPicPath" value="浏览">
+                           
+                        </input>
+                    </div>
+                        </li>
+                        <li>
+                            <div class="ip_name">
+                                录像文件保存类型：
+                          </div>
+                             <SELECT class="s_input" id="recordType">
+                          <option value ="MP4">MP4</option>
+                          <!--<option value ="264">264</option>-->
+
+</SELECT>
+                        </li>
+                        <li>
+                            <div class="ip_name">
+                                抓图文件保存类型：
+                          </div>
+                       
+                            <SELECT class="s_input" id="picType">
+                            <option value ="bmp">bmp</option>
+</SELECT>
+                        </li>
+                         <li style="display:none" id="liIsHardware">
+                            <div class="ip_name">
+                                是否启动硬件加速：
+                          </div>
+                             <SELECT class="s_input" id="isHardwareEnabled">
+                          <option value ="1">是</option>
+                          <option value ="0">否</option>
+
+</SELECT>
+                        </li>
+                         <li style="display:block">
+                            <div class="ip_name">
+                                播放网络性能：
+                          </div>
+                         
+                         
+                            <SELECT class="s_input" id="frame">
+                            <option value="50" selected="selected">最短延时模式</option>       
+<option value="80">实时性好</option>      
+<option value="135">实时性中、流畅性中</option>    
+<option value="220">流畅性好</option>   
+</SELECT>
+                        </li>
+                        
+                          
+                    </ul>
+                   
+                </div>
+            </div>
+           
+        </div>
+           <div>
+                          <object classid="CLSID:B3B8F1C7-9757-4EA5-B221-564346005081" id="filePath" style="width:0; height:0; border: 0 none" codebase="/activeX/GMIcomdlg.cab#version=1,0,0,1"></object>
+                          </div>
+                         
+                          <object classid="CLSID:3BCDAA6A-7306-42FF-B8CF-BE5D3534C1E4" style="width:0; height:0; border: 0 none" codebase="/activeX/gmiWeb.cab#version=2,1,13,21120"
+            width=702 height=395 align="absmiddle" id="GMIIPCmrWebPlugIn1">
+                <param name="_Version" value="65536" />
+                <param name="_ExtentX" value="19045" />
+                <param name="_ExtentY" value="11478" />
+                <param name="_StockProps" value="0" />
+            </object>
+        </fieldset>
+         <div class="bottom-action">
+                <input type="button" class="btn3" id="submit" value="确定" />
+                <input type="reset" class="btn3" value="取消" id="reset"/> 
+            </div>
+    </body>
+
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+html,body{
+	margin:0;
+	padding:0;
+	background-color:#242424;
+	}
+</style>
+ <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />  
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <script>
+		   jQuery(document).ready(function() {
+			  
+			  // 调用模版也方法
+				 parent.innerCallMe(true); 
+				  //语言初始化
+               // initLang();
+			 getSystemInfo();
+			 getWorkStateInfo();
+			
+			  });
+			  
+	
+			  function getSystemInfo()
+			  {
+				GetAndSet("GetSysDeviceInfo","json","{SessionId:"+parent.id+",AuthValue:0}", successfunc);
+			 }
+			   function getWorkStateInfo()
+			  {
+				GetAndSet("GetWorkState","xml","{SessionId:"+parent.id+",AuthValue:0}", workStatefunc);
+			 }
+			  function workStatefunc(data)
+			  {
+                var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					var streamnum=PackDate.Content.XmlBuf.workstate.streamstate.activestreamnum;
+					var record;
+					maxStreams4SystemInfo(streamnum);
+					for(var i=0;i<streamnum;i++)
+					{
+
+						if(i==0)
+						{
+$("#style"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream0.encodetype);
+$("#fps"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream0.framerate);
+$("#Resolution"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream0.encodewidth+"x"+PackDate.Content.XmlBuf.workstate.streamstate.stream0.encodeheight);
+$("#bitrate"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream0.bitrate);
+$("#ios"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream0.rotate);
+//$("#linknum"+i).html("0");//PackDate.Content.XmlBuf.workstate.streamstate.stream0.linknum);
+record = PackDate.Content.XmlBuf.workstate.streamstate.stream0.record;
+if(record == "0")//录像中
+{
+	$("#record"+i).html("录像中");	
+}
+else if(record == "1")//未录像
+{
+	$("#record"+i).html("未录像");	
+}
+//$("#record"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream0.record);
+/*
+							$("#bitrate"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream0.bitrate);
+							$("#linknum"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream0.linknum);
+							$("#record"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream0.record);
+							$("#videosignal"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream0.videosignal);*/
+						}
+						if(i==1)
+						{
+							/*
+							$("#bitrate"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream1.bitrate);
+							$("#linknum"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream1.linknum);
+							$("#record"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream1.record);
+							$("#videosignal"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream1.videosignal);
+							*/
+$("#style"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream1.encodetype);
+$("#fps"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream1.framerate);
+$("#Resolution"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream1.encodewidth+"x"+PackDate.Content.XmlBuf.workstate.streamstate.stream1.encodeheight);
+$("#bitrate"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream1.bitrate);
+$("#ios"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream1.rotate);
+//$("#linknum"+i).html("0");//PackDate.Content.XmlBuf.workstate.streamstate.stream1.linknum);
+record = PackDate.Content.XmlBuf.workstate.streamstate.stream1.record;
+if(record == "0")//录像中
+{
+	$("#record"+i).html("录像中");	
+}
+else if(record == "1")//未录像
+{
+	$("#record"+i).html("未录像");	
+}
+//$("#record"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream1.record);
+						}
+						if(i==2)
+						{
+							/*
+							$("#bitrate"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream2.bitrate);
+							$("#linknum"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream2.linknum);
+							$("#record"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream2.record);
+							$("#videosignal"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream2.videosignal);
+							*/
+$("#style"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream2.encodetype);
+$("#fps"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream2.framerate);
+$("#Resolution"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream2.encodewidth+"x"+PackDate.Content.XmlBuf.workstate.streamstate.stream2.encodeheight);
+$("#bitrate"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream2.bitrate);
+$("#ios"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream2.rotate);
+//$("#linknum"+i).html("0");//PackDate.Content.XmlBuf.workstate.streamstate.stream2.linknum);
+record = PackDate.Content.XmlBuf.workstate.streamstate.stream2.record;
+if(record == "0")//录像中
+{
+	$("#record"+i).html("录像中");	
+}
+else if(record == "1")//未录像
+{
+	$("#record"+i).html("未录像");	
+}
+//$("#record"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream2.record);
+						}
+						if(i==3)
+						{
+							/*
+							$("#bitrate"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream3.bitrate);
+							$("#linknum"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream3.linknum);
+							$("#record"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream3.record);
+							$("#videosignal"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream3.videosignal);
+							*/
+$("#style"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream3.encodetype);
+$("#fps"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream3.framerate);
+$("#Resolution"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream3.encodewidth+"x"+PackDate.Content.XmlBuf.workstate.streamstate.stream3.encodeheight);
+$("#bitrate"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream3.bitrate);
+$("#ios"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream3.rotate);
+//$("#linknum"+i).html("0");//PackDate.Content.XmlBuf.workstate.streamstate.stream3.linknum);
+record = PackDate.Content.XmlBuf.workstate.streamstate.stream3.record;
+if(record == "0")//录像中
+{
+	$("#record"+i).html("录像中");	
+}
+else if(record == "1")//未录像
+{
+	$("#record"+i).html("未录像");	
+}
+//$("#record"+i).html(PackDate.Content.XmlBuf.workstate.streamstate.stream3.record);
+						}
+					}
+				}
+              }
+			function successfunc(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					//$("#device_name").html(PackDate.Content.DeviceName);
+					$("#SBBHNAME").val(PackDate.Content.DeviceName);
+					$("#fw_version").html(PackDate.Content.DeviceFwVer);
+					//$("#DeviceId").html(PackDate.Content.DeviceId);
+					$("#SBBHTEXT").val(PackDate.Content.DeviceId);
+					$("#DeviceModel").html(PackDate.Content.DeviceModel);
+					$("#DeviceManufactuer").html(PackDate.Content.DeviceManufactuer);
+					$("#MACAddree").html(PackDate.Content.DeviceSerialNum);
+					$("#DeviceSerialNum").html(PackDate.Content.DeviceSerialNum);
+					$("#DeviceHwVer").html(PackDate.Content.DeviceHwVer);
+					
+					//web 版本 webvision
+					//$("#DeviceHwVer").html("3.0.2.2");
+				}
+			}
+			
+			function maxStreams4SystemInfo(maxStreams)
+		{
+			//var stream2html='<div class="video_top"><div class="system_info_1_list">码流 2</div><div class="system_info_1_list  divinfo" id="style1"></div><div class="system_info_1_list  divinfo" id="fps1"></div><div class="system_info_1_list  divinfo" id="Resolution1"></div><div class="system_info_1_list  divinfo" id="bitrate1"></div><div class="system_info_1_list  divinfo" id="ios1"></div><div class="system_info_1_list divinfo" id="linknum1"></div><div class="system_info_1_list divinfo" id="record1"></div></div>';
+			var stream2html='<div class="video_top"><div class="system_info_1_list">码流 2</div><div class="system_info_1_list  divinfo" id="style1"></div><div class="system_info_1_list  divinfo" id="fps1"></div><div class="system_info_1_list  divinfo" id="Resolution1"></div><div class="system_info_1_list  divinfo" id="bitrate1"></div><div class="system_info_1_list  divinfo" id="ios1"></div><div class="system_info_1_list divinfo" id="record1"></div></div>';
+	        var stream3html='<div class="video_top"><div class="system_info_1_list">码流 3</div><div class="system_info_1_list  divinfo" id="style2"></div><div class="system_info_1_list  divinfo" id="fps2"></div><div class="system_info_1_list  divinfo" id="Resolution2"></div><div class="system_info_1_list  divinfo" id="bitrate2"></div><div class="system_info_1_list  divinfo" id="ios2"></div><div class="system_info_1_list divinfo" id="record2"></div></div>';
+			var stream4html='<div class="video_top"><div class="system_info_1_list">码流 4</div><div class="system_info_1_list  divinfo" id="style3"></div><div class="system_info_1_list  divinfo" id="fps3"></div><div class="system_info_1_list  divinfo" id="Resolution3"></div><div class="system_info_1_list  divinfo" id="bitrate3"></div><div class="system_info_1_list  divinfo" id="ios3"></div><div class="system_info_1_list divinfo" id="record3"></div></div>';
+	var obj=$("#streamInfo");
+	if(obj!=null)
+	{
+		if(maxStreams==2)
+		{
+			obj.html(obj.html()+stream2html);
+		}
+		if(maxStreams==3)
+		{
+			obj.html(obj.html()+stream2html+stream3html);
+		}
+		if(maxStreams==4)
+		{
+			obj.html(obj.html()+stream2html+stream3html+stream4html);
+		}
+	}
+		}
+		
+		//配置设备编号
+		function SBBHBTNOK()
+		{
+			var st = $("#SBBHTEXT").val();
+			if(st == "")
+			{
+				alert("设备编号为空！");
+				return;
+			}
+			//st = parseInt(st,10);
+			if(isNaN(st))
+			{
+				alert("设备编号请填写数字！");
+				return;
+			}
+			var stname = $("#SBBHNAME").val();
+			if(stname == "")
+			{
+				alert("设备名称为空！");
+				return;
+			}
+				  var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=parent.Authvalue;
+				  content.DeviceId=st;
+				  content.DeviceName =stname;
+				  contentstr=jsonToString(content);
+				  GetAndSet("SetSysDeviceInfo","json",contentstr, succfunSetSysDeviceInfo);	
+		}
+		function succfunSetSysDeviceInfo(data)
+		{
+			var PackDate=new UnPackData(data);
+			if(PackDate.Content!=null)
+			{
+				if(PackDate.Content.RetCode!="0")
+				{
+					alert("设置失败！");
+				}
+				else if(PackDate.Content.RetCode=="0")
+				{
+					alert("设置成功！");
+				}
+			}
+			delete PackDate;
+			return;
+		}
+		
+		//取消
+		function SBBHBTNCAN()
+		{
+			getSystemInfo();
+		}
+		</script>
+</head>
+
+<body> 
+ 
+ 
+ 
+ <div class="bit-stream">
+<h3>系统信息</h3>
+                                </div> 
+                            <fieldset class="motion_det_fil_1" style="display:block">
+      <legend>像机信息</legend>
+                            
+                             
+                             <div class="down_main_content">
+                		<div class="ip_set_main" id="streamInfo">
+                        	<div class="video_top">
+                            	<div class="system_info_1_list"></div>
+                                <div class="system_info_1_list">类型</div>
+                                <div class="system_info_1_list">帧率</div>
+                                <div class="system_info_1_list">分辨率</div>
+                                <div class="system_info_1_list">码率</div>
+                                <div class="system_info_1_list">镜像/旋转</div>
+                               <!-- <div class="system_info_1_list">连接数</div>-->
+                                <div class="system_info_1_list">录像状态</div>
+                                
+                                
+                            </div>
+                            
+                            <div class="video_top">
+                            	<div class="system_info_1_list">码流 1</div>
+                                <div class="system_info_1_list  divinfo" id="style0"></div>
+                                <div class="system_info_1_list  divinfo" id="fps0"></div>
+ 								<div class="system_info_1_list  divinfo" id="Resolution0"></div>                           
+                                <div class="system_info_1_list  divinfo" id="bitrate0"></div>
+                                <div class="system_info_1_list  divinfo" id="ios0"></div>
+                                <!--<div class="system_info_1_list divinfo" id="linknum0"></div>-->
+                                <div class="system_info_1_list divinfo" id="record0"></div>
+                            </div>
+                                  
+                                 </div>
+                          </div>   
+                          </fieldset>
+                                 <fieldset class="motion_det_fil_1">
+      <legend>系统信息</legend> <div class="down_main_content">
+                		<div class="ip_set_main">
+                            <div class="video_top">
+                            	<div class="system_ma_list">设备名称</div>
+                                <div class="system_ma_list divinfo" id="device_name" style="background-color:#FFFBF0">
+                                <input type="text" style="width:196px; height:20px;" id="SBBHNAME">
+                                </div><input type="button" class="btn22" id="submit" value="保存" style="display:none; margin-left:10px" /><input type="button" class="btn22" id="cancel" value="取消" style="display:none; margin-left:10px" />
+                                
+                            </div>
+                           <div class="video_top">
+                            	<div class="system_ma_list">设备编号</div>
+                                <div class="system_ma_list divinfo" id="DeviceId">
+                                <input type="text" style="width:196px; height:20px;" id="SBBHTEXT">
+                                </div>
+
+                            </div>
+                            <div class="video_top">
+                            	<div class="system_ma_list">设备型号</div>
+                                <div class="system_ma_list divinfo" id="DeviceModel"></div>
+                            </div>
+                             <div class="video_top">
+                            	<div class="system_ma_list">设备序列号</div>
+                                <div class="system_ma_list divinfo" id="DeviceSerialNum"></div>
+                            </div>
+
+                             <div class="video_top">
+                            	<div class="system_ma_list">厂家信息</div>
+                                <div class="system_ma_list divinfo" id="DeviceManufactuer"></div>
+                            </div>
+
+                        	<div class="video_top">
+                            	<div class="system_ma_list">固件版本</div>
+                                <div class="system_ma_list divinfo" id="fw_version"></div>
+                            </div>
+                             <div class="video_top">
+                            	<div class="system_ma_list">硬件版本</div>
+                                <div class="system_ma_list divinfo" id="DeviceHwVer"></div>
+                            </div>
+                            <div class="video_top">
+                            	<div class="system_ma_list">WEB版本</div>
+                                <div class="system_ma_list divinfo" id="webvision">3.0.3.1</div>
+                            </div>
+<!--                                <div class="video_top" id="DeviceIdbtnok">
+                                <input class="btn22" type="button" id="sbbhbtn" onclick="SBBHBTNOK()" value="保存">
+                                <input class="btn22" type="button" id="sbbhbtn" onclick="SBBHBTNCAN()" value="取消">
+                                </div>-->
+                          </div>
+
+                      </div>
+                     
+                   </div> 
+      </fieldset>
+                          
+<div class="bottom-action" style="width:880px;padding-left:110px;">
+            			<input type="button" id="sbbhbtn" class="btn3" value="确定" onclick="SBBHBTNOK()" style="margin-left:50px"/>
+            			<input type="reset" class="btn3" value="取消" id="sbbhbtn" onclick="SBBHBTNCAN()"/>
+                    </div>                        
+                       
+                            
+
+                                 
+  
+                             
+</body>
+</html>

@@ -1,0 +1,2714 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0; background-color:#242424}
+        </style>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.core.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.slider.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/menu.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js" >
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <script type="text/javascript" src="js/tip.js">
+        </script>
+        <link type='text/css' href='css/demo.css' rel='stylesheet' media='screen'
+        />
+        <link type='text/css' href='css/basic.css' rel='stylesheet' media='screen'
+        />
+        <script type='text/javascript' src='js/jquery.simplemodal.js'>
+        </script>
+        <script type='text/javascript' src='js/system.js'>
+        </script>
+        <script>
+		//dingshiqi
+var c = 0;
+var t;
+		//光圈　
+		    var isRecord=false;
+		    var type=2;
+			var timetrig = 0;
+			var stoptimetrig = 0;
+			var isMove = false; //机械云台是否运动状态
+			var lastClick = new Date();
+			var activeX = null;
+			var PTZ_IRIS_CLOSE = "0x00003004";
+			var PTZ_IRIS_OPEN = "0x00003005";
+			//聚焦
+			var PTZ_FOCUS_NEAR = "0x00003006";
+			var PTZ_FOCUS_FAR = "0x00003007";
+			//变倍
+			var PTZ_ZOOM_WIDE = "0x00003008";
+			var PTZ_ZOOM_TELE = "0x00003009";
+			//云台方向
+			var PTZ_UP = "0x0000300a";
+			var PTZ_DOWN = "0x0000300b";
+			var PTZ_LEFT = "0x0000300c";
+			var PTZ_RIGHT = "0x0000300d";
+			var PTZ_LEFTUP = "0x00003022";
+			var PTZ_RIGHTUP = "0x00003023";
+			var PTZ_LEFTDOWN = "0x00003024";
+			var PTZ_RIGHTDOWN = "0x00003025";
+            //获取码流参数
+            var Streamid = 0;//getQueryString("streamid");
+			var currentStreamid = Streamid;
+			//预置位下标
+			var PreseIndx = 0;
+			//视频流ID
+			var VideoId;
+			//电子快门最小值
+			var ShutterMin;
+			
+			//电子快门最大值
+			var ShutterMax;
+			//最大增益
+			var GainMax;
+			//曝光模式
+			var Exposure;
+			
+			//当前预置位状态
+			//var YZWstate = false;
+			
+			//所有预置点状态
+			//var AllPos=new Array()
+			$(window).bind('unload',function(){
+				 try
+	 			{
+					var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+					activeX.StopPlay();
+	 			}
+				catch(e)
+				{
+					return;
+				}
+				//alert("预览界面关闭!");
+			});
+		$(document).ready(function(){
+
+			//界面初始化
+			init();
+// 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+//						if(!fso.FileExists("d:\\ocx_test.txt"))
+//						{
+//							fso.CreateTextFile("d:\\ocx_test.txt", true);
+//						}
+//						var f = fso.OpenTextFile("d:\\ocx_test.txt", 8,true,-1);
+//						var Day = new Date();
+//						var h = Day.getHours();
+//						var m = Day.getMinutes();
+//						var s = Day.getSeconds();
+//						var ss = Day.getMilliseconds();
+//						f.WriteLine("【预览界面已显示】Star---" + h+":"+m+":"+s+":"+ss);
+//						f.WriteBlankLines(1);
+//						f.Close(); 
+			//判断控件版本
+			if(!ActiveXCtr())
+			{
+				return;
+			}
+			
+			activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+		   if(parent.port=="")
+		   {
+			   GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", getportsuccessfunc);
+			   function getportsuccessfunc(data)
+				{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							
+/*						var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("视频预览：LoadImg begin(cgi)---" + h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
+						
+								parent.port=PackDate.Content.SDK_Port;
+								LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+								delete PackDate;
+						}
+					}
+				}
+		   }
+		   else
+		   {
+			   
+/*			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("视频预览：LoadImg begin---" + h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
+						
+		   		LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+				delete PackDate;
+		   }
+			//debugger;
+			
+
+						
+			
+         //LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+		   //------ wk add 获取码流
+		   var SessID = parent.id;
+		   var AuthId = parent.Authvalue;
+			//获取设备能力集码流数
+			function getStreamNumInfo()
+			{
+					GetAndSet("GetCapabilities","xml","{SessionId:"+parent.id+",AuthValue:}"+parent.Authvalue, sucess_getStreamNumNLJ);	
+			}
+			getStreamNumInfo();
+			function sucess_getStreamNumNLJ(data)
+			{
+                var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode!="0")
+					{
+						alert("获取设备能力集失败，获取码流数失败！");
+						delete PackDate;
+						return;
+					}
+					parent.StreamNum_NLJ = PackDate.Content.XmlBuf.capabilities.device.media.maxstreamnum;
+					parent.StreamNum_NLJ = parseInt(parent.StreamNum_NLJ,10);
+					
+					//再去获取最大码流和设置界面
+					getMaxStreamNum(false,SessID,AuthId,0);
+				}
+				delete PackDate;
+			}
+		   
+		   //根据设备能力集设置码流数
+		   //SetStreamNum_NLJ(parent.StreamNum_NLJ);
+		   //根据码流数填充页面元素
+           //getMaxStreams();
+		   
+
+		   
+		   //启动录像 停止录像
+				$("#brecord").bind("click",
+				function() {
+					if ($("#bplay").val() == "预览") {
+						alert("当前视频暂停，请开启预览再进行录像。");
+						return;
+					}
+					if (window.ActiveXObject) {
+						try {
+
+							
+
+							if ($("#brecord").val() == "启动录像") {
+								//添加保存接口。 //保存路径
+								var filePath = parent.recordpath;//getCookie("recordPath");
+								var recordType = parent.recordtype;//getCookie("recordType");
+
+								if (filePath == null) {
+									filePath = "C:\\Program Data\\IPC\\media";
+								}
+								if (recordType == null) {
+									recordType = "MP4";
+								}
+								if (filePath[filePath.length - 1] != "\\")
+								//if (filePath.indexOf("\\")<0)
+								{
+									filePath += "\\";
+								}
+								//filePath += getLocalFrormatTime() + "." + recordType;
+								//alert(filePath);
+								//保存filePath
+								//保存接口结束
+
+								activeX.SetRecordPath(filePath);
+								var result = activeX.Record(true);
+
+								if(result)
+								{
+									$("#brecord").val("停止录像");
+									isRecord = true;
+									$("#tipInfo").css("display", "block");
+									$("#tipInfo").html("状态：正在录像");
+								}
+								else
+								{
+									alert("启动录像失败");
+								}
+
+							} else {
+
+								activeX.Record(false);
+
+								$("#brecord").val("启动录像");
+								$("#tipInfo").css("display", "none");
+								isRecord = false;
+							}
+
+						} catch(e) {
+							alert(e);
+							return;
+						}
+					}
+				});
+		   
+		   //抓图
+				$("#bcapturePicture").bind("click",
+				function() {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，抓图失败！");
+						return;	
+					}
+					if (window.ActiveXObject) {
+						try {
+
+							//添加保存接口。 //保存路径
+							var filePath = parent.picpath;//getCookie("picPath");
+							var picType = parent.pictype;//getCookie("picType");
+							if (filePath == null) {
+								filePath = "C:\\Program Data\\IPC\\Image";
+							}
+							if (picType == null) {
+								picType = "bmp";
+							}
+							if (filePath[filePath.length - 1] != "\\") 
+							//if (filePath.indexOf("\\") < 0)
+							{
+								filePath += "\\";
+							}
+							//filePath += getLocalFrormatTime() + "." + picType;
+							//alert(filePath);
+							//保存filePath
+							//保存接口结束
+
+							var result = activeX.SetCapturePath(filePath);
+
+							var result = activeX.CapturePic();
+
+							
+
+						} catch(e) {
+							alert(e);
+							return;
+						}
+					}
+				});
+				
+				//编码镜像change
+				$("#flip_rotate").bind("change",
+				function() {
+					var stmp;
+				  	var  content={};
+				  	content.SessionId=parent.id;
+				  	content.AuthValue=parent.Authvalue;
+
+				  	if($("#flip_rotate").val() == '0')
+					{
+						content.Mirror="0";	
+					}
+					else if($("#flip_rotate").val() == '1')
+					{
+						content.Mirror="1";
+					}
+					else if($("#flip_rotate").val() == '2')
+					{
+						content.Mirror="2";
+					}
+					else if($("#flip_rotate").val() == '3')
+					{
+						content.Mirror="3";
+					}
+
+				  	content.StreamId=Streamid;
+				  	contentstr=jsonToString(content);
+				  	GetAndSet("SetVideoEncodeMirror","json",contentstr, sucess_SetVideoEncodeMirror);
+					});
+					function sucess_SetVideoEncodeMirror(data)
+					{
+					}
+					//暂停 预览
+				$("#bplay").bind("click",
+				function() {
+
+					if (window.ActiveXObject) {
+						try {
+
+					
+							var value = $("#bplay").val();
+							//alert(value);
+							if (value == "暂停") {
+								if (isRecord == true) {
+									if (!confirm("现在正在录像，暂停录像将停止，确定暂停吗？")) return;
+									else {
+
+										activeX.Record(false);
+
+										$("#brecord").val("启动录像");
+										$("#tipInfo").css("display", "none");
+										isRecord = false;
+										activeX.Pause();
+										$("#bplay").val("预览");
+
+									}
+								} else {
+ 
+									activeX.Pause();
+									$("#bplay").val("预览");
+
+								}
+							} else {
+
+								activeX.Play();
+								$("#bplay").val("暂停");
+
+							}
+
+						} catch(e) {
+							alert(e);
+							return;
+						}
+					}
+				});
+
+				//启动话筒
+				$("#btalking").bind("click",
+				function() {
+					if (window.ActiveXObject) {
+						try {
+
+							
+							var status = $("#btalking").val();
+							if (status == "启动对讲") {
+								if(c!=0)
+								{
+									//alert("return");
+									return;
+								}
+								//c=0;
+ 								$("#btalking").attr("disabled", "disabled");
+								var result = activeX.DeviceTalk(true);
+								c++;
+								t=setTimeout('StarTime_dj()',1000);
+								//parent.sleep(50);
+								if (result) {
+									$("#btalking").val("关闭对讲");
+								} else {
+									alert("启动对讲失败");
+									$("#btalking").val("启动对讲");
+								}
+
+							} else {
+								var result = true;
+								//关闭话筒没有返回值
+								//result=activeX.StopTalking();
+								if(c!=0)
+								{
+									//alert("return");
+									return;
+								}
+								//c=0;
+								$("#btalking").attr("disabled", "disabled");
+								result = activeX.DeviceTalk(false);
+								c++;
+								t=setTimeout('StarTime_dj()',1000);
+								//parent.sleep(50);
+								if (result) {
+									$("#btalking").val("启动对讲");
+								} else {
+									alert("关闭对讲失败");
+									$("#btalking").val("关闭对讲");
+								}
+
+							}
+
+						} catch(e) {
+							alert(e);
+							return;
+						}
+					}
+				});
+
+				//启动声音
+				$("#blistening").bind("click",
+				function() {
+					if (window.ActiveXObject) {
+						try {
+
+							
+							var status = $("#blistening").val();
+							if (status == "启动声音") {
+ 
+								var result = activeX.OpenSound(true);
+ 
+								if (result) {
+									$("#blistening").val("关闭声音");
+								} else {
+									$("#blistening").val("启动声音");
+									alert("启动声音失败");
+								}
+							} else {
+								var result = true;
+								//停止声音没有返回值
+								//var result=activeX.StopListening();
+
+								result=activeX.OpenSound(false);
+
+								if (result) {
+									$("#blistening").val("启动声音");
+								} else {
+									$("#blistening").val("关闭声音");
+									alert("关闭声音失败");
+								}
+							}
+						} catch(e) {
+							alert(e);
+							return;
+						}
+					}
+				});
+//--图像设置
+                //绑定图像设置 展开
+                $("#aimageset").bind("click",
+                function(e) {
+                    // 收缩
+					//debugger;
+                    var evt = e || window.event;
+                    if ($(".previer_zhankai").css("display") == "block") {
+                        $(".previer_zhankai").css("display", "none");
+                        $("#aimageset").css("background", "url(images/add3.gif) no-repeat 0 3px");
+                    }
+                    //展开
+                    else {
+
+                        $(".previer_zhankai").css("display", "block");
+                        $("#aimageset").css("background", "url(images/sub3.gif) no-repeat 0 3px");
+
+                    }
+                });
+				//亮度增加
+                $("#brightnessadd").bind("click",
+                function(e) {
+
+                    var oldv = $("#01brightness").val();
+                    if (oldv < 255) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+                        $("#brightness a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+						//parseInt((parseInt(newv, 10) + parseInt(255, 10)) / 510 * 100, 10) + "%";
+                        $("#01brightness").val(newv);
+
+						//设置Image消息:亮度 对比度  锐度 色度 饱和度
+                        SetImage(newv,$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val());
+						
+                    }
+					
+                });
+				//亮度减弱
+                $("#brightnesssub").bind("click",
+                function(e) {
+
+                    var oldv = $("#01brightness").val();
+                    if (oldv > 0) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                        $("#brightness a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+						//parseInt((parseInt(newv, 10) + parseInt(255, 10)) / 510 * 100, 10) + "%";
+                        $("#01brightness").val(newv);
+
+						//设置Image消息:亮度 对比度  锐度 色度 饱和度
+                        SetImage(newv,$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val());
+						
+                    }
+					
+                });
+				//对比度增加
+                $("#contrastadd").bind("click",
+                function(e) {
+                    var oldv = $("#01contrast").val();
+                    if (oldv < 255) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+                        $("#contrast a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01contrast").val(newv);
+
+						//设置Image消息:亮度 对比度  锐度 色度 饱和度
+                        SetImage($("#01brightness").val(),newv,$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val());
+						
+                    }
+					
+                });
+				//对比度减弱
+                $("#contrastsub").bind("click",
+                function(e) {
+                    var oldv = $("#01contrast").val();
+                    if (oldv > 0) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                        $("#contrast a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01contrast").val(newv);
+
+						//设置Image消息:亮度 对比度  锐度 色度 饱和度
+                        SetImage($("#01brightness").val(),newv,$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val());
+						
+                    }
+					
+                });
+				//锐度减弱
+                $("#sharpnesssub").bind("click",
+                function(e) {
+                    var oldv = $("#01sharpness").val();
+                    if (oldv > 0) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                        $("#sharpness a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01sharpness").val(newv);
+
+						//设置Image消息:亮度 对比度  锐度 色度 饱和度
+						//SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val());
+                        SetImage($("#01brightness").val(),$("#01contrast").val(),newv,$("#01hue").val(),$("#01saturation").val());
+						
+                    }
+                });
+				//锐度增加
+                $("#sharpnessadd").bind("click",
+                function(e) {
+                    var oldv = $("#01sharpness").val();
+                    if (oldv < 255) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+                        $("#sharpness a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01sharpness").val(newv);
+
+                        SetImage($("#01brightness").val(),$("#01contrast").val(),newv,$("#01hue").val(),$("#01saturation").val());
+						
+                    }
+                });
+				//色彩减弱
+                $("#huesub").bind("click",
+                function(e) {
+                    var oldv = $("#01hue").val();
+                    if (oldv > 0) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                        $("#hue a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01hue").val(newv);
+
+						//设置Image消息:亮度 对比度  锐度 色度 饱和度
+						SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),newv,$("#01saturation").val());
+						
+                    }
+                });
+				//色彩增加
+                $("#hueadd").bind("click",
+                function(e) {
+                    var oldv = $("#01hue").val();
+                    if (oldv < 255) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+                        $("#hue a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01hue").val(newv);
+
+						//设置Image消息:亮度 对比度  锐度 色度 饱和度
+						SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),newv,$("#01saturation").val());
+					
+                    }
+                });
+				//饱和度增加
+                $("#saturationadd").bind("click",
+                function(e) {
+                    var oldv = $("#01saturation").val();
+                    if (oldv < 255) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+                        $("#saturation a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01saturation").val(newv);
+
+						//设置Image消息:亮度 对比度  锐度 色度 饱和度
+						SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),newv);
+					
+                    }
+                });
+				//饱和度减弱
+                $("#saturationsub").bind("click",
+                function(e) {
+                    var oldv = $("#01saturation").val();
+                    if (oldv > 0) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                        $("#saturation a")[0].style.left = parseInt((parseInt(newv, 10)) / 255 * 100, 10) + "%";
+                        $("#01saturation").val(newv);
+
+						//设置Image消息:亮度 对比度  锐度 色度 饱和度
+						SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),newv);
+				
+                    }
+                });
+//--图像设置
+            //转到预置位  参数一 数字云台为1 机械云台为 0
+            // 参数2 为码流  机械云台控制时 无效。
+            // 参数3， 预置位索引
+            function callPrePosition(type, streamid, index) {
+                //var section = "";
+                //var postDataStr = "";
+
+                //var poststr2 = ""; //数字云台 预职位信息。并设置下去使用。
+                var PosSelValue;
+				/*
+				if (type == '1') //数字云台
+                {
+                    postDataStr = "dptz_preset_index=" + index + "||dptz_operation=2||dptz_source=" + streamid + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+                    section = "DPTZPRESETCTR";
+					
+					PosSelValue = $("#PosSel").val();
+					activeX.PresetConfig(32, PreseIndx, 1, PosSelValue);
+                }
+                if (type == "2") {
+                    section = "PTZPRESETCTR";
+                    postDataStr = "ptz_preset_index=" + index + "||ptz_operation=2" + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+                }
+				*/
+					PosSelValue = $("#PosSel").val();
+
+					activeX.PresetConfig(33, PreseIndx, 1, index);
+		
+             }
+				//调用云台预置位
+                $("#preCall").bind("click",
+                function(e) {
+                    //getPositionInfo(globalStream, $("#PosSel").val(), type, true);
+                    //数字云台调用预置位。
+					var stmp = $("#PosSel").val();
+					if(stmp == 0)
+					{
+						stmp = 1;
+					}
+                    callPrePosition(type, currentStreamid, stmp);
+
+                });
+            //设置预置位 
+            function setPrePosition(Request, streamid, index, type) {
+/*
+                var section = '';
+                var postStr = "";
+                //
+                //获取信息
+                //设置信息
+                if (type == '1') {
+                    // section = 'DPTZPRESETS' + streamid;
+                    section = "DPTZPRESETCTR";
+                    postStr = "dptz_preset_index=" + index + "||dptz_operation=0||dptz_source=" + streamid + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+                }
+                //机械云台
+                if (type == '2') {
+                    section = 'PTZPRESETCTR';
+                    postStr = "ptz_preset_index=" + index + "||ptz_operation=0" + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+                }
+				
+						postptzcmd(poststr, isMove);
+*/
+					var PosSelValue = $("#PosSel").val();
+
+					activeX.PresetConfig(32, PreseIndx, 1, index);
+
+					
+					//
+					$("#preCall").removeAttr("disabled", "disabled");
+                                $("#preCall").css("background", "url(images/btn_57.jpg) no-repeat");
+								$("#preDel").removeAttr("disabled", "disabled");
+								$("#preDel").css("background", "url(images/btn_57.jpg) no-repeat");
+								
+								$("#preSet").attr("disabled", "disabled");
+								$("#preSet").css("background", "url(images/btn_57_2.jpg) no-repeat");	
+			}
+                //设置预置位
+                $("#preSet").bind("click",
+                function(e) {
+                    //var section = "DPTZ";
+					var stmp = $("#PosSel").val();
+					if(stmp == 0)
+					{
+						stmp = 1;
+					}
+                    setPrePosition("set", currentStreamid, stmp, type);
+
+                });
+		   	//绑定云台预位置
+				$("#apreposition").bind("click",
+				function(e) {
+					var evt = e || window.event;
+					if ($(".detail").css("display") == "block") {
+						$(".detail").css("display", "none");
+						$("#apreposition").css("background", "url(images/add3.gif) no-repeat 0 3px");
+					} else {
+						$(".detail").css("display", "block");
+						$("#apreposition").css("background", "url(images/sub3.gif) no-repeat 0 3px");
+					}
+				});
+				//删除预置位
+                $("#preDel").bind("click",
+                function(e) {
+                    if ($("#PosSel").val() != 0) {
+                        delPosition(currentStreamid, $("#PosSel").val(), type);
+                    } else {
+                        alert("home 不能删除");
+                    }
+                });
+            function delPosition(streamid, index, type) {
+				/*
+                var section = "";
+                var postDataStr = "";
+                if (type == '1') {
+                    section = "DPTZPRESETCTR";
+                    postDataStr = "dptz_preset_index=" + index + "||dptz_operation=1||dptz_source=" + streamid + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+                }
+                if (type == '2') {
+                    section = "PTZPRESETCTR";
+                    postDataStr = "ptz_preset_index=" + index + "||ptz_operation=1" + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+                }
+				postptzcmd(postDataStr, isMove);
+//startmove(section, poststr, poststr1);
+*/
+					var PosSelValue = $("#PosSel").val();
+
+					activeX.PresetConfig(35, PreseIndx, 1, PosSelValue);
+
+					$("#preCall").attr("disabled", "disabled");
+                                $("#preCall").css("background", "url(images/btn_57_2.jpg) no-repeat");
+								$("#preDel").attr("disabled", "disabled");
+								$("#preDel").css("background", "url(images/btn_57_2.jpg) no-repeat");
+								
+								$("#preSet").removeAttr("disabled", "disabled");
+                                $("#preSet").css("background", "url(images/btn_57.jpg) no-repeat");
+			}
+				//云台预控制选择事件
+                $("#PosSel").bind("change",
+                function(e) {
+                    var index = $("#PosSel").val();
+//					var tt = document.getElementById("PosSel");
+//					for(i=0;i<tt.length;i++)
+//					{
+//  						if(tt[i].index==index)
+//						{
+//							PreseIndx = i;
+//							break;
+//						}
+//					}
+					PreseIndx = index;
+					if(index == 0)
+					{
+						index =1;
+					}
+					//获取当前预置位状态
+                    getPositionInfo(index);
+                    //alert(type);
+					//debugging preSet
+//								$("#preCall").removeAttr("disabled", "disabled");
+//                                $("#preCall").css("background", "url(images/btn_57.jpg) no-repeat");
+//								$("#preDel").removeAttr("disabled", "disabled");
+//								$("#preDel").css("background", "url(images/btn_57.jpg) no-repeat");
+//								
+//								$("#preSet").removeAttr("disabled", "disabled");
+//								$("#preSet").css("background", "url(images/btn_57.jpg) no-repeat");	
+
+                });
+				
+            function getPositionInfo(index) {                 
+/*                var section = "";
+                if (type == '1') {
+                    section = "DPTZPRESETS" + Streamid;
+				
+                }
+                if (type == '2') {
+                    section = "PTZPRESETS";
+                }
+				
+				PosSelValue = $("#PosSel").val();*/
+//				var activeXtmp = document.getElementById("GMIIPCmrWebPlugIn1");
+//			   	var st = activeXtmp.GetPresetInfomation(index);
+//				return st;
+				  		var  content={};
+				  		content.SessionId=parent.id;
+				  		content.AuthValue=parent.Authvalue;
+						
+						content.PresetIndex=index;
+				  		contentstr=jsonToString(content);
+						GetAndSet("SysSearchPtzPresetInfo","json",contentstr, succfunGetYZWstate);
+			}
+			//获取预置位状态
+			function succfunGetYZWstate(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						var st = PackDate.Content.Setted;	
+						if(st == "0")//没有设置
+						{
+
+					            $("#preCall").attr("disabled", "disabled");
+                                $("#preCall").css("background", "url(images/btn_57_2.jpg) no-repeat");
+								$("#preDel").attr("disabled", "disabled");
+								$("#preDel").css("background", "url(images/btn_57_2.jpg) no-repeat");
+								
+								$("#preSet").removeAttr("disabled", "disabled");
+                                $("#preSet").css("background", "url(images/btn_57.jpg) no-repeat");
+						}
+						else if(st == "1")//已经设置
+						{
+					            $("#preCall").removeAttr("disabled", "disabled");
+                                $("#preCall").css("background", "url(images/btn_57.jpg) no-repeat");
+								$("#preDel").removeAttr("disabled", "disabled");
+								$("#preDel").css("background", "url(images/btn_57.jpg) no-repeat");
+								
+								$("#preSet").attr("disabled", "disabled");
+								$("#preSet").css("background", "url(images/btn_57_2.jpg) no-repeat");					
+						}
+
+					}
+					else
+					{
+						alert("获取预置位状态失败！");
+					}
+				}
+				delete PackDate;				
+			}
+				//云台控制home
+				$("#home").bind("click",
+				function(e) {
+					var a = type;
+					//数字云台
+					if (a == 1) {
+						section = "DPTZ";
+						poststr = "dptz_zoom=0||dptz_source=" + currentStreamid + "||";
+						GetAndSet('set', section, poststr, "process", false, true);
+						$("#02dptz_zoom").val('0');
+					}
+					//机械云台
+					if (a == 2) {
+						section = "PTZ";
+						poststr = "ptz_cmd=31||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=24||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						postptzcmd(poststr, isMove);
+						if (isMove) {
+							isMove = false;
+						} else {
+							isMove = true;
+						}
+					}
+				});
+
+				//云台控制 向上
+				$("#up").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//数字云台
+					if (a == 1) {
+						section = "DPTZ";
+						poststr = "dptz_off_y=-100||dptz_off_x=0||dptz_source=" + currentStreamid + "||dptz_zoom=" + $("#02dptz_zoom").val();
+						startmove(section, poststr);
+					}
+					if (a == 2) {
+						section = "PTZ";
+						poststr = "ptz_cmd=17||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=2||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+
+					}
+
+				});
+				$("#rightup").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//数字云台
+					if (a == 1) {
+						section = "DPTZ";
+						poststr = "dptz_off_y=-100||dptz_off_x=0||dptz_source=" + currentStreamid + "||dptz_zoom=" + $("#02dptz_zoom").val();
+						startmove(section, poststr);
+					}
+					if (a == 2) {
+						section = "PTZ";
+						poststr = "ptz_cmd=22||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=24||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+
+					}
+				});
+				$("#leftup").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//数字云台
+					if (a == 1) {
+						section = "DPTZ";
+						poststr = "dptz_off_y=-100||dptz_off_x=0||dptz_source=" + currentStreamid + "||dptz_zoom=" + $("#02dptz_zoom").val();
+						startmove(section, poststr);
+					}
+					if (a == 2) {
+						section = "PTZ";
+						poststr = "ptz_cmd=21||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=24||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+
+					}
+
+				});
+				$("#leftdown").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//数字云台
+					if (a == 1) {
+						section = "DPTZ";
+						poststr = "dptz_off_y=-100||dptz_off_x=0||dptz_source=" + currentStreamid + "||dptz_zoom=" + $("#02dptz_zoom").val();
+						startmove(section, poststr);
+					}
+					if (a == 2) {
+						section = "PTZ";
+						poststr = "ptz_cmd=23||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=24||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+
+					}
+
+				});
+				$("#rightdown").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//数字云台
+					if (a == 1) {
+						section = "DPTZ";
+						poststr = "dptz_off_y=-100||dptz_off_x=0||dptz_source=" + currentStreamid + "||dptz_zoom=" + $("#02dptz_zoom").val();
+						startmove(section, poststr);
+					}
+					if (a == 2) {
+						section = "PTZ";
+						poststr = "ptz_cmd=24||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=24||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+					}
+
+				});
+                //绑定机械云台数字云台选择事件
+                $("input[type=radio][name='type']").bind("click",
+                function(e) {
+					var cameratype=parent.cameratype;
+                    var evt = e || window.event;
+                    var activex = document.getElementById("GMIIPCmrWebPlugIn1");
+                    $("#PosSel").val("0");
+					var PosSelhtml="<option value='0'>home</option>";
+                    if (this.value == 1) //数字云台
+                    {
+                        type = '1';
+                        activex.ShowDPTZ(1);
+						//自动聚焦不可见
+						$("#af_enable").css("display", "none");
+			            //一体机 可以调焦 其它数字云台不能调焦
+						if(cameratype!=2)
+						{
+							$("#divFocus").css("display", "none");
+							$("#divZoom").css("display", "none");
+							$("#dptzpan").css("display", "block");
+							$("#pantilt").css("display", "none");
+						}
+						else
+						{
+							$("#divZoom").css("display", "none");
+							$("#divFocus").css("display", "block"); //2013.04.02
+							$("#focusType").css("display", "none");
+							$("#divAutoFocusType").css("display", "none");
+							//设置数字云台
+							setptzordptz(1);
+							//方向键隐藏
+							$("#pantilt").css("display", "none");
+							$("#dptzpan").css("display", "block");
+						}
+						$("#divLight").css("display", "none");
+                        $("#divDrag").css("display", "none");
+                        $("#jixie").removeAttr("checked", "checked");
+                        $("#shuzi").attr("checked", "checked");
+						for(var i=1;i<10;i++)
+						{
+							PosSelhtml+="<option value='"+i+"'>"+i+"</option>";
+						}
+						$("#PosSel").html(PosSelhtml);
+
+                    }
+                    if (this.value == 2) //机械云台
+                    {
+                        type = '2';
+                        activex.ShowDPTZ(0);
+						$("#divZoom").css("display", "block");
+						//方向键显示
+						$("#pantilt").css("display", "block");
+						$("#dptzpan").css("display", "none");
+                        $("#divFocus").css("display", "block");
+                        $("#divLight").css("display", "block");
+                        $("#divDrag").css("display", "block");
+                        $("#shuzi").removeAttr("checked", "checked");
+                        $("#jixie").attr("checked", "checked");
+						if(cameratype==2)
+						{
+							//自动聚焦可见
+						    $("#af_enable").css("display", "none");
+							//设置机械云台
+							$("#focusType").css("display", "block");
+							
+							if(af_enable==0)
+							{
+								$("#divFocus").css("display", "block");
+								$("#divAutoFocusType").css("display", "none");
+							}
+							else
+							{
+								$("#divFocus").css("display", "none");
+								$("#divAutoFocusType").css("display", "block");
+							}
+							setptzordptz(0);
+							
+						}
+						for(var i=1;i<256;i++)
+						{
+							PosSelhtml+="<option value='"+i+"'>"+i+"</option>";
+						}
+						$("#PosSel").html(PosSelhtml);
+                        //GetAndSet('get', "PTZ", '', "process", true);
+						if(parent.isLinescanDisabled==1)
+						{
+							$("#home").attr("disabled", "disabled");
+						}
+						else
+						{
+							$("#home").removeAttr("disabled","disabled");
+						}
+                    }
+                });
+				$("#up,#down,#right,#left,#zoomadd,#zoomsub,#focussub,#focusadd,#irissub,#irisadd,#leftup,#leftdown,#rightup,#rightdown").bind("mouseup",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					//var a = $("input[type=radio][name='type'][checked='checked']").val();
+					var a = type;
+					if (a == 1) {
+						//数字云台 一体机 可以聚焦
+						if (this.id != "focussub" && this.id != "focusadd") {
+							stopmove();
+						} else {
+							var pastStr = "";
+							switch (this.id) {
+
+							case "focusadd":
+								pastStr = "ptz_cmd=" + parseInt(PTZ_FOCUS_NEAR, 16) + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+								break;
+							case "focussub":
+								pastStr = "ptz_cmd=" + parseInt(PTZ_FOCUS_FAR, 16) + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+								break;
+							}
+
+							stopmove("PTZ", pastStr);
+							//lastClick = new Date();
+						}
+					}
+					//
+					if (a == 2) {
+						var pastStr = "";
+						switch (this.id) {
+						case "up":
+							pastStr = "ptz_cmd=17||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "down":
+							pastStr = "ptz_cmd=18||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "right":
+							pastStr = "ptz_cmd=20||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "left":
+							pastStr = "ptz_cmd=19||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "zoomadd":
+							//pastStr = "ptz_cmd=11||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							pastStr = "ptz_cmd=12||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "zoomsub":
+							//pastStr = "ptz_cmd=12||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							pastStr = "ptz_cmd=11||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "focusadd":
+							//pastStr = "ptz_cmd=13||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							pastStr = "ptz_cmd=14||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "focussub":
+							//pastStr = "ptz_cmd=14||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							pastStr = "ptz_cmd=13||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "irisadd":
+							pastStr = "ptz_cmd=15||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "irissub":
+							pastStr = "ptz_cmd=16||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "leftup":
+							pastStr = "ptz_cmd=21||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "leftdown":
+							pastStr = "ptz_cmd=23||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "rightup":
+							pastStr = "ptz_cmd=22||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						case "rightdown":
+							pastStr = "ptz_cmd=24||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							break;
+						}
+
+						stopmove("PTZ", pastStr);
+						//lastClick = new Date();
+					}
+
+				});
+				/* $("#pantilt").bind("mouseleave",function(e)
+				{
+					 var a = type;
+                    if (a == 2) {
+						//alert("");
+					stopmove("PTZ", "ptz_cmd=24");
+					}
+				});*/
+				/*$("#up,#down,#right,#left,#zoomadd,#zoomsub,#focussub,#focusadd,#irissub,#irisadd,#leftup,#leftdown,#rightup,#rightdown").bind("mouseout",
+                function(e) {});*/
+				$("input[type=radio][name='focustype']").bind("mousedown",
+                function(e) {
+				  		var  content={};
+				  		content.SessionId=parent.id;
+						content.AuthValue=parent.Authvalue;
+				  		
+						
+						
+					 var thisvalue = this.value;
+					 if(thisvalue==0)
+					 {
+						 //手动
+						$("#divAutoFocusType").css("display","none");
+						$("#divFocus").css("display","block");
+						content.FocusMode="0";
+						
+					 }
+					 else
+					 {
+						 //自动
+						 $("#divFocus").css("display","none");
+						$("#divAutoFocusType").css("display","block");
+						thisvalue=$("#autoFocusType").val();
+						
+						//全自动模式
+						if(thisvalue == "1")
+						{
+							content.FocusMode="1";	
+						}
+						//自动聚焦一次
+						else if(thisvalue == "2")
+						{
+							content.FocusMode="2";	
+						}
+						
+					 }
+					 
+					 contentstr=jsonToString(content);
+					 
+
+					 	GetAndSet("SetAutoFocusMode","json",contentstr, sucess_setJJ);	 				
+
+				});
+				//下拉菜单
+$("#autoFocusType").bind("change",function(e){
+	var thisvalue=this.value;
+	$("#autofocus").val(thisvalue);
+	//var poststr = "af_enable="+thisvalue;
+						//section = "PTZ";
+						//poststr = "ptz_cmd=12" + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						//poststr1 = "ptz_cmd=10||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						//startmove(section, poststr, poststr1);
+		          var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=parent.Authvalue;
+						thisvalue=$("#autoFocusType").val();
+						
+						//全自动模式
+						if(thisvalue == "1")
+						{
+							content.FocusMode="1";	
+						}
+						//自动聚焦一次
+						else if(thisvalue == "2")
+						{
+							content.FocusMode="2";	
+						}
+						
+				  contentstr=jsonToString(content);
+				  GetAndSet("SetAutoFocusMode","json",contentstr, sucess_setJJ);
+					
+	});
+function sucess_setJJ(data)
+{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						//成功返回
+					}
+					else if(PackDate.Content.RetCode!="0")
+					{
+						//错误返回
+						alert("设置聚焦模式失败!");	
+					}
+					delete PackDate;
+				}		
+}
+
+			//自动聚焦一次
+			$("#qjjj").bind("click",function(e)
+			{
+				  var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=parent.Authvalue;
+				  contentstr=jsonToString(content);
+				  
+				  GetAndSet("FocusGlobalScan","json",contentstr, success_zdjj);
+			});
+			function success_zdjj(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						//成功返回
+					}
+					else if(PackDate.Content.RetCode!="0")
+					{
+						//错误返回
+						alert("自动聚焦失败!");	
+					}
+				}	
+				delete PackDate;			
+			}
+				//云台控制 向下
+				$("#down").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//数字云台
+					if (a == 1) {
+						section = "DPTZ";
+						poststr = "dptz_off_y=100||dptz_off_x=0||dptz_source=" + currentStreamid + "||dptz_zoom=" + $("#02dptz_zoom").val();
+						startmove(section, poststr);
+					}
+					if (a == 2) {
+						section = "PTZ";
+						poststr = "ptz_cmd=18||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=3||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+					}
+
+				});
+
+				//云台控制 向右
+				$("#right").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//数字云台
+					if (a == 1) {
+						section = "DPTZ";
+						poststr = "dptz_off_x=100||dptz_off_y=0||dptz_source=" + currentStreamid + "||dptz_zoom=" + $("#02dptz_zoom").val();
+						startmove(section, poststr);
+					}
+					if (a == 2) {
+						section = "PTZ";
+						poststr = "ptz_cmd=20||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=7||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+					}
+				});
+
+				//云台控制 向左
+				$("#left").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//数字云台
+					if (a == 1) {
+						section = "DPTZ";
+						poststr = "dptz_off_x=-100||dptz_off_y=0||dptz_source=" + currentStreamid + "||dptz_zoom=" + $("#02dptz_zoom").val();
+						startmove(section, poststr);
+					}
+					if (a == 2) {
+						section = "PTZ";
+						poststr = "ptz_cmd=19||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=6||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+					}
+				});
+
+				$("#zoomadd").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					
+					var a = type;
+					if (a == 1) {
+						var zoom = $("#02dptz_zoom").val();
+						if (zoom == 0) {
+							zoom = 1;
+						}
+						startzoom(zoom, 1);
+					}
+					//机械云台
+					if (a == 2) {
+						section = "PTZ";
+						//poststr = "ptz_cmd=" + parseInt(PTZ_ZOOM_TELE, 16) + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr = "ptz_cmd=11" + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=10||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+					}
+				});
+
+				//变倍 减
+				$("#zoomsub").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					if (a == 1) {
+						var zoom = $("#02dptz_zoom").val();
+						startzoom(zoom, 0);
+					}
+					//机械云台
+					if (a == 2) {
+						section = "PTZ";
+						//poststr = "ptz_cmd=" + parseInt(PTZ_ZOOM_WIDE, 16) + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr = "ptz_cmd=12" + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val()
+						poststr1 = "ptz_cmd=11||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+
+						//controlPtz(poststr, poststr1);
+					}
+				});
+
+				//光圈加
+				$("#irisadd").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//机械云台
+					if (a == 2) {
+						section = "PTZ";
+						//poststr = "ptz_cmd=" + parseInt(PTZ_IRIS_OPEN, 16) + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr = "ptz_cmd=15"+ "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=18||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+					}
+				});
+
+				//光圈减
+				$("#irissub").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//机械云台
+					if (a == 2) {
+						section = "PTZ";
+						//poststr = "ptz_cmd=" + parseInt(PTZ_IRIS_CLOSE, 16) + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr = "ptz_cmd=16"+ "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=19||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+					}
+				});
+				//聚焦减
+				$("#focussub").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//一体机 数字云台可以聚焦
+					//机械云台
+					if (a == 2 || (a == 1 && parent.shield_id != "0")) {
+						section = "PTZ";
+						//poststr = "ptz_cmd=" + parseInt(PTZ_FOCUS_FAR, 16) + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr = "ptz_cmd=13"+ "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=14||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+					}
+				});
+				//聚焦加
+				$("#focusadd").bind("mousedown",
+				function(e) {
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					//机械云台
+					if (a == 2 || (a == 1 && parent.shield_id != "0")) {
+						section = "PTZ";
+						//poststr = "ptz_cmd=" + parseInt(PTZ_FOCUS_NEAR, 16) + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr = "ptz_cmd=14"+ "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						poststr1 = "ptz_cmd=15||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+						startmove(section, poststr, poststr1);
+					}
+				});
+
+				
+                //滑动条代码
+                var $button = $(".drag-icon", $(".drag-bg"));
+                var sliderOpts = {
+                    step: 5,
+                    slide: function(e, ui){
+						//机械云台速度调节杆  活动过程中不传数据
+						//if(this.id!="ptz_speed")
+						//{
+					      //  sliderFunction(e,ui,this.id);
+							
+						//}
+					},
+                    stop: function(e, ui) //滑动停止事件
+                    {
+                        sliderFunction(e,ui,this.id);
+                    }
+
+                };
+                $button.slider(sliderOpts);
+		});
+			//滑动处理函数
+			var request;
+             function sliderFunction(e,ui,thisid)
+			 {
+				  // $button.css("left", "-" + ui.value + "px")
+                        var id = thisid;
+                        var value = "";
+                        if (id != "ptz_speed") {
+                            if (id == "saturation" || id == "contrast" || id == "sharpness") //取值范围 0-255；
+                            {
+                                value = parseInt((ui.value / 100 * 255), 10);
+                            }
+                            if (id == "hue") //取值范围-15-15；
+                            {
+                                //value = parseInt(((ui.value - 50) / 100 * 30), 10);
+								value = parseInt((ui.value / 100 * 255), 10);
+                            }
+                            if (id == "brightness") //取值范围-255-255；
+                            {
+                                //value = parseInt(((ui.value - 50) / 100 * 510), 10);
+								value = parseInt((ui.value / 100 * 255), 10);
+                            }
+							
+                            $("#01" + id + "").val(value);
+							//发送消息
+							//设置Image消息:亮度 对比度  锐度 色度 饱和度
+                        SetImage($("#01brightness").val(),$("#01contrast").val(),$("#01sharpness").val(),$("#01hue").val(),$("#01saturation").val());
+
+                        }
+						else 
+						{
+                            //机械云台 速度调节
+                            if (id == "ptz_speed") //取值范围 0-255；
+                            {
+                                value = parseInt((ui.value / 100 * 100), 10);
+                                //alert(value);
+                                // $("#01"+id+"").val(value); 
+                                //设置值参数到 server
+                                var section = 'PTZ';
+                                var poststr = "ptz_hspeed=" + value + "||ptz_vspeed=" + value;
+                                $("#03ptz_hspeed").val(value);
+                                $("#03ptz_vspeed").val(value);
+
+                            }
+                        }
+						//处理最左端等于0时，滚动条与文本框值不对应问题。
+					if(ui.value==0)
+					{
+						var uileft=$("#" + thisid + " a")[0].style.left;
+						if(uileft!="0%")
+						{
+							$("#" + thisid + " a")[0].style.left="0%";
+						}
+					}
+			 }	
+			function LoadImg(name,password,ip,port) {
+	//debugger;
+    if (window.ActiveXObject) {
+			if(typeof(parent.NetPlay) == "undefined" ||parent.NetPlay == null || isNaN(parent.NetPlay))
+			{
+				parent.NetPlay = 10;
+			}
+        try {
+ 
+		    var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+			activeX.SetLoginInfo(name, password, ip, port);
+
+			
+			//activeX.SetCapturePath("C:\\Program Data\\IPC\\Image");
+			//activeX.SetRecordPath("E:\\");
+			//activeX.SetCapturePath("E:\\");
+			//activeX.SetPtzType(0);
+			//activeX.SetStreamId(0);
+			//var str=activeX.AboutBox();
+
+				
+			activeX.SetVideoBuffer(0,parseInt(parent.NetPlay));	
+
+			activeX.Play();
+
+			
+			//获取预置点
+			GetPosEnable();
+			
+			
+/*			   							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("视频预览：LoadImg end---" + h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
+						
+        } catch(e) { 
+			//alert(e.message);
+			alert("控件未加载，请手动加载控件！");
+            return;
+        }
+    }
+	
+}
+//获取预置点状态
+function GetPosEnable()
+{
+	
+}
+
+function controlPtz(poststr, poststr2) {
+				//var html=$("#debugdiv").html()+"<p>"+poststr+ new Date().format("yyyy-MM-dd hh:mm:ss"); 
+				//$("#debugdiv").html(html);
+				myDate = new Date();
+				//发送停止命令
+				if (parseInt((myDate - lastClick), 10) > parseInt(timetrig, 10) && !isMove) {
+					postptzcmd(poststr, true);
+				}
+				//postptzcmd(poststr);
+			}
+
+			//语态控制长按 调用
+			var timerID = null;
+			var timerRunning = false;
+			var mysection, mypoststr, mypoststr2;
+			function move() {
+				//alert(timerRunning);
+				if (timerRunning) {
+					//alert("down");
+					//alert(mypoststr);
+					if (mysection == "DPTZ") {
+						//alert(mypoststr);
+						GetAndSet('set', mysection, mypoststr, "process", false, true);
+					}
+					if (mysection == "PTZ") {
+						//alert(mypoststr+"\n"+mypoststr2);
+						controlPtz(mypoststr, "");
+					}
+					timerID = setTimeout("move()", 400);
+					//alert("down");
+				}
+			}
+			var lock = false;
+			function postptzcmd(poststr, ismove) {
+
+				isMove = ismove;
+
+				var cmd, hspeed, vspeed;
+
+				cmd = poststr.split("||")[0].split("=")[1];
+				hspeed = poststr.split("||")[1].split("=")[1];
+
+				vspeed = poststr.split("||")[2].split("=")[1];
+
+				var control = 1; //off
+				if (ismove) {
+					control = 0;
+				} else {
+					control = 1;
+				}
+ 
+				var res = activeX.PTZControl(cmd, control, hspeed, vspeed);
+
+			}
+			function stopmove(section, poststr) {
+				var section = section || "DPTZ";
+				var poststr = poststr || "";
+				if (timerRunning) clearTimeout(timerID);
+				timerRunning = false;
+				if (section == "PTZ") {
+					//var html=$("#debugdiv").html()+"<p>"+poststr+ new Date().format("yyyy-MM-dd hh:mm:ss"); 
+					//$("#debugdiv").html(html);
+					// GetAndSet('set', section, poststr, "process", false, true);
+					myDate = new Date();
+					//发送停止命令
+					if (isMove) {
+						if (parseInt((myDate - lastClick), 10) > parseInt(stoptimetrig, 10)) {
+
+							postptzcmd(poststr, false);
+						} else {
+							setTimeout("postptzcmd(" + poststr + "," + false + ")", stoptimetrig - parseInt((myDate - lastClick), 10));
+							//isMove=false;
+						}
+					}
+
+				}
+
+			}
+			function startmove(section, poststr, poststr2) {
+				// stopmove();
+				mysection = section;
+				mypoststr = poststr;
+				mypoststr2 = poststr2 || "";
+				timerRunning = true;
+				if (section == "PTZ") {
+					controlPtz(mypoststr, "");
+				} else {
+					move();
+				}
+			}
+			var timezoom, timeaddorsub;
+			function startzoom(zoom, addorsub) {
+				stopmove();
+				timezoom = zoom;
+				timeaddorsub = addorsub;
+				timerRunning = true;
+				zoomaddorsub();
+			}
+			function zoomaddorsub() {
+				if (timerRunning) {
+					//alert("down");
+					//alert(mypoststr);
+					if (timeaddorsub == 1) //加
+					{
+						timezoom = parseInt(timezoom, 10) + parseInt(1, 10);
+					} else {
+						timezoom = parseInt(timezoom, 10) - parseInt(1, 10);
+					}
+					if (timezoom <= maxZoom && timezoom > -1) {
+						//不同的码流 变倍
+						poststr = "dptz_zoom=" + timezoom + "||dptz_off_x=0||dptz_off_y=0||dptz_source=" + currentStreamid + "||";
+						//alert(poststr);
+						GetAndSet('set', "DPTZ", poststr, "process", false, true);
+						$("#02dptz_zoom").val(timezoom);
+
+					}
+					timerID = setTimeout("zoomaddorsub()", 400);
+					//alert("down");
+				}
+			}
+
+function init() {
+				//默认数字云台
+/*						   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("视频预览：init begin---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
+				//var cameratype=parent.cameratype;
+			
+				$("#PosSel").val("0");
+				var PosSelhtml = "<option value='0'>home</option>";
+				//if(cameratype==2)//一体机
+				if (parent.shield_id != "0") {
+					//数字云台中有变焦
+					//默认机械云台
+					if (parent.isLinescanDisabled == 1) {
+						$("#home").attr("disabled", "disabled");
+					} else {
+						$("#home").removeAttr("disabled", "disabled");
+					}
+					$("#jixie").attr("checked", "checked");
+				
+				
+					$("#divZoom").css("display", "block");
+					//方向键显示
+					$("#pantilt").css("display", "block");
+					$("#dptzpan").css("display", "none");
+					//$("#divFocus").css("display", "block");
+					//$("#divAutoFocusType").css("display", "block");
+					$("#divLight").css("display", "block");
+					$("#divDrag").css("display", "block");
+					$("#shuzi").removeAttr("checked", "checked");
+					$("#jixie").attr("checked", "checked");
+
+					//自动聚焦可见
+					$("#af_enable").css("display", "none");
+					//设置机械云台
+					//$("#focusType").css("display", "block");
+					$("#divFocus").css("display", "block");
+                    //$("#divAutoFocusType").css("display", "block");
+					
+					//设置自动聚焦 手动聚焦可见，并且默认自动聚焦
+					//$("#qjjj").css("display", "true");
+					//$("#autofocus").css("display", "block");
+					//$("#manualfocus").css("display", "block");
+					
+				
+					for (var i = 1; i < 256; i++) {
+						PosSelhtml += "<option value='" + i + "'>" + i + "</option>";
+					}
+					$("#PosSel").html(PosSelhtml);
+/*					//获取home预置位的状态
+					var type = getPositionInfo(1);
+					if(type == false)//没有设置
+					{
+
+					            $("#preCall").attr("disabled", "disabled");
+                                $("#preCall").css("background", "url(images/btn_57_2.jpg) no-repeat");
+								$("#preDel").attr("disabled", "disabled");
+								$("#preDel").css("background", "url(images/btn_57_2.jpg) no-repeat");
+								
+								$("#preSet").removeAttr("disabled", "disabled");
+                                $("#preSet").css("background", "url(images/btn_57.jpg) no-repeat");
+					}
+					else if(type == true)//已经设置
+					{
+					            $("#preCall").removeAttr("disabled", "disabled");
+                                $("#preCall").css("background", "url(images/btn_57.jpg) no-repeat");
+								$("#preDel").removeAttr("disabled", "disabled");
+								$("#preDel").css("background", "url(images/btn_57.jpg) no-repeat");
+								
+								$("#preSet").attr("disabled", "disabled");
+								$("#preSet").css("background", "url(images/btn_57_2.jpg) no-repeat");					
+					}*/
+					
+					//获取图片数据
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					contentstr=jsonToString(content);
+					GetAndSet("GetImageCfg","json",contentstr, sucess_GetImageData);
+					
+					//获取相机类型
+				  var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=parent.Authvalue;
+				  contentstr=jsonToString(content);
+				  
+				  GetAndSet("GetSystemAfFlags","json",contentstr, sucess_GetXJtype);
+				  //获取编码镜像
+				  var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=parent.Authvalue;
+				  content.StreamId=Streamid;
+				  contentstr=jsonToString(content);
+				  
+				  GetAndSet("GetVideoEncodeMirror","json",contentstr, sucess_GetVideoEncodeMirror);		
+				  		  
+					//-----wk add
+					var value1 = parseInt((50 / 100 * 100), 10);
+					$("#03ptz_hspeed").val(value1);
+                    $("#03ptz_vspeed").val(value1);
+
+                	var dragbgid = "ptz_speed";
+					
+                	var value = document.getElementById("03ptz_hspeed").value;
+					spValue = value;
+					if($("#" + dragbgid + " a")[0]!=null)
+					{
+                		$("#" + dragbgid + " a")[0].style.left = value + "%";
+					}
+					else
+					{
+						setTimeout("getSpeed()",1000);
+					}
+
+					//-----wk add						
+				}
+				
+						$(".detail").css("display", "block");
+						$("#apreposition").css("background", "url(images/sub3.gif) no-repeat 0 3px");
+						
+/* 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("视频预览：init end---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close(); */
+						
+			}
+			//获取镜编码镜像
+			function sucess_GetVideoEncodeMirror(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						var stmp = PackDate.Content.Mirror;
+						switch(stmp)
+						{
+							case "0":
+								$("#flip_rotate").val(0);
+							break;
+							case "1":
+								$("#flip_rotate").val(1);
+							break;
+							case "2":
+								$("#flip_rotate").val(2);
+							break;
+							case "3":
+								$("#flip_rotate").val(3);
+							break;
+							default:
+								$("#flip_rotate").val(0);
+							break;
+						}
+						
+/* 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("获取镜像编码结束---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close(); */
+						
+					}
+					else if(PackDate.Content.RetCode!="0")
+					{
+						alert("获取编码镜像参数失败！");
+					}
+				}
+				delete PackDate;
+			}
+function sucess_GetImageData(data)
+{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						var stmp;
+						//成功返回
+						//视频流ID
+						VideoId = PackDate.Content.VideoId;
+						//电子快门
+						ShutterMin = PackDate.Content.ShutterMin;
+						ShutterMax = PackDate.Content.ShutterMax;
+						//最大增益
+						GainMax = PackDate.Content.GainMax;
+						//曝光模式
+						Exposure = PackDate.Content.ExposureMode;
+						//饱和度
+						stmp = PackDate.Content.Saturation;
+                        $("#saturation a")[0].style.left = parseInt((parseInt(stmp, 10)) / 255 * 100, 10) + "%";
+                        $("#01saturation").val(stmp);
+						//亮度
+						stmp = PackDate.Content.Brightness;
+                        $("#brightness a")[0].style.left = parseInt((parseInt(stmp, 10)) / 255 * 100, 10) + "%";
+                        $("#01brightness").val(stmp);
+						//色度
+						stmp = PackDate.Content.Hue;
+                        $("#hue a")[0].style.left = parseInt((parseInt(stmp, 10)) / 255 * 100, 10) + "%";
+                        $("#01hue").val(stmp);
+						//对比度
+						stmp = PackDate.Content.Contrast;
+                        $("#contrast a")[0].style.left = parseInt((parseInt(stmp, 10)) / 255 * 100, 10) + "%";
+                        $("#01contrast").val(stmp);
+						//锐度
+						stmp = PackDate.Content.Sharpness;
+                        $("#sharpness a")[0].style.left = parseInt((parseInt(stmp, 10)) / 255 * 100, 10) + "%";
+                        $("#01sharpness").val(stmp);
+					}
+					else if(PackDate.Content.RetCode!="0")
+					{
+						//错误返回
+						alert("获取Image数据失败!");	
+					}
+				}
+				
+/* 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("获取Image参数结束---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close(); */
+						
+				delete PackDate;	
+}
+function getSpeed()
+{
+	if($("#ptz_speed  a")[0]!=null)
+	{
+		$("#ptz_speed a")[0].style.left = spValue + "%";
+	}
+	else
+	{
+		setTimeout("getSpeed()",1000);
+	}
+}
+//获取相机；类型
+function sucess_GetXJtype(data)
+{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						if(PackDate.Content.AutoFlags == "0")//枪击不支持
+						{
+							$("#divAutoFocusType").css("display","none");
+							//$("#divFocus").css("display","block");
+							$("#focusType").css("display","none");
+							
+						}
+						else if(PackDate.Content.AutoFlags == "1")//球机支持
+						{
+							//$("#divAutoFocusType").css("display","none");
+							//$("#divFocus").css("display","block");
+							//$("#focusType").css("display","none");
+							//wk add  获取聚焦模式
+				  			var  content={};
+				  			content.SessionId=parent.id;
+				  			content.AuthValue=parent.Authvalue;
+				  			contentstr=jsonToString(content);
+				  
+				  			GetAndSet("GetAutoFocusMode","json",contentstr, sucess_GetJJ);	
+						}
+					}
+					else if(PackDate.Content.RetCode!="0")//作为枪击处理
+					{
+							$("#divAutoFocusType").css("display","none");
+							//$("#divFocus").css("display","block");
+							$("#focusType").css("display","none");	
+					}
+				}	
+				delete PackDate;	
+}
+
+//获取聚焦模式
+function sucess_GetJJ(data)
+{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						//成功返回
+						if(PackDate.Content.FocusMode == "0")//手动聚焦
+						{
+								$("#manualfocus").click();
+							//$("#manualfocus").checked = true;
+							//$("#autofocus").checked = false;	
+						}
+						else if(PackDate.Content.FocusMode == "1")//自动聚焦
+						{
+								//$("#autofocus").click();
+							//$("#manualfocus").checked = false;
+							//$("#autofocus").checked = true;	
+								$("#autoFocusType").val("1");	
+								$("#divAutoFocusType").css("display","block");
+								$("#divFocus").css("display","none");
+						}
+						else if(PackDate.Content.FocusMode == "2")//自动聚焦一次
+						{
+							//$("#qjjj").click();	
+							//$("#manualfocus").checked = false;
+							//$("#autofocus").checked = true;	
+							//$("#autofocus").click();
+							$("#autoFocusType").val("2");
+						
+							$("#divAutoFocusType").css("display","block");
+							$("#divFocus").css("display","none");
+						}
+						
+					//-----wk add
+					//var value1 = parseInt((100 / 100 * 100), 10);
+					//$("#03ptz_hspeed").val(value1);
+                    //$("#03ptz_vspeed").val(value1);
+					//-----wk add	
+					}
+					else if(PackDate.Content.RetCode!="0")
+					{
+						//错误返回
+						alert("获取聚焦模式失败!");	
+					}
+				}	
+				
+/* 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("获取聚焦模式结束---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close(); */
+						
+				delete PackDate;	
+}
+
+//切换码流		
+function changeStream(streamid)
+{
+	var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+				//判断是否在录像
+				if(isRecord == true)
+				{
+								activeX.Record(false);
+
+								$("#brecord").val("启动录像");
+								$("#tipInfo").css("display", "none");
+								isRecord = false;	
+				}
+				//判断是否在语音对
+				var status = $("#btalking").val();
+				if(status == "关闭对讲")
+				{
+								var result = true;
+								//关闭话筒没有返回值
+								//result=activeX.StopTalking();
+
+								result = activeX.DeviceTalk(false);
+
+								//if (result) {
+									$("#btalking").val("启动对讲");
+								//} else {
+									//alert("关闭对讲失败");
+								//	$("#btalking").val("关闭对讲");
+								//}
+				}
+				//判断声音是否开启
+				status = $("#blistening").val();
+				if(status == "关闭声音")
+				{
+								var result = true;
+								//停止声音没有返回值
+								//var result=activeX.StopListening();
+
+								result=activeX.OpenSound(false);
+
+								//if (result) {
+									$("#blistening").val("启动声音");
+								//} else {
+								//	$("#blistening").val("关闭声音");
+									//alert("关闭声音失败");
+								//}	
+				}
+				//判断是否暂停
+				status = $("#bplay").val();
+				if (status == "预览")
+				{
+									$("#bplay").val("暂停");
+	
+				}
+				
+				//切换码流
+				var ID = parseInt(streamid);
+				Streamid = ID;		
+    if (window.ActiveXObject) {
+        try {
+         
+		    
+			//activeX.SetLoginInfo(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+			//activeX.SetCapturePath("C:\\Program Data\\IPC\\Image");
+
+			switch(ID)
+			{
+				case 0:
+					//activeX.SetPtzType(0);
+					activeX.SetStreamId(0);
+				break;
+				case 1:
+					//activeX.SetPtzType(1);
+					activeX.SetStreamId(1);
+				break;
+				case 2:
+					//activeX.SetPtzType(2);
+					activeX.SetStreamId(2);
+				break;
+				case 3:
+					//activeX.SetPtzType(3);
+					activeX.SetStreamId(3);
+				break;
+				default:
+				return;
+			}
+
+			//var str=activeX.AboutBox();
+			//activeX.Play();
+			
+			//重新获取码流编码镜像
+				  //获取编码镜像
+				  var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=parent.Authvalue;
+				  content.StreamId=Streamid;
+				  contentstr=jsonToString(content);
+				  
+				  GetAndSet("GetVideoEncodeMirror","json",contentstr, sucess_GetVideoEncodeMirror);
+				
+			
+        } catch(e) { 
+			//alert(e.message);
+			alert("控件加载失败！请尝试手动加载控件！");
+            return;
+        }
+    }
+
+}
+
+function StarTime_dj()
+{
+//	if(c<1)
+//	{
+//		c++;	
+//		t=setTimeout('StarTime_dj()',1000);
+//	}
+//	else if(c>=1)
+//	{
+//		StopTime_dj();
+//	}
+c++;
+StopTime_dj();
+	
+}
+function StopTime_dj()
+{
+	c = 0;
+	clearTimeout(t);
+	$("#btalking").removeAttr("disabled", "disabled");
+}
+				//设置Image消息:亮度 对比度  锐度 色度 饱和度
+				function SetImage(Brightnes,Contrast,Sharpness,Hue,Saturation)
+				{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					//亮度
+					content.Brightness=Brightnes;
+					//对比度
+					content.Contrast=Contrast;
+					//锐度
+					
+					content.Sharpness=Sharpness;
+					//色度
+					content.Hue=Hue;
+					//饱和度
+					content.Saturation=Saturation;
+					//di8anzi快门
+					content.ShutterMax=ShutterMax;
+					content.ShutterMin=ShutterMin;
+					//最大增益
+					content.GainMax=GainMax;
+					//曝光模式
+					content.Exposure = Exposure;
+					
+					contentstr=jsonToString(content);
+					GetAndSet("SetImageCfg","json",contentstr, sucess_GetAdvanceImageData);			
+				}
+				function sucess_GetAdvanceImageData(data)
+				{
+					
+				}
+
+	    </script>
+    </head>
+    
+    <body>
+        <div class="bit-stream" >
+            <h3 id="hcameraset">
+                视频预览
+            </h3>
+<!--        </div>
+        <div class="bit-stream" >-->
+            <dl id="streamInfo">
+                <dt id="dstream">
+                    码流
+                </dt>
+                <dd>
+                    <input type="radio" name="bitstream" value="0" id="radiostream0" checked="checked"
+                    />
+                    <label id="1stream">
+                        码流
+                    </label>
+                    <label>
+                        1
+                    </label>
+                </dd>
+            </dl>
+        </div>
+        <div class="video" id="myvedio">
+            <object classid="CLSID:D761DC49-4CDC-458E-ABB6-4F594E9DA1EB" codebase=""
+            width=702 height=395 align="absmiddle" id="GMIIPCmrWebPlugIn1">
+            
+            </object>
+    </div>
+        <div class="rgt" >
+            <p class="type-sel" style="display:none">
+                <input type="hidden" id="02dptz_zoom" />
+                <input type="radio" name="type" value="1" id="shuzi" checked/>
+                <label id="lshuziyt">
+                    数字云台
+                </label>
+                <input type="radio" name="type" value="2" id="jixie" />
+                <label id="ljixieyt">
+                    机械云台
+                </label>
+            </p>
+            <div class="type_ajust" id="divZoom" style="display:none">
+                <div class="top_plus_m">
+                    <input class="btn7_mouseout" onmouseover="this.className='btn7_mouseover'"
+                    type="button" onmouseout="this.className='btn7_mouseout'" id="zoomsub"
+                    />
+                </div>
+                <div class="ajust_kind" id="ddivzoom">
+                    变倍
+                </div>
+                <div class="top_plus_m">
+                    <input class="btn6_mouseout" onmouseover="this.className='btn6_mouseover'"
+                    type="button" onmouseout="this.className='btn6_mouseout'" id="zoomadd"
+                    />
+                </div>
+            </div>
+             <div class="type_ajust" id="divLight" style="display:none">
+                <div class="top_plus_m">
+                    <input class="btn7_mouseout" onmouseover="this.className='btn7_mouseover'"
+                    type="button" onmouseout="this.className='btn7_mouseout'" id="irissub"
+                    />
+                </div>
+                <div class="ajust_kind" id="diviris">
+                    光圈
+                </div>
+                <div class="top_plus_m">
+                    <input class="btn6_mouseout" onmouseover="this.className='btn6_mouseover'"
+                    type="button" onmouseout="this.className='btn6_mouseout'" id="irisadd"
+                    />
+                </div>
+            </div>
+            
+             <div class="type_ajust" id="focusType" style="color:#A0A0A4">
+             <button id="qjjj" class="btn27" value="聚焦">聚焦</button>
+              <input type="radio" name="focustype" value="1" id="autofocus" checked/>
+                <label id="labelauto">
+                   自动
+                </label>
+                <input type="radio" name="focustype" value="0" id="manualfocus" />
+                <label id="labelmanul">
+                   手动
+                </label>
+             </div>
+            <div class="type_ajust" id="divFocus" style="display:none">
+                <div class="top_plus_m">
+                    <input class="btn7_mouseout" onmouseover="this.className='btn7_mouseover'"
+                    type="button" onmouseout="this.className='btn7_mouseout'" id="focussub"
+                    />
+                </div>
+                <div class="ajust_kind"  id="ddivfocus">
+                    调焦
+                </div>
+                <div class="top_plus_m">
+                    <input class="btn6_mouseout" onmouseover="this.className='btn6_mouseover'"
+                    type="button" onmouseout="this.className='btn6_mouseout'" id="focusadd"
+                    />
+                </div>
+            </div>
+             <div class="type_ajust" id="divAutoFocusType" style="display:none">
+               <select id="autoFocusType" style="width:150px; height:20px">
+               <option value="1">全自动模式</option>
+               <option value="2">自动聚焦锁定模式</option>
+               </select>
+            </div>
+           
+            <div class="sjiant" style="display:none" id="pantilt">
+                <table width="90" height="90px" border="0" cellpadding="0" cellspacing="0"
+                align="center" style="margin-top:6px">
+                    <tr>
+                        <td width="30px" height="30px"><input class="btn_mouseout_1" onmouseover="this.className='btn_mouseover_1'"
+                            type="button" onmouseout="this.className='btn_mouseout_1'" id="leftup" style="display:block" />             
+                        </td>
+                        <td width="30px">
+                            <input class="btn1_mouseout" onmouseover="this.className='btn1_mouseover'"
+                            type="button" onmouseout="this.className='btn1_mouseout'" id="up" />
+                        </td>
+                        <td width="30px"><input class="btn_mouseout_2" onmouseover="this.className='btn_mouseover_2'"
+                            type="button" onmouseout="this.className='btn_mouseout_2'" id="rightup" style="display:block"/>
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30px" height="30px">
+                            <input class="btn2_mouseout" onmouseover="this.className='btn2_mouseover'"
+                            type="button" onmouseout="this.className='btn2_mouseout'" id="left" />
+                        </td>
+                        <td width="30px" height="30px">
+                            <input class="btn3_mouseout" onmouseover="this.className='btn3_mouseover'"
+                            type="button" onmouseout="this.className='btn3_mouseout'" id="home" />
+                        </td>
+                        <td width="30px" height="30px">
+                            <input class="btn4_mouseout" onmouseover="this.className='btn4_mouseover'"
+                            type="button" onmouseout="this.className='btn4_mouseout'" id="right" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30px" height="30px"><input class="btn_mouseout_3" onmouseover="this.className='btn_mouseover_3'"
+                            type="button" onmouseout="this.className='btn_mouseout_3'" id="leftdown" style="display:block"/>
+                            
+                        </td>
+                        <td width="30px" height="30px">
+                            <input class="btn5_mouseout" onmouseover="this.className='btn5_mouseover'"
+                            type="button" onmouseout="this.className='btn5_mouseout'" id="down" />
+                        </td>
+                        <td width="30px" height="30px"><input class="btn_mouseout_4" onmouseover="this.className='btn_mouseover_4'"
+                            type="button" onmouseout="this.className='btn_mouseout_4'" id="rightdown" style="display:block"/>
+                            
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="sjiant" style="padding-top:10px; color:#A0A0A4" id="dptzpan">数字PTZ请使用鼠标操作。<br>鼠标滚轮缩放、左键拖动调整方向
+            </div>
+            <div style="clear:both">
+            </div>
+            
+            <div class="drag-widget" id="divDrag" style="display:none; padding:10px 0;">
+                <div style="float:left; color:#999; margin-left:0; width:12px; margin-left:10px;_margin-left:13px;" id="dslow">
+                    慢
+                </div>
+                <div class="drag-bg" style="float:left">
+                    <input type="hidden" id="03ptz_vspeed" value="30" />
+                    <input type="hidden" id="03ptz_hspeed" value="30"/>
+                    <div id="ptz_speed" class="drag-icon">
+                    </div>
+                </div>
+                <div style="float:left; color:#999; width:1px;" id="dquick">
+                    快
+                </div>
+            </div>
+            <div style="clear:both;">
+            </div>
+            <input type="hidden" id="02dptz_enable" />
+            <input type="hidden" id="02dptz_source" />
+            <input type="hidden" id="02dptz_off_x" />
+            <input type="hidden" id="02dptz_off_y" />
+            <div class="yuntaishez" style="height:30px;" >
+                <div style="height:22px;float:left;margin-top:0px; _margin-left:5px;">
+                    <a class="btn13" id="apreposition" style="background: url(images/add3.gif) no-repeat 0 3px;">
+                    </a>
+                </div>
+                <div id="dytyzw">云台预置位</div>
+            </div>
+            <div class="detail" style="display:none;">
+                <p>
+                    <select id="PosSel" name="PosSel">
+                        <option value=0 selected>
+                            home
+                        </option>
+                        <option value=1>
+                            1
+                        </option>
+                        <option value=2>
+                            2
+                        </option>
+                        <option value=3>
+                            3
+                        </option>
+                        <option value=4>
+                            4
+                        </option>
+                        <option value=5>
+                            5
+                        </option>
+                        <option value=6>
+                            6
+                        </option>
+                        <option value=7>
+                            7
+                        </option>
+                        <option value=8>
+                            8
+                        </option>
+                        <option value=9>
+                            9
+                        </option>
+                    </select>
+                    <input type="button" id="preCall" value="调用" disabled="disabled" class="btn24"
+                    style="background:url(images/btn_57_2.jpg) no-repeat">
+                    </input>
+                </p>
+                <p>
+                    <input type="button" id="preSet" value="设置" disabled="disabled" class="btn24"
+                    style="background:url(images/btn_57_2.jpg) no-repeat">
+                    </input>
+                    <input type="button" id="preDel" value="删除" disabled="disabled" class="btn24"
+                    style="background:url(images/btn_57_2.jpg) no-repeat">
+                    </input>
+                </p>
+            </div>
+        </div>
+        <div class="down_main_content">
+            <div class="left_nav">
+                <div class="actions" style="margin-top:10px;">
+                    <input class="btn22" type="button" id="bplay" value="暂停">
+                    </input>
+                    <input class="btn22" type="button" value="启动对讲" id="btalking">
+                    </input>
+                    <input class="btn22" type="button" value="启动声音" id="blistening">
+                    </input>
+                    <input class="btn22" type="button" id="brecord" value="启动录像">
+                    </input>
+                    <input class="btn22" type="button" value="抓图" id="bcapturePicture">
+                    </input>
+                    <input class="btn11" type="button" value="留空" style="visibility:hidden">
+                    </input>
+                    <input class="btn22" type="button" value="自动聚焦" id="af_enable" style="display:none">
+                    </input><div id="tipInfo" style="color:#F00; display: none;float:left; width:100px; height:20px;  margin-left:20px; "></div>
+                    <input type="hidden" id="01af_enable" /> 
+                <div class="img-set">
+                </div>
+                <div class="actions" id="tipInfo" style="margin-top:10px; color:#F00; display:none"></div>
+                <div class="img-set">
+                    <h4>
+                        <div style="height:22px;float:left;margin-top:0px;">
+                            <a class="btn13_1" id="aimageset">
+                            </a>
+                        </div>
+                        <div style="font-size:12px; width:125px; float:left;">
+                            图像设置 图像翻转
+                        </div>
+                        <select id="flip_rotate" name="s0_flip_rotate">
+                            <option value='0' selected>
+                                正常
+                            </option>
+                            <option value='1'>
+                                水平镜像
+                            </option>
+                            <option value='2'>
+                                垂直镜像
+                            </option>
+                            <!-- <option value='4'>
+                            顺时旋转90度
+                            </option> -->
+                            <option value='3'>
+                                旋转180度
+                            </option>
+                            <!--<option value='7'>
+                            顺时旋转270度
+                            </option>-->
+                        </select>
+                        <input type="hidden" id="04s0_flip_rotate" />
+                        <input type="hidden" id="04s1_flip_rotate" />
+                        <input type="hidden" id="04s2_flip_rotate" />
+                        <input type="hidden" id="04s3_flip_rotate" />
+                        
+                    </h4>
+                    <div class="previer_zhankai" style="display:none; width:320px;">
+                        <dl style="width:300px">
+                            <dt>
+                                饱和度
+                            </dt>
+                            <dd style="width:250px">
+                                <div class="drag-widget">
+                                    <input type="button" class="sub" id="saturationsub" style="margin-right:10px;">
+                                    </input>
+                                    <div class="drag-bg">
+                                        <div class="drag-icon" id="saturation">
+                                        </div>
+                                    </div>
+                                    <input type="button" class="add" id="saturationadd" style="margin-left:10px;">
+                                    </input>
+                                    <input id="01saturation" class="val" readonly="readonly" name="" />
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl style="width:300px">
+                            <dt>
+                                亮度
+                            </dt>
+                            <dd style="width:250px">
+                                <div class="drag-widget">
+                                    <input type="button" class="sub" id="brightnesssub" style="margin-right:10px;">
+                                    </input>
+                                    <div class="drag-bg">
+                                        <div id="brightness" class="drag-icon">
+                                        </div>
+                                    </div>
+                                    <input type="button" class="add" id="brightnessadd" style="margin-left:10px;">
+                                    </input>
+                                    <input id="01brightness" class="val" readonly="readonly" name="" />
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl style="width:300px">
+                            <dt>
+                                色度
+                            </dt>
+                            <dd style="width:250px">
+                                <div class="drag-widget">
+                                    <input type="button" class="sub" id="huesub" style="margin-right:10px;">
+                                    </input>
+                                    <div class="drag-bg">
+                                        <div class="drag-icon" id="hue">
+                                        </div>
+                                    </div>
+                                    <input type="button" class="add" id="hueadd" style="margin-left:10px;">
+                                    </input>
+                                    <input id="01hue" class="val" readonly="readonly" name="" />
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl style="width:300px">
+                            <dt>
+                                对比度
+                            </dt>
+                            <dd style="width:250px">
+                                <div class="drag-widget">
+                                    <input type="button" class="sub" id="contrastsub" style="margin-right:10px;">
+                                    </input>
+                                    <div class="drag-bg">
+                                        <div class="drag-icon" id="contrast">
+                                        </div>
+                                    </div>
+                                    <input type="button" class="add" id="contrastadd" style="margin-left:10px;">
+                                    </input>
+                                    <input id="01contrast" class="val" readonly="readonly" name=""/>
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl style="width:300px">
+                            <dt>
+                                锐度
+                            </dt>
+                            <dd style="width:250px">
+                                <div class="drag-widget">
+                                    <input type="button" class="sub" id="sharpnesssub" style="margin-right:10px;">
+                                    </input>
+                                    <div class="drag-bg">
+                                        <div class="drag-icon" id="sharpness">
+                                        </div>
+                                    </div>
+                                    <input type="button" class="add" id="sharpnessadd" style="margin-left:10px;">
+                                    </input>
+                                    <input id="01sharpness" class="val" readonly="readonly" name="" />
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+         </div>
+        <div id="mjs:tip" class="tip" style="position:absolute;left:0;top:0;display:none; color:#A00">
+        </div>
+        <div id="debugdiv" style=""></div>
+
+    </body>
+
+</html>

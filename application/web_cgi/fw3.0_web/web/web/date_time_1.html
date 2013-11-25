@@ -1,0 +1,556 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+html, body {
+	margin:0;
+	padding:0;
+	background-color:#242424;
+}
+</style>
+<link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+<script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+<script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js"></script>
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/SetAndGetValue.js" ></script>
+<script type="text/javascript" src="js/js_lang.js"></script>
+<script type="text/javascript" src="js/js_cookie.js"></script>
+<script type="text/javascript" src="js/system.js"></script>
+<script type='text/javascript'>
+ var isvalid = new Array(); //数据无效的数组。每个不合法项的ID 组成的数组。
+ var oldtzValue;
+ //是否是PC设置时间还是手动设置时间 0是手动设置 1是pc同步
+ var usr = 0;
+ function changeLanguage(lang)
+			 {
+					TranslatePage(lang);
+			 }
+			 
+var devTimehand = null;
+function getDevTime(){
+	GetAndSet("GetTime","json","{SessionId:"+parent.id+",AuthValue:0}", displayDevTime);
+	
+}
+function displayDevTime(txt){
+		var PackDate=new UnPackData(txt);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.cgiFncCmd=="GetTime")
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							var sync_mode = PackDate.Content.Type || 0;
+							$("input[type=radio][name=sync_mode][value=" + sync_mode + "]").attr("checked",true);
+							if(sync_mode == 0)//设置时间
+							{
+								$("#ntp_addr").attr("disabled","disabled");
+								$("#interval").attr("disabled","disabled");
+								$("#pc_date").removeAttr("disabled","disabled");
+								$("#pc_time").removeAttr("disabled","disabled");								
+							}
+							else if(sync_mode == 1)//设置NTP
+							{
+								$("#pc_date").attr("disabled","disabled");
+								$("#pc_time").attr("disabled","disabled");
+								$("#ntp_addr").removeAttr("disabled","disabled");
+								$("#interval").removeAttr("disabled","disabled");
+							}
+
+							//ntp_addr
+							var ntp_addr = PackDate.Content.NtpAddr_1 ;
+							
+							$("#ntp_addr").val(ntp_addr);
+							
+							
+							//time
+							var sHour =  PackDate.Content.Hour;
+							var sMinute = PackDate.Content.Minute;
+							var sSecond = PackDate.Content.Second;
+							sHour = CheckTimeRight(sHour);
+							sMinute = CheckTimeRight(sMinute);
+							sSecond = CheckTimeRight(sSecond);
+							
+							var datestr = CheckTimeRight(PackDate.Content.Year)+"-"+CheckTimeRight(PackDate.Content.Month)+"-"+CheckTimeRight(PackDate.Content.Day);
+							var timestr = sHour+":"+sMinute+":"+sSecond;
+							var tz=PackDate.Content.TimeZoneName;
+							var interval=PackDate.Content.NtpInterval;
+							$('#interval').val(interval);
+							$('#tz').val(tz);
+							$('#dev_date').val(datestr);
+							$('#dev_time').val(timestr);
+							$('#pc_date').val(datestr);
+							$('#pc_time').val(timestr);
+							var d = parseTime(datestr, timestr);
+							devTimehand = autoTime(d, 'dev_date', 'dev_time');
+							oldtzValue=tz;
+						}
+					}
+					if(PackDate.cgiFncCmd=="SetTime")
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							
+							//提示语言设置
+									var alertInfo="设置成功!";
+									  
+									alert(alertInfo);
+										//location.reload();
+								//re get dev time
+								stopAutoTime(devTimehand);
+								devTimehand = null;
+								getDevTime();
+						}
+						else
+						{
+							PackDate= null;
+							alert("设置失败");
+						}
+					}
+				}
+		
+		
+		
+	}
+	//检查时间格式
+	function CheckTimeRight(tstr)
+	{
+		
+		if(tstr == "0" 
+		|| tstr == "1" 
+		|| tstr == "2" 
+		|| tstr == "3" 
+		|| tstr == "4" 
+		|| tstr == "5" 
+		|| tstr == "6" 
+		|| tstr == "7" 
+		|| tstr == "8" 
+		|| tstr == "9" 
+		)
+		{
+			tstr = "0" + tstr;
+			return tstr;
+		}
+		else
+		{
+			return tstr;
+		}
+
+	}
+$(document).ready(function(){
+	
+                  // 调用模版也方法
+				 parent.innerCallMe(true); 
+				 //语言初始化
+	            initLang();
+	autoTime(new Date(), 'pc_date_add', 'pc_time_add');
+	getDevTime();
+	
+	$('#ntp_addr').change(function(){//手动添加
+		if(this.value == 'manual')
+			$("#ntp_addr_manual").show();
+		else
+			$("#ntp_addr_manual").hide();
+	});
+	$('#btn_ok').click(setDateTime);
+	$('#btn_cancel').click(function(){
+		window.location.reload();
+	});
+	//ip 校验
+	/*
+	$("#ntp_addr_manual").bind("blur",function(e){
+		var isok=check_ip(this.value);
+		if(!isok)
+		{
+			this.value="";
+			this.focus();
+		}
+		});
+		*/
+		//点击NTP设置
+		$("#NTPSET").bind("click",function(e){
+			$("#pc_date").attr("disabled","disabled");
+			$("#pc_time").attr("disabled","disabled");
+			$("#ntp_addr").removeAttr("disabled","disabled");
+			$("#interval").removeAttr("disabled","disabled");
+			});
+		//点击用户设置
+		$("#USRSET").bind("click",function(e){
+			usr = 0;
+			$("#ntp_addr").attr("disabled","disabled");
+			$("#interval").attr("disabled","disabled");
+			$("#pc_date").removeAttr("disabled","disabled");
+			$("#pc_time").removeAttr("disabled","disabled");
+			});
+		$("#PCSET").bind("click",function(e){
+			usr = 1;
+			$("#ntp_addr").attr("disabled","disabled");
+			$("#interval").attr("disabled","disabled");
+			$("#pc_date").attr("disabled","disabled");
+			$("#pc_time").attr("disabled","disabled");
+			});
+	$("#manul_date").bind("blur",function(e){
+		 var id = this.id;
+		var isok=check_date(this.value);
+		/*if(!isok)
+		{
+			//this.value="";
+			getDevTime();
+			this.focus();
+		}*/
+		 if (!isok) {
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+			});
+		$("#manul_time").bind("blur",function(e){
+			 var id = this.id;
+		var isok=check_time(this.value);
+		/*if(!isok)
+		{
+			//this.value="";
+			getDevTime();
+			this.focus();
+		}*/
+		 if (!isok) {
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+			});
+			
+	$("#ntp_addr").bind("blur",function(e){
+		 var id = this.id;
+                    var isok = check_ip(this.value);
+                    if (!isok) {
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+		});
+		/*
+			$("#interval").bind("blur",function(e){
+		 var id = this.id;
+                    var isok = (this.value<100001&&this.value>0);
+                    if (!isok) {
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+							alert("请填入正确的时间间隔！");
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+		});
+		*/
+		
+		$("#tz").bind("change",function(e){
+			//var datestr = $('#manul_date').val();
+	        //var timestr = $('#manul_time').val();
+			var newValue=this.value;
+			
+			//CST+02:00:00
+			//var oldtimetrig=oldtzValue.substr(3);
+			var newtimetrig=newValue.substr(3);
+			//var old=parseInt(oldtimetrig.substr(1).split(":")[0],10)+parseInt(oldtimetrig.substr(1).split(":")[1],10)/60;
+			var newo=parseInt(newtimetrig.substr(1).split(":")[0],10)+parseInt(newtimetrig.substr(1).split(":")[1],10)/60;
+			//var oldoffset=oldtimetrig.substr(0,1)+old;
+			var newoffset=newtimetrig.substr(0,1)+newo;
+			//var trig=newoffset-oldoffset;
+		
+			//var date=new Date($("#manul_date").val().split("-")[0],$("#manul_date").val().split("-")[1],$("#manul_date").val().split("-")[2],$("#manul_time").val().split(":")[0],$("#manul_time").val().split(":")[1],$("#manul_time").val().split(":")[2]);
+			
+			var newdate=calcTime(new Date(),newoffset);
+			//alert(newdate.format("yyyy-MM-dd"));
+			$('#manul_date').val(newdate.format("yyyy-MM-dd"));
+			$('#manul_time').val(newdate.format("hh:mm:ss"));
+			//oldtzValue=newValue;
+			});
+});
+function calcTime(date,offset) {
+		utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+		nd = new Date(utc + (3600000*offset));
+		return  nd;
+    }
+
+
+function check_manual_time(){ //检查手动输入时间
+	var datestr = $('#manul_date').val();
+	var timestr = $('#manul_time').val();
+	//return false if format inccrect
+	return true;
+}
+
+function setDateTime(){
+	if (isvalid.length == 0) {
+		
+		          var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=parent.Authvalue;
+				  var sync_mode ;// $("input[type=radio][name=sync_mode][checked]").val();
+					var obj= $("input[type=radio][name=sync_mode]");
+					for(var i = 0; i < obj.length; ++i){
+						if(obj[i].checked == true){
+							sync_mode = obj[i].value;
+							break;
+						}
+					}
+	              content.Type=sync_mode;
+				  if(sync_mode==0)
+				  {
+					  //设置时间
+					  content.TimeZoneName=$('#tz').val();
+					  content.Year=$('#pc_date').val().split("-")[0];
+					  content.Month=$('#pc_date').val().split("-")[1];
+					  content.Day=$('#pc_date').val().split("-")[2];
+					  content.Hour=$('#pc_time').val().split(":")[0];
+					  content.Minute=$('#pc_time').val().split(":")[1];
+					  content.Second=$('#pc_time').val().split(":")[2];
+					
+				  	  if(isNaN(content.Year)
+				  		|| isNaN(content.Month)
+			   	  		|| isNaN(content.Day)
+						|| isNaN(content.Hour)
+						|| isNaN(content.Minute)
+						|| isNaN(content.Second)
+				 		 )
+				  		{
+							alert("日期和时间请填写正确的格式！");
+							return;  
+				  		}
+					  contentstr=jsonToString(content);
+					  GetAndSet("SetTime","json",contentstr, setTimefunc);
+				  }
+				  if(sync_mode==1)
+				  {
+					  //NTP服务信息
+					  content.NtpAddr_1=$("#ntp_addr").val();	
+				      content.NtpInterval= $('#interval').val();
+					  var isok = $("#interval").val();//(document.getElementById("interval").value<100001&&document.getElementById("interval").value>0);
+					  if(isok >100000 || isok < 0)
+					  {
+						  alert("时间间隔查出范围，应在0~100000之间！");
+						  return;
+					  }
+					  if(isNaN(content.NtpInterval))
+					  {
+						  alert("时间间隔请填写数字！");
+						  return;
+					  }
+					  contentstr=jsonToString(content);
+					  GetAndSet("SetNtpServerInfo","json",contentstr, setTimefunc);
+				  }
+				  if(sync_mode==2)
+				  {
+					  //设置时间
+					  content.TimeZoneName=$('#tz').val();
+					  content.Year=$('#pc_date_add').val().split("-")[0];
+					  content.Month=$('#pc_date_add').val().split("-")[1];
+					  content.Day=$('#pc_date_add').val().split("-")[2];
+					  content.Hour=$('#pc_time_add').val().split(":")[0];
+					  content.Minute=$('#pc_time_add').val().split(":")[1];
+					  content.Second=$('#pc_time_add').val().split(":")[2];  
+				  	  if(isNaN(content.Year)
+				  		|| isNaN(content.Month)
+			   	  		|| isNaN(content.Day)
+						|| isNaN(content.Hour)
+						|| isNaN(content.Minute)
+						|| isNaN(content.Second)
+				 		 )
+				  		{
+							alert("日期和时间请填写正确的格式！");
+							return;  
+				  		}
+					  contentstr=jsonToString(content);
+					  GetAndSet("SetTime","json",contentstr, setTimefunc);
+				  }	
+	}
+}
+
+function setTimefunc(data)
+{
+	var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					
+						if(PackDate.Content.RetCode=="0")
+						{
+							
+							//提示语言设置
+									//var alertInfo="设置成功!";
+									  
+									alert("设置成功!");
+										//location.reload();
+								//re get dev time
+								stopAutoTime(devTimehand);
+								devTimehand = null;
+								getDevTime();
+						}
+						else
+						{
+							alert("设置失败");
+						}
+					
+				}
+}
+
+</script>
+</head>
+
+<body>
+<div class="bit-stream">
+  <h3>日期时间</h3>
+</div>
+<div class="down_main_content">
+  <div class="ip_set_main">
+    <div class="video_top">
+      <div class="video_top_list">设备当前时间</div>
+      <div class="video_top_list" align="right"> 日期：</div>
+      <div class="video_top_list">
+        <input class="date_time_input" id='dev_date' disabled="disabled"/>
+      </div>
+      <div class="video_top_list" align="right">时间：</div>
+      <div class="video_top_list">
+        <input class="date_time_input" id='dev_time' disabled="disabled"/>
+      </div>
+    </div>
+    <fieldset class="motion_det_fil_1">
+      <legend>更新设备时间</legend>
+      <div class="motion_det_list">
+        <div class="motion_det_list_inner_date_t" align="left"  >
+        <div style="width:140px; text-align:right; float:right">
+          时区</div></div>
+        <div class="motion_det_list_inner" style="width:330px;margin:0px 0px 0px 25px">
+          <select class="int_pro_main_list_inner_input" id='tz' style="width:300px;">
+            <option id="timezoneOpt1" value="CST-12:00:00" name="timezoneOpt1">(GMT-12:00) 日界线西</option>
+					<option id="timezoneOpt2" value="CST-11:00:00" name="timezoneOpt2">(GMT-11:00) 中途岛，萨摩亚群岛</option>
+					<option id="timezoneOpt3" value="CST-10:00:00" name="timezoneOpt3">(GMT-10:00) 夏威夷</option>
+					<option id="timezoneOpt4" value="CST-09:00:00" name="timezoneOpt4">(GMT-09:00) 阿拉斯加</option>
+					<option id="timezoneOpt5" value="CST-08:00:00" name="timezoneOpt5">(GMT-08:00) 太平洋时间(美国和加拿大)</option>
+					<option id="timezoneOpt6" value="CST-07:00:00" name="timezoneOpt6">(GMT-07:00) 山地时间(美国和加拿大)</option>
+					<option id="timezoneOpt7" value="CST-06:00:00" name="timezoneOpt7">(GMT-06:00) 中部时间(美国和加拿大)</option>
+					<option id="timezoneOpt8" value="CST-05:00:00" name="timezoneOpt8">(GMT-05:00) 东部时间(美国和加拿大)</option>
+					<option id="timezoneOpt9" value="CST-04:30:00" name="timezoneOpt9">(GMT-04:30) 加拉斯加</option>
+					<option id="timezoneOpt10" value="CST-04:00:00" name="timezoneOpt10">(GMT-04:00) 大西洋时间(加拿大)</option>
+					<option id="timezoneOpt11" value="CST-03:30:00" name="timezoneOpt11">(GMT-03:30) 纽芬兰</option>
+					<option id="timezoneOpt12" value="CST-03:00:00" name="timezoneOpt12">(GMT-03:00) 乔治敦、巴西利亚</option>
+					<option id="timezoneOpt13" value="CST-02:00:00" name="timezoneOpt13">(GMT-02:00) 中大西洋</option>
+					<option id="timezoneOpt14" value="CST-01:00:00" name="timezoneOpt14">(GMT-01:00) 佛得角群岛、亚速尔群岛</option>
+					<option id="timezoneOpt15" value="CST-00:00:00" name="timezoneOpt15">(GMT+00:00) 都柏林、爱丁堡、伦敦</option>
+					<option id="timezoneOpt16" value="CST+01:00:00" name="timezoneOpt16">(GMT+01:00) 阿姆斯特丹、柏林、罗马、巴黎</option>
+					<option id="timezoneOpt17" value="CST+02:00:00" name="timezoneOpt17">(GMT+02:00) 雅典、耶路撒冷、伊斯坦布尔</option>
+					<option id="timezoneOpt18" value="CST+03:00:00" name="timezoneOpt18">(GMT+03:00) 巴格达、科威特、莫斯科</option>
+					<option id="timezoneOpt19" value="CST+03:30:00" name="timezoneOpt19">(GMT+03:30) 德黑兰</option>
+					<option id="timezoneOpt20" value="CST+04:00:00" name="timezoneOpt20">(GMT+04:00) 高加索标准时间</option>
+					<option id="timezoneOpt21" value="CST+04:30:00" name="timezoneOpt21">(GMT+04:30) 喀布尔</option>
+					<option id="timezoneOpt22" value="CST+05:00:00" name="timezoneOpt22">(GMT+05:00) 伊斯兰堡、卡拉奇、塔什干</option>
+					<option id="timezoneOpt23" value="CST+5:30:00" name="timezoneOpt23">(GMT+05:30) 马德拉斯、孟买、新德里</option>
+					<option id="timezoneOpt24" value="CST+05:45:00" name="timezoneOpt24">(GMT+05:45) 加德满都</option>
+					<option id="timezoneOpt25" value="CST+06:00:00" name="timezoneOpt25">(GMT+06:00) 阿拉木图、新西伯利亚、达卡</option>
+					<option id="timezoneOpt26" value="CST+06:30:00" name="timezoneOpt26">(GMT+06:30) 仰光</option>
+					<option id="timezoneOpt27" value="CST+07:00:00" name="timezoneOpt27">(GMT+07:00) 曼谷、河内、雅加达</option>
+					<option id="timezoneOpt28" value="CST+08:00:00" name="timezoneOpt28">(GMT+08:00) 北京、乌鲁木齐、新加坡</option>
+					<option id="timezoneOpt29" value="CST+09:00:00" name="timezoneOpt29">(GMT+09:00) 汉城、东京、大阪、札幌</option>
+					<option id="timezoneOpt30" value="CST+09:30:00" name="timezoneOpt30">(GMT+09:30) 阿德莱德、达尔文</option>
+					<option id="timezoneOpt31" value="CST+10:00:00" name="timezoneOpt31">(GMT+10:00) 墨尔本、悉尼、堪培拉</option>
+					<option value="CST+11:00:00" id="timezoneOpt32" name="timezoneOpt32">(GMT+11:00) 马加丹、索罗门群岛</option>
+					<option value="CST+12:00:00" id="timezoneOpt33" name="timezoneOpt33">(GMT+12:00) 奥克兰、惠灵顿</option>
+					<option value="CST+13:00:00" selected="selected" id="timezoneOpt34" name="timezoneOpt34">(GMT+13:00) 努库阿洛法</option>
+          </select>
+         
+        </div>
+      </div>
+      <fieldset class="motion_det_fil_5">
+        <legend>自动</legend>
+      <div class="motion_det_list">
+        <div class="motion_det_list_inner_date_t" align="left"  >
+        <div style="width:140px; text-align:left; float:right">
+          <input type="radio" name='sync_mode' value='1' id="NTPSET"/>
+          与NTP服务器同步</div></div>
+        <div class="motion_det_list_inner" style="width:330px">
+          <input class="int_pro_main_list_inner_input" id='ntp_addr' type="text" value="59.124.196.84">
+          </input>
+         
+        </div>
+      </div>
+         <div class="motion_det_list">
+        <div class="motion_det_list_inner_date_t" align="left"  >
+        <div style="width:117px; text-align: left; float:right; margin:0 0 0 23px">
+        时间间隔</div></div>
+        <div class="motion_det_list_inner" style="width:330px">
+          <input class="int_pro_main_list_inner_input" id='interval' type="text">
+            1~100000
+          </input>
+        (分钟)</div>
+      </div>
+      </fieldset>
+      <fieldset class="motion_det_fil_5">
+        <legend>手动</legend>
+     
+      <div class="motion_det_list">
+        <div class="motion_det_list_inner_date_t"  align="left"><div style="width:140px; text-align:left; float:right">
+          <input type="radio" name='sync_mode' value='0' id="USRSET"/>
+         用户手动设置</div></div>
+        <div class="int_pro_main_list_inner_2">
+          <div style="float:left">日期：</div>
+          <input class="date_time_input" id='pc_date' />
+        </div>
+        <div class="int_pro_main_list_inner_2">
+          <div style="float:left">时间：</div>
+          <input class="date_time_input" id='pc_time' />
+        </div>
+      </div>
+      <div class="motion_det_list">
+        <div class="motion_det_list_inner_date_t"  align="left"><div style="width:140px; text-align:left; float:right">
+          <input type="radio" name='sync_mode' value='2' id="PCSET"/>
+          与PC时间同步</div></div>
+        <div class="int_pro_main_list_inner_2">
+          <div style="float:left">日期：</div>
+          <input class="date_time_input" id='pc_date_add' disabled="disabled"/>
+        </div>
+        <div class="int_pro_main_list_inner_2">
+          <div style="float:left">时间：</div>
+          <input class="date_time_input" id='pc_time_add' disabled="disabled"/>
+        </div>
+      </div>
+      </fieldset>
+    </fieldset>
+  </div>
+</div>
+<div class="bottom-action">
+  <input type="submit" class="btn3" id='btn_ok' value="确定"/>
+  <input type="reset" class="btn3" id='btn_cancel' value="取消"/>
+</div>
+</div>
+</body>
+</html>

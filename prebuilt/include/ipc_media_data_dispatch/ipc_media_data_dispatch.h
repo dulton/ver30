@@ -1,0 +1,9 @@
+// ipc_media_data_dispatch.h
+#if !defined( IPC_MEDIA_DATA_DISPATCH )
+#define IPC_MEDIA_DATA_DISPATCH
+
+#define GM_STREAM_APPLICATION_ID       1
+#define GB_28181_STREAM_APPLICATION_ID 2
+#define ONVIF_STREAM_APPLICATION_ID    4
+
+#endif//IPC_MEDIA_DATA_DISPATCH

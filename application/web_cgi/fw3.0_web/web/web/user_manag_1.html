@@ -1,0 +1,636 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<script type="text/javascript" src="js/time_s_xxk.js"></script>
+ <link href="css/inner_frame.css" type="text/css" rel="stylesheet" /> 
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.funkyUI.js">
+        </script>
+        <!--表单分页-->
+        <link rel="stylesheet" type="text/css" media="screen" href="css/jquery-ui-1.8.21.custom.css"
+        />
+        <link rel="stylesheet" type="text/css" media="screen" href="css/ui.jqgrid.css"
+        />
+        <link rel="stylesheet" type="text/css" media="screen" href="css/ui.multiselect.css"
+        />
+        <script src="js/jquery-ui-1.8.1.custom.min.js" type="text/javascript">
+        </script>
+        <script src="js/grid.locale-cn.js" type="text/javascript">
+        </script>
+        <script src="js/ui.multiselect.js" type="text/javascript">
+        </script>
+        <script src="js/jquery.jqGrid.min.js" type="text/javascript">
+        </script>
+        <link type='text/css' href='css/demo.css' rel='stylesheet' media='screen'
+        />
+        <link type='text/css' href='css/basic.css' rel='stylesheet' media='screen'
+        />
+        <script type='text/javascript' src='js/jquery.simplemodal.js'>
+        </script>
+
+        <script> 
+		//当前选定的用户
+		var UserIndex;
+		var UserIndexID = 0;//用户名
+		var UserIdexLever = 0;//用户权限
+		var UserIndexFlag = 0;//用户类型
+		var UserPsw;	//用户密码
+		var UserRowIndex = -1;
+		var mydata = {};
+		//用户数目
+		var UserCont=0;
+		
+		//var updateid = 0;
+		//var addid = 0;
+		//var UserIndexFlag = 0;
+		//var UserIndexLevel = 0;
+//-----------
+
+//-----------
+		<!--
+		//添加用户
+		function openwin()
+		{
+			//LoadUserDiv();
+			/*
+					//判断当前身份
+					if(parent.UserLevel != 1)
+					{
+						alert("你没有添加用户的权限！");
+						return;
+					}
+					//判断是否有权限
+					var intNum = parent.Authvalue;
+					var Valuetwo;
+					var ValueStr = "";
+					//转换为二进制
+          			var answer = "";
+          			if(/\d+/.test(intNum)) 
+					{
+            			while(intNum != 0) {
+              			answer = Math.abs(intNum%2)+answer;
+              			intNum = parseInt(intNum/2);
+            			}
+            			if(answer.length == 0)
+						{
+							answer = "0";	
+						}
+          			}
+					else
+					{
+						//取高八位
+            			Valuetwo = answer;
+						ValueStr = String(Valuetwo);
+						//判断用户管理权限
+						if(ValueStr[7] != "1")
+						{
+							alert("你没有用户管理权限的权限！");
+							return;	
+						}
+          			}
+					*/
+//window.open ('addUser.html', 'newwindow', 'height=100, width=400, top=0, left=0, toolbar=no, menubar=no, scrollbars=no, resizable=no,location=n o, status=no');
+/*
+var obj = new Object();
+obj.name="";
+window.showModelessDialog("addUser.html",obj,
+center = "yes",//居中
+resizable = "no",//大小不可变
+status = "no",//显示状态栏
+scroll = "no",//显示滚动条
+edge = "sunken",//指明对话框的边框样式。默认为raised。
+"dialogWidth=500px;dialogHeight=500px");
+*/
+//alert("hello");
+
+//var result = window.showModalDialog("addUser.html?Flag=0","","dialogHeight:400px; dialogWidth:500px; status:no; help:no; scroll:no");	
+		
+	
+						if(UserCont >= 32)
+						{
+							alert("用户数目已达上限，无法添加！");
+							return;
+						}
+						var src = "addUser.html";
+						$.modal('<iframe src="' + src+"?Flag=0"+ '" height="500" width="500"  frameborder="No" scrolling="No"  style="" border="0" allowtransparency="yes">', {
+							containerId: 'simplemodal-container0',
+							closeHTML: "",
+							onClose: function() {
+								//alert("close");
+								$.modal.close(); 
+								
+							},
+							containerCss : {height:"500px",
+							width:"500px", 
+							color:"#999", 
+							backgroundcolor:"#242424",
+							border:"1px solid #000", 
+							padding:"0"},
+							overlayClose: false,
+							overlayCss : {backgroundcolor:"red"}
+						});
+						
+					
+			}
+			
+			function closeframe()
+			{
+				$.modal.close();	
+			}
+
+			//-->
+		//修改用户
+		function updateUser()
+		{
+			//window.showModalDialog("UpdateUser.html??usename="+UserIndexID+"&usepsw="+UserPsw+"&useflag="+UserIndexFlag+"&userLever="+UserIdexLever+"&Flag=1","","dialogHeight:400px; dialogWidth:500px; status:no; help:no; scroll:no");
+						if(UserRowIndex <= 0)
+						{
+							alert("请选择用户！");
+							return;
+						}
+						var src = "UpdateUser.html";
+						$.modal('<iframe src="' + "UpdateUser.html"+"?usename="+UserIndexID+"&usepsw="+UserPsw+"&useflag="+UserIndexFlag+"&userLever="+UserIdexLever+"&Flag=1" + '" height="500" width="500"  frameborder="No" scrolling="No"  style="" border="0" allowtransparency="yes">', {
+							containerId: 'simplemodal-container1',
+							closeHTML: "",
+							onClose: function() {
+								//alert("close");
+								$.modal.close();  
+								
+							},
+							containerCss : {height:"500px",
+							width:"500px", 
+							color:"#999", 
+							backgroundcolor:"#242424",
+							border:"1px solid #000", 
+							padding:"0"},
+							overlayClose: false,
+							overlayCss : {backgroundcolor:"red"}
+						});	
+						
+		}
+			
+		//删除用户
+		function deleteUser()
+		{
+			if(UserRowIndex <= 0)
+			{
+				alert("请选择用户!");
+				return;
+			}
+			var  content={};
+			content.SessionId=parent.parent.id;
+			content.AuthValue=parent.parent.Authvalue;
+			content.UserName=UserIndexID;
+			//content.UserFlag=UserIndexFlag;
+			
+			contentstr=jsonToString(content);
+			GetAndSet("DelUsers","json",contentstr, sucess_deleteUser);	
+			
+			
+		}
+		//删除用户回调函数
+		function sucess_deleteUser(data)
+		{
+			var PackDate=new UnPackData(data);
+			if(PackDate.Content!=null)
+			{
+				if(PackDate.Content.RetCode=="0")
+				{	
+					$("#list4").jqGrid('delRowData', UserRowIndex);
+					alert("删除用户成功！");
+					UserRowIndex = -1;
+					UserCont = UserCont -1;
+					return;
+				}
+				else
+				{
+					alert("删除用户失败！");
+					return;
+				}
+			}		
+		}
+			
+		  function changeLanguage(lang) {
+                TranslatePage(lang);
+            }
+		  jQuery(document).ready(function() {
+			   // 调用模版也方法
+				 parent.innerCallMe(true); 
+				  //语言初始化
+                initLang();
+			  bindData();
+			  //getUser();
+			  });
+		//获取用户
+		function getUser()
+		{
+			//先清空列表
+			$("#list4" ).clearGridData(); 
+			//$("#list4").jqGrid('delRowData', UserRowIndex);
+			var  content={};
+			content.SessionId=UserIndexID;
+			content.AuthValue=parent.Authvalue;
+			
+			contentstr=jsonToString(content);
+			GetAndSet("GetUsers","json",contentstr, sucess_getUser);	
+		}
+		//获取用户回调函数
+		function sucess_getUser(data)
+		{
+			var PackDate=new UnPackData(data);
+			if(PackDate.Content!=null)
+			{
+				if(PackDate.Content.RetCode=="0")
+				{	
+					UserCont = PackDate.Content.RealUserCnt;
+					var mydata = {};
+					mydata.length = UserCont;
+					
+					for(var i=1;i<=UserCont;i++)
+					{
+						//varUsernametmp = "UserName"+ i;
+						//mydata[i] = [{name:PackDate.Content.(UseName),group:PackDate.Content.UserFlag,userinfo:' '}];
+						//TestCode
+						var st = 0;
+						var jb = "";
+						switch(i)
+						{
+							case 1:
+							st = PackDate.Content.UserFlag0;
+							if(st == 1)
+							{
+								jb = "管理员";	
+							}
+							else if(st == 2)
+							{
+								jb = "操作员";
+							}
+							else if(st == 3)
+							{
+								jb = "视频预览";
+							}
+							//mydata[i-1] = [{name:PackDate.Content.UserName0,group:jb,userinfo:PackDate.Content.UserLevel0}];
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName0,group:jb,userinfo:PackDate.Content.UserLevel0,userpsw:PackDate.Content.UserPass0});
+							break;
+							case 2:
+							st = PackDate.Content.UserFlag1;
+							if(st == 1)
+							{
+								jb = "管理员";	
+							}
+							else if(st == 2)
+							{
+								jb = "操作员";
+							}
+							else if(st == 3)
+							{
+								jb = "视频预览";
+							}
+
+							//mydata[i-1] = [{name:PackDate.Content.UserName1,group:jb,userinfo:PackDate.Content.UserLevel1}];
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName1,group:jb,userinfo:PackDate.Content.UserLevel1,userpsw:PackDate.Content.UserPass1});
+							break;
+							case 3:
+							st = PackDate.Content.UserFlag2;
+							if(st == 1)
+							{
+								jb = "管理员";	
+							}
+							else if(st == 2)
+							{
+								jb = "操作员";
+							}
+							else if(st == 3)
+							{
+								jb = "视频预览";
+							}
+
+							//mydata[i-1] = [{name:PackDate.Content.UserName2,group:jb,userinfo:PackDate.Content.UserLevel2}];
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName2,group:jb,userinfo:PackDate.Content.UserLevel2,userpsw:PackDate.Content.UserPass2});
+							break;
+							case 4:
+							st = PackDate.Content.UserFlag3;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName3,group:jb,userinfo:PackDate.Content.UserLevel3,userpsw:PackDate.Content.UserPass3});
+							break;
+							case 5:
+							st = PackDate.Content.UserFlag4;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName4,group:jb,userinfo:PackDate.Content.UserLevel4,userpsw:PackDate.Content.UserPass4});
+							break;
+							case 6:
+							st = PackDate.Content.UserFlag5;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName5,group:jb,userinfo:PackDate.Content.UserLevel5,userpsw:PackDate.Content.UserPass5});
+							break;
+							case 7:
+							st = PackDate.Content.UserFlag6;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName6,group:jb,userinfo:PackDate.Content.UserLevel6,userpsw:PackDate.Content.UserPass6});
+							break;
+							case 8:
+							st = PackDate.Content.UserFlag7;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName7,group:jb,userinfo:PackDate.Content.UserLevel7,userpsw:PackDate.Content.UserPass7});
+							break;
+							case 9:
+							st = PackDate.Content.UserFlag8;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName8,group:jb,userinfo:PackDate.Content.UserLevel8,userpsw:PackDate.Content.UserPass8});
+							break;
+							case 10:
+							st = PackDate.Content.UserFlag9;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName9,group:jb,userinfo:PackDate.Content.UserLevel9,userpsw:PackDate.Content.UserPass9});
+							break;
+							case 11:
+							st = PackDate.Content.UserFlag10;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName10,group:jb,userinfo:PackDate.Content.UserLevel10,userpsw:PackDate.Content.UserPass10});
+							break;
+							case 12:
+							st = PackDate.Content.UserFlag11;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName11,group:jb,userinfo:PackDate.Content.UserLevel11,userpsw:PackDate.Content.UserPass11});
+							break;
+						
+							case 13:
+							st = PackDate.Content.UserFlag12;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName12,group:jb,userinfo:PackDate.Content.UserLevel12,userpsw:PackDate.Content.UserPass12});
+							break;
+							case 14:
+							st = PackDate.Content.UserFlag13;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName13,group:jb,userinfo:PackDate.Content.UserLevel13,userpsw:PackDate.Content.UserPass13});
+							break;
+							case 15:
+							st = PackDate.Content.UserFlag14;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName14,group:jb,userinfo:PackDate.Content.UserLevel14,userpsw:PackDate.Content.UserPass14});
+							break;
+							case 16:
+							st = PackDate.Content.UserFlag15;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName15,group:jb,userinfo:PackDate.Content.UserLevel15,userpsw:PackDate.Content.UserPass15});
+							break;
+							case 17:
+							st = PackDate.Content.UserFlag16;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName16,group:jb,userinfo:PackDate.Content.UserLevel16,userpsw:PackDate.Content.UserPass16});
+							break;
+							case 18:
+							st = PackDate.Content.UserFlag17;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName17,group:jb,userinfo:PackDate.Content.UserLevel17,userpsw:PackDate.Content.UserPass17});
+							break;
+						
+							case 19:
+							st = PackDate.Content.UserFlag18;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName18,group:jb,userinfo:PackDate.Content.UserLevel18,userpsw:PackDate.Content.UserPass18});
+							break;
+							case 20:
+							st = PackDate.Content.UserFlag19;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName19,group:jb,userinfo:PackDate.Content.UserLevel19,userpsw:PackDate.Content.UserPass19});
+							break;
+							case 21:
+							st = PackDate.Content.UserFlag20;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName20,group:jb,userinfo:PackDate.Content.UserLevel20,userpsw:PackDate.Content.UserPass20});
+							break;
+							case 22:
+							st = PackDate.Content.UserFlag21;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName21,group:jb,userinfo:PackDate.Content.UserLevel21,userpsw:PackDate.Content.UserPass21});
+							break;
+							case 23:
+							st = PackDate.Content.UserFlag22;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName22,group:jb,userinfo:PackDate.Content.UserLevel22,userpsw:PackDate.Content.UserPass22});
+							break;
+							case 24:
+							st = PackDate.Content.UserFlag23;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName23,group:jb,userinfo:PackDate.Content.UserLevel23,userpsw:PackDate.Content.UserPass23});
+							break;
+							case 25:
+							st = PackDate.Content.UserFlag24;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName24,group:jb,userinfo:PackDate.Content.UserLevel24,userpsw:PackDate.Content.UserPass24});
+							break;
+							case 26:
+							st = PackDate.Content.UserFlag25;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName25,group:jb,userinfo:PackDate.Content.UserLevel25,userpsw:PackDate.Content.UserPass25});
+							
+							break;
+							case 27:
+							st = PackDate.Content.UserFlag26;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName26,group:jb,userinfo:PackDate.Content.UserLevel26,userpsw:PackDate.Content.UserPass26});
+							
+							break;
+							case 28:
+							st = PackDate.Content.UserFlag27;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName27,group:jb,userinfo:PackDate.Content.UserLevel27,userpsw:PackDate.Content.UserPass27});
+							
+							break;
+							case 29:
+							st = PackDate.Content.UserFlag28;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName28,group:jb,userinfo:PackDate.Content.UserLevel28,userpsw:PackDate.Content.UserPass28});
+							
+							break;
+							case 30:
+							st = PackDate.Content.UserFlag29;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName29,group:jb,userinfo:PackDate.Content.UserLevel29,userpsw:PackDate.Content.UserPass29});
+							
+							break;
+							case 31:
+							st = PackDate.Content.UserFlag30;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName30,group:jb,userinfo:PackDate.Content.UserLevel30,userpsw:PackDate.Content.UserPass30});
+							
+							break;
+							case 32:
+							st = PackDate.Content.UserFlag31;
+							if(st == 1){jb = "管理员";	}else if(st == 2){jb = "操作员";}else if(st == 3){jb = "视频预览";}
+							jQuery("#list4").jqGrid('addRowData', i + 1, {name:PackDate.Content.UserName31,group:jb,userinfo:PackDate.Content.UserLevel31,userpsw:PackDate.Content.UserPass31});
+							
+							break;
+							default:
+							break;
+						}	
+					} 
+					//mydata[0]=[{name:'admin',group:'管理员',userinfo:' '}];
+					//mydata[1]=[{name:'admin',group:'管理员',userinfo:' '}];
+					//mydata[2]=[{name:'admin',group:'管理员',userinfo:' '}];
+					//var userInfo = getQueryString("UserLevel");
+					//var username = PackDate.Content.UserName;
+					//var mydata=[{name:PackDate.Content.UserName,group:PackDate.Content.UserFlag,userinfo:' '}];
+					//if(parent.isZY)
+					//{
+						//mydata.length= 2;
+						//mydata[0]=[{name:'admin',group:'管理员',userinfo:' '}];mydata[1]=[{name:'admin',group:'管理员',userinfo:' '}];
+					//}
+				
+                	//alert(mydata);
+                	//for (var i = 0; i < mydata.length; i++) {
+                   	//	jQuery("#list4").jqGrid('addRowData', i + 1, mydata[i]);
+               	 	//}
+					//jQuery("#list4").jqGrid('addRowData', 2, mydata[0]);
+					//重新加载。开始分页
+				 	//jQuery("#list4").trigger("reloadGrid");
+				}
+			}	
+		}
+		 function bindData() {
+				// jQuery("#list4").jqGrid("clearGridData");
+                jQuery("#list4").jqGrid({ //装在数据的table id
+
+                    datatype: "local",
+                    height: 230,
+                    colNames: ['用户名称', '用户分组', '用户信息','用户密码'],
+
+                    colModel: [{
+                        name: 'name',
+                        index: 'name',
+                        width: 400,
+						align:"center"
+                    },
+                    {
+                        name: 'group',
+                        index: 'group',
+                        width: 400,
+						align:"center"
+                    },
+					
+                    {
+                        name: 'userinfo',
+                        index: 'userinfo',
+                        width: 0.5,
+						align:"center",
+						hidden:"true"
+                    },
+                    {
+                        name: 'userpsw',
+                        index: 'userpsw',
+                        width: 0.5,
+						align:"center",
+						hidden:"true"
+                    }],
+					
+
+                    viewrecords: true,
+                    //是否显示行数  
+                    pager: "logListPager",
+                    //分页显示的DIVID
+                    rowNum: 10,
+                    //每页20条记录 
+                    rowList: [10, 20, 30],
+                    //可调整每页显示的记录数    
+                    sortname: "name",
+                    //默认排序的列名 
+                    sortorder: "desc",
+                    //默认排序的顺序
+                    //scroll:true,//鼠标滚动翻页
+                    multiselect: false,
+                    caption: "  ",
+					
+					//定位当前行
+                    onSelectRow:function(id){
+						UserIndex = $("#list4").jqGrid('getRowData', id); 
+						UserIndexID = UserIndex.name;
+						UserIdexLever= UserIndex.userinfo;//用户权限
+						UserIndexFlag =UserIndex.group;;//用户类型
+						UserPsw = UserIndex.userpsw;//用户密码
+						
+						UserRowIndex = $("#list4"). jqGrid('getGridParam', 'selrow'); 
+						//UserIndexFlag = UserIndex.group;
+						//UserIndexLevel = UserIndex.userinfo;
+						}
+                });
+				getUser();
+				/*
+				var mydata=[{name:'inc',group:'管理员',userinfo:' '}];
+				if(parent.isZY)
+				{
+					mydata=[{name:'admin',group:'管理员',userinfo:' '}];
+				}
+				
+				//mydata.length = 3;
+					//mydata[0]=[{name:'admin',group:'管理员',userinfo:' '}];
+					//mydata[1]=[{name:'admin',group:'管理员',userinfo:' '}];
+					//mydata[2]=[{name:'admin',group:'管理员',userinfo:' '}];
+					//mydata=[{name:'inc',group:'管理员',userinfo:' '},{name:'inc',group:'管理员',userinfo:' '},{name:'inc',group:'管理员',userinfo:' '}];
+                //alert(mydata);
+				//getUser();
+                for (var i = 0; i < mydata.length; i++) {
+                    jQuery("#list4").jqGrid('addRowData', i + 1, mydata[i]);
+                }
+				//jQuery("#list4").jqGrid('addRowData', 2, [{name:'gmi1',group:'操作员',userinfo:' '}]);
+				//重新加载。开始分页
+				 jQuery("#list4").trigger("reloadGrid");
+				 */
+				 
+		 }
+		 
+		 //列表点击事件
+		 function tableclick(o)
+		 {
+			 //当前行号
+			 var index = o.srcElement.parentNode.parentNode.rowIndex; 
+			 alert(index);
+		 }
+		</script> 
+</head>
+
+<body> 
+ 
+ 
+ 
+ <div class="bit-stream">
+<h3 style="font-size:14px; font-weight:bold;">用户管理</h3>
+                                </div> 
+                                 
+                         
+                <div class="down_main_content">
+                		<div class="ip_set_main">
+                        	 
+                              	
+                            
+                            	
+                                  <table id="list4" >
+                </table>
+                                 
+                                 
+                              <div class="video_top"><div class="sd_manage_1" style="width:250px;"></div><div class="sd_manage_1"><a class="btn22" style="background:url(images/btn1.jpg) no-repeat; color: #000;" onclick="openwin()">添加</a></div><div class="sd_manage_1"><a class="btn22" style="background:url(images/btn1.jpg) no-repeat; color: #000;" onclick="updateUser()">修改</a></div>
+                              <div class="sd_manage_1"><a class="btn22" style="background:url(images/btn1.jpg) no-repeat; color: #000;" onclick="deleteUser()">删除</a></div>
+                              </div>
+                          		  
+						 </div>
+                 </div>   
+                 
+                 
+    
+                                  
+                             
+</body>
+</html>

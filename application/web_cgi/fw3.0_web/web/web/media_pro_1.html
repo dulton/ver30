@@ -1,0 +1,423 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0; background-color:#242424;}
+        </style>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js" >
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+         <script type="text/javascript" src="js/system.js"></script>
+        <script>
+		var succ = false;
+		 var isvalid = new Array(); //数据无效的数组。每个不合法项的ID 组成的数组。
+            function changeLanguage(lang) {
+                TranslatePage(lang);
+            }
+			function successfunc(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						if(PackDate.cgiFncCmd=="GetNetworkPort")
+						{
+							$("#HTTP_Port").val(PackDate.Content.HTTP_Port);
+							$("#RTSP_Port").val(PackDate.Content.RTSP_Port);
+							$("#SDK_Port").val(PackDate.Content.SDK_Port);
+							delete PackDate;
+						}
+						
+						if(PackDate.cgiFncCmd=="SetNetworkPort")
+						{
+							//alert("设置成功");
+							
+							//跳转到登陆界面
+							delete PackDate;
+							if (!confirm("是否重启设备?"))
+							{
+								alert("设置成功，重启设备生效！");
+								return;	
+							}
+							
+									//parent.tport=$("#65camera_server_port").val();
+				  			var  content={};
+				  			content.SessionId=parent.id;
+				  			content.AuthValue=parent.Authvalue;
+				  			contentstr=jsonToString(content);
+				  			GetAndSet("SystemRootCmd","json",contentstr, success_SystemRootCmd);
+							
+								  	var alerttime = 90;
+									var i = alerttime;
+									var toutStr = function() { //读取显示信息
+									return "设置成功！系统正在重启，页面将会在重启完成后重新载入，剩余时间 ： " + i--+"秒。";
+								    }
+									var reloadfunc = function() { //倒计时完成后调用的函数
+										if (succ === true) {
+											window.parent.location.href = window.location.protocol+"//"+window.location.host+"/login.html";
+										} else 
+										{
+										//alert("很抱歉，重启失败！");
+										}
+								    }
+								    var closealert = timeoutalert(toutStr, alerttime, reloadfunc);
+									
+						}
+						
+					}
+				}
+			}
+			function success_SystemRootCmd(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						succ = true;	
+					}
+					else
+					{
+						alert("重启设备失败！");
+						
+					}
+				}
+				delete PackDate;
+			}
+            $(document).ready(function() {
+
+                // 调用模版也方法
+                parent.innerCallMe(true);
+                //语言初始化
+                initLang();
+				//初始化 get
+	            GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", successfunc);
+				
+
+				
+				$("#portSet").bind("click",function(e){
+			if($("#portfield").css("display")=="none")
+			{
+				$("#portfield").css("display","block");
+				$("#portSet").css("background", "url(images/sub3.gif) no-repeat 0 3px");
+			}
+			else
+			{
+				$("#portfield").css("display","none");
+				$("#portSet").css("background", "url(images/add3.gif) no-repeat 0 3px");
+			}
+			});
+			$("#mediaSet").bind("click",function(e){
+				if($("#mediafield").css("display")=="none")
+				{
+					$("#mediafield").css("display","block");
+					$("#mediaSet").css("background", "url(images/sub3.gif) no-repeat 0 3px");
+				}
+				else
+				{
+					$("#mediafield").css("display","none");
+					$("#mediaSet").css("background", "url(images/add3.gif) no-repeat 0 3px");
+				}
+			});
+		
+           $("#portSubmit").bind("click",function(e){
+			   //按回车检查
+			 
+			   if (isvalid.length == 0) {
+				  var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=0;
+				  content.HTTP_Port=$("#HTTP_Port").val();
+				  content.RTSP_Port=$("#RTSP_Port").val();
+				  content.SDK_Port=$("#SDK_Port").val();
+				  contentstr=jsonToString(content);
+				  
+				  //端口安全性检测
+				  //判断是否有字母
+				  if(isNaN(content.HTTP_Port)
+				  || isNaN(content.RTSP_Port)
+			   	  || isNaN(content.SDK_Port)
+				  )
+				  {
+						alert("端口号请填写数字！");
+						return;  
+				  }
+				  //HTTP 范围1~65535 
+				  if(content.HTTP_Port < 1 ||content.HTTP_Port>65535)
+				  {
+					  alert("HTTP端口范围：1-65535！");
+					  return;
+				  }
+				  
+				  //RTSP 范围1~65535
+				  if(content.RTSP_Port < 1 ||content.RTSP_Port>65535)
+				  {
+					  alert("RTSP端口范围：1-65535！");
+					  return;
+				  }
+				  
+				  //SDK 范围1024~65500
+				  if(content.SDK_Port < 1024 ||content.SDK_Port>65500)
+				  {
+					  alert("SDK端口范围：1024~65500！");
+					  return;
+				  }
+				  
+				  //判断端口号是否相同
+				  if(content.SDK_Port == content.HTTP_Port)
+				  {
+						alert("SDK服务端口和HTTP服务端口不可以相同！");
+						return;  
+				  }
+				  if(content.HTTP_Port == content.RTSP_Port)
+				  {
+						alert("RTSP服务端口和HTTP服务端口不可以相同！");
+						return;  
+				  }
+				  if(content.SDK_Port == content.RTSP_Port)
+				  {
+						alert("RTSP服务端口和SDK服务端口不可以相同！");
+						return;  
+				  }
+				  GetAndSet("SetNetworkPort","json",contentstr, successfunc);
+			   }
+			   else {
+                        alert("请按照要求输入各项内容");
+                        return;
+                    }
+				
+			});
+		   $("#portCancel").bind("click",function(e){
+				 GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", successfunc);
+		  //去除红色边框
+                    for (var i = 0; i < isvalid.length; i++) {
+                        $("#" + isvalid[i]).css("border", "1px solid black");
+                    }
+                    isvalid.length = []; //数组清空
+			});
+			/*$("#HTTP_Port,#RTSP_Port,#SDK_Port").bind("blur",function(e){
+				    var id = this.id;
+                    var isok = f_check_port(this);
+                    if (!isok||this.value<1024||this.value>65500) {
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+				});*/
+            });
+        </script>
+    </head>
+    
+    <body>
+        <div class="bit-stream">
+            <h3>
+                流媒体协议
+            </h3>
+        </div>
+        <div class="down_main_content">
+            <div class="ip_set_main">
+               <fieldset class="motion_det_fil_1" id="portField">
+                    <legend>
+                    <a class="btn13_1" id="portSet" style="display:none"></a>
+                        端口设置
+                    </legend>
+                    <div id="portfield"  style="display:block; background-color:">
+                    <div class="motion_det_list">
+                       <div class="motion_det_list_inner_lmt">HTTP服务端口:</div>
+                        <div class="motion_det_list_inner_2" style="width:250px">
+                            <div style="float:left">
+                                
+                            </div>
+                            <input class="ip_address_input" id="HTTP_Port" />
+                        </div>
+                        <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                               
+                            </div>
+                           
+                        </div>
+                       </div>
+                       <div class="motion_det_list">
+                       <div class="motion_det_list_inner_lmt">RTSP 服务端口:</div>
+                        <div class="motion_det_list_inner_2" style="width:250px">
+                            <div style="float:left">
+                               
+                            </div>
+                            <input class="ip_address_input" id="RTSP_Port" />
+                        </div>
+                        <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                               
+                            </div>
+                           
+                        </div>
+                       </div>
+                       <div class="motion_det_list">
+                       <div class="motion_det_list_inner_lmt"> SDK服务端口:</div>
+                        <div class="motion_det_list_inner_2" style="width:250px">
+                          <div style="float:left">
+                               
+                            </div>
+                            <input class="ip_address_input" id="SDK_Port" />
+                            (1024~65500)
+                        </div>
+                        <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                               
+                            </div>
+                           
+                        </div>
+                       </div>
+                        <div class="bottom-action">
+                          <input type="submit" class="btn3" value="确定" id="portSubmit"/>
+                            <input type="reset" class="btn3" value="取消" id="portCancel" />
+                     
+                    </div>
+                      </div>
+                </fieldset>
+                <fieldset class="motion_det_fil_1" disabled=true style="display:none">
+                    <legend>
+                    <a class="btn13_1" id="mediaSet"></a>
+                        复合流配置
+                    </legend>
+                      <div id="mediafield"  style="display:none; background-color:">
+                    <div class="motion_det_list">
+                        <div class="motion_det_list_inner_lmt">
+                            <input type="radio" name="singleorNo"/>
+                            单播
+                        </div>
+                        <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                                传输协议:
+                            </div>
+                            <select class="date_time_input">
+                                <option value=" ">
+                                    TCP
+                                </option>
+                            </select>
+                        </div>
+                        <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                                端口:
+                            </div>
+                            <input class="port_input" />
+                        </div>
+                    </div>
+                    <div class="motion_det_list">
+                        <div class="motion_det_list_inner_lmt">
+                            <input type="radio" name="singleorNo" />
+                            组播
+                        </div>
+                        <div class="int_pro_main_list_inner_1">
+                            <input type="checkbox" />
+                            码流1
+                        </div>
+                        <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                                组播地址:
+                            </div>
+                            <input class="ip_address_input" />
+                        </div>
+                         <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                                端口:
+                            </div>
+                            <input class="port_input" />
+                        </div>
+                        
+                    </div>
+                    <div class="motion_det_list">
+                        <div class="motion_det_list_inner_lmt">
+                        </div>
+                        <div class="int_pro_main_list_inner_1">
+                            <input type="checkbox" />
+                            码流2
+                        </div>
+                        <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                                组播地址:
+                            </div>
+                            <input class="ip_address_input" />
+                        </div>
+                         <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                                端口:
+                            </div>
+                            <input class="port_input" />
+                        </div>
+                    </div>
+                    <div class="motion_det_list">
+                        <div class="motion_det_list_inner_lmt">
+                        </div>
+                        <div class="int_pro_main_list_inner_1">
+                            <input type="checkbox" />
+                            码流3
+                        </div>
+                        <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                                组播地址:
+                            </div>
+                            <input class="ip_address_input" />
+                        </div>
+                         <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                                端口:
+                            </div>
+                            <input class="port_input" />
+                        </div>
+                    </div>
+                    <div class="motion_det_list">
+                        <div class="motion_det_list_inner_lmt">
+                        </div>
+                        <div class="int_pro_main_list_inner_1">
+                            <input type="checkbox" />
+                            码流4
+                        </div>
+                        <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                                组播地址:
+                            </div>
+                            <input class="ip_address_input" />
+                        </div>
+                         <div class="motion_det_list_inner_2">
+                            <div style="float:left">
+                                端口:
+                            </div>
+                            <input class="port_input" />
+                        </div>
+                    </div>
+                    <div class="bottom-action">
+                        <input type="submit" class="btn3" value="确定" />
+                        <input type="reset" class="btn3" value="取消" />
+                        <input type="submit" class="btn3" value="恢复默认" />
+        		    </div>
+                    </div>
+                </fieldset>
+                
+                
+            </div>
+        </div>
+     
+        </div>
+    </body>
+
+</html>

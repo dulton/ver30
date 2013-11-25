@@ -1,0 +1,445 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0; background-color:#242424; }
+        </style>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.core.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <script type="text/javascript" src="js/system.js">
+        </script>
+        <script>
+            function changeLanguage(lang) {
+                TranslatePage(lang);
+            }
+            $(document).ready(function() {
+
+                // 调用模版也方法
+                parent.innerCallMe(true);
+                //语言初始化
+                initLang();
+				
+				//界面初始化
+				init();
+
+            });
+
+            function AudioSetParam() {
+                this.mem = new Array(['audio_enable', 0], ['codec_fmt', 0], ['audio_out_enable', 0], ['audio_out_vol', 0], ['audio_in_vol', 0], ['echo_canceller_enable', 0]);
+                this.count = this.mem.length;
+            }
+            //保存全局参数
+            var g_AudioSetParam = new AudioSetParam();
+            //界面初始化
+			function init()
+			{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					contentstr=jsonToString(content);
+					GetAndSet("GetAudioEncCfg","json",contentstr, sucess_GetAudioEncCfg);	
+
+			}
+			function sucess_GetAudioEncCfg(data)
+			{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							var stmp;
+							//是否启用音频
+                			if ($('input[@name="audio_enable"][checked]').val() == '1') { //enable
+                    		//$('#codec_fmt').attr('disabled', true); //暂时为G711,不让用户选择
+                    		$('#audio_out_enable').attr('disabled', false);
+                    		$('#audio_out_vol').attr('disabled', false);
+                    		$('#audio_in_vol').attr('disabled', false);
+                    		$('#echo_canceller_enable').attr('disabled', false);
+                    		filterAudioOutEnable();
+                			} else {
+                    		//$('#codec_fmt').attr('disabled', true);
+                    		$('#audio_out_enable').attr('disabled', true);
+                    		$('#audio_out_vol').attr('disabled', true);
+                    		$('#audio_in_vol').attr('disabled', true);
+                    		$('#echo_canceller_enable').attr('disabled', true);
+                			}
+							//语音格式
+							stmp = PackDate.Content.EncodeType;
+							switch(stmp)
+							{
+								case "1":
+									$("#codec_fmt").val(1);
+								break;
+								case "2":
+									$("#codec_fmt").val(2);
+								break;
+								case "3":
+									$("#codec_fmt").val(3);
+								break;
+								default:
+									$("#codec_fmt").val(1);
+								break;
+							}
+							//摄像机音响
+							stmp = PackDate.Content.CapVolume;
+							switch(stmp)
+							{
+								case "10":
+									$("#audio_out_vol").val(10);
+								break;
+								case "20":
+									$("#audio_out_vol").val(20);
+								break;
+								case "30":
+									$("#audio_out_vol").val(30);
+								break;
+								case "40":
+									$("#audio_out_vol").val(40);
+								break;
+								case "50":
+									$("#audio_out_vol").val(50);
+								break;
+								case "60":
+									$("#audio_out_vol").val(60);
+								break;
+								case "70":
+									$("#audio_out_vol").val(70);
+								break;
+								case "80":
+									$("#audio_out_vol").val(80);
+								break;
+								case "90":
+									$("#audio_out_vol").val(90);
+								break;
+								case "100":
+									$("#audio_out_vol").val(100);
+								break;
+								default:
+									$("#audio_out_vol").val(10);
+								break;
+							}
+							stmp = PackDate.Content.PlayVolume;
+							switch(stmp)
+							{
+								case "10":
+									$("#audio_in_vol").val(10);
+								break;
+								case "20":
+									$("#audio_in_vol").val(20);
+								break;
+								case "30":
+									$("#audio_in_vol").val(30);
+								break;
+								case "40":
+									$("#audio_in_vol").val(40);
+								break;
+								case "50":
+									$("#audio_in_vol").val(50);
+								break;
+								case "60":
+									$("#audio_in_vol").val(60);
+								break;
+								case "70":
+									$("#audio_in_vol").val(70);
+								break;
+								case "80":
+									$("#audio_in_vol").val(80);
+								break;
+								case "90":
+									$("#audio_in_vol").val(90);
+								break;
+								case "100":
+									$("#audio_in_vol").val(100);
+								break;
+								default:
+									$("#audio_in_vol").val(10);
+								break;
+							}
+							//	
+						}
+						else
+						{
+							alert("获取音频配置失败！");
+						}
+					}
+					delete PackDate;
+			}
+/*            function init_audio(txt) {
+                var unpack = UnPack(txt);
+                if (unpack.Flag == 0) {
+                    unpack.filterPageParam(g_AudioSetParam);
+                    set_page_data(g_AudioSetParam);
+                    filterAudioEnable();
+                } else {
+                    alert("加载数据出错");
+                }
+            }
+            FlySwapData('get', 'AUDIOINFO', '', init_audio);*/
+
+            //界面适配
+            function filterAudioEnable() {
+                if ($('input[@name="audio_enable"][checked]').val() == '1') { //enable
+                    $('#codec_fmt').attr('disabled', true); //暂时为G711,不让用户选择
+                    $('#audio_out_enable').attr('disabled', false);
+                    $('#audio_out_vol').attr('disabled', false);
+                    $('#audio_in_vol').attr('disabled', false);
+                    $('#echo_canceller_enable').attr('disabled', false);
+                    filterAudioOutEnable();
+                } else {
+                    $('#codec_fmt').attr('disabled', true);
+                    $('#audio_out_enable').attr('disabled', true);
+                    $('#audio_out_vol').attr('disabled', true);
+                    $('#audio_in_vol').attr('disabled', true);
+                    $('#echo_canceller_enable').attr('disabled', true);
+                }
+            }
+            function filterAudioOutEnable() {
+                //if($('#audio_out_enable').attr("checked") == true) //竟然不行 -_-|||
+                if ($('#audio_out_enable').attr("checked") == 'checked') {
+                    $('#audio_out_vol').attr('disabled', false);
+                } else {
+                    $('#audio_out_vol').attr('disabled', true);
+                }
+            }
+            //响应
+            $(function() {
+				//确定
+                $("#btn_ok").bind("click",
+                function(e) {
+                    try {
+                        var new_AudioSetParam = new AudioSetParam();
+                        get_page_data(new_AudioSetParam);
+                        var AudioSetPack = new Pack();
+                        for (var i = 0; i < new_AudioSetParam.count; i++) {
+                            AudioSetPack.add(new_AudioSetParam.mem[i][0], new_AudioSetParam.mem[i][1]);
+                        }
+                        //FlySwapData('set', 'AUDIOINFO', AudioSetPack.mem, display);
+                    } catch(e) {
+                        alert(e);
+                    }
+                    function display(txt) {
+                        try {
+                            var unpack = UnPack(txt);
+                            if (unpack.Flag == 0) {
+                                alert("设置成功");
+                                g_AudioSetParam = new_AudioSetParam;
+                            } else {
+                                alert("很抱歉，设置失败");
+                                set_page_data(g_AudioSetParam);
+                                filterAudioEnable();
+                            }
+                        } catch(e) {
+                            alert(e);
+                        }
+                    }
+                });
+				
+				//取消
+                $("#btn_cancel").bind("click",
+                function(e) {
+                    try {
+                        //set_page_data(g_AudioSetParam);
+                        //filterAudioEnable();
+						init();
+                    } catch(e) {
+                        alert(e);
+                    }
+                });
+				//恢复默认
+                $("#btn_reset").bind("click",
+                function(e) {
+                    try {
+                        //FlySwapData('load_default', 'AUDIOINFO', '', reload_audio);
+                    } catch(e) {
+                        alert(e);
+                    }
+/*                    function reload_audio(txt) {
+                        var unpack = UnPack(txt);
+                        if (unpack.Flag == 0) {
+                            alert("恢复默认成功");
+                            unpack.filterPageParam(g_AudioSetParam);
+                            set_page_data(g_AudioSetParam);
+                            filterAudioEnable();
+                        } else {
+                            alert("很抱歉，恢复默认出错");
+                        }
+                    }*/
+                });
+            });
+        </script>
+    </head>
+    
+    <body>
+        <div class="bit-stream">
+            <h3>
+                音频设置
+            </h3>
+            <div class="down_main_content">
+                <div class="ip_set_main">
+                    <fieldset class="motion_det_fil_1">
+                        <legend>
+                            音频设置
+                        </legend>
+<!--                        <div class="motion_det_list">
+                            <div class="motion_det_list_inner_yps">
+                                是否启用音频
+                            </div>
+                            <div class="int_pro_main_list_inner_1" style="width:70px;">
+                                <input type="radio" name="audio_enable" value="1" onclick="javascript:filterAudioEnable()"
+                                />
+                                是
+                            </div>
+                            <div class="int_pro_main_list_inner_1" style="width:70px;">
+                                <input type="radio" name="audio_enable" id="audio_enable" checked="checked"
+                                value="0" onclick="javascript:filterAudioEnable()" />
+                                否
+                            </div>
+                        </div>-->
+                        <div class="motion_det_list">
+                            <div class="motion_det_list_inner_yps">
+                                语音格式
+                            </div>
+                            <div class="motion_det_list_inner">
+                                <select class="int_pro_main_list_inner_input" style="width:183px;" id='codec_fmt'
+                                >
+<!--                                    <option value="0" disabled="disabled">
+                                        AMR
+                                    </option>
+                                    <option value="1" selected="selected">
+                                        G.711
+                                    </option>-->
+                                    <option value="1">
+                                    	G.711A
+                                    </option>
+<!--                                    <option value="2" disabled="disabled">
+                                    	G.711U
+                                    </option>
+                                    <option value="3" disabled="disabled">
+                                    	3--G.726
+                                    </option>-->
+                                </select>
+                            </div>
+                        </div>
+<!--                        <div class="motion_det_list">
+                            <div class="motion_det_list_inner_yps">
+                                <input type="checkbox" id='audio_out_enable' onclick="javascript:filterAudioOutEnable()"
+                                />
+                                摄像机音响
+                            </div>
+                            <div class="int_pro_main_list_inner_1">
+                                音量
+                            </div>
+                            <div class="int_pro_main_list_inner_1">
+                                <select class=" " id='audio_out_vol'>
+                                    <option value="10">
+                                        10%
+                                    </option>
+                                    <option value="20">
+                                        20%
+                                    </option>
+                                    <option value="30">
+                                        30%
+                                    </option>
+                                    <option value="40">
+                                        40%
+                                    </option>
+                                    <option value="50" selected="selected">
+                                        50%
+                                    </option>
+                                    <option value="60">
+                                        60%
+                                    </option>
+                                    <option value="70">
+                                        70%
+                                    </option>
+                                    <option value="80">
+                                        80%
+                                    </option>
+                                    <option value="90">
+                                        90%
+                                    </option>
+                                    <option value="100">
+                                        100%
+                                    </option>
+                                </select>
+                            </div>
+                        </div>-->
+<!--                        <div class="motion_det_list">
+                            <div class="motion_det_list_inner_yps">
+                                摄像机麦克风
+                            </div>
+                            <div class="int_pro_main_list_inner_1">
+                                音量
+                            </div>
+                            <div class="int_pro_main_list_inner_1">
+                                <select class=" " id='audio_in_vol'>
+                                    <option value="10">
+                                        10%
+                                    </option>
+                                    <option value="20">
+                                        20%
+                                    </option>
+                                    <option value="30">
+                                        30%
+                                    </option>
+                                    <option value="40">
+                                        40%
+                                    </option>
+                                    <option value="50" selected="selected">
+                                        50%
+                                    </option>
+                                    <option value="60">
+                                        60%
+                                    </option>
+                                    <option value="70">
+                                        70%
+                                    </option>
+                                    <option value="80">
+                                        80%
+                                    </option>
+                                    <option value="90">
+                                        90%
+                                    </option>
+                                    <option value="100">
+                                        100%
+                                    </option>
+                                </select>
+                            </div>
+                        </div>-->
+<!--                        <div class="motion_det_list">
+                            <div class="motion_det_list_inner_yps">
+                                <input type="checkbox" id='echo_canceller_enable' />
+                                消除回声
+                            </div>
+                        </div>-->
+                    </fieldset>
+                </div>
+            </div>
+<!--            <div class="bottom-action">
+                <input type='button' id="btn_ok" class="btn3" value="确定" disabled="disabled"/>
+                <input type='button' id="btn_cancel" class="btn3" value="取消" />
+            </div>
+            <div>
+                <input type='button' id="btn_reset" class="btn3" value="恢复默认" style="display:none"
+                />
+            </div>
+        </div>-->
+        </div>
+    </body>
+
+</html>

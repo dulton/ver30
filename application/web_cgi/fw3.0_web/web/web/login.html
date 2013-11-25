@@ -1,0 +1,243 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" style="height:100%;">
+    <head>
+        <title>登录</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link href="css/common.css" rel="stylesheet" type="text/css" />
+           <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+           <script type="text/javascript" src="js/js_lang.js"></script>
+         <script type="text/javascript" src="js/js_cookie.js"></script> 
+         <script type="text/javascript" src="js/util.js">
+        </script> 
+        <script type="text/javascript" src="js/jquery.md5.js">
+        </script> 
+        <style type="text/css">
+            #loginForm{
+                margin:0 auto;
+                width: 897px;
+                height: 500px;
+               position:relative;
+			    background: url(images/login_bg.gif);
+            }
+            #loginForm #biaoti{
+				width:600px;
+				height:40px;
+				line-height:40px;
+				font-family:"微软雅黑";
+				font-size:24px;
+				position:absolute;
+				top:50px;
+				left:150px;
+				text-align:center;
+				color:#FFF;
+				font-weight:bold;
+				}
+            #loginForm ul{
+                padding: 120px 0 0 155px;
+            }
+            #loginForm ul li{
+                padding-top: 23px;
+            }
+            #loginForm ul label{
+                width: 90px;
+                display: inline-block;
+                color:white;
+                zoom:1;
+				font-size:20px;
+				font-weight:bold;
+            }
+            #loginForm ul input.text,select.text{
+                border:1px solid;
+                width: 260px;
+                height:34px;
+				vertical-align:middle;
+				font:18px "宋体"; /*font:16px arial;*/  line-height:28px\9; _line-height:29px; width:14em; padding-left:4px; border:1px solid #ace; overflow:hidden; outline:none;
+
+            }
+            #loginForm ul input.btn{
+                margin-top: 16px;
+                border:0 none;
+                width: 90px;
+                height:36px;
+                cursor:pointer;
+				margin-left: 25px;
+
+            }
+            #loginForm ul input.submit{
+                background: url(images/log_qued.jpg);
+				font-size:16px;
+				font-weight:bold;
+            }
+            #loginForm ul input.reset{
+                margin-left: 38px;
+                background: url(images/log_qux.jpg);
+            }
+        </style>
+        <script>
+		 var lang="zh-cn";
+		 //登录超时时间
+		 var LoginClock = 0;
+		 var LoginClockFun = null;
+		 
+		 //var tesy;
+
+         $(document).ready(function() {
+			 //init();
+			    //非IE6  添加背景图片
+		       var isIE=!!window.ActiveXObject;
+		       if (!(isIE&&!window.XMLHttpRequest)) 
+			   {
+				   window.document.body.style.background="url(images/main_pg_bg.jpg)";
+			   }
+			 	 setCookie(window.location.host+"currenturl","ylanzkai_1.html");
+			 $("#username").focus();
+			 $("#username").val("");
+		     $("#password").val("");
+
+			 $("#submit").bind("click",function(e){
+				// alert("ttt");
+				
+				  user=$("#username").val();
+				  pass=$("#password").val();
+				  //pass=$.md5(pass);
+				 // alert(pass);
+				GetAndSet("LogIn", "json", "{SessionId:0,UserName:"+user+",Password:"+pass+"}",successfunc);
+				//启动定时器
+				if(LoginClock <= 0)
+				{
+					LoginClock ++;
+					clock();	
+				}
+				
+						 
+				
+					
+				 });
+				 
+				$("#username").bind("keyup",function(event){
+					var keyCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
+					if (keyCode == 13) {
+					$('#password').focus();
+					}
+					});
+				$("#password").bind("keyup",function(event){
+				var keyCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
+					if (keyCode == 13) {
+					$("#submit").click();
+					}
+				});
+				$("#slang").bind("change",function(e){
+					
+					});
+				
+			 });
+			 
+			//登录超时计时器
+			function clock()
+			{
+				if(LoginClock <= 300)
+				{
+					LoginClock++;
+					LoginClockFun = setTimeout('clock()',1000);
+				}
+				else
+				{
+					LoginClock = 0;
+					clearTimeout(LoginClockFun);
+					
+					//判断是否是inc和admin用户
+					var s=$("#username").val();
+					if(s == "inc" || s =="admin")
+					{
+						
+					
+						if (!confirm("登录设备遇到问题，可能是后台服务无法启动的原因，\n是否跳转设备升级界面，通过升级设备来修复设备?")) return;
+						top.location.href="index.html?id=0&authvalue=-1";
+					
+					}
+					else
+					{
+						alert("登录设备出现问题，登录失败！");
+					}
+				}	
+			}
+			 function successfunc(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						 try
+						 {
+							 		//alert(data);
+									//关闭定时器
+									clearTimeout(LoginClockFun);
+							     setCookie("gmiwebusername",$("#username").val());
+								 setCookie("gmiwebpassword",$("#password").val());
+								 top.location.href="index.html?id="+PackDate.Content.SessionId +"&authvalue=" + PackDate.Content.Authvalue +"&UserFlag="+PackDate.Content.UserFlag;
+								 //top.location.href="index.html?id=0&authvalue=-1";
+								 window.event.returnValue=false;
+						 }
+						 catch(e)
+						 {
+							 alert(e);
+						 }
+					}
+					else if(PackDate.Content.RetCode=="-2147483647")
+					{
+						alert("用户名或密码错误，登录失败！");
+						//清空
+						$("#username").val("");
+						$("#password").val("");
+						
+						$('#username').focus();
+						
+					}
+					else if(PackDate.Content.RetCode=="-2147287033")
+					{
+						
+					}
+					else
+					{
+						alert("登录失败！");
+						//清空
+						$("#username").val("");
+						$("#password").val("");	
+						
+						$('#username').focus();
+					}
+					delete PackDate;
+				}
+			}
+			
+        </script>
+    </head>
+
+    <body style="height:100%;">
+        <div id="main">
+            <div id="container">
+                <form id="loginForm">
+                <div id="biaoti">
+                </div>
+                    <ul>
+                        <li><label id="lusername">用户名</label>
+                          <input class="text" name="username" id="username"/>
+                        </li>
+                       <li>
+                         <label id="lloginpassword">密  码</label>
+                         <input class="text" name="password" id="password" type="password"/></li>    <li style="display:none"><label id="llanguage"></label> <select class="text" id="slang">
+  <option value="0">中文</option>
+  <option value="1">English</option>
+</select></li>  
+                        <li><label>&nbsp;</label><input class="btn submit" name="yes" type="button" value="" id="submit"/><input class="btn reset" name="cancel" type="reset" value="" id="reset"/></li>
+                        
+                    
+                        
+                    </ul>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

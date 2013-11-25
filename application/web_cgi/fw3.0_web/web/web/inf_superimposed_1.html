@@ -1,0 +1,1723 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+html,body{
+	margin:0;
+	padding:0;
+	background-color:#242424;
+	}
+</style>
+ <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />  
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js"></script>
+        <script type="text/javascript" src="js/util.js"></script>
+        <script type="text/javascript" src="js/SetAndGetValue.js"></script>
+         <script type="text/javascript" src="js/js_lang.js"></script>
+         <script type="text/javascript" src="js/js_cookie.js"></script> 
+         <script type="text/javascript" src="js/system.js"></script>
+         <script>
+		 
+		 var isvalid = new Array(); //数据无效的数组。每个不合法项的ID 组成的数组。
+		 //VidieID
+		 var VidieID;
+		 
+		  //获取码流参数
+ var Streamid=0;//getQueryString("streamid");
+ //最多码流数
+ var RspShowNum = 0;
+ //------------所有码流OSD信息---------------
+ //time是否显示时间信息
+ var timeEnable=[['0'],['0'],['0'],['0'],['0']];
+ //TIME语言
+ //var timeLanguage=[['0'],['0'],['0'],['0'],['0']];
+ //time 精确位置 X
+ var timeDisPlayX=[['0'],['0'],['0'],['0'],['0']];
+ //time 精确位置 Y
+ var timeDisPlayY=[['0'],['0'],['0'],['0'],['0']];
+ //time日期格式
+ var timeDatestyle=[['0'],['0'],['0'],['0'],['0']];
+ //time时间格式
+ var timeTimestyle=[['0'],['0'],['0'],['0'],['0']];
+ //time字体颜色
+ var timeFontColor=[['0'],['0'],['0'],['0'],['0']];
+ //time字体大小
+ var timeFontSize=[['0'],['0'],['0'],['0'],['0']];
+ //time字体加粗
+ var timeFontBlod=[['0'],['0'],['0'],['0'],['0']];
+ //time字体旋转
+ //var timeFontRotate=[['0'],['0'],['0'],['0'],['0']];
+ //time字体倾斜
+ //var timeFontItalic=[['0'],['0'],['0'],['0'],['0']];
+ //time字体加框
+ //var timeFontOutLine=[['0'],['0'],['0'],['0'],['0']];
+ //changel是否显示用户字符
+ var changeEnable=[['0'],['0'],['0'],['0'],['0']];
+ //changel精确位置X
+ var changeDisPlayX=[['0'],['0'],['0'],['0'],['0']];
+ //changel精确位置Y
+ var changeDisPlayY=[['0'],['0'],['0'],['0'],['0']];
+ //changel字体颜色
+ var changeFontColor=[['0'],['0'],['0'],['0'],['0']];
+ //changel字体大小
+ var changeFontSize=[['0'],['0'],['0'],['0'],['0']];
+ //changel字体加粗
+ var changeFontBlod=[['0'],['0'],['0'],['0'],['0']];
+ //changel字体旋转
+ //var changeFontRotate=[['0'],['0'],['0'],['0'],['0']];
+ //changel字体倾斜
+ //var changeFontItalic=[['0'],['0'],['0'],['0'],['0']];
+ //changel字体加框
+ //var changeFontOutLine=[['0'],['0'],['0'],['0'],['0']];
+ //changel用户字符
+ var changeName=[['0'],['0'],['0'],['0'],['0']];
+ //------------所有码流OSD信息---------------
+ 
+ //alert(mystreamid);
+ if(Streamid==""||Streamid==null)
+ {
+	 Streamid=0;
+ }
+ 
+ var mystreamid=Streamid;
+ function changeLanguage(lang)
+ {
+	TranslatePage(lang);
+ }
+//获取OSD	
+  function getAllOSD()
+  {
+	  
+		var  content={};
+		content.SessionId=parent.id;
+		content.AuthValue=parent.Authvalue;	
+		contentstr=jsonToString(content);
+		GetAndSet("GetShowInfo","json",contentstr, sucess_GetShowInfo);
+
+  }
+  function sucess_GetShowInfo(data)
+  {
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						//将不同码流的值记录下来
+						//获取码流数
+						RspShowNum = PackDate.Content.RspShowNum;
+						if(parent.maxStreams != RspShowNum) 
+						{
+							alert("码流数不匹配,获取OSD数据失败！");
+							return;
+						}	
+						//VidieID = PackDate.Content.VideoId;
+						//码流1
+						if(RspShowNum >=1)
+						{
+							timeEnable[0] = PackDate.Content.TimeEnable0;
+							//timeLanguage[0] = PackDate.Content.Language0;
+							timeDisPlayX[0] = PackDate.Content.TimeDisplayX0;
+							timeDisPlayY[0] = PackDate.Content.TimeDisplayY0;
+							timeDatestyle[0] = PackDate.Content.DateStyle0;
+							timeTimestyle[0] = PackDate.Content.TimeStyle0;
+							timeFontColor[0] = PackDate.Content.TimeFontColor0;
+							timeFontSize[0] = PackDate.Content.TimeFontSize0;
+							timeFontBlod[0] = PackDate.Content.TimeFontBlod0;
+							//timeFontRotate[0] = PackDate.Content.TimeFontRotate0;
+							//timeFontItalic[0] = PackDate.Content.TimeFontItalic0;
+							//timeFontOutLine[0] = PackDate.Content.FontOutline0;
+						
+							changeEnable[0] = PackDate.Content.ChannelEnable0;	
+							changeDisPlayX[0] = PackDate.Content.ChannelDisplayX0;
+							changeDisPlayY[0] = PackDate.Content.ChannelDisplayY0;
+							changeFontColor[0] = PackDate.Content.ChannelFontColor0;
+							changeFontSize[0] = PackDate.Content.ChannelFontSize0;
+							changeFontBlod[0] = PackDate.Content.ChannelFontBlod0;
+							//changeFontRotate[0] = PackDate.Content.ChannelFontRotate0;
+							//changeFontItalic[0] = PackDate.Content.ChannelFontItalic0;
+							//changeFontOutLine[0] = PackDate.Content.ChannelOutline0;
+							changeName[0] = PackDate.Content.ChannelName0;
+						}
+						//码流2
+						if(RspShowNum >=2)
+						{
+							timeEnable[1] = PackDate.Content.TimeEnable1;
+							//timeLanguage[1] = PackDate.Content.Language1;
+							timeDisPlayX[1] = PackDate.Content.TimeDisplayX1;
+							timeDisPlayY[1] = PackDate.Content.TimeDisplayY1;
+							timeDatestyle[1] = PackDate.Content.DateStyle1;
+							timeTimestyle[1] = PackDate.Content.TimeStyle1;
+							timeFontColor[1] = PackDate.Content.TimeFontColor1;
+							timeFontSize[1] = PackDate.Content.TimeFontSize1;
+							timeFontBlod[1] = PackDate.Content.TimeFontBlod1;
+							//timeFontRotate[1] = PackDate.Content.TimeFontRotate1;
+							//timeFontItalic[1] = PackDate.Content.TimeFontItalic1;
+							//timeFontOutLine[1] = PackDate.Content.FontOutline1;
+						
+							changeEnable[1] = PackDate.Content.ChannelEnable1;	
+							changeDisPlayX[1] = PackDate.Content.ChannelDisplayX1;
+							changeDisPlayY[1] = PackDate.Content.ChannelDisplayY1;
+							changeFontColor[1] = PackDate.Content.ChannelFontColor1;
+							changeFontSize[1] = PackDate.Content.ChannelFontSize1;
+							changeFontBlod[1] = PackDate.Content.ChannelFontBlod1;
+							//changeFontRotate[1] = PackDate.Content.ChannelFontRotate1;
+							//changeFontItalic[1] = PackDate.Content.ChannelFontItalic1;
+							//changeFontOutLine[1] = PackDate.Content.ChannelOutline1;
+							changeName[1] = PackDate.Content.ChannelName1;
+						}
+						//码流3
+						if(RspShowNum >=3)
+						{
+							timeEnable[2] = PackDate.Content.TimeEnable2;
+							//timeLanguage[2] = PackDate.Content.Language2;
+							timeDisPlayX[2] = PackDate.Content.TimeDisplayX2;
+							timeDisPlayY[2] = PackDate.Content.TimeDisplayY2;
+							timeDatestyle[2] = PackDate.Content.DateStyle2;
+							timeTimestyle[2] = PackDate.Content.TimeStyle2;
+							timeFontColor[2] = PackDate.Content.TimeFontColor2;
+							timeFontSize[2] = PackDate.Content.TimeFontSize2;
+							timeFontBlod[2] = PackDate.Content.TimeFontBlod2;
+							//timeFontRotate[2] = PackDate.Content.TimeFontRotate2;
+							//timeFontItalic[2] = PackDate.Content.TimeFontItalic2;
+							//timeFontOutLine[2] = PackDate.Content.FontOutline2;
+						
+							changeEnable[2] = PackDate.Content.ChannelEnable2;	
+							changeDisPlayX[2] = PackDate.Content.ChannelDisplayX2;
+							changeDisPlayY[2] = PackDate.Content.ChannelDisplayY2;
+							changeFontColor[2] = PackDate.Content.ChannelFontColor2;
+							changeFontSize[2] = PackDate.Content.ChannelFontSize2;
+							changeFontBlod[2] = PackDate.Content.ChannelFontBlod2;
+							//changeFontRotate[2] = PackDate.Content.ChannelFontRotate2;
+							//changeFontItalic[2] = PackDate.Content.ChannelFontItalic2;
+							//changeFontOutLine[2] = PackDate.Content.ChannelOutline2;
+							changeName[2] = PackDate.Content.ChannelName2;
+						}
+						//码流3
+						if(RspShowNum >=4)
+						{
+							timeEnable[3] = PackDate.Content.TimeEnable3;
+							//timeLanguage[3] = PackDate.Content.Language3;
+							timeDisPlayX[3] = PackDate.Content.TimeDisplayX3;
+							timeDisPlayY[3] = PackDate.Content.TimeDisplayY3;
+							timeDatestyle[3] = PackDate.Content.DateStyle3;
+							timeTimestyle[3] = PackDate.Content.TimeStyle3;
+							timeFontColor[3] = PackDate.Content.TimeFontColor3;
+							timeFontSize[3] = PackDate.Content.TimeFontSize3;
+							timeFontBlod[3] = PackDate.Content.TimeFontBlod3;
+							//timeFontRotate[3] = PackDate.Content.TimeFontRotate3;
+							//timeFontItalic[3] = PackDate.Content.TimeFontItalic3;
+							//timeFontOutLine[3] = PackDate.Content.FontOutline3;
+						
+							changeEnable[3] = PackDate.Content.ChannelEnable3;	
+							changeDisPlayX[3] = PackDate.Content.ChannelDisplayX3;
+							changeDisPlayY[3] = PackDate.Content.ChannelDisplayY3;
+							changeFontColor[3] = PackDate.Content.ChannelFontColor3;
+							changeFontSize[3] = PackDate.Content.ChannelFontSize3;
+							changeFontBlod[3] = PackDate.Content.ChannelFontBlod3;
+							//changeFontRotate[3] = PackDate.Content.ChannelFontRotate3;
+							//changeFontItalic[3] = PackDate.Content.ChannelFontItalic3;
+							//changeFontOutLine[3] = PackDate.Content.ChannelOutline3;
+							changeName[3] = PackDate.Content.ChannelName3;
+						}
+						getsetOsdInfo(Streamid);
+					}
+					else if(PackDate.Content.RetCode!="0")
+					{
+						alert("获取OSD数据失败！");
+					}
+				}
+				delete PackDate;
+  }
+ $(window).bind('unload',function(){
+	 try
+	 {
+		var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+		activeX.StopPlay();
+	 }
+	catch(e)
+	{
+		return;
+	}
+	//alert("OSD界面关闭!");
+	});
+  $(document).ready(function() {
+	  if(Streamid!=4)
+		 {
+			  $("#cvbsosd").css("display","none");
+		 }
+	  //根据码流数填充页面元素
+		   getMaxStreamNum(false,parent.id,parent.Authvalue,3);
+		   //SetStreamNum_NLJ(parent.StreamNum_NLJ);
+				//getMaxStreams();
+				
+	   // 调用模版也方法
+				 parent.innerCallMe(true); 
+	 //语言初始化
+	   initLang();
+	//初始化 get
+	var section='OSD';
+  //  GetAndSet('get',section,'', "process");
+  //获取所有码流OSD
+ getAllOSD();
+ //getsetOsdInfo(Streamid);
+ 	$("#radiostream"+Streamid).attr("checked","checked");
+	
+	
+	//取消
+	$("#reset").bind("click",function(e){
+		if($("input[type=radio][name='bitstream']:checked").val()!=4)
+		{
+			var section='OSD';
+  //  GetAndSet('get',section,'', "process");
+ //getsetOsdInfo('get',globalStream,'');
+               for (var i = 0; i < isvalid.length; i++) {
+                        $("#" + isvalid[i]).css("border", "1px solid black");
+                    }
+                    isvalid.length = []; //数组清空
+		}
+		else
+		{
+					displayCVBS();
+		}
+		});
+		//是否显示时间信息
+		$("#s_time_enable").bind("click",function(e){
+			var stmp = document.getElementById("s_time_enable").checked;
+			if(stmp)
+			{
+				timeEnable[Streamid] = "1";	
+			}
+			else if(!stmp)
+			{
+				timeEnable[Streamid] = "0";		
+			}
+		});
+		//TIME语言
+		/*
+		$("#language").bind("change",function(e){
+		switch($("#language").val())
+		{
+			case "1":
+				
+				timeLanguage[Streamid] = "1";
+			break;
+			case "2":
+				timeLanguage[Streamid] = "2";
+			break;
+			case "3":
+				timeLanguage[Streamid] = "3";
+			break;
+			default:
+				timeLanguage[Streamid] = "1";
+			break;
+		}	
+
+		});
+		*/
+		//TIME精确位置X
+		$("#s_time_startx").bind("change",function(e){
+			timeDisPlayX[Streamid] = $("#s_time_startx").val();
+		});
+		//TIME精确位置Y
+		$("#s_time_starty").bind("change",function(e){
+			timeDisPlayY[Streamid] = $("#s_time_starty").val();
+		});
+		 //time日期格式
+		$("#s_date_style").bind("change",function(e){
+		switch($("#s_date_style").val())
+		{
+			case "0":
+				timeDatestyle[Streamid] = "0";
+			break;
+			case "1":
+				timeDatestyle[Streamid] = "1";
+			break;
+
+			default:
+				timeDatestyle[Streamid] = "0";
+			break;
+		}
+
+		});
+		 //time时间格式
+		$("#s_time_style").bind("change",function(e){
+		switch($("#s_time_style").val())
+		{
+			case "0":
+				timeTimestyle[Streamid] = "0";
+			break;
+
+			default:
+				timeTimestyle[Streamid] = "1";
+			break;
+		}
+
+		});
+		 //time字体颜色
+		$("#s_time_color").bind("change",function(e){
+		switch($("#s_time_color").val())
+		{
+			case "0":
+				timeFontColor[Streamid] = "0";
+			break;
+			case "1":
+				timeFontColor[Streamid] = "1";
+			break;
+			case "2":
+				timeFontColor[Streamid] = "2";
+			break;
+			case "3":
+				timeFontColor[Streamid] = "3";
+			break;
+			case "4":
+				timeFontColor[Streamid] = "4";
+			break;
+			case "5":
+				timeFontColor[Streamid] = "5";
+			break;
+			case "6":
+				timeFontColor[Streamid] = "6";
+			break;
+			case "7":
+				timeFontColor[Streamid] = "7";
+			break;
+
+			default:
+				timeDatestyle[Streamid] = "1";
+			break;
+		
+			}
+		});
+		 //time字体大小
+		$("#s_time_size").bind("change",function(e){
+		switch($("#s_time_size").val())
+		{
+			case "48":
+				timeFontSize[Streamid] = "48";
+			break;
+			case "16":
+				timeFontSize[Streamid] = "16";
+			break;
+			case "24":
+				timeFontSize[Streamid] = "24";
+			break;
+			case "32":
+				timeFontSize[Streamid] = "32";
+			break;
+			case "40":
+				timeFontSize[Streamid] = "40";
+			break;
+			default:
+				timeFontSize[Streamid] = "16";
+			break;
+		}
+
+		});
+		//time字体加粗
+		$("#s_time_bold").bind("click",function(e){
+			var stmp = document.getElementById("s_time_bold").checked;
+			if(stmp)
+			{
+				timeFontBlod[Streamid] = "1";	
+			}
+			else if(!stmp)
+			{
+				timeFontBlod[Streamid] = "0";		
+			}
+		});
+		/*
+		//time字体旋转
+		$("#s_time_rotate").bind("click",function(e){
+			var stmp = document.getElementById("s_time_rotate").checked;
+			if(stmp)
+			{
+				timeFontRotate[Streamid] = "1";	
+			}
+			else if(!stmp)
+			{
+				timeFontRotate[Streamid] = "0";		
+			}
+		});
+		*/
+		//time字体倾斜
+/*		$("#s_time_italic").bind("click",function(e){
+			var stmp = document.getElementById("s_time_italic").checked;
+			if(stmp)
+			{
+				timeFontItalic[Streamid] = "1";	
+			}
+			else if(!stmp)
+			{
+				timeFontItalic[Streamid] = "0";		
+			}
+		});*/
+		//time字体加框
+/*		$("#s_time_outline").bind("click",function(e){
+			var stmp = document.getElementById("s_time_outline").checked;
+			if(stmp)
+			{
+				timeFontOutLine[Streamid] = "1";	
+			}
+			else if(!stmp)
+			{
+				timeFontOutLine[Streamid] = "0";		
+			}
+		});*/
+		
+		//changel是否显示用户字符
+		$("#s_text_enable").bind("click",function(e){
+			var stmp = document.getElementById("s_text_enable").checked;
+			if(stmp)
+			{
+				changeEnable[Streamid] = "1";	
+			}
+			else if(!stmp)
+			{
+				changeEnable[Streamid] = "0";		
+			}
+		});
+		//changel精确位置X
+		$("#s_text_startx").bind("change",function(e){
+			changeDisPlayX[Streamid] = $("#s_text_startx").val();
+		});
+		//changel精确位置Y
+		$("#s_text_starty").bind("change",function(e){
+			changeDisPlayY[Streamid] = $("#s_text_starty").val();
+		});
+		 //changel字体颜色
+		$("#s_text_color").bind("change",function(e){
+		switch($("#s_text_color").val())
+		{
+			case "0":
+				changeFontColor[Streamid] = "0";
+			break;
+			case "1":
+				changeFontColor[Streamid] = "1";
+			break;
+			case "2":
+				changeFontColor[Streamid] = "2";
+			break;
+			case "3":
+				changeFontColor[Streamid] = "3";
+			break;
+			case "4":
+				changeFontColor[Streamid] = "4";
+			break;
+			case "5":
+				changeFontColor[Streamid] = "5";
+			break;
+			case "6":
+				changeFontColor[Streamid] = "6";
+			break;
+			case "7":
+				changeFontColor[Streamid] = "7";
+			break;
+
+			default:
+				changeFontColor[Streamid] = "1";
+			break;
+		}
+			
+		});
+		//changel字体大小
+		$("#s_text_size").bind("change",function(e){
+		switch($("#s_text_size").val())
+		{
+			case "48":
+				changeFontSize[Streamid] = "48";
+			break;
+			case "16":
+				changeFontSize[Streamid] = "16";
+			break;
+			case "24":
+				changeFontSize[Streamid] = "24";
+			break;
+			case "32":
+				changeFontSize[Streamid] = "32";
+			break;
+			case "40":
+				changeFontSize[Streamid] = "40";
+			break;
+			default:
+				changeFontSize[Streamid] = "16";
+			break;
+		}
+
+		});
+		//changel字体加粗
+		$("#s_text_bold").bind("click",function(e){
+			var stmp = document.getElementById("s_text_bold").checked;
+			if(stmp)
+			{
+				changeFontBlod[Streamid] = "1";	
+			}
+			else if(!stmp)
+			{
+				changeFontBlod[Streamid] = "0";		
+			}
+		});
+		/*
+		//change字体旋转
+		$("#s_text_rotate").bind("click",function(e){
+			var stmp = document.getElementById("s_text_rotate").checked;
+			if(stmp)
+			{
+				changeFontRotate[Streamid] = "1";	
+			}
+			else if(!stmp)
+			{
+				changeFontRotate[Streamid] = "0";		
+			}
+		});
+		*/
+		//change字体倾斜
+/*		$("#s_text_italic").bind("click",function(e){
+			var stmp = document.getElementById("s_text_italic").checked;
+			if(stmp)
+			{
+				changeFontItalic[Streamid] = "1";	
+			}
+			else if(!stmp)
+			{
+				changeFontItalic[Streamid] = "0";		
+			}
+		});*/
+		//change字体加框
+/*		$("#s_text_outline").bind("click",function(e){
+			var stmp = document.getElementById("s_text_outline").checked;
+			if(stmp)
+			{
+				changeFontOutLine[Streamid] = "1";	
+			}
+			else if(!stmp)
+			{
+				changeFontOutLine[Streamid] = "0";		
+			}
+		});*/
+		//changel用户字符
+		$("#s_text").bind("change",function(e){
+			changeName[Streamid] = $("#s_text").val();
+			
+			if(changeName[Streamid] == "" || changeName[Streamid] == null)
+			{
+				changeName[Streamid] = " ";
+			}
+		});
+	$("#submit").bind("click",function(e){
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;
+					//content.VideoId=VidieID;
+					
+					//设置码流标记
+					content.Flag=Streamid;
+					//是否显示时间
+					content.TimeEnable=timeEnable[Streamid];
+					//TIME语言
+					//content.Language=timeLanguage[Streamid];
+					//time 精确位置
+					
+					content.TimeDisplayX=timeDisPlayX[Streamid];
+					content.TimeDisplayY=timeDisPlayY[Streamid];
+					//time日期格式
+					content.DateStyle=timeDatestyle[Streamid];
+					content.TimeStyle=timeTimestyle[Streamid];
+					
+					//字体
+					content.TimeFontColor=timeFontColor[Streamid];
+					content.TimeFontSize=timeFontSize[Streamid];
+					content.TimeFontBlod=timeFontBlod[Streamid];
+					//content.TimeFontRotate=timeFontRotate[Streamid];
+					content.TimeFontItalic="0";//timeFontItalic[Streamid];
+					content.FontOutline="0";//timeFontOutLine[Streamid];
+					
+					//是否显示text
+					content.ChannelEnable=changeEnable[Streamid];
+					//text 精确位置
+					content.ChannelDisplayX=changeDisPlayX[Streamid];
+					content.ChannelDisplayY=changeDisPlayY[Streamid];
+
+					
+					//字体
+					content.ChannelFontColor=changeFontColor[Streamid];
+					content.ChannelFontSize=changeFontSize[Streamid];
+					content.ChannelFontBlod=changeFontBlod[Streamid];
+					//content.ChannelFontRotate=changeFontRotate[Streamid];
+					content.ChannelFontItalic="0";//changeFontItalic[Streamid];
+					content.ChannelOutline="0";//changeFontOutLine[Streamid];
+					
+					content.ChannelName=changeName[Streamid];
+					contentstr=jsonToString(content);
+					GetAndSet("SetShowInfo","json",contentstr, sucess_SetShowInfoData);	
+		});
+		
+		$("#displaytime").bind("click",function(e){
+				if($("#divtime").css("display")=="block")
+				{
+					$("#divtime").css("display","none");
+					$("#displaytime").css("background","url(images/add3.gif) no-repeat 0 3px");
+				}
+				else
+				{
+					$("#divtime").css("display","block");
+					$("#displaytime").css("background","url(images/sub3.gif) no-repeat 0 3px");
+				}
+			});
+			
+			$("#displaytext").bind("click",function(e){
+				if($("#divtext").css("display")=="block")
+				{
+					$("#divtext").css("display","none");
+					$("#displaytext").css("background","url(images/add3.gif) no-repeat 0 3px");
+				}
+				else
+				{
+					$("#divtext").css("display","block");
+					$("#displaytext").css("background","url(images/sub3.gif) no-repeat 0 3px");
+				}
+				
+			});
+			
+			//校验
+			$("#s_time_startx,#s_time_starty,#s_text_startx,#s_text_starty").bind("keyup",function(e){
+				var val=this.value;
+				this.value=val.substr(0,2);
+				var id=this.id;
+				//alert(this.value);
+				if(this.value!="")
+				{
+					var exp=/^[0-9]\d*$/;
+					 var reg = this.value.match(exp);
+					var ErrMsg = "你输入的值无效。请输入正整数！"
+					//var Msg = "你输入的是一个合法的IP地址段！"
+					if (reg == null) {
+						this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+						alert(ErrMsg);
+						this.value="";
+						return false;
+					} else {
+						 this.style.border = "1px solid black";
+
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+						return true;
+					}
+				}
+				else
+				{
+					 this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+				}
+				});
+				$("#s_time_startx,#s_time_starty").bind("blur",function(e){
+					var x=$("#s_time_startx").val();
+					var y=$("#s_time_starty").val();
+					var intx=parseInt(x,10);
+					var inty=parseInt(y,10);
+					if(intx>=50&&inty>=50)
+					{
+						$("#s_time_position").val('3');
+					}
+					if(intx<50&&inty>=50)
+					{
+						$("#s_time_position").val('2');
+					}
+					
+					if(intx<50&&inty<50)
+					{
+						$("#s_time_position").val('0');
+					}
+					if(intx>=50&&inty<50)
+					{
+						$("#s_time_position").val('1');
+					}
+					timeDisPlayX[Streamid] = $("#s_time_startx").val();
+					timeDisPlayY[Streamid] = $("#s_time_starty").val();
+					});
+				$("#s_text_startx,#s_text_starty").bind("blur",function(e){
+					var x=$("#s_text_startx").val();
+					var y=$("#s_text_starty").val();
+					var intx=parseInt(x,10);
+					var inty=parseInt(y,10);
+					if(intx>=50&&inty>=50)
+					{
+						$("#s_text_position").val('3');
+					}
+					if(intx<50&&inty>=50)
+					{
+						$("#s_text_position").val('2');
+					}
+					
+					if(intx<50&&inty<50)
+					{
+						$("#s_text_position").val('0');
+					}
+					if(intx>=50&&inty<50)
+					{
+						$("#s_text_position").val('1');
+					}
+					changeDisPlayX[Streamid] = $("#s_text_startx").val();
+					changeDisPlayY[Streamid] = $("#s_text_starty").val();
+					});
+				$("#s_text").bind("blur",function(e){
+					var val=this.value;
+				this.value=val.substr(0,20);
+				if(this.value=="")
+				{
+					$("#s_text_enable").removeAttr("checked","checked");
+				}
+					});
+					
+		$("#s_text_enable").bind("click",function(e){
+			if($("#s_text_enable").attr("checked")=="checked")
+			{
+				
+			}
+			});
+		$("#text_str").bind("blur",function(e){
+			   var isok = f_check_valid(this);
+					
+                    if (!isok) {
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+					}
+			});
+			
+		//选择时间位置 左上右下。。。。
+		$("#s_time_position").bind("change",function(e){
+			var value=$("#s_time_position").val();
+				if(value==0)
+				{
+					$("#s_time_startx").val('0');
+					$("#s_time_starty").val('0');
+				}
+				if(value==1)
+				{
+					$("#s_time_startx").val('88');
+					$("#s_time_starty").val('0');
+				}
+				if(value==2)
+				{
+					$("#s_time_startx").val('0');
+					$("#s_time_starty").val('90');
+				}
+				if(value==3)
+				{
+					$("#s_time_startx").val('88');
+					$("#s_time_starty").val('90');
+				}
+			});
+			$("#s_text_position").bind("change",function(e){
+			var value=$("#s_text_position").val();
+				if(value==0)
+				{
+					$("#s_text_startx").val('0');
+					$("#s_text_starty").val('0');
+				}
+				if(value==1)
+				{
+					$("#s_text_startx").val('88');
+					$("#s_text_starty").val('0');
+				}
+				if(value==2)
+				{
+					$("#s_text_startx").val('0');
+					$("#s_text_starty").val('90');
+				}
+				if(value==3)
+				{
+					$("#s_text_startx").val('88');
+					$("#s_text_starty").val('90');
+				}
+			});
+	//切换码流
+		/*$("input[type=radio][name='bitstream']").bind("click",function(e){
+			streamid=this.value;
+			changeStream(streamid);
+							//获取页面信息
+	                        getsetOsdInfo('get',streamid,'');
+			});*/
+			//播放视频
+			var cameraip  = "";
+				cameraip = parent.getip();
+				if(cameraip != "")
+				{
+		   			if(parent.port=="")
+		   			{
+			   			GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", getportsuccessfunc);
+			   			function getportsuccessfunc(data)
+						{
+							var PackDate=new UnPackData(data);
+							if(PackDate.Content!=null)
+							{
+								if(PackDate.Content.RetCode=="0")
+								{
+										parent.port=PackDate.Content.SDK_Port;
+										if(parent.isZY)
+										{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
+										else
+										{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
+										delete PackDate;
+								}
+							}
+						}
+		  			 }
+		  			 else
+		   			{
+						if(parent.isZY)
+		   				{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
+						else
+						{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
+						delete PackDate;
+		   			}
+
+				}
+
+  });
+  			  $(window).bind('beforeunload',function()
+			  { 
+			  	try
+			  	{
+					var activex=document.getElementById("GMIIPCmrWebPlugIn1");
+					if (activex != null && activex != 'null')
+					{
+							if(activex)
+							{activex.Pause();}
+					}
+			  }
+			  catch(e)
+			  {
+				  //alert(e.message);
+			  }
+	});
+	
+
+	//获取OSD数据	
+  function getsetOsdInfo(streamid)
+  {
+		//将码流数据填入控件
+		//是否显示时间信息
+		if(timeEnable[streamid] == "1")
+		{
+			document.getElementById("s_time_enable").checked = true;
+			//$("#s_time_enable").checked = true;		
+		}
+		else if(timeEnable[streamid] == "0")
+		{
+			//$("#s_time_enable").checked = false;	
+			document.getElementById("s_time_enable").checked = false;
+		}
+		/*
+		//TIME语言
+		switch(timeLanguage[streamid])
+		{
+			case "1":
+				$("#language").val(1);
+			break;
+			case "2":
+				$("#language").val(2);
+			break;
+			case "3":
+				$("#language").val(3);
+			break;
+			default:
+				$("#language").val(2);
+			break;
+		}	
+		*/
+		//time 精确位置 
+		$("#s_time_startx").val(timeDisPlayX[streamid]);
+		$("#s_time_starty").val(timeDisPlayY[streamid]);
+		//time日期格式
+		switch(timeDatestyle[streamid])
+		{
+			case "0":
+				$("#s_date_style").val(0);
+			break;
+			case "1":
+				$("#s_date_style").val(1);
+			break;
+
+			default:
+				$("#s_date_style").val(0);
+			break;
+		}
+		//time时间格式
+		switch(timeTimestyle[streamid])
+		{
+			case "0":
+				$("#s_time_style").val(0);
+			break;
+
+			default:
+				$("#s_time_style").val(0);
+			break;
+		}
+		//time字体颜色
+		switch(timeFontColor[streamid])
+		{
+			case "0":
+				$("#s_time_color").val(0);
+			break;
+			case "1":
+				$("#s_time_color").val(1);
+			break;
+			case "2":
+				$("#s_time_color").val(2);
+			break;
+			case "3":
+				$("#s_time_color").val(3);
+			break;
+			case "4":
+				$("#s_time_color").val(4);
+			break;
+			case "5":
+				$("#s_time_color").val(5);
+			break;
+			case "6":
+				$("#s_time_color").val(6);
+			break;
+			case "7":
+				$("#s_time_color").val(7);
+			break;
+			default:
+				$("#s_time_color").val(0);
+			break;
+		}
+		//time字体大小
+		switch(timeFontSize[streamid])
+		{
+			case "48":
+				$("#s_time_size").val(48);
+			break;
+			case "16":
+				$("#s_time_size").val(16);
+			break;
+			case "24":
+				$("#s_time_size").val(24);
+			break;
+			case "32":
+				$("#s_time_size").val(32);
+			break;
+			case "40":
+				$("#s_time_size").val(40);
+			break;
+			default:
+				$("#s_time_size").val(16);
+			break;
+		}
+		//time字体加粗
+		if(timeFontBlod[streamid] == "1")
+		{
+			document.getElementById("s_time_bold").checked = true;
+			//$("#s_time_bold").checked = true;		
+		}
+		else if(timeFontBlod[streamid] == "0")
+		{
+			document.getElementById("s_time_bold").checked = false;
+			//$("#s_time_bold").checked = false;	
+		}
+		/*
+		//time字体旋转
+		if(timeFontRotate[streamid] == "1")
+		{
+			document.getElementById("s_time_rotate").checked = true;
+			//$("#s_time_rotate").checked = true;		
+		}
+		else if(timeFontRotate[streamid] == "0")
+		{
+			document.getElementById("s_time_rotate").checked = false;
+			//$("#s_time_rotate").checked = false;	
+		}
+		*/
+		//time字体倾斜
+/*		if(timeFontItalic[streamid] == "1")
+		{
+			document.getElementById("s_time_italic").checked = true;
+			//$("#s_time_italic").checked = true;		
+		}
+		else if(timeFontItalic[streamid] == "0")
+		{
+			document.getElementById("s_time_italic").checked = false;
+			//$("#s_time_italic").checked = false;	
+		}
+		//time字体加框
+		if(timeFontOutLine[streamid] == "1")
+		{
+			document.getElementById("s_time_outline").checked = true;
+			//$("#s_time_outline").checked = true;		
+		}
+		else if(timeFontOutLine[streamid] == "0")
+		{
+			document.getElementById("s_time_outline").checked = false;
+			//$("#s_time_outline").checked = false;	
+		}*/
+		
+		
+		//changel是否显示用户字符
+		if(changeEnable[streamid] == "1")
+		{
+			document.getElementById("s_text_enable").checked = true;
+			//$("#s_text_enable").checked = true;		
+		}
+		else if(changeEnable[streamid] == "0")
+		{
+			document.getElementById("s_text_enable").checked = false;
+			//$("#s_text_enable").checked = false;	
+		}
+		//changel精确位置
+		$("#s_text_startx").val(changeDisPlayX[streamid]);
+		$("#s_text_starty").val(changeDisPlayY[streamid]);
+		//changel字体颜色
+		switch(changeFontColor[streamid])
+		{
+			case "0":
+				$("#s_text_color").val(0);
+			break;
+			case "1":
+				$("#s_text_color").val(1);
+			break;
+			case "2":
+				$("#s_text_color").val(2);
+			break;
+			case "3":
+				$("#s_text_color").val(3);
+			break;
+			case "4":
+				$("#s_text_color").val(4);
+			break;
+			case "5":
+				$("#s_text_color").val(5);
+			break;
+			case "6":
+				$("#s_text_color").val(6);
+			break;
+			case "7":
+				$("#s_text_color").val(7);
+			break;
+			default:
+				$("#s_text_color").val(0);
+			break;
+		}
+		//changel字体大小
+		switch(changeFontSize[streamid])
+		{
+			case "16":
+				$("#s_text_size").val(16);
+			break;
+			case "48":
+				$("#s_text_size").val(48);
+			break;
+			case "24":
+				$("#s_text_size").val(24);
+			break;
+			case "32":
+				$("#s_text_size").val(32);
+			break;
+			case "40":
+				$("#s_text_size").val(40);
+			break;
+			default:
+				$("#s_text_size").val(16);
+			break;
+		}
+		 //changel字体加粗
+		if(changeFontBlod[streamid] == "1")
+		{
+			document.getElementById("s_text_bold").checked = true;
+			//$("#s_text_bold").checked = true;		
+		}
+		else if(changeFontBlod[streamid] == "0")
+		{
+			document.getElementById("s_text_bold").checked = false;
+			//$("#s_text_bold").checked = false;	
+		}
+		/*
+		//changel字体旋转
+		if(changeFontRotate[streamid] == "1")
+		{
+			document.getElementById("s_text_rotate").checked = true;
+			//$("#s_text_rotate").checked = true;		
+		}
+		else if(changeFontRotate[streamid] == "0")
+		{
+			document.getElementById("s_text_rotate").checked = false;
+			//$("#s_text_rotate").checked = false;	
+		}
+		*/
+/*		//changel字体倾斜
+		if(changeFontItalic[streamid] == "1")
+		{
+			document.getElementById("s_text_italic").checked = true;
+			//$("#s_text_italic").checked = true;		
+		}
+		else if(changeFontItalic[streamid] == "0")
+		{
+			document.getElementById("s_text_italic").checked = false;
+			//$("#s_text_italic").checked = false;	
+		}
+		//changel字体加框
+		if(changeFontOutLine[streamid] == "1")
+		{
+			document.getElementById("s_text_outline").checked = true;
+			//$("#s_text_outline").checked = true;		
+		}
+		else if(changeFontOutLine[streamid] == "0")
+		{
+			document.getElementById("s_text_outline").checked = false;
+			//$("#s_text_outline").checked = false;	
+		}*/
+		//changel用户字符
+		$("#s_text").val(changeName[streamid]);
+  }
+
+  
+  
+ function OSDStyleControl()
+{
+	                var x=$("#s_time_startx").val();
+					var y=$("#s_time_starty").val();
+					var intx=parseInt(x,10);
+					var inty=parseInt(y,10);
+					if(intx>=50&&inty>=50)
+					{
+						$("#s_time_position").val('3');
+					}
+					if(intx<50&&inty>=50)
+					{
+						$("#s_time_position").val('2');
+					}
+					
+					if(intx<50&&inty<50)
+					{
+						$("#s_time_position").val('0');
+					}
+					if(intx>=50&&inty<50)
+					{
+						$("#s_time_position").val('1');
+					}
+					
+					
+					 var textx=$("#s_text_startx").val();
+					var texty=$("#s_text_starty").val();
+					var tintx=parseInt(textx,10);
+					var tinty=parseInt(texty,10);
+					if(tintx>=50&&tinty>=50)
+					{
+						$("#s_text_position").val('3');
+					}
+					if(tintx<50&&tinty>=50)
+					{
+						$("#s_text_position").val('2');
+					}
+					
+					if(tintx<50&&tinty<50)
+					{
+						$("#s_text_position").val('0');
+					}
+					if(tintx>=50&&tinty<50)
+					{
+						$("#s_text_position").val('1');
+					}
+}
+  //切换码流函数。
+  function changeStream(streamid)
+ {
+					
+	var ID = parseInt(streamid);
+	Streamid = ID;		
+    if (window.ActiveXObject) {
+        try {
+         
+		    var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+			//activeX.SetLoginInfo(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+			//activeX.SetCapturePath("C:\\Program Data\\IPC\\Image");
+			switch(ID)
+			{
+				case 0:
+					//activeX.SetPtzType(0);
+					activeX.SetStreamId(0);
+				break;
+				case 1:
+					//activeX.SetPtzType(1);
+					activeX.SetStreamId(1);
+				break;
+				case 2:
+					//activeX.SetPtzType(2);
+					activeX.SetStreamId(2);
+				break;
+				case 3:
+					//activeX.SetPtzType(3);
+					activeX.SetStreamId(3);
+				break;
+				default:
+				return;
+			}
+			//activeX.Play();
+			//加载码流信息
+			getsetOsdInfo(streamid);	
+			
+        } catch(e) { 
+			alert("控件加载失败！请尝试手动加载控件！");
+            return;
+        }
+    }			
+ }
+ 
+ function displayCVBS()
+ {
+ }
+ 	function LoadImg(name,password,ip,port)
+	{
+		//debugger;
+    	if (window.ActiveXObject)
+		{
+        	try
+			{
+         
+		    	var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+				activeX.SetLoginInfo(name, password, ip, port);
+			
+			if(typeof(parent.NetPlay) == "undefined" ||parent.NetPlay == null || isNaN(parent.NetPlay))
+			{
+				parent.NetPlay = 10;
+			}
+			activeX.SetVideoBuffer(0,parseInt(parent.NetPlay));
+				//activeX.SetCapturePath("C:\\Program Data\\IPC\\Image");
+				//activeX.SetRecordPath("E:\\");
+				//activeX.SetCapturePath("E:\\");
+				//activeX.SetPtzType(0);
+				//activeX.SetStreamId(0);
+				//var str=activeX.AboutBox();
+				activeX.Play();
+        	}
+			catch(e)
+			{ 
+				alert(e.message);
+            	return;
+        	}
+   		}
+    }
+
+//设置OSD毁掉函数
+function sucess_SetShowInfoData(data)
+{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						alert("设置成功！");
+					}
+					else if(PackDate.Content.RetCode!="0")
+					{
+						alert("设置OSD参数失败！");
+						
+					}
+				}
+				delete PackDate;
+}
+         </script>
+</head>
+
+<body> 
+ 
+ 
+ 
+<div class="bit-stream">
+<h3 id="honscreendisplay">
+                信息叠加
+            </h3>
+<dl id="streamInfo">
+ <dt id="dstream">码流</dt>
+                                <dd>
+<input type="radio" name="bitstream" value="0" id="radiostream0" checked="checked"/>
+<label id="1stream">码流</label><label>1</label></dd>
+                               </dl> 
+                                </div> 
+                <div class="down_main_content">
+                          		<div class="camera_top">
+                                	<div class="video"  id="myvedio">
+            <object classid="CLSID:D761DC49-4CDC-458E-ABB6-4F594E9DA1EB" codebase=""
+            width=702 height=395 align="absmiddle" id="GMIIPCmrWebPlugIn1">
+            
+            </object>                                </div>
+                                </div>
+                                
+                                 <div class="down_main_content">
+                <div class="ip_set_main">
+      <fieldset class="motion_det_fil_1" style="width:850px" id="cvbsosd">
+                        <legend id="lcvbsset">
+                            CVBS OSD设置
+        </legend>
+         <div class="motion_det_list">
+                            <div class="motion_det_list_inner_yps">
+                                <input type="checkbox" id='support_vout'  disabled="disabled" 
+                                />
+                                <div id="dissuposd">
+                                支持cvbs OSD输出
+                                </div>
+                      </div>
+                        </div>
+                <div class="motion_det_list">
+          <div class="motion_det_list_inner_yps" style="margin-left:32px; width:148px;" id="dfontcolor">
+                                字体颜色
+                            </div>
+                            <div class="motion_det_list_inner">
+                               <select class="infro_selec" id="font_color">
+                                                <option value='0'  selected id="optionblack">黑</option>
+                                                <option value='1' id="optionred"  >红</option>
+                                                <option value='2'  id="optionblue" >蓝</option>
+                                                <option value='3'  id="optiongreen">绿</option>
+                                                <option value='4'  id="optionyellow">黄</option>
+                                                <option value='5'  id="optionpurple" >紫</option>
+                                                <option value='6'  id="optioncyan">氰</option>
+                                                <option value='7' id="optionwhite">白</option>
+
+                                        		</select>
+                            </div>
+                        </div>
+                        <div class="motion_det_list">
+                            <div class="motion_det_list_inner_yps">
+                                <input type="checkbox" id='time_enable' 
+                                />
+                                <div id="dtimeoverlay">
+                                显示时间信息</div>
+                      </div>
+                        </div>
+          <div class="motion_det_list">
+              <div class="motion_det_list_inner_yps">
+                                <input type="checkbox" id='zoom_enable' />
+                                <div id="dzoomoverlay">
+                                显示变倍信息</div>
+            </div>
+                            
+        </div>
+                        <div class="motion_det_list">
+                             <div class="motion_det_list_inner_yps">
+                                <input type="checkbox" id='text_enable' />
+                                <div id="dstringoverlay">
+                                显示用户字符</div>
+                            </div>
+                        </div>
+                        <div class="motion_det_list">
+                             <div class="motion_det_list_inner_yps" style="margin-left:32px; width:148px" id="dinputstring">
+                                输入字符
+                             </div>
+                             <div class="motion_det_list_inner"><input class="info_s_content_list_1_inf_input" id="text_str" maxlength="20"/>
+                          </div>
+            </div>
+                    </fieldset>
+                </div>
+            </div>
+                                 <script>
+					            if(parent.isZY)
+								{
+									if(mystreamid==1)
+									{
+										$("#GMIIPCmrWebPlugIn1").css("visibility","hidden");			
+									}
+								    else
+									{
+										
+										$("#GMIIPCmrWebPlugIn1").css("visibility","visible");
+										//alert($("#GMIIPCmrWebPlugIn1").css("visibility"));
+									}
+								}
+								else
+								{
+									$("#GMIIPCmrWebPlugIn1").css("visibility","visible");
+								}
+					          </script>
+                                    <div class="info_down" id="osddiv">
+                                    <div style="color:#666; margin-top:10px" id="dinfotool">注意：分辨率相同时码流设置的OSD信息显示会重叠</div>
+                                    	<div class="info_title">
+                                       
+                                       		 <div style="float:left"><input type="checkbox" style="border:0 none;" id="s_time_enable" />
+                                             <input type="hidden" id="31s0_time_enable" />
+                                             <input type="hidden" id="31s1_time_enable" />
+                                             <input type="hidden" id="31s2_time_enable" />
+                                             <input type="hidden" id="31s3_time_enable" />
+                                             </div>
+                                      		  <div style="float:left"> <div style="height:24px;float:left; width:80px;" id="otimeoverlay">显示时间信息</div><div style="height:24px;float:left;margin-top:2px;margin-left:4px;"><a class="btn13_1" id="displaytime"></a></div> </div>
+                                        </div>
+                                        <div class="info_s_content_1" id="divtime" style="display:none">
+                         					<!--<div class="info_s_content_list">
+                                            	语言
+                                            </div>
+                                            <div class="info_s_content_list">
+                            				<select id="language" class="infro_selec">
+                                			<option value='1'>
+                                    			英文
+                                			</option>
+                                			<option value='2'>
+                                    			中文
+                                			</option>
+                                			<option value='3'>
+                                    			韩文
+                                			</option>
+                            				</select>
+                                            <input type="hidden" id="31s0_time_size" />
+                                            <input type="hidden" id="31s1_time_size" />
+                                            <input type="hidden" id="31s2_time_size" />
+                                            </div>-->
+                                        	<div class="info_s_content_list">
+                                            	字体
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	<select class="infro_selec" id="s_time_size">
+                                                <option value='16'  >最小</option>
+<option value='24'  >小</option>
+<option value='32'  >中</option>
+<option value='40'  selected>大</option>
+<option value='48'  selected>最大</option>
+
+                                        		</select>
+                                                <input type="hidden" id="31s0_time_size" />
+                                                 <input type="hidden" id="31s1_time_size" />
+                                                  <input type="hidden" id="31s2_time_size" />
+                                                   <input type="hidden" id="31s3_time_size" />
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	颜色
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	<select class="infro_selec" id="s_time_color">
+                                                <option value='0'  selected id="eptionblack">黑</option>
+                                                <option value='1' id="eptionred"  >红</option>
+                                                <option value='2'  id="eptionblue" >蓝</option>
+                                                <option value='3'  id="eptiongreen">绿</option>
+                                                <option value='4'  id="eptionyellow">黄</option>
+                                                <option value='5'  id="eptionpurple" >紫</option>
+                                                <option value='6'  id="eptioncyan">氰</option>
+                                                <option value='7' id="eptionwhite">白</option>
+
+                                        		</select>
+                                                <input type="hidden" id="31s0_time_color" />
+                                                 <input type="hidden" id="31s1_time_color" />
+                                                  <input type="hidden" id="31s2_time_color" />
+                                                   <input type="hidden" id="31s3_time_color" />
+                                                
+                                                    
+                                            </div>
+                                          
+                                            <div class="info_s_content_list">
+                                            	<input type="checkbox" style="border:0 none; float:left;" id="s_time_bold" />
+                                                <input type="hidden" id="31s0_time_bold" />
+                                                <input type="hidden" id="31s1_time_bold" />
+                                                <input type="hidden" id="31s2_time_bold" />
+                                                <input type="hidden" id="31s3_time_bold" />
+                                                  <div align="left">加粗</div> 
+                                            	<!--
+                                            	<input type="checkbox" style="border:0 none; float:left;" id="s_time_rotate" />
+                                                <input type="hidden" id="31s0_time_bold" />
+                                                <input type="hidden" id="31s1_time_bold" />
+                                                <input type="hidden" id="31s2_time_bold" />
+                                                <input type="hidden" id="31s3_time_bold" />
+                                                  <div align="left">旋转</div> 
+                                                  -->
+<!--                                            	<input type="checkbox" style="border:0 none; float:left;" id="s_time_italic" />
+                                                <input type="hidden" id="31s0_time_bold" />
+                                                <input type="hidden" id="31s1_time_bold" />
+                                                <input type="hidden" id="31s2_time_bold" />
+                                                <input type="hidden" id="31s3_time_bold" />
+                                                  <div align="left">斜体</div> 
+                                            	<input type="checkbox" style="border:0 none; float:left;" id="s_time_outline" />
+                                                <input type="hidden" id="31s0_time_bold" />
+                                                <input type="hidden" id="31s1_time_bold" />
+                                                <input type="hidden" id="31s2_time_bold" />
+                                                <input type="hidden" id="31s3_time_bold" />
+                                                  <div align="left">勾边</div>-->
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	日期格式
+                                            </div> 
+                                            <div class="info_s_content_list_datetime">
+                                            	<select class="infro_selec_wk" id="s_date_style" disabled="disabled">
+                                                <option value='0'  selected id="ymd">年-月-日</option>
+                                                <option value='1' id="mdy"  >月-日-年</option>
+                                        		</select>
+                                                <input type="hidden" id="31s0_time_color" />
+                                                 <input type="hidden" id="31s1_time_color" />                                                    
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	时间格式
+                                            </div> 
+                                            <div class="info_s_content_list_datetime">
+                                            	<select class="infro_selec_wk" id="s_time_style" disabled="disabled">
+                                                <option value='0'  selected id="oms">时：分：秒</option>
+                                        		</select>
+                                                <input type="hidden" id="31s0_time_color" />                                            
+                                            </div>
+                                            
+                                            <div class="info_s_content_list" style="width:100%">
+                                            	 <div class="info_s_content_list" style="text-align:right;margin-left:2px;">精确位置</div>
+                                            </div>
+                                           
+                                            <div class="info_s_content_list">
+                                            	横向
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	<input class="infro_input" id="s_time_startx" />%
+                                                <input type="hidden" id="31s0_time_startx" />
+                                                <input type="hidden" id="31s1_time_startx" />
+                                                <input type="hidden" id="31s2_time_startx" />
+                                                <input type="hidden" id="31s3_time_startx" />
+                                            </div>
+                                             <div class="info_s_content_list">
+                                            	纵向
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	<input class="infro_input" id="s_time_starty" />%
+                                                <input type="hidden" id="31s0_time_starty" />
+                                                <input type="hidden" id="31s1_time_starty" />
+                                                <input type="hidden" id="31s2_time_starty" />
+                                                <input type="hidden" id="31s3_time_starty" />
+                                            </div>
+                                        </div>
+                                        <div class="info_title">
+                                       		 <div style="float:left"><input type="checkbox" style="border:0 none;" id="s_text_enable"/>
+                                             <input type="hidden" id="31s0_text_enable" />
+                                             <input type="hidden" id="31s1_text_enable" />
+                                             <input type="hidden" id="31s2_text_enable" />
+                                             <input type="hidden" id="31s3_text_enable" />
+                                            
+                                             </div>
+
+                                      		 <div style="float:left"> <div style="height:24px;float:left; width:157px; _width:157px;" id="ostringoverlay">显示用户字符（最多20个）</div><div style="height:24px;float:left;margin-top:2px;margin-left:2px;"><a class="btn13_1" id="displaytext"></a></div></div>
+                                        </div>
+                                        <div class="info_s_content_1" id="divtext" style="display:none">
+                                        	<div class="info_s_content_list_1">
+                                            	<div style="float:left; margin-left:20px; _margin-left:10px; color:#999;" id="textcontent">输入字符</div><input class="info_s_content_list_1_inf_input" id="s_text" maxlength="20"/>
+                                                <input type="hidden" id="31s0_text" />
+                                                <input type="hidden" id="31s1_text" />
+                                                <input type="hidden" id="31s2_text" />
+                                                <input type="hidden" id="31s3_text" />
+                                            </div>
+                                        	<div class="info_s_content_list">
+                                            	字体
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	<select class="infro_selec" id="s_text_size">
+                                                <option value='16'  >最小</option>
+<option value='24'  >小</option>
+<option value='32'  >中</option>
+<option value='40'  selected>大</option>
+<option value='48'  selected>最大</option>
+
+
+           		                </select>
+                                                <input type="hidden" id="31s0_text_size" />
+                                                <input type="hidden" id="31s1_text_size" />
+                                                <input type="hidden" id="31s2_text_size" />
+                                                <input type="hidden" id="31s3_text_size" />
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	颜色
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	<select class="infro_selec" id="s_text_color">
+                                                <option value='0'  selected id="dptionblack">黑</option>
+                                                <option value='1' id="dptionred"  >红</option>
+                                                <option value='2'  id="dptionblue" >蓝</option>
+                                                <option value='3'  id="dptiongreen">绿</option>
+                                                <option value='4'  id="dptionyellow">黄</option>
+                                                <option value='5'  id="dptionpurple" >紫</option>
+                                                <option value='6'  id="dptioncyan">氰</option>
+                                                <option value='7' id="dptionwhite">白</option>
+
+                                        		</select>
+                                                <input type="hidden" id="31s0_text_color" />
+                                                <input type="hidden" id="31s1_text_color" />
+                                                <input type="hidden" id="31s2_text_color" />
+                                                <input type="hidden" id="31s3_text_color" />
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	<input type="checkbox" style="border:0 none; float:left;" id="s_text_bold" /> 
+                                                <input type="hidden" id="31s0_text_bold" />
+                                                <input type="hidden" id="31s1_text_bold" />
+                                                <input type="hidden" id="31s2_text_bold" />
+                                                <input type="hidden" id="31s3_text_bold" />
+                                                 <div align="left">加粗</div> 
+                                                 <!--
+                                            	<input type="checkbox" style="border:0 none; float:left;" id="s_text_rotate" />
+                                                <input type="hidden" id="31s0_time_bold" />
+                                                <input type="hidden" id="31s1_time_bold" />
+                                                <input type="hidden" id="31s2_time_bold" />
+                                                <input type="hidden" id="31s3_time_bold" />
+                                                  <div align="left">旋转</div> 
+                                                  -->
+<!--                                            	<input type="checkbox" style="border:0 none; float:left;" id="s_text_italic" />
+                                                <input type="hidden" id="31s0_time_bold" />
+                                                <input type="hidden" id="31s1_time_bold" />
+                                                <input type="hidden" id="31s2_time_bold" />
+                                                <input type="hidden" id="31s3_time_bold" />
+                                                
+                                                  <div align="left">斜体</div> 
+                                            	<input type="checkbox" style="border:0 none; float:left;" id="s_text_outline" />
+                                                <input type="hidden" id="31s0_time_bold" />
+                                                <input type="hidden" id="31s1_time_bold" />
+                                                <input type="hidden" id="31s2_time_bold" />
+                                                <input type="hidden" id="31s3_time_bold" />
+                                                  <div align="left">勾边</div>-->
+                                            </div>
+                                            
+
+                                            
+                                            
+                                            <div class="info_s_content_list" style="width:100%">
+                                            	 <div class="info_s_content_list" style="text-align:right;margin-left:2px;">精确位置</div>
+                                            </div>
+                                           
+                                            <div class="info_s_content_list">
+                                            	横向
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	<input class="infro_input" id="s_text_startx" />%
+                                                <input type="hidden" id="31s0_text_startx" />
+                                                <input type="hidden" id="31s1_text_startx" />
+                                                <input type="hidden" id="31s2_text_startx" />
+                                                <input type="hidden" id="31s3_text_startx" />
+                                            </div>
+                                             <div class="info_s_content_list">
+                                            	纵向
+                                            </div>
+                                            <div class="info_s_content_list">
+                                            	<input class="infro_input" id="s_text_starty" />%
+                                                <input type="hidden" id="31s0_text_starty" />
+                                                <input type="hidden" id="31s1_text_starty" />
+                                                <input type="hidden" id="31s2_text_starty" />
+                                                <input type="hidden" id="31s3_text_starty" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                             	
+                             
+                        </div>  
+                                 
+   <div class="bottom-action">
+<input type="button" id="submit" class="btn3" value="确定"/>
+                            <input type="reset" class="btn3" value="取消" id="reset"/>
+                        </div>
+                             
+</body>
+</html>

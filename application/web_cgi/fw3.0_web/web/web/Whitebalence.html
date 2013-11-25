@@ -1,0 +1,467 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>
+            自定义设置
+        </title>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.core.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.slider.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/menu.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js" >
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <link type='text/css' href='css/demo.css' rel='stylesheet' media='screen'
+        />
+        <link type='text/css' href='css/basic1.css' rel='stylesheet' media='screen'
+        />
+        <script type='text/javascript' src='js/jquery.simplemodal.js'>
+        </script>
+        <script>
+			//BGain
+			var BGain;
+			//RGain
+			var RGain;
+            $(document).ready(function() {
+                var section = 'IMAGE';
+               // GetAndSet('get', section, '', "process", true);
+
+
+
+
+                $("#submit").bind("click",
+                function(e) {
+					/*
+                    var section = 'IMAGE';
+					var wbc_r_gain=$("#01wbc_r_gain").val();
+					var wbc_b_gain=$("#01wbc_b_gain").val();
+                    poststr = "wbc_r_gain="+wbc_r_gain+"||wbc_b_gain="+wbc_b_gain+"||wbc=10";
+                    $.ajax({
+                        url: url,
+                        data: "Request=set&Section=" + section + "&exsection= 0&postDataStr=" + encodeURIComponent(poststr + "||"),
+                        type: "post",
+                        success: function(data) {
+							
+                            //alert(data);
+                            var data2 = data.replace("\n", "");
+                            data2 = $.trim(data2);
+                            if (data2.substring(0, 3) == "<br") {
+                                alert("返回数据出错：\n" + data2);
+                                return;
+                            }
+                            var result = data2.split('&');
+                            var Request;
+                            var Section;
+                            var Flag;
+                            var Info;
+                            if (result.length != 4) {
+                                alert("返回数据解析错误");
+                                return;
+                            } else {
+                                Request = result[0];
+                                Section = result[1];
+                                Flag = result[2];
+                                Info = result[3];
+                                //alert(Info);
+
+                                //alert(Info);
+                                
+                                if (Flag == 0) {
+									 //提示语言设置
+              
+                alert("设置成功");
+				parent.closemodal();
+				
+				
+
+}
+else
+{parent.closemodal();}
+                            }
+							
+                            //
+
+                        },
+                        error: function() {
+                            // alert("util.js-->GetAndSet()--调用ajax 出错！\n fname=" + fname);
+                        }
+                    });
+*/
+					var  content={};
+					content.SessionId=parent.parent.id;
+					content.AuthValue=parent.parent.Authvalue;	
+					//模式
+					content.Mode = "10";
+					//背光补偿
+					content.RGain = $("#01wbc_r_gain").val();
+					//自动光圈
+					content.BGain = $("#01wbc_b_gain").val();
+
+					
+					contentstr=jsonToString(content);
+					GetAndSet("SetWhiteBalanceMode","json",contentstr, sucess_SetWhiteBalanceDataOK);
+                });
+				//设置毁掉函数
+				function sucess_SetWhiteBalanceDataOK(data)
+				{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							//跳转界面
+							//设置父窗口参数
+							alert("设置成功！");
+							parent.RGain = $("#01wbc_r_gain").val();
+							parent.BGain = $("#01wbc_b_gain").val();
+							parent.closemodal();
+							parent.init();
+						}
+						else if(PackDate.Content.RetCode=="0")
+						{
+							alert("设置失败！");
+							parent.closemodal();
+						}
+					}
+					
+				}
+
+                $("#cancel").bind("click",
+                function(e) {
+					/*
+					 var section = 'IMAGE';
+					 var wbc=$("#hwbc").val();
+					var wbc_r_gain=$("#hwbcr").val();
+					var wbc_b_gain=$("#hwbcb").val();
+					//恢复父页面值
+					   try
+			   {
+			   $("#01wbc", window.top.frames[0].document).val(wbc); 
+			   if(wbc!="10")
+			   {
+				   $("#whiteblueSet", window.top.frames[0].document).attr("disabled", "disabled");
+                   $("#whiteblueSet", window.top.frames[0].document).css("background", "url(images/btn1.jpg) no-repeat");
+			   }
+			   //alert($("#01wbc", window.top.frames[0].document).val());
+			   }catch(e){}
+                    poststr = "wbc_r_gain="+wbc_r_gain+"||wbc_b_gain="+wbc_b_gain+"||wbc="+wbc;
+                    $.ajax({
+                        url: url,
+                        data: "Request=set&Section=" + section + "&exsection=0&postDataStr=" + encodeURIComponent(poststr + "||"),
+                        type: "post",
+                        success: function(data) {
+                            var data2 = data.replace("\n", "");
+                            data2 = $.trim(data2);
+                            if (data2.substring(0, 3) == "<br") {
+                                alert("返回数据出错：\n" + data2);
+                                return;
+                            }
+                            var result = data2.split('&');
+                            var Request;
+                            var Section;
+                            var Flag;
+                            var Info;
+                            if (result.length != 4) {
+                                alert("返回数据解析错误");
+                                return;
+                            } else {
+                                Request = result[0];
+                                Section = result[1];
+                                Flag = result[2];
+                                Info = result[3];
+                                parent.closemodal();
+                                if (Flag == 0) {
+									 //提示语言设置
+              
+               // alert("设置成功");
+                                  }
+
+                            }
+                            //
+
+                        },
+                        error: function() {
+                            // alert("util.js-->GetAndSet()--调用ajax 出错！\n fname=" + fname);
+                        }
+                    });
+                    
+*/
+							parent.RGain = RGain;
+							parent.BGain = BGain;
+							parent.closeframe();
+							parent.init();
+                });
+
+                //四个加减按钮的操作 开始
+				//红增益+1
+                $("#wbc_r_gainadd").bind("click",
+                function(e) {
+				var oldv=$("#01wbc_r_gain").val();
+					if(oldv<1023)
+					{
+				var newv=parseInt(oldv,10)+parseInt(1,10);
+				$("#wbc_r_gain a")[0].style.left=parseInt((parseInt(newv,10))/1023*100,10)+"%";
+				$("#01wbc_r_gain").val(newv);
+				//var section='IMAGE';
+			    //var poststr="wbc_r_gain="+newv+"||";
+			    //GetAndSet('set',section,poststr, "process",true,true);
+				SetWhiteBalance("10",newv,$("#01wbc_b_gain").val());
+					}
+                   
+                });
+				//蓝增益+1
+                $("#wbc_b_gainadd").bind("click",
+                function(e) {
+					var oldv=$("#01wbc_b_gain").val();
+					if(oldv<1023)
+					{
+				var newv=parseInt(oldv,10)+parseInt(1,10);
+				$("#wbc_b_gain a")[0].style.left=parseInt((parseInt(newv,10))/1023*100,10)+"%";
+				$("#01wbc_b_gain").val(newv);
+				//var section='IMAGE';
+			    //var poststr="wbc_b_gain="+newv+"||";
+			    //GetAndSet('set',section,poststr, "process",true,true);
+				SetWhiteBalance("10",$("#01wbc_r_gain").val(),newv);
+					}
+                   
+                });
+
+				//红增益-1
+                $("#wbc_r_gainsub").bind("click",
+                function(e) {
+								var oldv=$("#01wbc_r_gain").val();
+					if(oldv>1)
+					{
+				var newv=parseInt(oldv,10)-parseInt(1,10);
+				$("#wbc_r_gain a")[0].style.left=parseInt((parseInt(newv,10))/1023*100,10)+"%";
+				$("#01wbc_r_gain").val(newv);
+				//var section='IMAGE';
+			    //var poststr="wbc_r_gain="+newv+"||";
+			    //GetAndSet('set',section,poststr, "process",true,true);
+				SetWhiteBalance("10",$("#01wbc_r_gain").val(),$("#01wbc_b_gain").val());
+					}
+                   
+                });
+
+				//蓝增益-1
+                $("#wbc_b_gainsub").bind("click",
+                function(e) {
+						var oldv=$("#01wbc_b_gain").val();
+					if(oldv>1)
+					{
+				var newv=parseInt(oldv,10)-parseInt(1,10);
+				$("#wbc_b_gain a")[0].style.left=parseInt((parseInt(newv,10))/1023*100,10)+"%";
+				$("#01wbc_b_gain").val(newv);
+				//var section='IMAGE';
+			    //var poststr="wbc_b_gain="+newv+"||";
+			    //GetAndSet('set',section,poststr, "process",true,true);
+				SetWhiteBalance("10",$("#01wbc_r_gain").val(),$("#01wbc_b_gain").val());
+					}
+                  
+                });
+                //四个加减按钮的操作 结束
+				
+                //滑动条代码
+                var $button = $(".drag-icon", $(".drag-bg"));
+                var sliderOpts = {
+					step:4,
+					stop:function(e,ui){
+				
+					sliderFunction(e,ui,this.id);
+				
+			},
+                    slide: function(e, ui) {
+
+                       //sliderFunction(e,ui,this.id);
+					}
+
+                };
+                $button.slider(sliderOpts);
+                //滑动条代码结束				
+				//初始化函数
+				init();
+
+            });
+			
+				//滑动处理函数
+		var request;
+ function sliderFunction(e,ui,thisid)
+ {
+			 var id=thisid;
+		     var value="";
+			 ///最小值从1开始
+				value= parseInt(((ui.value)/100*1023),10); 
+			   $("#01"+id+"").val(value); 
+			   //设置值参数到 server
+				var section='IMAGE';
+			   var poststr=id+"="+value+"||wbc=10";
+			   if(request!=null)
+			   {
+				   request.abort();
+			   }
+			   SetWhiteBalance("10",$("#01wbc_r_gain").val(),$("#01wbc_b_gain").val());
+			   /*
+			   request= $.ajax({
+                    url: url,
+						async:true,
+                    data: "Request=set&Section=" + section + "&exsection= 0&postDataStr=" + encodeURIComponent(poststr + "||"),
+                    type: "post",
+                    success: function(data) {
+                        //alert(data);
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+						if(data2.substring(0,3)=="<br")
+						{
+							//alert("返回数据出错：\n"+data2);
+							return;
+						}
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                           // alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                            //alert(Info);
+                            if (Flag == 0) {
+                             
+							    
+                            }
+						}
+                            //
+                        
+                    },
+                    error: function() {
+                      	if(isAlertUrlError)
+			                               {
+                                              alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+			                               }
+                    }
+                });*/
+				//处理最左端等于0时，滚动条与文本框值不对应问题。
+					if(ui.value==0)
+					{
+						var uileft=$("#" + thisid + " a")[0].style.left;
+						if(uileft!="0%")
+						{
+							$("#" + thisid + " a")[0].style.left="0%";
+						}
+					}
+		   }
+			//设置白平衡
+			function SetWhiteBalance(Mode,RGain,BGain)
+			{
+					var  content={};
+					content.SessionId=parent.parent.id;
+					content.AuthValue=parent.parent.Authvalue;	
+					//模式
+					content.Mode = Mode;
+					//背光补偿
+					content.RGain = RGain;
+					//自动光圈
+					content.BGain = BGain;
+
+					
+					contentstr=jsonToString(content);
+					GetAndSet("SetWhiteBalanceMode","json",contentstr, sucess_SetWhiteBalanceData);	
+			}
+				function sucess_SetWhiteBalanceData(data)
+				{
+				}
+function init()
+{
+	//读取值
+	RGain = getQueryString("RGain");
+	BGain = getQueryString("BGain");
+	var value1 = parseInt((parseInt(RGain,10))/1023*100,10);
+	var value2 = parseInt((parseInt(BGain,10))/1023*100,10);
+	//设置值
+	$("#wbc_r_gain a")[0].style.left=value1+"%";
+	$("#01wbc_r_gain").val(RGain);
+	
+	$("#wbc_b_gain a")[0].style.left=value2+"%";
+	$("#01wbc_b_gain").val(BGain);
+}
+        </script>
+    </head>
+    
+    <body style="border:1px solid #000; width:358px">
+        <div id="basic-modal" style="color:#999;"><h3 style="width:100%; color:#fff; background-color:#000; display:block; margin-top:0;height:28px; line-height:26px; font-size:12px; float:left; font-weight:normal; padding-left:20px;">
+                自定义设置：
+            </h3>
+            <input type="hidden" value="0" id="hwbc"/>
+            <input type="hidden" value="0" id="hwbcr"/>
+            <input type="hidden" value="0" id="hwbcb"/>
+        <div style="width:400px; margin:0 auto; padding-left:10px;">
+            <dl style="display:block; width:360px; height:40px; +margin-top:10px; float:left;">
+            
+                <dt style="width:50px;display:block;float:left;">
+                    红增益:
+                </dt>
+                <dd >
+                    <div class="drag-widget">
+                        <input type="button" class="sub" id="wbc_r_gainsub" style="margin-right:10px;">
+                        </input>
+                        <div class="drag-bg">
+                            <div class="drag-icon" id="wbc_r_gain">
+                            </div>
+                        </div>
+                        <input type="button" class="add" id="wbc_r_gainadd" style="margin-left:10px;">
+                        </input>
+                        <input id="01wbc_r_gain" class="val_ir" readonly="readonly" name=""
+                        />
+                    </div>
+                </dd>
+          </dl>
+         
+            
+            <dl style="display:block; width:360px; height:40px; float:left;">
+                <dt style="width:50px;display:block;float:left;">
+                    蓝增益:
+            </dt>
+                <dd>
+                    <div class="drag-widget">
+                        <input type="button" class="sub" id="wbc_b_gainsub" style="margin-right:10px;">
+                        </input>
+                        <div class="drag-bg">
+                            <div id="wbc_b_gain" class="drag-icon">
+                            </div>
+                        </div>
+                        <input type="button" class="add" id="wbc_b_gainadd" style="margin-left:10px;">
+                        </input>
+                        <input id="01wbc_b_gain" class="val_ir" readonly="readonly" name=""
+                        />
+                    </div>
+                </dd>
+            </dl>
+         
+            <div style="width:90%; text-align:center;">
+            <input type="button" class="btn3" value="确定" id="submit"
+            />
+            <input type="button" class="btn3" value="取消" id="cancel"
+            /></div>
+            </div>
+        </div>
+    </body>
+
+</html>

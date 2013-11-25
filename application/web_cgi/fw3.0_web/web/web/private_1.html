@@ -1,0 +1,404 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0; background-color:#242424;}
+        </style>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js" >
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <script>
+		  var isvalid = new Array(); //数据无效的数组。每个不合法项的ID 组成的数组。
+            //隐私遮挡流程。获取过程：1.从server端获取数据 2.set到activeX 控件方法SetMaskPosition 3 从activeX获得数据getMaskPosition()
+            function changeLanguage(lang) {
+                TranslatePage(lang);
+            }
+            $(document).ready(function() {
+				 // 调用模版也方法
+				 parent.innerCallMe(true); 
+                //语言初始化
+                initLang();
+                //初始化 get
+                var section = 'PMSETS';
+                GetAndSet('get', section, '', "process",false,false,0,2);
+
+                $("#submit").bind("click",
+                function(e) {
+
+                    //alert(document.getElementById("GMIIPCmrWebPlugIn1").getMaskPosition());
+                });
+
+                $("#masklist").bind("click",
+                function(e) {
+                    //alert(this.value);
+                    if (this.value != null && this.value != "") {
+                        //alert(this.value);
+                        document.getElementById("GMIIPCmrWebPlugIn1").SetPmCurrWinIndex(this.value);
+						var name= $("#masklist option[value='" + this.value + "']").text();
+				
+				         $("#32pm_name").val(name);
+                    }
+
+                });
+
+                $("#addmask").bind("click",
+                function(e) {
+                    andmasktoocx();
+                });
+                $("#delmask").bind("click",
+                function(e) {
+                    var index = document.getElementById("GMIIPCmrWebPlugIn1").GetPmCurrWinIndex();
+                    document.getElementById("GMIIPCmrWebPlugIn1").DelPmWindow(index);
+                    var oldinfo = $("#mask" + index).val();
+                    var p = new private(oldinfo, index);
+                    p.pm_enable = 0;
+                    p.getPosStr();
+                    $("#mask" + index).val(p.posStrServer); //记录服务器端 删除数据
+					//alert(p.posStrServer);
+                    $("#masklist option[value='" + index + "']").remove();
+                });
+                //取消按钮
+                $("#cancelmask").bind("click",
+                function(e) {
+                   // 刷新。
+				   location.reload();
+                });
+				//提交 确认
+                $("#submitmask").bind("click",
+                function(e) {
+				 if (isvalid.length == 0) {
+					var indexs=new Array();//未删除的id数组
+                    var postions = document.getElementById("GMIIPCmrWebPlugIn1").getMaskPosition();
+                   // alert(postions);
+                    var posString = "";
+                    if (postions != "" && postions != null) {
+                        var masks = postions.split("#");
+                        for (var i = 0; i < masks.length - 1; i++) {
+                            //alert(masks[i]);
+                            var j = 0;
+                            if (i == 0) {
+                                j = 0;
+                            } else {
+                                j = 1;
+                            }
+                            var index;
+                            var info = masks[i];
+                            var arr = info.split(',');
+                            var name = arr[0 + j];
+                            var left = arr[1 + j];
+                            var top = arr[2 + j];
+                            var right = arr[3 + j];
+                            var bottom = arr[4 + j];
+                            index = arr[5 + j];
+							indexs.push(index);
+                            var oldinfo = $("#mask" + index).val();
+                            //alert("lol"+oldinfo);
+                            var p = new private(oldinfo, index);
+                            p.pm_name = name;
+                            p.pm_color = $("#32pm_color").val();
+                            //alert(p.pm_color);
+                            p.pm_top = top;
+                            p.pm_enable = 1; //获取到的都是未删除的。
+                            p.pm_left = left;
+                            p.pm_w = parseInt(right, 10) - parseInt(left, 10) + parseInt("1", 10);
+                            p.pm_h = parseInt(bottom, 10) - parseInt(top, 10) + parseInt("1", 10);
+                            p.getPosStr();
+                            //alert(p.posStrServer);
+                            //
+                            posString += p.posStrServer;
+                        }
+                    }
+                    //确定 保存
+					var exPostStr="";
+					for(var i=1;i<=4;i++)
+					{
+						if(indexs.length==0)
+						{
+							exPostStr+="pm"+i+"_enable=0||";//被删除的遮挡
+						}
+						else
+						{
+							var flag=false;
+							for(var j=0;j<indexs.length;j++)
+							{
+								if(i==indexs[j])
+								{
+									flag=true;
+									break;
+								}
+							}
+							if(flag==false)
+							{
+								exPostStr+="pm"+i+"_enable=0||";//被删除的遮挡
+							}
+						}
+						
+					}
+					//alert(exPostStr);
+                    var section = 'PMSETS';
+                    var poststr = posString+exPostStr;
+					//alert(poststr);
+                    //alert(poststr);
+                    GetAndSet('set', section, poststr, "process");
+				 }
+				 else
+				 {
+					 alert("名称不能为空或超过16字符");
+				 }
+                });
+
+                $("#32pm_name").bind("change",
+                function(e) {
+					id=this.id;
+                    if ($("#32pm_name").val() != ""&&getlengthB($("#32pm_name").val())<16) {
+						 this.style.border = "1px solid black";
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+						
+							try
+							{
+								//隐私遮挡个数
+								var maskcount=$("#masklist option").length;
+								
+								if(maskcount>0)
+								{
+									var index = document.getElementById("GMIIPCmrWebPlugIn1").GetPmCurrWinIndex();
+									$("#masklist option[value='" + index + "']").text($("#32pm_name").val());
+									document.getElementById("GMIIPCmrWebPlugIn1").SetMaskName($("#32pm_name").val());
+								}
+							}
+							catch(e)
+							{
+								alert(e);
+							}
+					
+                        //alert(document.getElementById("GMIIPCmrWebPlugIn1").getMaskPosition());
+                    }
+					else
+					{
+						
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+						
+					}
+                });
+               
+				var cameraip=parent.getIp();
+				if(cameraip!="")
+				{
+					//alert(cameraip);
+                     LoadMaskActiveX(cameraip, 0);
+				}
+
+            });
+			  $(window).bind('beforeunload',function(){ 
+			  try
+			  {
+		var activex=document.getElementById("GMIIPCmrWebPlugIn1");
+							if (activex != null && activex != 'null') {
+						if(activex)
+							activex.Stop();
+					}
+			  }catch(e){alert(e.message);}
+	});
+            function OnPmWinChanged(index) {
+                $("#masklist option[value='" + index + "']").attr("selected", "selected");
+				var name= $("#masklist option[value='" + index + "']").text();
+				
+				$("#32pm_name").val(name);
+            }
+            function andmasktoocx() {
+                var position = document.getElementById("GMIIPCmrWebPlugIn1").getMaskPosition();
+
+                var count = position.split("#").length;
+                //alert(position);
+                //alert(count);
+                if (count < 5) {
+                    for (var i = 1; i <= 4; i++) {
+                        //alert($("#masklist option[value='"+i+"']").val());
+                        if ($("#masklist option[value='" + i + "']").val() == undefined) {
+                            //alert("ok");
+                            //alert(i);
+                            var name = "";
+                            if ($("#32pm_name").val() != "") {
+                                name = $("#32pm_name").val();
+                            } else {
+                                name = "mask" + i;
+                            }
+
+                            var oldinfo = $("#mask" + i).val();
+                            var p = new private(oldinfo, i);
+                            p.pm_enable = 1;
+                            p.getPosStr(); //posStrServer 赋值
+                            $("#mask" + i).val(p.posStrServer); //记录服务器端 添加数据
+                            //alert(p.posStrServer);
+                            document.getElementById("GMIIPCmrWebPlugIn1").AddPmWindow(i);
+                            document.getElementById("masklist").options.add(new Option(name, i));
+                            document.getElementById("GMIIPCmrWebPlugIn1").SetMaskName(name);
+                            $("#32pm_name").val("");
+                            break;
+                        }
+                    }
+                } else {
+                    alert("最多只能添加4个！");
+                }
+            }
+
+            function private(info, index) {
+				var _this=this;
+                _this.index = index;
+                _this.pm_enable = 0;
+                _this.pm_left = 0;
+                _this.pm_top = 0;
+                _this.pm_w = 0;
+                _this.pm_h = 0;
+                _this.pm_color = 0;
+                _this.pm_name = "mask";
+                _this.posStrServer = "";
+                var init = function() {
+                    var arrs = info.split("||");
+                    _this.pm_enable = arrs[0].split("=")[1];
+                    //alert("ler--"+this.pm_enable);
+                    _this.pm_left = arrs[1].split("=")[1];
+                    _this.pm_top = arrs[2].split("=")[1];
+                    _this.pm_w = arrs[3].split("=")[1];
+                    _this.pm_h = arrs[4].split("=")[1];
+                    _this.pm_color = arrs[5].split("=")[1];
+                    _this.pm_name = arrs[6].split("=")[1];
+                };
+                init();
+                _this.getPosStr = function() {
+                    _this.posStrServer = "pm" + index + "_enable=" + _this.pm_enable + "||" + "pm" + index + "_left=" + _this.pm_left + "||" + "pm" + index + "_top=" + _this.pm_top + "||" + "pm" + index + "_w=" + _this.pm_w + "||" + "pm" + index + "_h=" + _this.pm_h + "||" + "pm" + index + "_color=" + _this.pm_color + "||" + "pm" + index + "_name=" + _this.pm_name + "||";
+                };
+
+            }
+        </script>
+        <script language="Javascript" event="OnPmWinChanged(changedIndex)" for="GMIIPCmrWebPlugIn1">
+            OnPmWinChanged(changedIndex);
+        </script>
+    </head>
+    
+    <body>
+        <div class="bit-stream">
+            <h3 id="hprivacy">
+                隐私遮挡
+            </h3>
+        </div>
+        <div class="down_main_content">
+            <div class="camera_top">
+                <div class="video">
+                    <OBJECT CLASSID="CLSID:3BCDAA6A-7306-42FF-B8CF-BE5D3534C1E4" 
+                    WIDTH=702 HEIGHT=395 align="absmiddle" ID="GMIIPCmrWebPlugIn1">
+                        <PARAM NAME="_Version" VALUE="65536">
+                        <PARAM NAME="_ExtentX" VALUE="19045">
+                        <PARAM NAME="_ExtentY" VALUE="11478">
+                        <PARAM NAME="_StockProps" VALUE="0">
+                        <embed src="65536" width="700" height="395" align="absmiddle" _version="65536"
+                        _extentx="19045" _extenty="11478" _stockprops="0">
+                        </embed>
+                    </OBJECT>
+                </div>
+                 <div style="clear:both"></div>
+        
+                
+                <div class="info">
+                    <p>
+                        <label id="lname">
+                            名称
+                        </label>
+                        <input name="name" class="name" id="32pm_name" maxlength="16"/>
+                        <label style="margin-left:20px;" id="lcolor">
+                            颜色
+                        </label>
+                        <select name="color" class="color" id="32pm_color">
+                            <option value='0' selected id="optionblack">
+                                黑色
+                            </option>
+                            <option value='1' id="optionred">
+                                红色
+                            </option>
+                            <option value='2' id="optionblue">
+                                蓝色
+                            </option>
+                            <option value='3' id="optiongreen">
+                                绿色
+                            </option>
+                            <option value='4' id="optionyellow">
+                                黄色
+                            </option>
+                            <option value='5' id="optionmagenta">
+                                洋红
+                            </option>
+                            <option value='6'  id="optionviridity">
+                                青绿
+                            </option>
+                            <option value='7' id="optionwhite">
+                                白色
+                            </option>
+                        </select>
+						<input type="hidden" id="32pm1_color" />
+                    </p>
+                    <p>
+                        <label id="llist">
+                            列表
+                        </label>
+                        <!--<textarea rows="4"></textarea>-->
+                        <input type="hidden" id="mask1" />
+                        <input type="hidden" id="mask2" />
+                        <input type="hidden" id="mask3" />
+                        <input type="hidden" id="mask4" />
+                        <select class="selectlist" size="5" id="masklist">
+                        </select>
+                    </p>
+                    <p>
+                        <!--马军港 注销 <label>遮挡区域范围</label>
+                        <span>左边</span><input name="left" class="small"/>
+                        <span>上边</span><input name="top" class="small"/>
+                        <span>宽度</span><input name="width" class="small"/>
+                        <span>高度</span><input name="height" class="small"/>
+                        -->
+                    </p>
+                </div>
+                <div class="actions1">
+                    <p>
+                        <input type="button" class="btn24" id="addmask" value="添加" />
+                    </p>
+                    <p>
+                        <input type="button" class="btn24" id="delmask" value="删除" />
+                    </p>
+                    <p>
+                        <input type="button" class="btn24" id="submitmask" value="确定" />
+                    </p>
+                    <p>
+                        <input type="button" class="btn24" id="cancelmask" value="取消" />
+                    </p>
+                </div>
+           
+            </div>
+        </div>
+        </div>
+        <!--马军港 注销 <div class="bottom-action"><input type="button" name="restore" class="btn3" value="恢复默认"/>
+        <input type="button" id="submit" class="btn3" value="确定"/>
+        <input type="reset" class="btn3" value="取消"/>
+        </div>
+        -->
+    </body>
+
+</html>

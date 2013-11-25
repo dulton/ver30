@@ -1,0 +1,419 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>
+            IrCut高级设置
+        </title>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.core.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.slider.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/menu.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js" >
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <link type='text/css' href='css/demo.css' rel='stylesheet' media='screen'
+        />
+        <link type='text/css' href='css/basic1.css' rel='stylesheet' media='screen'
+        />
+        <script type='text/javascript' src='js/jquery.simplemodal.js'>
+        </script>
+        <script>
+			//当前操作
+			var SchedEnableNow = 0;
+			//8天
+			var sSchedEnable = parent.SchedEnable;//[['0'],['0'],['0'],['0'],['0'],['0'],['0'],['0']];
+			//日出时间
+			var sSchedStartTime = parent.SchedStartTime;//[['0'],['0'],['0'],['0'],['0'],['0'],['0'],['0']];
+			//日落时间
+			var sSchedEndTime = parent.SchedEndTime;//[['0'],['0'],['0'],['0'],['0'],['0'],['0'],['0']];
+			function init()
+			{
+				//设置星期
+				SchedEnableNow = 0;
+				$("#days").val(SchedEnableNow);
+				if(sSchedEnable[SchedEnableNow] == "1")
+				{
+					document.getElementById("ifSchedEnable").checked = true;
+					//$("#ifSchedEnable").checked = true;	
+				}
+				else if(sSchedEnable[SchedEnableNow] == "0")
+				{
+					document.getElementById("ifSchedEnable").checked = false;
+					//$("#ifSchedEnable").checked = false;		
+				}
+
+				//设置日出
+				//折算小时
+				var hour = parseInt(sSchedStartTime[SchedEnableNow],10)/3600;
+				hour = parseInt(hour,10);
+				//则算分
+				var minutes = (parseInt(sSchedStartTime[SchedEnableNow],10) - hour*3600)/60;
+				minutes = parseInt(minutes,10);
+				//折算秒
+				var seconds = parseInt(sSchedStartTime[SchedEnableNow],10) - hour*3600 - minutes*60;
+				seconds = parseInt(seconds,10);
+				
+			    $("#rsh1").val(hour);
+				$("#rsm1").val(minutes);
+				$("#rss1").val(seconds);
+				
+				//日落时间
+				hour = parseInt(sSchedEndTime[SchedEnableNow],10)/3600;
+				hour = parseInt(hour,10);
+				//则算分
+				minutes = (parseInt(sSchedEndTime[SchedEnableNow],10) - hour*3600)/60;
+				minutes = parseInt(minutes,10);
+				//折算秒
+				seconds = parseInt(sSchedEndTime[SchedEnableNow],10) - hour*3600 - minutes*60;
+				seconds = parseInt(seconds,10);
+				
+			    $("#rsh2").val(hour);
+				$("#rsm2").val(minutes);
+				$("#rss2").val(seconds);
+
+			}
+            $(document).ready(function() {
+				init();
+
+				//设置
+				$("#submit").bind("click",function(e){
+					parent.DayNightModeData = true;
+					
+					parent.SchedEnable = sSchedEnable;
+					//日出时间
+					parent.SchedStartTime = sSchedStartTime;
+					//日落时间
+					parent.SchedEndTime = sSchedEndTime;
+					
+					parent.closemodal();
+				});
+				//星期变换事件
+                $("#days").bind("change",
+                function(e) {
+                    switch($("#days").val())
+					{
+						case "0":
+							SchedEnableNow = 0;
+						break;
+						case "1":
+							SchedEnableNow = 1;
+							
+						break;
+						case "2":
+							SchedEnableNow = 2;
+							
+						break;
+						case "3":
+							SchedEnableNow = 3;
+						break;
+						case "4":
+							SchedEnableNow = 4;
+						break;
+						case "5":
+							SchedEnableNow = 5;
+						break;
+						case "6":
+							SchedEnableNow = 6;
+						break;
+						case "7":
+							SchedEnableNow = 7;
+						break;
+						default:
+							SchedEnableNow = 0;
+						break;
+					}
+					
+					if(sSchedEnable[SchedEnableNow] == "1")
+					{
+						document.getElementById("ifSchedEnable").checked = true;	
+					}
+					else if(sSchedEnable[SchedEnableNow] == "0")
+					{
+						document.getElementById("ifSchedEnable").checked = false;		
+					}
+					//设置日出日落时间
+				//设置日出
+				//折算小时
+				var hour = parseInt(sSchedStartTime[SchedEnableNow],10)/3600;
+				hour = parseInt(hour,10);
+				//则算分
+				var minutes = (parseInt(sSchedStartTime[SchedEnableNow],10) - hour*3600)/60;
+				minutes = parseInt(minutes,10);
+				//折算秒
+				var seconds = parseInt(sSchedStartTime[SchedEnableNow],10) - hour*3600 - minutes*60;
+				seconds = parseInt(seconds,10);
+				
+			    $("#rsh1").val(hour);
+				$("#rsm1").val(minutes);
+				$("#rss1").val(seconds);
+				
+				//日落时间
+				hour = parseInt(sSchedEndTime[SchedEnableNow],10)/3600;
+				hour = parseInt(hour,10);
+				//则算分
+				minutes = (parseInt(sSchedEndTime[SchedEnableNow],10) - hour*3600)/60;
+				minutes = parseInt(minutes,10);
+				//折算秒
+				seconds = parseInt(sSchedEndTime[SchedEnableNow],10) - hour*3600 - minutes*60;
+				seconds = parseInt(seconds,10);
+				
+			    $("#rsh2").val(hour);
+				$("#rsm2").val(minutes);
+				$("#rss2").val(seconds);
+                });
+				//是否有效选择事件
+                $("#ifSchedEnable").bind("click",
+                function(e) {
+					
+					var btmp = document.getElementById("ifSchedEnable").checked;//$("#ifSchedEnable").checked;
+					if(btmp)
+					{
+						sSchedEnable[SchedEnableNow] = "1";	
+					}
+					else if(!btmp)
+					{
+						sSchedEnable[SchedEnableNow] = "0";		
+					}
+
+                });
+				//日出时间改变 input[type=radio][name='focustype']
+                $("#rsh1").bind("change",
+                function(e) {
+						//获取日出时间
+						sSchedStartTime[SchedEnableNow] = $("#rsh1").val()*3600+$("#rsm1").val()*60+($("#rss1").val()-0);
+                });
+                $("#rsm1").bind("change",
+                function(e) {
+						//获取日出时间
+						sSchedStartTime[SchedEnableNow] = $("#rsh1").val()*3600+$("#rsm1").val()*60+($("#rss1").val()-0);
+                });
+                $("#rss1").bind("change",
+                function(e) {
+						//获取日出时间
+						sSchedStartTime[SchedEnableNow] = $("#rsh1").val()*3600+$("#rsm1").val()*60+($("#rss1").val()-0);
+                });
+				//日落时间改变 input[type=radio][name='focustype']
+                $("#rsh2").bind("change",
+                function(e) {
+						//获取日出时间
+						sSchedEndTime[SchedEnableNow] = $("#rsh2").val()*3600+$("#rsm2").val()*60+($("#rss2").val()-0);
+                });
+                $("#rsm2").bind("change",
+                function(e) {
+						//获取日出时间
+						sSchedEndTime[SchedEnableNow] = $("#rsh2").val()*3600+$("#rsm2").val()*60+($("#rss2").val()-0);
+                });
+                $("#rss2").bind("change",
+                function(e) {
+						//获取日出时间
+						sSchedEndTime[SchedEnableNow] = $("#rsh2").val()*3600+$("#rsm2").val()*60+($("#rss2").val()-0);
+                });
+                $("#cancel").bind("click",
+                function(e) {
+                    parent.closemodal();
+                });
+				
+ 
+                  $("#rsm1,#rsm2,#rss1,#rss2,#rsh1,#rsh2").bind("keyup",function(e){
+					  if(this.value.length==2)
+					  {
+						  var nxtIdx = $(this).index()+ 1;
+						  if(this.id.indexOf("1")>0)
+						  {
+						  $("p:eq(0) :input:text:eq(" + nxtIdx + ")").focus();
+						  }
+						  else
+						  {
+							   $("p:eq(1) :input:text:eq(" + nxtIdx + ")").focus();
+						  }
+					  }
+					});
+                
+
+				$("#rsh1,#rsh2").bind("blur",function(e){
+					chatime(this,23);
+					var startTime=$("#rsh1").val()*3600+$("#rsm1").val()*60+($("#rss1").val()-0);
+					var endTime=$("#rsh2").val()*3600+$("#rsm2").val()*60+($("#rss2").val()-0);
+					if(startTime>=endTime)
+					{
+						$("#error").css("display","block");
+					}
+					else
+					{
+						$("#error").css("display","none");
+					}
+					});
+				$("#rsm1,#rsm2,#rss1,#rss2").bind("blur",function(e){
+					chatime(this,59);
+					var startTime=$("#rsh1").val()*3600+$("#rsm1").val()*60+($("#rss1").val()-0);
+					var endTime=$("#rsh2").val()*3600+$("#rsm2").val()*60+($("#rss2").val()-0);
+					if(startTime>=endTime)
+					{
+						$("#error").css("display","block");
+					}
+					else
+					{
+						$("#error").css("display","none");
+					}
+					});
+					//点击全选
+				$("#rsm1,#rsm2,#rss1,#rss2,#rsh1,#rsh2").bind("focus",function(e){$(this).select();});
+					
+            });
+			function limit(a,c){var b=a.value;if(b!="")b=b.replace(/[^\d]/g,"")-0,a.value=b>c?c:b}
+			function chatime(object,val)
+			{
+	            limit(object,val);
+				if(object.value.length==1)
+				{
+					object.value="0"+object.value;
+				}
+			}
+			
+			function timeStruct(times)
+			{
+				var _this = this;
+				_this.Hour=0;
+				_this.Min=0;
+				_this.Sec=0;
+				 var init = function() {
+					 _this.Hour=Math.floor(times/3600);
+					 if((_this.Hour+"").length==1)
+					 {
+						 _this.Hour="0"+_this.Hour;
+					 }
+					 //alert(_this.Hour);
+					 _this.Min=Math.floor((times-(_this.Hour*3600))/60);
+				
+					 if((_this.Min+"").length==1)
+					 {
+						
+						 _this.Min="0"+_this.Min;
+						 
+					 }
+					 _this.Sec=times-(_this.Hour*3600)-(_this.Min*60);
+					 if((_this.Sec+"").length==1)
+					 {
+						 _this.Sec="0"+_this.Sec;
+					 }
+					
+					 };
+				 init();
+				 return _this;
+			}
+
+			
+			
+        </script>
+    </head>
+    
+    <body>
+        <div id="basic-modal" style="color:#999;">
+        <h3 style="width:100%; color:#fff; background-color:#000; margin-top:0;height:28px; line-height:26px; font-size:12px; font-weight:normal; padding-left:10px;">
+                日夜模式时间设置：
+            </h3>
+
+        <div style="width:400px; margin:0 auto; padding-left:10px;">
+        <div>
+                <dt style="width:70px;display:block;float:left;">
+                    星期:
+                </dt>
+                        <div class="shuru">
+                            <select id="days" >
+                                <option value='0'>
+                                    星期日
+                                </option>
+                                <option value='1'>
+                                    星期一
+                                </option>
+                                <option value='2'>
+                                    星期二
+                                </option>
+                                <option value='3'>
+                                    星期三
+                                </option>
+                                <option value='4'>
+                                    星期四
+                                </option>
+                                <option value='5'>
+                                    星期五
+                                </option>
+                                <option value='6'>
+                                    星期六
+                                </option>
+                                <option value='7'>
+                                    所有
+                                </option>
+
+                            </select>
+                            </div>
+                            <div>
+                           		<dt style="width:70px;display:block;float:left;">
+                    是否有效
+                </dt>
+                </div>
+                            </div>
+                <dd>
+                </dd>
+
+                <dt style="width:70px;display:block;float:left;">
+                        <input id="ifSchedEnable" name="" type="checkbox" style="border:0 none; width:30px;"
+                            />
+                        </dt>
+                <dd>
+                </dd>
+            <dl style="display:block; width:360px; height:40px; +margin-top:10px; float:left;">
+             
+                <dt style="width:70px;display:block;float:left;">
+                    日出:
+                </dt>
+                <dd>
+                        <p class="timeBoxTime"> 
+                        <input type="text" maxlength="2" class="noborder"  id="rsh1" value="06">:
+                        <input type="text" maxlength="2" class="noborder"  id="rsm1" value="00">:
+                        <input type="text" maxlength="2" class="noborder"  id="rss1" value="00">
+                        </p>
+                   
+                </dd>
+          </dl>
+         
+            
+            <dl style="display:block; width:360px; height:40px; float:left;">
+                <dt style="width:70px;display:block;float:left;">
+                    日落:
+            </dt>
+                <dd>
+                    <p class="timeBoxTime"> 
+                        <input type="text" maxlength="2" class="noborder"  id="rsh2" value="18">:
+                        <input type="text" maxlength="2" class="noborder"  id="rsm2" value="00">:
+                        <input type="text" maxlength="2" class="noborder"  id="rss2" value="00">
+                    </p>
+                </dd>
+            </dl>
+             <dl style="display:block; width:360px; height:40px; float:left; color:red; display:none;" id="error">
+               开始时间不能大于结束时间！
+            </dl>
+            <div style="width:90%; text-align:center;">
+            <input type="button" class="btn3" value="确定" id="submit"
+            />
+            <input type="button" class="btn3" value="取消" id="cancel"
+            /></div>
+            </div>
+        </div>
+    </body>
+
+</html>

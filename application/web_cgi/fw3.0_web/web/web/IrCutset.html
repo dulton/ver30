@@ -1,0 +1,611 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>
+            IrCut高级设置
+        </title>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.core.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.slider.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/menu.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js" >
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <link type='text/css' href='css/demo.css' rel='stylesheet' media='screen'
+        />
+        <link type='text/css' href='css/basic1.css' rel='stylesheet' media='screen'
+        />
+        <script type='text/javascript' src='js/jquery.simplemodal.js'>
+        </script>
+        <script>
+			//延时时间
+			var sDurationTime = parent.DurationTime;
+			//夜晚到白天
+			var sNightToDayThr = parent.NightToDayThr;
+			//白天到黑夜
+			var sDayToNightThr = parent.DayToNightThr;
+
+            $(document).ready(function() {
+                var section = 'IMAGE';
+                //GetAndSet('get', section, '', "process", true);
+				if(parent.parent.isLimitIrcut==1)
+				{
+                	$("#tips").css("display","block");
+				}
+				else
+				{
+					$("#tips").css("display","none");
+				}
+
+				function sliderFunction(e,ui,thisid)
+				{
+                        var id = thisid;
+                        var value = "";
+
+                            if (id == "dn_day2night_thr") //取值范围 0-100；
+                            {
+                                value = parseInt((ui.value / 100 * 100), 10);
+								$("#idn_day2night_thr").val(value);
+                            }
+                            else if (id == "dn_night2day_thr") //取值范围-15-15；
+                            {
+
+								value = parseInt((ui.value / 100 * 100), 10);
+								$("#idn_night2day_thr").val(value);
+                            }
+
+				}
+                //滑动条代码
+                var $button = $(".drag-icon", $(".drag-bg"));
+                var sliderOpts = {
+					stop:function(e,ui){
+					sliderFunction(e,ui,this.id);
+					//如果白天到夜晚的值大于夜晚到黑夜的值
+					var Day2Night = $("#idn_day2night_thr").val();
+					var Night2Day = $("#idn_night2day_thr").val();
+					if(Day2Night >= Night2Day || Day2Night == 100)
+					{
+						Day2Night = Night2Day;
+						$("#idn_day2night_thr").val(Day2Night);
+						sDayToNightThr = Day2Night;
+						$("#dn_day2night_thr a")[0].style.left =Day2Night + "%";
+					}
+					
+				
+			},
+					slide:function(e,ui){
+							sliderFunction(e,ui,this.id);
+					}
+					
+                    /*slide: function(e, ui) {
+
+                        // $button.css("left", "-" + ui.value + "px")
+                        var id = this.id;
+                        var value = "";
+
+                        var max1 = $("#01dn_night2day_max").val();
+                        var max2 = $("#01dn_day2night_max").val();
+                        var min1 = $("#01dn_night2day_min").val();
+                        var min2 = $("#01dn_day2night_min").val();
+                        if (parseInt(max2, 10) <= parseInt(max1, 10)) {
+                            if (id == "dn_night2day_thr") {
+                                value = parseInt((ui.value / 100 * (max1 - min1)), 10);
+                            } else if (id == "dn_day2night_thr") {
+                                value = parseInt((ui.value / 100 * (max2 - min2)), 10);
+                            }
+
+                            else {
+                                return;
+                            }
+                        } else {
+                            if (id == "dn_night2day_thr") {
+                                value = parseInt((ui.value / 100 * (max2 - min2)), 10);
+                            } else if (id == "dn_day2night_thr") {
+                                value = parseInt((ui.value / 100 * (max1 - min1)), 10);
+                            }
+
+                            else {
+                                return;
+                            }
+                        }
+                        if (id == "dn_night2day_thr") {
+                            //  如果night2day 小于day2night   day2night 要随着变小 但是最小不能小到最小值
+							if(parent.parent.isLimitIrcut==1)
+							{
+								if (value <= $("#idn_day2night_thr").val()) {
+									var v = parseInt(value, 10) - parseInt(1, 10);
+									if (v >= min2 && v >= min1) {
+										$("#dn_day2night_thr a")[0].style.left = value + "%";
+										$("#idn_day2night_thr").val(v);
+									} else {
+										return;
+									}
+								}
+							}
+                        }
+                        if (id == "dn_day2night_thr") {
+							if(parent.parent.isLimitIrcut==1)
+							{
+								if (value >= $("#idn_night2day_thr").val()) {
+									var v = parseInt(value, 10) + parseInt(1, 10);
+									if (v <= max2 && v <= max1) {
+									   $("#dn_night2day_thr a")[0].style.left = value + "%";
+										$("#idn_night2day_thr").val(v);
+									} else {
+										return;
+									}
+								}
+							}
+                        }
+
+                        // alert(value);
+                        $("#i" + id + "").val(value);
+						//处理最左端等于0时，滚动条与文本框值不对应问题。
+					if(ui.value==0)
+					{
+						var uileft=$("#" + thisid + " a")[0].style.left;
+						if(uileft!="0%")
+						{
+							$("#" + thisid + " a")[0].style.left="0%";
+						}
+					}
+
+                    }*/
+
+                };
+                $button.slider(sliderOpts);
+                //滑动条代码结束
+
+                $("#submitIrCut").bind("click",
+                function(e) {
+                    var section = 'IMAGE';
+                    var time = $("#01dn_durtime").val();
+                    var day2nigth = $("#idn_day2night_thr").val();
+                    var nigth2day = $("#idn_night2day_thr").val();
+                    var max1 = $("#01dn_night2day_max").val();
+                    var max2 = $("#01dn_day2night_max").val();
+                    var poststr = "dn_durtime=" + time + "||";
+                    if (parseInt(max2, 10) <= parseInt(max1, 10)) {
+                        poststr += "dn_night2day_thr=" + nigth2day + "||dn_day2night_thr=" + day2nigth;
+                        $("#01dn_day2night_thr").val(day2nigth);
+                        $("#01dn_night2day_thr").val(nigth2day);
+                    } else {
+                        poststr += "dn_night2day_thr=" + day2nigth + "||dn_day2night_thr=" + nigth2day;
+                        $("#01dn_day2night_thr").val(nigth2day);
+                        $("#01dn_night2day_thr").val(day2nigth);
+                    }
+
+					parent.DayNightModeData = true;
+			//延时时间
+					parent.DurationTime = time;
+			//夜晚到白天
+					parent.NightToDayThr = nigth2day;
+			//白天到黑夜
+					parent.DayToNightThr = day2nigth;
+					
+					parent.closemodal();
+                  /*  poststr += "||dn_mode=2||";
+					
+                    $.ajax({
+                        url: url,
+                        data: "Request=set&Section=" + section + "&exsection= 0&postDataStr=" + encodeURIComponent(poststr + "||"),
+                        type: "post",
+                        success: function(data) {
+                            //alert(data);
+                            var data2 = data.replace("\n", "");
+                            data2 = $.trim(data2);
+                            if (data2.substring(0, 3) == "<br") {
+                                alert("返回数据出错：\n" + data2);
+                                return;
+                            }
+                            var result = data2.split('&');
+                            var Request;
+                            var Section;
+                            var Flag;
+                            var Info;
+                            if (result.length != 4) {
+                                alert("返回数据解析错误");
+                                return;
+                            } else {
+                                Request = result[0];
+                                Section = result[1];
+                                Flag = result[2];
+                                Info = result[3];
+                                //alert(Info);
+
+                                //alert(Info);
+                                parent.closemodal();
+                                if (Flag == 0) {
+									 //提示语言设置
+              
+                alert("设置成功");
+
+}
+                            }
+                            //
+
+                        },
+                        error: function() {
+                            // alert("util.js-->GetAndSet()--调用ajax 出错！\n fname=" + fname);
+                        }
+                    });
+*/
+                });
+	
+                $("#cancelircut").bind("click",
+                function(e) {
+                    parent.closemodal();
+
+                });
+
+                //四个加减按钮的操作 开始
+                $("#dn_day2night_thradd").bind("click",
+                function(e) {
+					/*
+                    //alert("ee");
+                    var oldv = $("#idn_day2night_thr").val();
+                    var max1 = $("#01dn_night2day_max").val();
+                    var max2 = $("#01dn_day2night_max").val();
+                    var min1 = $("#01dn_night2day_min").val();
+                    var min2 = $("#01dn_day2night_min").val();
+                    var maxval = 0;
+                    var maxmin = 0;
+                    if (parseInt(max2, 10) <= parseInt(max1, 10)) {
+                        maxval = max1;
+                        maxmin = max1 - min1;
+                    } else {
+                        maxval = max2;
+                        maxmin = max2 - min2;
+                    }
+                    if (parseInt(oldv, 10) < parseInt(maxval, 10)-1) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+						
+                        $("#dn_day2night_thr a")[0].style.left = parseInt((parseInt(newv, 10)) / maxmin * 100, 10) + "%";
+                        $("#idn_day2night_thr").val(newv);
+						//夜晚到白天随之增加
+						if(parent.parent.isLimitIrcut==1)
+							{
+								if(parseInt(newv,10)>=parseInt($("#idn_night2day_thr").val(),10))
+								{
+								 newv = parseInt(newv, 10) + parseInt(1, 10);
+								//alert(newv);
+								$("#dn_night2day_thr a")[0].style.left = parseInt((parseInt(newv, 10)) / maxmin * 100, 10) + "%";
+								$("#idn_night2day_thr").val(newv);
+								}
+							}
+						
+                    }*/
+					//Day2Night
+					var oldD = $("#idn_day2night_thr").val();
+					//Night2Day
+					var oldN = $("#idn_night2day_thr").val();
+					oldN = parseInt(oldN,10);
+					
+					oldD = parseInt(oldD,10) + parseInt(1, 10);
+					
+					if(oldD >= oldN)
+					{
+						oldD = oldN;
+
+					}
+
+					$("#idn_day2night_thr").val(oldD);
+					sDayToNightThr = oldD;
+					$("#dn_day2night_thr a")[0].style.left =oldD + "%";
+                });
+                $("#dn_night2day_thradd").bind("click",
+                function(e) {
+					//Day2Night
+					var oldD = $("#idn_day2night_thr").val();
+					//Night2Day
+					var oldN = $("#idn_night2day_thr").val();
+					oldN = parseInt(oldN,10) + parseInt(1, 10);
+					
+					oldD = parseInt(oldD,10);
+					
+					if(oldD >= oldN)
+					{
+						oldD = oldN;
+						$("#idn_day2night_thr").val(oldD);
+						sDayToNightThr = oldD;
+						$("#dn_day2night_thr a")[0].style.left =oldD + "%";
+
+					}
+					$("#idn_night2day_thr").val(oldN);
+					sNightToDayThr = oldN;
+					$("#dn_night2day_thr a")[0].style.left =oldN + "%";
+
+                  /*  var oldv = $("#idn_night2day_thr").val();
+                    var max1 = $("#01dn_night2day_max").val();
+                    var max2 = $("#01dn_day2night_max").val();
+                    var min1 = $("#01dn_night2day_min").val();
+                    var min2 = $("#01dn_day2night_min").val();
+                    var maxval = 0;
+                    var maxmin = 0;
+                    if (parseInt(max2, 10) <= parseInt(max1, 10)) {
+                        maxval = max1;
+                        maxmin = max1 - min1;
+                    } else {
+                        maxval = max2;
+                        maxmin = max2 - min2;
+                    }
+                    if (parseInt(oldv, 10) < parseInt(maxval, 10)) {
+                        var newv = parseInt(oldv, 10) + parseInt(1, 10);
+                        //alert(newv);
+                        $("#dn_night2day_thr a")[0].style.left = parseInt((parseInt(newv, 10)) / maxmin * 100, 10) + "%";
+                        $("#idn_night2day_thr").val(newv);
+                    }*/
+                });
+
+                $("#dn_day2night_thrsub").bind("click",
+                function(e) {
+					//Day2Night
+					var oldD = $("#idn_day2night_thr").val();
+					//Night2Day
+					var oldN = $("#idn_night2day_thr").val();
+					oldN = parseInt(oldN,10);
+					
+					oldD = parseInt(oldD,10) - parseInt(1, 10);
+					
+					if(oldD >= oldN)
+					{
+						oldD = oldN;
+
+					}
+
+					$("#idn_day2night_thr").val(oldD);
+					sDayToNightThr = oldD;
+					$("#dn_day2night_thr a")[0].style.left =oldD + "%";
+					/*
+                    //alert("ee");
+                    var oldv = $("#idn_day2night_thr").val();
+                    var max1 = $("#01dn_night2day_max").val();
+                    var max2 = $("#01dn_day2night_max").val();
+                    var min1 = $("#01dn_night2day_min").val();
+                    var min2 = $("#01dn_day2night_min").val();
+                    var maxval = 0;
+                    var maxmin = 0;
+                    var minval = 0;
+                    if (parseInt(max2, 10) <= parseInt(max1, 10)) {
+                        minval = min1;
+                        maxmin = max1 - min1;
+                    } else {
+                        minval = min2;
+                        maxmin = max2 - min2;
+                    }
+                    if (parseInt(oldv, 10) > parseInt(minval, 10)) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                       $("#dn_day2night_thr a")[0].style.left = parseInt((parseInt(newv, 10)) / maxmin * 100, 10) + "%";
+                        $("#idn_day2night_thr").val(newv);
+                    }*/
+                });
+
+                $("#dn_night2day_thrsub").bind("click",
+                function(e) {
+					//Day2Night
+					var oldD = $("#idn_day2night_thr").val();
+					//Night2Day
+					var oldN = $("#idn_night2day_thr").val();
+					oldN = parseInt(oldN,10) - parseInt(1, 10);
+					
+					oldD = parseInt(oldD,10);
+					
+					if(oldD >= oldN)
+					{
+						oldD = oldN;
+						$("#idn_day2night_thr").val(oldD);
+						sDayToNightThr = oldD;
+						$("#dn_day2night_thr a")[0].style.left =oldD + "%";
+
+					}
+					$("#idn_night2day_thr").val(oldN);
+					sNightToDayThr = oldN;
+					$("#dn_night2day_thr a")[0].style.left =oldN + "%";
+					/*
+                    var oldv = $("#idn_night2day_thr").val();
+                    var max1 = $("#01dn_night2day_max").val();
+                    var max2 = $("#01dn_day2night_max").val();
+                    var min1 = $("#01dn_night2day_min").val();
+                    var min2 = $("#01dn_day2night_min").val();
+                    var maxval = 0;
+                    var maxmin = 0;
+                    var minval = 0;
+                    if (parseInt(max2, 10) <= parseInt(max1, 10)) {
+                        minval = min1;
+                        maxmin = max1 - min1;
+                    } else {
+                        minval = min2;
+                        maxmin = max2 - min2;
+                    }
+                    if (parseInt(oldv, 10) > parseInt(minval, 10)+1) {
+                        var newv = parseInt(oldv, 10) - parseInt(1, 10);
+                        //alert(newv);
+                       $("#dn_night2day_thr a")[0].style.left = parseInt((parseInt(newv, 10)) / maxmin * 100, 10) + "%";
+                        $("#idn_night2day_thr").val(newv);
+						//夜晚到白天随之减小
+						if(parent.parent.isLimitIrcut==1)
+							{
+								if(parseInt(newv,10)<=parseInt($("#idn_day2night_thr").val(),10))
+								{
+									
+								 newv = parseInt(newv, 10) - parseInt(1, 10);
+								//alert(newv);
+								$("#dn_day2night_thr a")[0].style.left= parseInt((parseInt(newv, 10)) / maxmin * 100, 10) + "%";
+								$("#idn_day2night_thr").val(newv);
+								
+								}
+							}
+                    }*/
+                });
+                //四个加减按钮的操作 结束
+
+				
+				//初始化代码
+				init();
+            });
+
+
+		//初始化函数
+		function init()
+		{
+			//设置等待时间
+			switch(sDurationTime)
+			{
+				case "3":
+					$("#01dn_durtime").val(3);
+				break;
+				case "5":
+					$("#01dn_durtime").val(5);
+				break;
+				case "10":
+					$("#01dn_durtime").val(10);
+				break;
+				case "30":
+					$("#01dn_durtime").val(30);
+				break;
+				default:
+					$("#01dn_durtime").val(5);
+				break;
+			}
+			//设置白天-》黑夜
+			$("#idn_day2night_thr").val(sDayToNightThr);
+			$("#idn_night2day_thr").val(sNightToDayThr);
+			/*
+			var maxmin1 = $("#idn_day2night_thr").val();
+			maxmin1 = parseInt(maxmin1,10);
+			var maxmin2 = $("#idn_night2day_thr").val();
+			maxmin2 = parseInt(maxmin2,10);
+            var maxval = 0;
+            var maxmin = 0;
+                    if (parseInt(max2, 10) <= parseInt(max1, 10)) {
+                        maxval = max1;
+                        maxmin = max1 - min1;
+                    } else {
+                        maxval = max2;
+                        maxmin = max2 - min2;
+                    }
+					*/
+			
+			var value1 = parseInt((parseInt(sDayToNightThr, 10)) / 100 * 100, 10);
+			var value2 = parseInt((parseInt(sNightToDayThr, 10)) / 100 * 100, 10);
+			//如果白天-》夜晚的值大于夜晚到白天的值
+			if(value1 >= value2)
+			{
+				value1 = value2;
+				$("#idn_day2night_thr").val(value1);
+				sDayToNightThr = value1;
+			}
+			
+            $("#dn_day2night_thr a")[0].style.left =value1 + "%";
+            
+			//设置黑夜-》白天
+            $("#dn_night2day_thr a")[0].style.left = value2 + "%";
+            
+		}
+	
+        </script>
+    </head>
+    
+    <body>
+
+        <div id="basic-modal" style="color:#999;"><h3 style="width:100%; color:#fff; background-color:#000; margin-top:0;height:28px; line-height:26px; font-size:12px; font-weight:normal; padding-left:10px;">
+                日夜模式设置：
+            </h3>
+        <div style="width:400px; margin:0 auto; padding-left:10px;">
+            
+            <dl>
+                <dt style="width:200px;">等待时间:
+                    <select id="01dn_durtime">
+                        <option value='3'>
+                            3
+                        </option>
+                        <option value='5'>
+                            5
+                        </option>
+                        <option value='10'>
+                            10
+                        </option>
+                        <option value='30'>
+                            30
+                        </option>
+                    </select>秒
+                </dt>
+                <dd>
+                </dd>
+            </dl>
+            <br />
+            <dl>
+                <dt>
+                    白天->夜晚:
+                </dt>
+                <dd>
+                    <div class="drag-widget">
+                        <input type="button" class="sub" id="dn_day2night_thrsub" style="margin-right:10px;">
+                        </input>
+                        <div class="drag-bg">
+                            <div class="drag-icon" id="dn_day2night_thr">
+                            </div>
+                        </div>
+                        <input type="button" class="add" id="dn_day2night_thradd"style="margin-left:10px;">
+                        </input>
+                        <input id="idn_day2night_thr" class="val_ir" readonly="readonly" name=""
+                        />
+                        <input type="hidden" id="01dn_day2night_thr" />
+                        <input type="hidden" id="01dn_day2night_min" />
+                        <input type="hidden" id="01dn_day2night_max" />
+                    </div>
+                </dd>
+            </dl>
+            <br /><br /> 
+            <dl>
+                <dt>
+                    夜晚->白天:
+                </dt>
+                <dd>
+                    <div class="drag-widget">
+                        <input type="button" class="sub" id="dn_night2day_thrsub" style="margin-right:10px;">
+                        </input>
+                        <div class="drag-bg">
+                            <div id="dn_night2day_thr" class="drag-icon">
+                            </div>
+                        </div>
+                        <input type="button" class="add" id="dn_night2day_thradd" style="margin-left:10px;">
+                        </input>
+                        <input id="idn_night2day_thr" class="val_ir" readonly="readonly" name=""
+                        />
+                        <input type="hidden" id="01dn_night2day_thr" />
+                        <input type="hidden" id="01dn_night2day_min" />
+                        <input type="hidden" id="01dn_night2day_max" />
+                    </div>
+                </dd>
+            </dl>
+            <br />
+            <div id="tips">
+                注意:"白天->夜晚"设置值必须小于"夜晚->白天"设置值
+            </div>
+            <br>
+            
+            <div style="width:90%; text-align:center;">
+            <input type="button" class="btn3" value="确定" id="submitIrCut"
+            />
+            <input type="button" class="btn3" value="取消" id="cancelircut"
+            /></div>
+            </div>
+        </div>
+    </body>
+
+</html>

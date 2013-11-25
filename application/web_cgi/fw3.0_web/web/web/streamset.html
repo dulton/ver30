@@ -1,0 +1,953 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0;background-color:#242424; }
+        </style>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.core.min.js">
+        </script>
+        <script type="text/javascript" src="js/ui.slider.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <script>
+            // 分辨率 名字 宽度 高度对照表 
+            var resolution = [["1920 x 1080", "1080P", "1920", "1080"], ["1440 x 1080", "1080P2", "1440", "1080"], ["1280 x 1024", "1024P", "1280", "1024"], ["1280 x 960", "960P", "1280", "960"], ["1280 x 720", "720P", "1280", "720"], ["800 x 600", "600P", "800", "600"], ["720 x 576", "576P", "720", "576"], ["720 x 480", "480P", "720", "480"], ["640 x 480", "480P2", "640", "480"], ["352 x 288", "CIF", "352", "288"], ["352 x 240", "SIF2", "352", "240"], ["320 x 240", "QVGA", "320", "240"],["352 x 240", "SIF", "352", "240"], ["176 x 144", "144P", "176", "144"], ["176 x 120", "120P", "176", "120"], ["160 x 120", "120P2", "160", "120"]];
+            //帧率 值 对照表
+            var rate = [["60", "8533333"], ["30", "17066667"], ["25", "20480000"], ["20", "25600000"], ["15", "34133333"], ["10", "51200000"], ["6", "85333333"], ["5", "102400000"], ["4", "128000000"], ["3", "170666667"], ["2", "256000000"], ["1", "512000000"]];
+            function rateItem(fmt, fps) {
+                var _this = this;
+                _this.resolution = "";
+                _this.name = "";
+                _this.width = "";
+                _this.heigth = "";
+                _this.rate = "";
+                _this.ratevalue = "";
+                _this.items = "";
+                _this.count = "";
+                var init = function() {
+                    _this.resolution = fmt.split("=")[1];
+                    _this.rate = fps.split("=")[1];
+                    _this.items = fmt.split("=")[0].substring(5, 6);
+                    _this.count = fmt.split("=")[0].substring(5, 6);
+                    _this.width = _this.resolution.split("x")[0];
+                    _this.heigth = _this.resolution.split("x")[1];
+                    for (var i = 0; i < rate.length; i++) {
+                        if (_this.rate == rate[i][0]) {
+                            _this.ratevalue = rate[i][1];
+                            break;
+                        }
+                    }
+                    for (var j = 0; j < resolution.length; j++) {
+                        if (_this.resolution == resolution[j][0]) {
+                            _this.name = resolution[j][1];
+                            break;
+                        }
+                    }
+
+                };
+                init();
+            }
+            //获取encode 设置属性值
+            function rateEncode(value) {
+                var _tthis = this;
+                _tthis.width = "";
+                _tthis.heigth = "";
+                _tthis.fps = "";
+                var init = function() {
+                    var name = value.split(" ")[0];
+					var myrate;
+					if(value.split(" ").length>1)
+					{
+                     myrate = value.split(" ")[1].substr(0, value.split(" ")[1].length - 3);
+					}
+                    for (var i = 0; i < resolution.length; i++) {
+                        if (name == resolution[i][1]) {
+                            var temp = resolution[i][0];
+                            _tthis.width = temp.split(" x ")[0];
+                            _tthis.heigth = temp.split(" x ")[1];
+                            break;
+                        }
+                    }
+					if(myrate!=null)
+					{
+                    for (var j = 0; j < rate.length; j++) {
+                        if (myrate == rate[j][0]) {
+                            _tthis.fps = rate[j][1];
+                            break;
+                        }
+                    }
+					}
+                };
+                init();
+
+            }
+            function changeLanguage(lang) {
+                TranslatePage(lang);
+            }
+            $(document).ready(function() {
+				streamSetGetMaxStreams();
+                // 调用模版也方法
+                parent.innerCallMe(true);
+                //语言初始化
+                initLang();
+                //初始化 get
+                var section = 'ENCODE_COMBINE';
+                // getStreamSelects('1'); 
+                $("#streamselect").bind("change",
+                function(e) {
+                    getStreamSelects($("#streamselect").val());
+                });
+
+                //取消
+                $("#reset").bind("click",
+                function(e) {
+                    init();
+                });
+                $("#submit").bind("click",
+                function(e) {
+                    var streams = $("#streamselect").val();
+                    var value = $("#rateselect").val();
+                    setStreamSelects(streams, value);
+                });
+				
+                //设置默认值
+                $("#bdefault").bind("click",
+                function(e) {
+                    if (!confirm("恢复默认后，视频编码参数也将恢复默认。\n预置位信息将不可用，事件设置中相关参数也将无效\n确认恢复默认参数吗？")) return;
+                    setDefault();
+                });
+            });
+            function init() {
+                var section = "ENCODE";
+                var postDataStr = "";
+                $.ajax({
+                    url: url,
+                    data: "Request=get&Section=" + section + "&exsection=0" + "&postDataStr=" + encodeURIComponent(postDataStr + "||"),
+                    type: "post",
+                    success: function(data) {
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                            if (Flag == 0) {
+                                var index0 = Info.indexOf("s0_type");
+                                var index1 = Info.indexOf("s1_type");
+                                var index2 = Info.indexOf("s2_type");
+                                var index3 = Info.indexOf("s3_type");
+                                var s0_type = Info.substr(index0, 9).split("=")[1];
+                                var s1_type = Info.substr(index1, 9).split("=")[1];
+                                var s2_type = Info.substr(index2, 9).split("=")[1];
+                                var s3_type = Info.substr(index3, 9).split("=")[1];
+
+                                //alert(Info);
+                                var value = "";
+                                if (s0_type != "0") {
+                                    value = "1";
+                                }
+                                if (s1_type != "0") {
+                                    value = "2";
+                                }
+                                if (s2_type != "0") {
+                                    value = "3";
+                                }
+                                if (s3_type != "0") {
+                                    value = "4";
+                                }
+
+                                $("#streamselect").val(value);
+                                getStreamSelects(value, Info, value);
+
+                            }
+                            //
+                        }
+                    },
+                    error: function() {
+                        if (isAlertUrlError) {
+                            alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+                        }
+                    }
+                });
+            }
+            //设置编码率组合
+            function setStreamSelects(streams, value) {
+                var section = "ENCODE";
+                var postDataStr = "";
+                $.ajax({
+                    url: url,
+                    data: "Request=get&Section=" + section + "&exsection=0" + "&postDataStr=" + encodeURIComponent(postDataStr + "||"),
+                    type: "post",
+                    success: function(data) {
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                            if (Flag == 0) {
+                                var s0_type = Info.split("||")[2].split("=")[1];
+                                var s1_type = Info.split("||")[8].split("=")[1];
+                                var s2_type = Info.split("||")[14].split("=")[1];
+                                var s3_type = Info.split("||")[20].split("=")[1];
+                                var poststr = "";
+                                if (streams == 1) {
+                                    var width = "";
+                                    var higth = "";
+                                    var fps = "";
+                                    var encode = new rateEncode(value);
+                                    width = encode.width;
+                                    higth = encode.heigth;
+                                    fps = encode.fps;
+                                    // 是关闭状态
+                                    if (s0_type == 0) {
+                                        poststr = "s0_type=1||s0_width=" + width + "||s0_height=" + higth + "||s0_enc_fps=" + fps + "||";
+                                    } else {
+                                        poststr = "s0_width=" + width + "||s0_height=" + higth + "||s0_enc_fps=" + fps + "||";
+                                    }
+                                    poststr += "s1_type=0||s2_type=0||s3_type=0||";
+                                }
+                                if (streams == 2) {
+
+                                    var myvalues = value.split(" + ");
+                                    var encode = new rateEncode(myvalues[0]);
+                                    var width = encode.width;
+                                    var higth = encode.heigth;
+                                    var fps = encode.fps;
+                                    if (s0_type == 0) {
+                                        poststr += "s0_type=1||s0_width=" + width + "||s0_height=" + higth + "||s0_enc_fps=" + fps + "||";
+                                    } else {
+                                        poststr += "s0_width=" + width + "||s0_height=" + higth + "||s0_enc_fps=" + fps + "||";
+                                    }
+                                    encode = new rateEncode(myvalues[1]);
+                                    width = encode.width;
+                                    higth = encode.heigth;
+									 //第二个码流不设置帧率
+									if(parent.isZY)
+									{
+										if (s1_type == 0) {
+                                            poststr += "s1_type=1||s1_width=" + width + "||s1_height=" + higth + "||";
+                                        } else {
+                                            poststr += "s1_width=" + width + "||s1_height=" + higth + "||";
+                                        }
+									}
+						            //第二码流设置帧率
+									else
+									{
+										fps = encode.fps;
+										if (s1_type == 0) {
+											poststr += "s1_type=1||s1_width=" + width + "||s1_height=" + higth + "||s1_enc_fps=" + fps + "||";
+										} else {
+											poststr += "s1_width=" + width + "||s1_height=" + higth + "||s1_enc_fps=" + fps + "||";
+										}
+									}
+                                    poststr += "s2_type=0||s3_type=0||";
+
+                                }
+                                if (streams == 3) {
+                                    var myvalues = value.split(" + ");
+                                    var encode = new rateEncode(myvalues[0]);
+                                    var width = encode.width;
+                                    var higth = encode.heigth;
+                                    var fps = encode.fps;
+                                    if (s0_type == 0) {
+                                        poststr += "s0_type=1||s0_width=" + width + "||s0_height=" + higth + "||s0_enc_fps=" + fps + "||";
+                                    } else {
+                                        poststr += "s0_width=" + width + "||s0_height=" + higth + "||s0_enc_fps=" + fps + "||";
+                                    }
+                                    encode = new rateEncode(myvalues[1]);
+                                    width = encode.width;
+                                    higth = encode.heigth;
+                                    fps = encode.fps;
+                                    if (s1_type == 0) {
+                                        poststr += "s1_type=1||s1_width=" + width + "||s1_height=" + higth + "||s1_enc_fps=" + fps + "||";
+                                    } else {
+                                        poststr += "s1_width=" + width + "||s1_height=" + higth + "||s1_enc_fps=" + fps + "||";
+                                    }
+                                    encode = new rateEncode(myvalues[2]);
+                                    width = encode.width;
+                                    higth = encode.heigth;
+                                    fps = encode.fps;
+                                    if (s2_type == 0) {
+                                        poststr += "s2_type=1||s2_width=" + width + "||s2_height=" + higth + "||s2_enc_fps=" + fps + "||";
+                                    } else {
+                                        poststr += "s2_width=" + width + "||s2_height=" + higth + "||s2_enc_fps=" + fps + "||";
+                                    }
+                                    poststr += "s3_type=0||";
+                                }
+                                if (streams == 4) {
+                                    var myvalues = value.split(" + ");
+                                    var encode = new rateEncode(myvalues[0]);
+                                    var width = encode.width;
+                                    var higth = encode.heigth;
+                                    var fps = encode.fps;
+                                    if (s0_type == 0) {
+                                        poststr += "s0_type=1||s0_width=" + width + "||s0_height=" + higth + "||s0_enc_fps=" + fps + "||";
+                                    } else {
+                                        poststr += "s0_width=" + width + "||s0_height=" + higth + "||s0_enc_fps=" + fps + "||";
+                                    }
+                                    encode = new rateEncode(myvalues[1]);
+                                    width = encode.width;
+                                    higth = encode.heigth;
+                                    fps = encode.fps;
+                                    if (s1_type == 0) {
+                                        poststr += "s1_type=1||s1_width=" + width + "||s1_height=" + higth + "||s1_enc_fps=" + fps + "||";
+                                    } else {
+                                        poststr += "s1_width=" + width + "||s1_height=" + higth + "||s1_enc_fps=" + fps + "||";
+                                    }
+                                    encode = new rateEncode(myvalues[2]);
+                                    width = encode.width;
+                                    higth = encode.heigth;
+                                    fps = encode.fps;
+                                    if (s2_type == 0) {
+                                        poststr += "s2_type=1||s2_width=" + width + "||s2_height=" + higth + "||s2_enc_fps=" + fps + "||";
+                                    } else {
+                                        poststr += "s2_width=" + width + "||s2_height=" + higth + "||s2_enc_fps=" + fps + "||";
+                                    }
+                                    encode = new rateEncode(myvalues[3]);
+                                    width = encode.width;
+                                    higth = encode.heigth;
+                                    fps = encode.fps;
+                                    if (s3_type == 0) {
+                                        poststr += "s3_type=1||s3_width=" + width + "||s3_height=" + higth + "||s3_enc_fps=" + fps + "||";
+                                    } else {
+                                        poststr += "s3_width=" + width + "||s3_height=" + higth + "||s3_enc_fps=" + fps + "||";
+                                    }
+                                }
+                                // alert(poststr);
+                                GetAndSet('set', "ENCODE", poststr, "process");
+                            }
+                            //
+                        }
+                    },
+                    error: function() {
+                        if (isAlertUrlError) {
+                            alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+                        }
+                    }
+                });
+            }
+
+            function getStreamSelects(streams, info, myvalue) {
+                var value = myvalue || "";
+                var myInfo = info || "";
+                var section = "ENCODE_COMBINE";
+                var postDataStr = "";
+                $.ajax({
+                    url: url,
+                    data: "Request=get&Section=" + section + "&exsection=" + streams + "&postDataStr=" + encodeURIComponent(postDataStr + "||"),
+                    type: "post",
+                    success: function(data) {
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                            if (Flag == 0) {
+                                var items = getarrs(Info, streams);
+                                //alert(items);
+                                $("#rateselect").empty();
+                                for (var i = 0; i < items.length; i++) {
+                                    var option = new Option(items[i], items[i]);
+
+                                    $("#rateselect")[0].options.add(option);
+                                }
+                                if (myInfo != "") {
+                                    var temps = myInfo.split("||");
+                                    var s0_width = temps[4].split("=")[1];
+                                    var s0_height = temps[5].split("=")[1];
+                                    var s0_enc_fps = temps[6].split("=")[1];
+                                    var s1_width = temps[10].split("=")[1];
+                                    var s1_height = temps[11].split("=")[1];
+                                    var s1_enc_fps = temps[12].split("=")[1];
+                                    var s2_width = temps[16].split("=")[1];
+                                    var s2_height = temps[17].split("=")[1];
+                                    var s2_enc_fps = temps[18].split("=")[1];
+                                    var s3_width = temps[22].split("=")[1];
+                                    var s3_height = temps[23].split("=")[1];
+                                    var s3_enc_fps = temps[24].split("=")[1];
+                                    var value2 = "";
+                                    if (value == '1') {
+                                        //alert(value);
+                                        var temp = s0_width + " x " + s0_height;
+                                        for (var i = 0; i < resolution.length; i++) {
+                                            if (temp == resolution[i][0]) {
+                                                value2 += resolution[i][1] + " ";
+                                                break;
+                                            }
+                                        }
+                                        for (var j = 0; j < rate.length; j++) {
+                                            if (s0_enc_fps == rate[j][1]) {
+                                                value2 += rate[j][0] + "fps";
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (value == '2') {
+
+                                        var temp = s0_width + " x " + s0_height;
+                                        for (var i = 0; i < resolution.length; i++) {
+                                            if (temp == resolution[i][0]) {
+                                                value2 += resolution[i][1] + " ";
+                                                break;
+                                            }
+                                        }
+                                        for (var j = 0; j < rate.length; j++) {
+                                            if (s0_enc_fps == rate[j][1]) {
+                                                value2 += rate[j][0] + "fps ";
+                                                break;
+                                            }
+                                        }
+                                        temp = s1_width + " x " + s1_height;
+                                        for (var i = 0; i < resolution.length; i++) {
+                                            if (temp == resolution[i][0]) {
+												if(parent.isZY)
+												{
+													value2 += "+ " + resolution[i][1] + "";
+												}
+												else
+												{
+                                               		value2 += "+ " + resolution[i][1] + " ";
+												}
+                                                break;
+                                            }
+                                        }
+	
+										if(!parent.isZY)
+										{
+											for (var j = 0; j < rate.length; j++) {
+												if (s1_enc_fps == rate[j][1]) {
+													value2 += rate[j][0] + "fps";
+													break;
+												}
+											}
+										}
+                                    }
+                                    if (value == '3') {
+
+                                        var temp = s0_width + " x " + s0_height;
+                                        for (var i = 0; i < resolution.length; i++) {
+                                            if (temp == resolution[i][0]) {
+                                                value2 += resolution[i][1] + " ";
+                                                break;
+                                            }
+                                        }
+                                        for (var j = 0; j < rate.length; j++) {
+                                            if (s0_enc_fps == rate[j][1]) {
+                                                value2 += rate[j][0] + "fps ";
+                                                break;
+                                            }
+                                        }
+                                        temp = s1_width + " x " + s1_height;
+                                        for (var i = 0; i < resolution.length; i++) {
+                                            if (temp == resolution[i][0]) {
+                                                value2 += "+ " + resolution[i][1] + " ";
+                                                break;
+                                            }
+                                        }
+                                        for (var j = 0; j < rate.length; j++) {
+                                            if (s1_enc_fps == rate[j][1]) {
+                                                value2 += rate[j][0] + "fps ";
+                                                break;
+                                            }
+                                        }
+                                        temp = s2_width + " x " + s2_height;
+                                        for (var i = 0; i < resolution.length; i++) {
+                                            if (temp == resolution[i][0]) {
+                                                value2 += "+ " + resolution[i][1] + " ";
+                                                break;
+                                            }
+                                        }
+                                        for (var j = 0; j < rate.length; j++) {
+                                            if (s2_enc_fps == rate[j][1]) {
+                                                value2 += rate[j][0] + "fps";
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (value == '4') {
+
+                                        var temp = s0_width + " x " + s0_height;
+                                        for (var i = 0; i < resolution.length; i++) {
+                                            if (temp == resolution[i][0]) {
+                                                value2 += resolution[i][1] + " ";
+                                                break;
+                                            }
+                                        }
+                                        for (var j = 0; j < rate.length; j++) {
+                                            if (s0_enc_fps == rate[j][1]) {
+                                                value2 += rate[j][0] + "fps ";
+                                                break;
+                                            }
+                                        }
+                                        temp = s1_width + " x " + s1_height;
+                                        for (var i = 0; i < resolution.length; i++) {
+                                            if (temp == resolution[i][0]) {
+                                                value2 += "+ " + resolution[i][1] + " ";
+                                                break;
+                                            }
+                                        }
+                                        for (var j = 0; j < rate.length; j++) {
+                                            if (s1_enc_fps == rate[j][1]) {
+                                                value2 += rate[j][0] + "fps ";
+                                                break;
+
+                                            }
+                                        }
+                                        temp = s2_width + " x " + s2_height;
+                                        for (var i = 0; i < resolution.length; i++) {
+                                            if (temp == resolution[i][0]) {
+                                                value2 += "+ " + resolution[i][1] + " ";
+                                                break;
+                                            }
+                                        }
+                                        for (var j = 0; j < rate.length; j++) {
+                                            if (s2_enc_fps == rate[j][1]) {
+                                                value2 += rate[j][0] + "fps ";
+                                                break;
+                                            }
+                                        }
+                                        temp = s3_width + " x " + s3_height;
+                                        for (var i = 0; i < resolution.length; i++) {
+                                            if (temp == resolution[i][0]) {
+                                                value2 += "+ " + resolution[i][1] + " ";
+                                                break;
+                                            }
+                                        }
+                                        for (var j = 0; j < rate.length; j++) {
+                                            if (s3_enc_fps == rate[j][1]) {
+                                                value2 += rate[j][0] + "fps";
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    $("#rateselect").val(value2);
+                                }
+                            }
+                            //
+                        }
+                    },
+                    error: function() {
+                        if (isAlertUrlError) {
+                            alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+                        }
+                    }
+                });
+            }
+            //根据服务返回值  返回选择项的数组
+            function getarrs(info, streams) {
+                var myarrs = info.split("||");
+                var count = myarrs.length - 1;
+                var multiple = 2;
+                var result = new Array();
+                if (streams == '1') {
+                    multiple = 2;
+                    for (var i = 0; i < count; i += parseInt(multiple, 10)) {
+                        //处理每一项目  
+                        var fmt = myarrs[i];
+                        var fps = myarrs[parseInt(i, 10) + 1];
+                        var myitem = new rateItem(fmt, fps);
+                        var myresult = myitem.name + " " + myitem.rate + "fps";
+                        // alert(myresult);
+                        result.push(myresult);
+                    }
+                }
+                if (streams == '2') {
+                    multiple = 4;
+                    for (var i = 0; i < count; i += parseInt(multiple, 10)) {
+                        //处理每一项目  
+                        var fmt = myarrs[i];
+                        var fps = myarrs[parseInt(i, 10) + 1];
+                        var fmt1 = myarrs[parseInt(i, 10) + 2];
+                        var fps1 = myarrs[parseInt(i, 10) + 3];
+                        var myitem = new rateItem(fmt, fps);
+                        var myitem1 = new rateItem(fmt1, fps1);
+					
+						if(parent.isZY)
+						{
+							var myresult = myitem.name + " " + myitem.rate + "fps + " + myitem1.name;
+						}
+						
+						else
+						{
+                        	var myresult = myitem.name + " " + myitem.rate + "fps + " + myitem1.name + " " + myitem1.rate + "fps";
+						}
+                        result.push(myresult);
+                    }
+                }
+                if (streams == '3') {
+                    multiple = 6;
+                    for (var i = 0; i < count; i += parseInt(multiple, 10)) {
+                        //处理每一项目  
+                        var fmt = myarrs[i];
+                        var fps = myarrs[parseInt(i, 10) + 1];
+                        var fmt1 = myarrs[parseInt(i, 10) + 2];
+                        var fps1 = myarrs[parseInt(i, 10) + 3];
+                        var fmt2 = myarrs[parseInt(i, 10) + 4];
+                        var fps2 = myarrs[parseInt(i, 10) + 5];
+                        var myitem = new rateItem(fmt, fps);
+                        var myitem1 = new rateItem(fmt1, fps1);
+                        var myitem2 = new rateItem(fmt2, fps2);
+                        var myresult = myitem.name + " " + myitem.rate + "fps + " + myitem1.name + " " + myitem1.rate + "fps + " + myitem2.name + " " + myitem2.rate + "fps";
+                        result.push(myresult);
+                    }
+                }
+                if (streams == '4') {
+                    multiple = 8;
+                    for (var i = 0; i < count; i += parseInt(multiple, 10)) {
+                        //处理每一项目  
+                        var fmt = myarrs[i];
+                        var fps = myarrs[parseInt(i, 10) + 1];
+                        var fmt1 = myarrs[parseInt(i, 10) + 2];
+                        var fps1 = myarrs[parseInt(i, 10) + 3];
+                        var fmt2 = myarrs[parseInt(i, 10) + 4];
+                        var fps2 = myarrs[parseInt(i, 10) + 5];
+                        var fmt3 = myarrs[parseInt(i, 10) + 6];
+                        var fps3 = myarrs[parseInt(i, 10) + 7];
+                        var myitem = new rateItem(fmt, fps);
+                        var myitem1 = new rateItem(fmt1, fps1);
+                        var myitem2 = new rateItem(fmt2, fps2);
+                        var myitem3 = new rateItem(fmt3, fps3);
+                        var myresult = myitem.name + " " + myitem.rate + "fps + " + myitem1.name + " " + myitem1.rate + "fps + " + myitem2.name + " " + myitem2.rate + "fps + " + myitem3.name + " " + myitem3.rate + "fps";
+                        result.push(myresult);
+                    }
+                }
+                return result;
+            }
+            //判断是否奇数。奇数返回true 偶数返回false
+            function isOdd(num) {
+                var a = parseInt(num);
+                switch (a % 2) {
+                case 0:
+                    return false;
+                    break;
+                case 1:
+                    return true;
+                    break;
+                }
+            }
+
+            //码流数组 
+            function setDefault() {
+                var streams = new Array();
+                var backCount = 0;
+                postDataStr = "a=b";
+                $.ajax({
+                    url: url,
+                    data: "Request=get_default&Section=ENCODE&exsection= 0&postDataStr=" + encodeURIComponent(postDataStr + "||"),
+                    type: "post",
+                    success: function(data) {
+                        //alert(data);
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        if (data2.substring(0, 3) == "<br") {
+                            alert("返回数据出错：\n" + data2);
+                            return;
+                        }
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                            // alert(Info);
+                            if (Flag == 0) {
+                                //获取默认 开启码流  streams
+                                var index0 = Info.indexOf("s0_type");
+                                var index1 = Info.indexOf("s1_type");
+                                var index2 = Info.indexOf("s2_type");
+                                var index3 = Info.indexOf("s3_type");
+                                var s0_type = Info.substr(index0, 9).split("=")[1];
+                                var s1_type = Info.substr(index1, 9).split("=")[1];
+                                var s2_type = Info.substr(index2, 9).split("=")[1];
+                                var s3_type = Info.substr(index3, 9).split("=")[1];
+                                if (s0_type == "1") {
+
+                                    streams.push(0);
+                                    if (s1_type == "1") {
+                                        streams.push(1);
+                                        if (s2_type == "1") {
+
+                                            streams.push(2);
+                                            if (s3_type == "1") {
+                                                streams.push(3);
+                                            }
+                                        }
+                                    }
+                                }
+                                //alert(streams.length);
+                                var postStr = "";
+                                for (var i = 0; i < streams.length; i++) {
+                                    var widthtemp = "s" + streams[i] + "_width";
+                                    var heighttemp = "s" + streams[i] + "_height";
+                                    var fliptemp = "s" + streams[i] + "_enc";
+                                    var windex = Info.indexOf(widthtemp);
+                                    var hindex = Info.indexOf(heighttemp);
+                                    var findex = Info.indexOf(fliptemp);
+                                    var width = Info.substring(windex).split("||")[0].split("=")[1];
+                                    var height = Info.substring(hindex).split("||")[0].split("=")[1];
+                                    var enc_fps = Info.substring(findex).split("||")[0].split("=")[1];
+                                    postStr += "s" + streams[i] + "_width=" + width + "||" + "s" + streams[i] + "_height=" + height + "||" + "s" + streams[i] + "_enc_fps=" + enc_fps + "||";
+                                }
+                                //设置码流开启 关闭
+                                postStr += "s0_type=" + s0_type + "||s1_type=" + s1_type + "||s2_type=" + s2_type + "||s3_type=" + s3_type + "||";
+                                // GetAndSet('set','ENCODE',postStr,'process');
+                                // alert(postStr);
+                                //设置默认值开始
+                                $.ajax({
+                                    url: url,
+                                    data: "Request=set&Section=ENCODE&exsection= 0&postDataStr=" + encodeURIComponent(postStr + "||"),
+                                    type: "post",
+                                    success: function(data) {
+                                        //alert(data);
+                                        var data2 = data.replace("\n", "");
+                                        data2 = $.trim(data2);
+                                        if (data2.substring(0, 3) == "<br") {
+                                            alert("返回数据出错：\n" + data2);
+                                            return;
+                                        }
+                                        var result = data2.split('&');
+                                        var Request;
+                                        var Section;
+                                        var Flag;
+                                        var Info;
+                                        if (result.length != 4) {
+                                            alert("返回数据解析错误");
+                                            return;
+                                        } else {
+                                            Request = result[0];
+                                            Section = result[1];
+                                            Flag = result[2];
+                                            Info = result[3];
+
+                                            if (Flag == 0) {
+                                                //提示语言设置
+                                                var alertInfo = "设置成功!";
+                                                var lang = getCookie('lang');
+                                                if (lang != null) {
+                                                    if (lang == "zh-cn") {
+                                                        alertInfo = "设置成功!";
+                                                    }
+                                                    if (lang == "en") {
+                                                        var alertInfo = Info;
+                                                    }
+                                                } else {
+                                                    alertInfo = "设置成功!";
+                                                }
+                                                alert(alertInfo);
+                                            }
+                                            location.reload();
+                                        }
+                                        //
+                                    },
+                                    error: function() {
+                                        if (isAlertUrlError) {
+                                            alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+                                        }
+                                    }
+                                });
+                                //设置默认值 结束
+                            }
+                        }
+                        //
+                    },
+                    error: function() {
+                        if (isAlertUrlError) {
+                            alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+                        }
+                    }
+                });
+            }
+			//获取设备码流能力  设置Select 选项。并初始化。
+			function maxStreamsForSelect(maxStreams)
+			{
+				var obj=$("#streamselect")[0];
+				if(obj!=null)
+				{
+					var html=obj.innerHTML;
+					if(maxStreams==2)
+					{
+						html="<option value='1' id='option1stream'>单码流</option><option value='2' id='option2stream'>双码流</option>";
+						//var option2 = new Option("双码流",2);
+                       //obj.options.add(option2);
+					}
+					if(maxStreams==3)
+					{
+						html="<option value='1' id='option1stream'>单码流</option><option value='2' id='option2stream'>双码流</option><option value='3' id='option3stream'>三码流</option>";
+						//var option2 = new Option("双码流",2);
+						//var option3 = new Option("三码流",3);
+                        //obj.options.add(option2);
+						//obj.options.add(option3);
+					}
+					if(maxStreams==4)
+					{
+						html="<option value='1' id='option1stream'>单码流</option><option value='2' id='option2stream'>双码流</option><option value='3' id='option3stream'>三码流</option><option value='4' id='option4stream'>四码流</option>";
+						//var option2 = new Option("双码流",2);
+						//var option3 = new Option("三码流",3);
+						//var option4 = new Option("四码流",4);
+                        //obj.options.add(option2);
+						//obj.options.add(option3);
+						//obj.options.add(option4);
+					}
+					$("#streamselect").html(html);
+					if(parent.isZY)
+					{
+						$("#streamselect option[value='1']").remove();
+					}
+					//初始化
+                    init();
+				}
+			}
+			
+			//获取当前设备码流数
+function streamSetGetMaxStreams()
+{
+	var maxst=parent.maxStreams;
+	if(maxst!=null)
+	{
+		 maxStreamsForSelect(maxst);
+	}
+	else
+	{
+		var sect = 'DEVCAP';
+		var postDataStr = "";
+		$.ajax({
+			url: url,
+			data: "Request=get&Section=" + sect + "&exsection= 0&postDataStr=" + encodeURIComponent(postDataStr + "||"),
+			type: "post",
+			success: function(data) {
+				//alert(data);
+				var data2 = data.replace("\n", "");
+				data2 = $.trim(data2);
+				var result = data2.split('&');
+				var Request;
+				var Section;
+				var Flag;
+				var Info;
+				if (result.length != 4) {
+					alert("返回数据解析错误");
+					return;
+				} else {
+					Request = result[0];
+					Section = result[1];
+					Flag = result[2];
+					Info = result[3];
+					//alert(Info);
+					if (Flag == 0) {
+						var infos = Info.split("||");
+						var maxsteams = infos[0].split("=")[1];//支持码流数
+						parent.maxStreams=maxsteams;
+						maxStreamsForSelect(maxsteams);
+					}
+				}
+			}
+		});
+	}
+}
+        </script>
+    </head>
+    
+    <body>
+        <div class="bit-stream">
+            <h3 id="hhresolutioncom">
+                分辨率组合
+            </h3>
+        </div>
+        <div class="down_main_content">
+            <div class="int_pro_main">
+                <fieldset class="motion_det_fil_1">
+                    <legend id="llvedioset">
+                        视频配置
+                    </legend>
+                    <div class="int_pro_main_list">
+                        <div class="int_pro_main_list_inner" style="width:120px;" id="dostreamcount">
+                            打开码流路数
+                        </div>
+                        <div class="int_pro_main_list_inner">
+                            <select style="height:22px;width:350px" id="streamselect">
+                                <!--<option value='1' id="option1stream">
+                                    单码流
+                                </option>
+                                <option value='2'>
+                                    双码流
+                                </option>
+                                <option value='3'>
+                                    三码流
+                                </option>
+                                <option value='4'>
+                                    四码流
+                                </option>-->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="int_pro_main_list">
+                        <div class="int_pro_main_list_inner" style="width:120px;" id="dresolutionandrate">
+                            分辨率与帧率选项
+                        </div>
+                        <div class="int_pro_main_list_inner">
+                            <select style="height:22px;width:350px" id="rateselect">
+                                <option value=" ">
+                                    请选择
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+                <div class="bottom-action">
+                    <input type="button" class="btn3" id="submit" value="确定" />
+                    <input type="reset" class="btn3" value="取消" id="reset" />
+                    <input type="submit" class="btn3" id="bdefault" value="恢复默认" />
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

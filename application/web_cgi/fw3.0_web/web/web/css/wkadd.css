@@ -1,0 +1,25 @@
+.vision {
+	color : #2C1100;
+	background-color : transparent;
+	border-width : 1px;
+	border-color : #F5FFF4;
+	border-style : solid;
+	width : 190px;
+	height : 24px;	
+	vertical-align : middle;
+	text-align : center;
+	font-size : 16pt;
+}
+
+.visionbtn {
+	background-color : transparent;
+	border-style : none;
+	border-width : 2px;
+	border-color : #140014;
+	width : 50px;
+	height : 24px;
+	color : #FFFCF8;
+	text-align : center;
+	cursor : hand;
+}
+

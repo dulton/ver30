@@ -1,0 +1,1128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0;background-color:#242424; }
+        </style>
+<style> 
+*{ 
+    margin:0; 
+    padding:0; 
+} 
+body{font-size:12px;}h1{font-size:15px;} 
+.wrap{ 
+    font-size: 12px; 
+    margin:40px auto; 
+    width:400px; 
+} 
+/*进度条样式*/ 
+.progressbar_1{ 
+    background-color:#eee; 
+    height:16px; 
+    width:150px; 
+    border:1px solid #bbb; 
+    color:#222; 
+} 
+.progressbar_1 .bar { 
+    background-color:#6CAF00; 
+    height:16px; 
+    width:0; 
+} 
+</style> 
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <script type="text/javascript" src="js/system.js"></script>
+<!--<script language="javascript" for="UploadAtx" event="NotifyWebProcess" type="text/javascript"> 
+      alert("okkkkk"); 
+</script>--> 
+        <script>
+         
+		 var succ = false; //重启是否成功
+		 var succ_restore = false;//恢复默认成功
+		 var succ_easyrestore = false;//简单恢复是否成功
+		 var userlevel = "";	//当前用户权限
+		 var UpdateNum = 0;		//升级进度
+		 var UpdatePath = "";	//升级文件上一层目录
+		 var UpdateReboot = false;
+		 var UpdateRebootTime = 0;	//重启计时
+		 var GetUpdateNum = 0;	//获取更新状态间隔
+		 var Updatefileindex = 0;	//当前升级完成的文件数
+		 var IfERROR = false;
+               function succfunc(data) {
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+					
+                    	if(PackDate.Content.RetCode=="0")
+						{
+                        succ = true;
+                    	} else {
+                        if (typeof(closealert) === 'function') closealert();
+                        //alert("很抱歉，重启失败！");
+                    	}
+					}
+                }  
+ function changeLanguage(lang)
+			 {
+					TranslatePage(lang);
+			 }
+            function reboot() {
+                if (!confirm("确认重启设备吗?")) return;
+				
+				  var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=parent.Authvalue;
+				  contentstr=jsonToString(content);
+				  //如果是出错情况
+				  if(IfERROR)
+				  {
+					  GetAndSet("SystemRebootCmd","json",contentstr, succfunc);
+					  succ = true;
+				  }
+				  else
+				  {
+						GetAndSet("SystemRootCmd","json",contentstr, succfunc);
+				  }
+                
+
+               // FlySwapData('set', 'DEVCTRL', CmdPack.mem, succfunc);
+
+                var alerttime = 90;
+                var i = alerttime;
+                
+                var toutStr = function() { //读取显示信息
+                    if (succ === true) return "系统正在重启，页面将会在重启完成后重新载入，剩余时间 ： " + i--+"秒。";
+                    else return "请稍候，系统重启将会在" + alerttime + "秒内完成，剩余时间 ： " + i--+"秒。";
+                }
+                var reloadfunc = function() { //倒计时完成后调用的函数
+                    if (succ === true) {
+                        window.parent.location.href = window.location.protocol+"//"+window.location.host+"/login.html";
+                    } else 
+					{
+					//alert("很抱歉，重启失败！");
+					}
+                }
+                var closealert = timeoutalert(toutStr, alerttime, reloadfunc);
+            }
+
+            function restore() {
+                if (!confirm("确认恢复摄像机参数吗?\r\n确定后，设备IP将恢复成出厂默认值")) return;
+					//基本权限
+				  var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=parent.Authvalue;
+				  contentstr=jsonToString(content);
+              GetAndSet("SystemDefaultCmd","json",contentstr, succfunc_restore);
+			  
+			  
+           
+
+                var alerttime = 100;
+                var i = alerttime;
+                succ_restore = false; //重启是否成功
+                var toutStr = function() { //读取显示信息
+                    if (succ_restore === true) return "系统正在恢复默认配置，页面将会在恢复默认完成后重新载入，剩余时间 ： " + i--+"秒。";
+                    else return "请稍候，系统恢复默认配置将会在" + alerttime + "秒内完成，剩余时间 ： " + i--+"秒。";
+                }
+				
+                var reloadfunc = function() { //倒计时完成后调用的函数
+                    //if (succ_restore === true) {
+                        a = window.location;
+						
+
+						
+						var port="";
+							var oldhost = a.host;
+							var ipport=oldhost.split(":");
+							var newhost="";
+							if(ipport.length>1);
+							{
+							   port = oldhost.split(":")[1];
+							   newhost= "10.0.0.2:"+port;
+							}
+							if(port==undefined)
+							{
+								port="80";
+								newhost="10.0.0.2";
+							}
+							
+						   //reload to new ip's page need user & pwd , but they are not in cookie
+						   window.parent.location.href = window.location.protocol+"//10.0.0.2:"+port+"/login.html";
+						   
+                        //window.location.href = a.href.replace(a.hostname, "10.0.0.2"); // + a.pathname + a.search;
+						parent.ipchange("10.0.0.2",port,true);//第二个参数为端口 //父级页面跳转
+						
+						
+                   // } else alert("很抱歉，恢复默认配置失败！");
+                }
+                var closealert = timeoutalert(toutStr, alerttime, reloadfunc);
+				
+				/*
+				     var succfunc = function(data) {
+						var PackDate=new UnPackData(data);
+						
+                   if(PackDate.Content!=null)
+				{
+                    if(PackDate.Content.RetCode=="0") {
+                        succ_restore = true;
+                    } else {
+                        if (typeof(closealert) === 'function') closealert();
+                        alert("很抱歉，恢复默认配置失败！");
+                    }
+				}
+                }
+              */
+            }
+			
+			function succfunc_restore(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						succ_restore = true;
+					}	
+					else
+					{
+						if (typeof(closealert) === 'function') closealert();
+						return;	
+					}
+				}	
+				delete PackDate;
+			}
+			
+			//简单恢复
+			function easyrestore()
+			{
+                if (!confirm("确认简单恢复摄像机参数吗?")) return;
+				
+				
+					//基本权限
+				  var  content={};
+				  content.SessionId=parent.id;
+				  content.AuthValue=parent.Authvalue;
+				  contentstr=jsonToString(content);
+				  //如果是出错情况
+				  if(IfERROR)
+				  {
+					  GetAndSet("FactoryDefault","json",contentstr, succes_SystemSimpleDefaultCmd);	
+					  succ_easyrestore = true;
+				  }
+				  else
+				  {
+						GetAndSet("SystemSimpleDefaultCmd","json",contentstr, succes_SystemSimpleDefaultCmd);  
+				  }
+              	  
+				  
+				  
+                var alerttime = 100;
+                var i = alerttime;
+                succ_easyrestore = false; //重启是否成功
+                var toutStr = function() { //读取显示信息
+                    if (succ_easyrestore === true) return "系统正在简单恢复默认配置，页面将会在简单恢复默认完成后重新载入，剩余时间 ： " + i--+"秒。";
+                    else return "请稍候，系统简单恢复默认配置将会在" + alerttime + "秒内完成，剩余时间 ： " + i--+"秒。";
+                }
+				
+                var reloadfunc = function() { //倒计时完成后调用的函数
+                    //if (succ_restore === true) {
+						
+                        a = window.location;	
+						var port="";
+							var oldhost = a.host;
+							var ipport=oldhost.split(":");
+							var newhost="";
+							if(ipport.length>1);
+							{
+							   port = oldhost.split(":")[1];
+							   //newhost= "10.0.0.2:"+port;
+							}
+							if(port==undefined)
+							{
+								port="80";
+								//newhost="10.0.0.2";
+							}
+							
+
+						   //window.parent.location.href = window.location.protocol+"//10.0.0.2:"+port+"/login.html";
+							window.parent.location.href=window.location.protocol+"//" + parent.ip+":"+port+"/login.html";
+							//parent.ipchange("10.0.0.2",port,true);//第二个参数为端口 //父级页面跳转
+                }
+                var closealert = timeoutalert(toutStr, alerttime, reloadfunc);
+			}
+			function succes_SystemSimpleDefaultCmd(data)
+			{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							succ_easyrestore = true;
+						}
+						else if(PackDate.Content.RetCode!="0")
+						{
+							if (typeof(closealert) === 'function') closealert();
+							return;
+						}
+					}
+					delete PackDate;
+			}
+
+            $(document).ready(function() {
+				
+				    // 调用模版也方法
+				 parent.innerCallMe(true); 
+				 //语言初始化
+	            initLang();
+				
+				//初始化
+				init();
+				
+                $('#btn_reboot').click(reboot);
+                $('#btn_restore').click(restore);
+				//简单恢复
+				$('#btn_easyrestore').click(easyrestore);
+				
+                //$('#btn_upgrade').click(upgrade);
+                prepareUpload();
+            });
+
+			//获取升级端口
+			function succfunGetUpdateCfg(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						parent.UpdatePort = PackDate.Content.UpgradePort;	
+					}
+					else
+					{
+						alert("获取升级端口失败！");
+					}
+				}
+				delete PackDate;
+			}
+			//初始化函数
+			function init()
+			{
+				//如果是出错过来的
+					if(parent.id == "0" && parent.Authvalue == "-1")
+					{
+						//parent.ErrorHtml();
+						IfERROR = true;
+						$("#restorediv").css("display", "none");
+						
+						//获取升级端口
+				  		var  content={};
+				  		content.SessionId="1234";
+				  		content.AuthValue="0";
+				  		contentstr=jsonToString(content);
+						GetAndSet("GetUpdateCfg","json",contentstr, succfunGetUpdateCfg);
+							
+					}
+				//检测当前用户权限
+				userlevel = parent.UserLevel;
+				if(userlevel.indexOf("1") == -1)//非管理员用户
+				{
+					
+
+					var update1 = document.getElementById("update1");
+					var update2 = document.getElementById("update2");
+					var update3 = document.getElementById("update3");
+					
+					update1.style.display = "none";
+					update2.style.display = "none";	
+					update3.style.display = "none";	
+				}
+				
+				$("#puf").val("");
+			}
+			
+            //以下为恢复默认功能
+            function getClientIp() {
+                var succfunc = function(data) {
+                    var unpack = UnPack(data);
+                    if (unpack.Flag == 0) {
+                        clientIp = unpack.Info;
+                    }
+                }
+                FlySwapData('get', 'GET_CLIENT_IP', '', succfunc);
+            }
+            function getServerIp() {
+                var succfunc = function(data) {
+                    var unpack = UnPack(data);
+                    if (unpack.Flag == 0) {
+                        serverIp = unpack.Info;
+						//alert('摄像机地址:' + serverIp);
+                    }
+                }
+                FlySwapData('get', 'GET_SERVER_IP', '', succfunc);
+            }
+
+            var clientIp = "";
+            var serverIp = "";
+            var isuploading = false;
+            var isUploadSucc = false;
+            var popup_window_closefunc = null;
+            function prepareUpload() {
+                if (window.ActiveXObject) {
+                    if ($('#UploadAtx').length) {
+                        //$('#UploadAtx')[0].attachEvent("OnResult", onUploadResultAtx);//NotifyWebProcess  fireEvent
+						//$('#UploadAtx')[0].attachEvent("NotifyWebProcess", CallNotifyWebProcess);
+                        $('#label_tip').hide();
+                        //$('#upfile').show();//mjg 注释
+                        $('#btn_upgrade').show();
+                    } else {
+                        $('#label_tip').show();
+                        $('#label_tip').html('请安装控件以支持升级功能');
+                        $('#upfile').hide();
+                        $('#btn_upgrade').hide();
+                    }
+                } else {
+                    $('#label_tip').show();
+                }
+                getClientIp();
+                getServerIp();
+                checkupload();
+            }
+            function checkupload() {
+                if (true) { //由activex判断
+                    $('#btn_upgrade').attr("disabled", false);
+                    return true;
+                } else {
+                    $('#btn_upgrade').attr("disabled", true);
+                    return false;
+                }
+            }
+            function checkFileType(obj) {
+				//alert("tt");
+			    var path = null;  //文件路径  
+				var filename=obj.value;
+				path=getFullPath(obj); 
+				
+				//alert(path);
+				//alert($("#upfile").val());
+				//alert(filename);
+                var uptype = "package";
+                if (filename.lastIndexOf(".") != -1) {
+                    var fileType = (filename.substring(filename.lastIndexOf(".") + 1, filename.length)).toLowerCase();
+                    var suppotFile = new Array(uptype);
+                    for (var i = 0; i < suppotFile.length; i++) {
+                        if (suppotFile[i] == fileType) {
+							
+				       
+						//var file = document.getElementById("upfile"); 
+							//$("#puf").val(obj.value);
+							UpdatePath = path;
+							$("#puf").val(path);
+                            return true;
+                        } else {
+                            continue;
+                        }
+                    }
+                    alert("不支持文件类型" + fileType + ", 只支持类型" + uptype);
+                    return false;
+                } else {
+                    alert("只支持类型" + uptype);
+                    return false;
+                }
+				
+				$("#puf").val($("#upfile").val());
+				UpdatePath = $("#upfile").val();
+                return true;
+				}
+            function startUploadAtx() {
+                try {
+                    if (window.ActiveXObject && $('#UploadAtx').length) {
+                        if (isuploading) {
+                            alert("设备正在升级！");
+                            return;
+                        }
+//                        if ($('#upfile').val() == "") {
+//                            alert("请选择上传文件!");
+//                            return;
+//                        }
+                        if (UpdatePath == "") {
+                            alert("请选择升级文件!");
+                            return;
+                        }
+                        if (!checkFileType(document.getElementById("upfile"))) return;
+                        var atxobj = $('#UploadAtx')[0];
+                        var localport = parent.UpdatePort;//9000 + Math.floor(Math.random() * 100 + 1);
+						if(isNaN(localport)||localport == "")
+						{
+							localport = 8000;
+						}
+
+						//测试
+						var username = getCookie("gmiwebusername");
+						var pawd = getCookie("gmiwebpassword");
+                        var localval = atxobj.SetIPCInfo(parent.ip,getCookie("gmiwebusername"),getCookie("gmiwebpassword"),localport);//atxobj.SetLocalInfo(clientIp, localport);
+						var oldhost = window.location.host;
+						if(parent.tport!="")
+						{
+							//进度
+							var alerttime = 0;
+							
+							//升级中处理函数
+							var toutStr = function() { //读取显示信息
+							
+/*								//设备正在重启
+								if(UpdateReboot)
+								{
+									UpdateRebootTime ++;
+									if(UpdateRebootTime>=80 && UpdateRebootTime<=95)
+									{
+										return 80;	
+									}
+									else if(UpdateRebootTime>95 && UpdateRebootTime<= 110)
+									{
+										return 85;
+									}
+									else if(UpdateRebootTime >110 && UpdateRebootTime<=125)
+									{
+										return 90;
+									}
+									else if(UpdateRebootTime>125 && UpdateRebootTime<=140)
+									{
+										return 95;
+									}
+									else if(UpdateRebootTime>140 && UpdateRebootTime<=155)
+									{
+										return 98;
+									}
+									else if(UpdateRebootTime>155)
+									{
+										return 99;
+									}
+
+								}
+								//重启设备计时
+								if(UpdateNum == 102)//开始重启
+								{
+									UpdateReboot = true;
+									return UpdateNum;
+								}*/
+								//获取当前升级状态
+								if(GetUpdateNum<=3)
+								{
+									GetUpdateNum++;
+									if(Updatefileindex == 0 && !UpdateReboot)
+									{
+										if(UpdateNum <20)
+										{
+											UpdateNum++;
+										}
+									}
+									else if(Updatefileindex == 1 && !UpdateReboot)
+									{
+										if(UpdateNum <40)
+										{
+											UpdateNum++;
+										}	
+									}
+									else if(Updatefileindex == 2 && !UpdateReboot)
+									{
+										if(UpdateNum <69)
+										{
+											UpdateNum++;
+										}	
+									}
+									if(UpdateNum >= 70)
+									{
+										//如果正在重启
+										if(UpdateReboot)
+										{
+											UpdateRebootTime ++;
+											if(UpdateRebootTime>0&&UpdateRebootTime<=10)
+											{
+												UpdateNum = 75;	
+											}
+											else if(UpdateRebootTime>10&&UpdateRebootTime<=20)
+											{
+												UpdateNum = 80;		
+											}
+											else if(UpdateRebootTime>20&&UpdateRebootTime<=30)
+											{
+												UpdateNum = 85;		
+											}
+											else if(UpdateRebootTime>30&&UpdateRebootTime<=50)
+											{
+												UpdateNum = 90;		
+											}
+											else if(UpdateRebootTime>50&&UpdateRebootTime<=65)
+											{
+												UpdateNum = 95;		
+											}
+											else if(UpdateRebootTime>65&&UpdateRebootTime<=80)
+											{
+												UpdateNum = 98;		
+											}
+											else if(UpdateRebootTime>=90)
+											{
+												
+												UpdateNum = 100;		
+											}
+											
+											GetUpdateNum = 0;
+										}
+										
+									}
+									
+								}
+								else if(!UpdateReboot && GetUpdateNum>=3)
+								{
+									GetUpdateNum = 0;
+									//获取更新状态
+									var tmp = atxobj.GetUpgradeProcess();
+									tmp = parseInt(tmp,10);
+									if(tmp == 33)
+									{
+										if(Updatefileindex != 1)
+										{
+											//第一个文件完成
+											UpdateNum = 20;
+											Updatefileindex = 1;
+											//alert("第一个文件升级完毕！");											
+										}
+
+									}
+									else if(tmp == 66)
+									{
+										if(Updatefileindex!=2)
+										{
+											//第二个文件完成
+											UpdateNum = 40;
+											Updatefileindex = 2;
+											//alert("第二个文件升级完毕！");	
+										}
+									}
+									else if(tmp == 99)
+									{
+										if(Updatefileindex!=3)
+										{
+											//第三个文件完成
+											UpdateNum = 69;
+											Updatefileindex = 3;
+											//alert("第三个文件升级完毕！");	
+										}
+									}
+									else if(tmp ==110)//文件错误
+									{
+										alert("很抱歉，文件错误，升级失败！");
+										return 110;
+									}
+									else if(tmp == 109){}
+									else if(tmp ==108)
+									{
+										alert("很抱歉，升级超时，失败！");
+										return 108;
+									}//timout
+									else if(tmp ==107)
+									{
+										alert("很抱歉，升级故障，失败！");
+										return 107;
+									}
+									else if(tmp == 106)
+									{
+										//升级成功
+										UpdateNum = 70;
+										//开始重启 发送消息
+										//alert("发送重启消息");
+										atxobj.RebootIPC();
+									}
+									else if(tmp == 105){}
+									else if(tmp == 104){}
+									else if(tmp == 103){}
+									else if(tmp == 102)
+									{
+										//开始重启
+										UpdateNum = 71;
+										//alert("开始重启设备");
+										UpdateReboot = true;
+										isUploadSucc = true;
+										GetUpdateNum = 0;
+									}
+									else if(tmp == 101){}
+
+								}
+								
+								
+								return UpdateNum;
+                			}
+				
+							//升级完毕处理函数
+							var reloadfunc = function()
+							{
+                    			if (typeof(alwindown) === 'function') alwindown();
+                    			window.parent.location.href = window.location.protocol+"//"+window.location.host+"/login.html";
+					 			location.reload();
+							}
+							popup_window_closefunc = UpdateWindow(toutStr, alerttime, reloadfunc);
+							
+							//atxobj.SetDeviceInfo(serverIp, parent.tport);
+							//IE 屏蔽本地文件问题。
+
+							//var path=getFullPath(document.getElementById("upfile"));
+							atxobj.SetUpdateFilePath(UpdatePath);//SetUpgradeFile(path);
+							atxobj.StartUpdateServer();//Open();
+							//atxobj.attachEvent("NotifyWebProcess", CallNotifyWebProcess);
+							//set User Name
+						    //atxobj.SetUserName(getCookie(oldhost+"gmiusername"),getCookie(oldhost+"gmipassword"));
+							
+							isuploading = true;
+							isUploadSucc = false;
+								
+							//setTimeout("UpgradeStart()",100);
+						}
+						//获取通讯端口
+						else
+						{/*
+
+						*/}
+                    }
+				}
+                 catch(e) {
+                    alert("升级过程中出错！");
+                    closeUploadAtx();
+                }
+            }
+			function UpgradeStart()
+			{
+				 var atxobj = $('#UploadAtx')[0];
+				 atxobj.UpgradeStart();
+			}
+			//升级调度函数
+			function NotifyWebProcess(data)
+			{
+				alert("ooo");
+			}
+			function CallNotifyWebProcess(data)
+			{
+				alert("OK");
+				//var dd = data;
+				//UpdateNum;	
+			}
+            function onUploadResultAtx(resId, msgtxt) {
+			//	$("#logtest").text($("#logtest").text()+"\n"+"resId="+resId+"-----msgtxt="+msgtxt);
+                if (!isuploading) return;
+                switch (resId) {
+                case 0:
+                case 1:
+                case 4:
+                case 6:
+                case 10:
+                    //中间信息
+                    break;
+                case 7:
+                    //succ
+                    isUploadSucc = true;
+                    closeUploadAtx();
+                    delayRestart(); //not this order js will crash!!
+                    break;
+                case 8:
+                    //failed
+                    alert("很抱歉, 系统升级失败！");
+                    isUploadSucc = false;
+                    closeUploadAtx();
+                    break;
+                case 3:
+                    //断开
+                    break;
+                case 2:
+                case 5:
+                case 255:
+                default:
+                    //error
+                    alert("升级过程中出现错误，请刷新页面后重新升级.");
+                    isUploadSucc = false;
+                    closeUploadAtx();
+                    break;
+                }
+                //alert("接收事件ID : " + resId + " , 自己报出的消息 : " + msgtxt);
+            }
+            function delayRestart() {
+                var i = 90;
+                var alwindown = null;
+                var toutStr = function() {
+                    return "系统升级成功，正在重启，将会在90秒内完成，剩余时间 ： " + i--+"秒。";
+                }
+                var reloadfunc = function() {
+                    if (typeof(alwindown) === 'function') alwindown();
+                    window.parent.location.href = window.location.protocol+"//"+window.location.host+"/login.html";
+					 location.reload();
+                }
+                alwindown = timeoutalert(toutStr, i, reloadfunc);
+            }
+            function closeUploadAtx() {
+                try {
+                    if (window.ActiveXObject && $('#UploadAtx').length) {
+                        if (!isuploading) return;
+                        isuploading = false;
+                        var atxobj = $('#UploadAtx')[0];
+                        atxobj.close();
+                        if (typeof(popup_window_closefunc) === "function" && popup_window_closefunc !== null) {
+                            popup_window_closefunc();
+                            popup_window_closefunc = null;
+                        }
+                    }
+                } catch(e) {}
+            }
+            function popCloseMsg() {
+                if (isUploadSucc) 
+				{
+					alert("系统升级成功");
+					 location.reload();
+				}
+                else alert("系统升级失败");
+            }
+			function mc()
+			{//var _i=$("#upfile");_i.click();
+				//_i.select();
+				//alert(document.selection.createRange().text);
+				var ss = document.getElementById("upfile");
+				ss.click();
+				//ss.select();
+				//var st = document.selection.createRange().text;
+				//alert(ss.value);
+				//alert(st);
+			}
+		//选择升级文件的上一层文件夹
+//			function chooseFolder()
+//			{     
+//			//选择文件夹
+///* 				var objSrc = new ActiveXObject("Shell.Application").BrowseForFolder(0,'请选择文件夹目录：',   0,   '');   
+//				if(objSrc != null)
+//				{   
+//   					UpdatePath = objSrc.Items().Item().Path; 
+//   					//document.all.savePath.value = UpdatePath;  
+//					$("#puf").val(UpdatePath);
+//    			}*/
+//				//选择文件ActiveXObject  MSComDlg.CommonDialog
+///*				var objSrc = new ActiveXObject("MSComDlg.CommonDialog");
+//				if(objSrc != null)
+//				{
+//					objSrc.Filter = "tgz Files (*.package)|*.package";
+//					objSrc.FilterIndex = 2;
+//					objSrc.MaxFileSize = 128;
+//					objSrc.ShowOpen();
+//					UpdatePath = objSrc.filename;
+//					//alert(UpdatePath);
+//					$("#puf").val(UpdatePath);
+//					
+//				}*/
+//				//var s = document.getElementById("file");
+//				//s.click();
+//				//UpdatePath = s.value;//获取文件路径
+//				//UpdatePath = getPath(document.getElementById("file"));
+//				var file_upl = document.getElementById('file1');
+//				//file_upl.click();
+//				file_upl.select();
+//
+//				UpdatePath = document.selection.createRange().text;
+//
+//				if(UpdatePath.indexOf(".package") == -1)
+//				{
+//					alert("请选择正确升级的文件！");
+//					return;
+//				}
+//				//alert(UpdatePath);
+//				$("#puf").val(UpdatePath);
+// 			}
+
+  
+		
+ //升级固件提示框
+ function UpdateWindow(getStrfunc, secs, closefunc)
+ {
+                if (typeof(getStrfunc) !== "function" || typeof(secs) !== "number") return;
+                //function timeoutalert(msg) {
+                var msgw, msgh, bordercolor;
+                msgw = 500; //提示窗口的宽度
+                msgh = 120; //提示窗口的高度
+                titleheight = 25 //提示窗口标题高度
+                bordercolor = "#000"; //提示窗口的边框颜色
+                titlecolor = "#99CCFF"; //提示窗口的标题颜色
+				background ="#242424";
+                var sWidth, sHeight;
+                //获取当前窗口尺寸
+                sWidth = document.body.offsetWidth;
+				//sWidth=900;
+                sHeight = document.body.offsetHeight > document.body.clientHeight ? document.body.offsetHeight: document.body.clientHeight;
+                sHeight = sHeight > window.screen.availHeight ? sHeight: window.screen.availHeight;
+				
+                //    //背景div
+                var bgObj = document.createElement("div");
+                bgObj.setAttribute('id', 'alertbgDiv');
+                bgObj.style.position = "absolute";
+                bgObj.style.top = "0";
+                bgObj.style.background = "#E8E8E8";
+                bgObj.style.filter = "progid:DXImageTransform.Microsoft.Alpha(style=3,opacity=25,finishOpacity=75";
+                bgObj.style.opacity = "0.6";
+                bgObj.style.left = "0";
+                bgObj.style.width = sWidth + "px";
+                bgObj.style.height = sHeight + "px";
+                bgObj.style.zIndex = "10000";
+                document.body.appendChild(bgObj);
+                //创建提示窗口的div
+                var msgObj = document.createElement("div");
+				msgObj.setAttribute("id", "alertmsgDiv");
+                //msgObj.setAttribute("align", "center");
+                msgObj.style.background = background;
+                msgObj.style.border = "1px solid " + bordercolor;
+                msgObj.style.position = "absolute";
+                msgObj.style.left = "50%";
+				msgObj.style.color = "#ccc";
+                msgObj.style.font = "12px/1.6em Verdana, Geneva, Arial, Helvetica, sans-serif";
+                //窗口距离左侧和顶端的距离
+                msgObj.style.marginLeft = "-225px";
+                //窗口被卷去的高+（屏幕可用工作区高/2）-150
+                msgObj.style.top = document.body.scrollTop + (window.screen.availHeight / 2) - 150 + "px";
+                msgObj.style.width = msgw + "px";
+                msgObj.style.height = msgh + "px";
+                //msgObj.style.textAlign = "center";
+                msgObj.style.lineHeight = "25px";
+                msgObj.style.zIndex = "10001";
+                document.body.appendChild(msgObj);
+                //提示信息标题
+                var title = document.createElement("h4");
+                title.setAttribute("id", "alertmsgTitle");
+                title.setAttribute("align", "left");
+                title.style.margin = "0";
+                title.style.padding = "3px";
+                title.style.background = bordercolor;
+                title.style.filter = "progid:DXImageTransform.Microsoft.Alpha(startX=20, startY=20, finishX=100, finishY=100,style=1,opacity=75,finishOpacity=100);";
+                title.style.opacity = "0.75";
+                title.style.border = "1px solid " + bordercolor;
+                title.style.height = "18px";
+                title.style.font = "12px Verdana, Geneva, Arial, Helvetica, sans-serif";
+                title.style.color = "white";
+                title.innerHTML = "提示信息";
+                document.getElementById("alertmsgDiv").appendChild(title);
+                //提示信息
+                var txt = document.createElement("p");
+                txt.setAttribute("id", "msgTxt");
+                txt.style.margin = "16px 0";
+                txt.innerHTML = "进度状态，已完成"+getStrfunc()+"%";//getStrfunc(); //msg;
+                document.getElementById("alertmsgDiv").appendChild(txt);
+				//创建进度条div	
+				var bardiv = document.createElement("div");
+				bardiv.setAttribute("id", "progressbar_1");
+				bardiv.style.backgroundColor = "#eee";
+				bardiv.style.width = "490px";
+				bardiv.style.height = "16px";
+				bardiv.style.border = "1px solid #bbb";
+				document.getElementById("alertmsgDiv").appendChild(bardiv);
+				
+/*				//进度条提示文本
+				var bartxt = document.createElement("p");
+				bartxt.innerHTML = "进度状态:";
+				document.getElementById("alertmsgDiv").appendChild(bartxt);*/
+				
+				//进度条
+				var bar = document.createElement("div");
+				bar.setAttribute("id", "progressbar");
+				bar.style.backgroundColor = "#6CAF00";
+				bar.style.width = "0px";
+				bar.style.height = "16px";
+				document.getElementById("progressbar_1").appendChild(bar);
+				//设置宽度
+				var stt = document.getElementById("progressbar");
+				stt.style.width = getStrfunc()+"%";
+				//document.getElementById("alertmsgDiv").appendChild(txt);
+				
+
+                //设置关闭时间
+                var chmsgid = 0;
+				var updatePro = 0;
+				var updateNow = 0;
+				var updatestr = "";
+				var strpoint = ".";
+                var chmsg = function() {
+                    var txt = document.getElementById("msgTxt");
+                    if (txt) 
+					{
+						updatePro = getStrfunc();
+						updatePro = parseInt(updatePro,10);
+						if(updatePro >=0 && updatePro<70)
+						{
+							//正在升级中但是未完成
+							updateNow = updatePro;
+							updatestr = "正在升级，已完成"+updateNow+"%";
+						}
+						else if(updatePro == 69 || updatePro == 70)//升级成功
+						{
+							updateNow = updatePro;
+							
+							updatestr = "升级完成，正在准备重启设备，已完成"+updateNow+"%";	
+						}
+						else if(updatePro > 70 && updatePro<100)
+						{
+							updateNow = updatePro;
+							
+							updatestr = "正在重启设备，已完成"+updateNow+"%";
+						}
+						else if(updatePro == 100)
+						{
+							updateNow = updatePro;
+							
+							updatestr = "完成"+updateNow+"%";	
+							
+							txt.innerHTML = updatestr;
+							stt.style.width = updateNow+"%";
+							
+							alert("固件升级、设备重启完成，请单击“确定”重新重录!");
+							window.parent.location.href = window.location.protocol+"//"+window.location.host+"/login.html";
+					 location.reload();
+						}
+						else if(updatePro == 110||updatePro==107||updatePro==108)//文件错误
+						{
+                        document.body.removeChild(document.getElementById("alertbgDiv"));
+                        document.getElementById("alertmsgDiv").removeChild(document.getElementById("alertmsgTitle"));
+                        document.body.removeChild(document.getElementById("alertmsgDiv"));
+						return;
+						}
+
+						
+						//显示到界面
+						if(strpoint == "."){strpoint = "..";}
+						else if(strpoint == ".."){strpoint = "...";}
+						else if(strpoint == "..."){strpoint = ".";}
+						txt.innerHTML = updatestr  + " " + strpoint;
+						stt.style.width = updateNow+"%";	
+					}
+                    chmsgid = setTimeout(chmsg, 1000);
+                }
+                chmsgid = setTimeout(chmsg, 1000);
+				//如果进度达到100则执行完毕函数
+//				if(parseInt(getStrfunc()) >= 100)
+//				{
+//					//if (typeof(closefunc) === 'function') closefuncid = window.setTimeout(closefunc, secs * 1000 - 10);
+//					if (typeof(closefunc) === 'function') closefuncid = closefunc;
+//				}	 
+ }
+         function getFullPath(obj)   
+        {   
+		//var ooo = document.getElementById("upfile");
+           if(obj)               {   
+               if (window.navigator.userAgent.indexOf("MSIE")>=1)    //ie   
+               {   
+                    obj.select();   
+					$(".video_top").focus();
+					//var path = document.selection.createRange().text;
+					//alert(path);
+                    return document.selection.createRange().text;  
+                }   
+                else if(window.navigator.userAgent.indexOf("Firefox")>=1)             //firefox   
+                {   
+                    if(obj.files)   
+                    {   
+                        return ooo.files.item(0).getAsDataURL();   
+                    }   
+                    return obj.value;   
+                }
+				   
+                return obj.value; 
+				  
+            }   
+        }
+        </script>
+    </head>
+    
+    <body>
+                 <input id="upfile" type="file"  onchange="javascript:checkFileType(this)"
+                        style="width:0; height:0;border:0 none;" name="upfile" />
+        <div class="bit-stream" >
+            <h3>
+                系统维护
+            </h3>
+        </div>
+        <div class="down_main_content" style="width:80%">
+         <fieldset class="motion_det_fil_1">
+      <legend>系统管理</legend>
+        
+            <div class="ip_set_main">
+                <div class="video_top" >
+                    
+                     <div class="system_ma_list">
+                        重新启动网络摄像机
+                    </div>
+                    <div class="system_ma_list">
+                        <input type='button' class="btn22" id="btn_reboot" value='重启设备' />
+                    </div>
+                </div>
+                <div class="video_top" > 
+                    <div class="system_ma_list">
+                        简单恢复设备参数
+                    </div>
+                    
+                    <div class="system_ma_list">
+                        <input type='button' class="btn22" id="btn_easyrestore" value='简单恢复' />
+                    </div>
+                </div>
+                <div class="video_top" id="restorediv"> 
+                    <div class="system_ma_list">
+                         完全恢复设备参数到出厂设置
+                    </div>
+                    
+                    <div class="system_ma_list">
+                        <input type='button' class="btn22" id="btn_restore" value='完全恢复' />
+                    </div>
+                </div>
+                <div class="video_top" id="update1">
+                     <div class="system_ma_list">
+                        摄像机固件升级
+                    </div>
+                    
+                    <div class="system_ma_list">
+                     	<object id="UploadAtx"  classid="CLSID:4A63E50B-7A8F-435A-8B34-1CDD2F6600BB" style="width:0; height:0; border: 0 none"/></object>
+                        <input type="text" name="predent" id="puf" style="width:200px; height:20px;">
+                     
+                    </div><div class="system_ma_list" style="margin-left:10px; margin-top:2px; vertical-align:middle; width:100px"><input type="button" value="浏览" class="btn22"  onclick="mc()" id="bbrowse"/></div>
+<div class="system_ma_list">
+                      <div class="system_ma_list2" style="margin-left:10px; margin-top:2px; vertical-align:middle; width:100px">
+<!--                    <div class="system_ma_list" style="display:none">
+
+                    </div>-->
+                           <input id="btn_upgrade" type="button" class="btn22"  onclick="javascript:startUploadAtx();" value="固件升级">
+
+                    </div>
+                    </div>
+<!--<input type="file" id="file1" style="display:none;" mce_style="display:none"/>-->
+
+                </div>
+                  <div class="video_top"  id="update2">
+
+                    <div class="system_ma_list" style="width:500px; color:#F00;" id="update3">
+                        <!--<label id="label_tip" style="display: inline; color:red; ">-->
+                            <!--升级功能只支持Internet Explorer浏览器.-->
+                            在线升级过程需要大约3-10分钟，在此期间设备请勿断电！
+                        <!--</label> --> 
+                    </div>
+                    
+       
+              </div>
+            </div>
+        
+        </fieldset>
+        </div>
+        </div>
+
+    </body>
+
+</html>

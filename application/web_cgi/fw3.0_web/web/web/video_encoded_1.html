@@ -1,0 +1,1259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0;background-color:#242424}
+        </style>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <script>
+		    //mjpeg高中低
+			var mjpeg_quality=[50,75,100]
+            //是否需要强制刷新。功能完成后 改为false;
+            var isrefresh = true;
+            var isplayvideo = false; //是否以播放视频
+            var isvalid = new Array(); //数据无效的数组。每个不合法项的ID 组成的数组。
+            //数组索引表示码流
+			var cbr_avg_bps_min ;
+			var cbr_avg_bps_max ;
+			var vbr_min_bps_min ;
+			var vbr_min_bps_max ;
+			var vbr_max_bps_min ;
+			var vbr_max_bps_max ;
+			if(parent.isZY)
+			{
+				 cbr_avg_bps_min =  [1000, 128, 500, 200];
+				 cbr_avg_bps_max =  [8000, 1000, 2000, 1000];
+				 vbr_min_bps_min =  [100, 128, 100, 100];
+				 vbr_min_bps_max =  [5000, 1000, 1000, 1000];
+				 vbr_max_bps_min =  [1000, 128, 1000, 100];
+				 vbr_max_bps_max =  [10000, 1000, 5000, 5000];
+				//var rateItem=[[25,20480000],[24,21333333],[23,22260869],[22,23272727],[21,24380952],[20,25600000],[19,26947368],[18,28444444],[17,30117647],[16,32000000],[15,34133333],[14,36571428],[13,39384615],[12,42666666],[11,46545454],[10,51200000],[9,56888888],[8,64000000],[7,73142857],[6,85333333],[5,102400000],[4,128000000],[3,170666667],[2,256000000],[1,512000000]];
+				var rateItem=[[20,25600000],[19,26947368],[18,28444444],[17,30117647],[16,32000000],[15,34133333],[14,36571428],[13,39384615],[12,42666666],[11,46545454],[10,51200000],[9,56888888],[8,64000000],[7,73142857],[6,85333333],[5,102400000],[4,128000000],[3,170666667],[2,256000000],[1,512000000]];
+			}
+			//非卓杨定制
+			else
+			{
+				 cbr_avg_bps_min = [1000, 1000, 500, 200];
+				 cbr_avg_bps_max = [8000, 8000, 2000, 1000];
+				 vbr_min_bps_min = [100, 100, 100, 100];
+				 vbr_min_bps_max = [5000, 5000, 1000, 1000];
+				 vbr_max_bps_min = [1000, 1000, 1000, 100];
+				 vbr_max_bps_max = [10000, 10000, 5000, 5000];
+			}
+			
+            //设置成功 此 +1  两个均成功时提示设置成功
+            var isOk = 0;
+            //获取码流参数
+            var mystreamid = getQueryString("streamid");
+            globalStream = mystreamid;
+            //alert(mystreamid);
+            if (mystreamid == "" || mystreamid == null) {
+                mystreamid = 0;
+            }
+	        getcbrLimits(mystreamid);
+		    window.onload=function (){
+				if(parent.isZY)
+				{
+				if(mystreamid==1)
+								{
+									
+									$("#s_enc_fps").removeAttr("disabled","disabled");
+									$("#s_type").attr("disabled","disabled");
+									$("#s_quality").attr("disabled","disabled");
+									 $("#s_enc_fps").empty();
+                                    for (var i = 0; i < rateItem.length; i++) {
+                                        var option = new Option(rateItem[i][0], rateItem[i][1]);
+
+                                        $("#s_enc_fps")[0].options.add(option);
+                                    }
+									
+								}
+								else
+								{
+									
+									$("#s_enc_fps").attr("disabled","disabled");
+									$("#s_type").removeAttr("disabled","disabled");
+									$("#s_quality").removeAttr("disabled","disabled");
+								}
+				}
+				
+			}
+            function changeLanguage(lang) {
+                TranslatePage(lang);
+            }
+            $(document).ready(function() {
+					           
+               //根据码流数填充页面元素
+				getMaxStreams();
+                // 调用模版也方法
+                parent.innerCallMe(true);
+                //语言初始化
+                initLang();
+                //初始化 get
+				
+                getsetEncode('get', mystreamid, '');
+                getsetStreamInfo('get', mystreamid, '');
+                
+
+                //$("input[name=bitstream][value="+mystreamid+"]").attr("cheaked","cheaked");
+                $("#radiostream" + mystreamid).attr("checked", "checked");
+
+                var cameraip = parent.getIp();
+
+                if (cameraip != "") {
+					// 只播放码流1
+                    if(parent.isZY)
+					{
+						//只播放码流1 视频
+						
+							LoadImg(cameraip, 0);
+						
+					}
+					else
+					{
+                    	LoadImg(cameraip, mystreamid);
+					}
+
+                }
+
+                //取消
+                $("#reset").bind("click",
+                function(e) {
+                    getsetEncode('get', mystreamid, '');
+                    getsetStreamInfo('get', mystreamid, '');
+                    //去除红色边框
+                    for (var i = 0; i < isvalid.length; i++) {
+                        $("#" + isvalid[i]).css("border", "1px solid black");
+                    }
+                    isvalid.length = []; //数组清空
+                });
+                $("#submit").bind("click",
+                function(e) {
+                    if (isvalid.length == 0) {
+                        isOk = 0;
+                        var poststr = "s" + mystreamid + "_type=" + $("#s_type").val() + "||s" + mystreamid + "_enc_fps=" + $("#s_enc_fps").val();
+                        getsetEncode('set', mystreamid, poststr);
+                        var poststr2 = "s" + mystreamid + "_brc=" + $("#s_brc").val() + "||s" + mystreamid + "_cbr_avg_bps=" + $("#s_cbr_avg_bps").val() + "000||s" + mystreamid + "_vbr_max_bps=" + $("#s_vbr_max_bps").val() + "000||s" + mystreamid + "_vbr_min_bps=" + $("#s_vbr_min_bps").val() + "000||s" + mystreamid + "_mjpeg_level=" + $("#s_mjpeg_level").val();
+                        getsetStreamInfo('set', mystreamid, poststr2);
+                    } else {
+                        alert("请按照要求输入各项内容");
+                        return;
+                    }
+                });
+                //校验有效性
+                $("#s_cbr_avg_bps").bind("blur",
+                function(e) {
+                    var id = this.id;
+                    var value = parseInt(this.value, 10);
+                    if (value < cbr_avg_bps_min[mystreamid] || value > cbr_avg_bps_max[mystreamid] || isNaN(value)) {
+                        //getsetStreamInfo('get', mystreamid, '');
+                        alert("请按要求输入：\n当前码流为：码流" + (parseInt(mystreamid, 10) + 1) + "\n平均码率取值范围为：" + cbr_avg_bps_min[mystreamid] + "-" + cbr_avg_bps_max[mystreamid]);
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+                });
+                $("#s_vbr_min_bps").bind("blur",
+                function(e) {
+                    var id = this.id;
+                    var value = parseInt(this.value, 10);
+					var maxvalue=parseInt($("#s_vbr_max_bps").val(), 10);
+					var isMin=true;
+					if(!isNaN(maxvalue)&&!isNaN(value))
+					{
+						if(value>maxvalue)
+						{
+							 alert("请按要求输入：最小分辨率不能大于最大分辨率。");
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+						return;
+						}
+						else {
+                        this.style.border = "1px solid black";
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+							if(isvalid[i]=="s_vbr_max_bps")
+							{
+								tempvalue=$("#s_vbr_max_bps").val();
+								if(!(tempvalue < vbr_max_bps_min[mystreamid] || tempvalue > vbr_max_bps_max[mystreamid] || isNaN(tempvalue)))
+			{
+								$("#s_vbr_max_bps").css("border","1px solid black");
+								isvalid.splice(i, 1); //删除数据
+			}
+							}
+                        }
+                    }
+					}
+                    if (value < vbr_min_bps_min[mystreamid] || value > vbr_min_bps_max[mystreamid] || isNaN(value)) {
+                        //getsetStreamInfo('get', mystreamid, '');
+                        alert("请按要求输入：\n当前码流为：码流" + (parseInt(mystreamid, 10) + 1) + "\n最小码率取值范围为：" + vbr_min_bps_min[mystreamid] + "-" + vbr_min_bps_max[mystreamid]);
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+                });
+                $("#s_vbr_max_bps").bind("blur",
+                function(e) {
+                    var id = this.id;
+                    var value = parseInt(this.value, 10);
+					var minvalue=parseInt($("#s_vbr_min_bps").val(), 10);
+					var isMax=true;
+					if(!isNaN(minvalue)&&!isNaN(value))
+					{
+						if(value<minvalue)
+						{
+						
+							 alert("请按要求输入：最大分辨率不能小于最小分辨率。");
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+						return;
+						}
+						else {
+                        this.style.border = "1px solid black";
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+							if(isvalid[i]=="s_vbr_min_bps")
+							{
+									tempvalue=$("#s_vbr_min_bps").val();
+								if(!(tempvalue < vbr_min_bps_min[mystreamid] || tempvalue > vbr_min_bps_max[mystreamid] || isNaN(tempvalue)))
+			{
+								$("#s_vbr_min_bps").css("border","1px solid black");
+								isvalid.splice(i, 1); //删除数据
+			}
+							}
+                        }
+                    }
+					}
+                    if (value < vbr_max_bps_min[mystreamid] || value > vbr_max_bps_max[mystreamid] || isNaN(value)) {
+                        //getsetStreamInfo('get', mystreamid, '');
+                        alert("请按要求输入：\n当前码流为：码流" + (parseInt(mystreamid, 10) + 1) + "\n最大码率取值范围为：" + vbr_max_bps_min[mystreamid] + "-" + vbr_max_bps_max[mystreamid]);
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        this.style.border = "1px solid black";
+
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+                    }
+                });
+                $("#s_brc").bind("change",
+                function(e) {
+                    var value = $("#s_brc").val();
+                    s_brcControlStyle(value);
+                });
+                //切换码流
+               /* $("input[type=radio][name='bitstream']").bind("click",
+                function(e) {
+                    var streamid = this.value;
+                    changeStream(streamid);
+                    //获取页面信息
+                    //getsetEncode('get', mystreamid, '');
+                    //getsetStreamInfo('get', mystreamid, '');
+                });*/
+                //回复默认值
+                $("#bdefault").bind("click",
+                function(e) {
+                    //if (!confirm("恢复默认后，分辨率组合也将恢复默认。\n预置位信息将不可用，事件设置中相关参数也将无效\n确认恢复默认参数吗？")) return;
+                    setDefault(mystreamid);
+
+                });
+                $("#s_type").bind("click",
+                function(e) {
+                    var s_type = $("#s_type").val();
+                    s_typeControlStyle(s_type);
+                });
+
+
+                
+                //校验数字有效性
+                /* $("#s_cbr_avg_bps,#s_vbr_max_bps,#s_vbr_min_bps,#s_quality").bind("blur",
+                function(e) {
+                    var id = this.id;
+                    if (!isIntcheckValue($("#" + id).val())) {
+						this.style.border="1px solid red";
+						if(!isvalid.contains(id))
+						{
+						  isvalid.push(id);
+						}
+                       // var length = $("#" + id).val().length - 1;
+                       // var undo = $("#" + id).val().substring(0, length);
+                       // $("#" + id).val(undo);
+						//getsetStreamInfo('get', mystreamid, '');
+                        //return;
+                    }
+					else
+					{
+						this.style.border="1px solid black";
+						
+						  for(var i =0;i<isvalid.length;i++)
+						  {
+							  if(isvalid[i]==id)
+							  {
+								  isvalid.splice(i,1);//删除数据
+							  }
+						  }
+					}
+					
+                });*/
+               /* $("#s_quality").bind("blur",
+                function(e) {
+                    var id = this.id;
+                    var value = parseInt(this.value);
+                    if (value < 0 || value > 100 || isNaN(value)) {
+                        //getsetStreamInfo('get', mystreamid, '');
+                        this.style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+
+                        alert("请按要求输入：MJPEG质量取值范围：0-100");
+                    } else {
+                        this.style.border = "1px solid black";
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+
+                    }
+                });*/
+
+            });
+           			  $(window).bind('beforeunload',function(){ 
+			  try
+			  {
+		var activex=document.getElementById("GMIIPCmrWebPlugIn1");
+							if (activex != null && activex != 'null') {
+						if(activex)
+							activex.Stop();
+					}
+			  }catch(e){
+				  //alert(e.message);
+				  }
+	});
+            function setDefault(streamid) {
+                var backCount = 0;
+                var section = 'ENCODE';
+                postDataStr = "a=b";
+                $.ajax({
+                    url: url,
+                    data: "Request=get_default&Section=" + section + "&exsection= 0&postDataStr=" + encodeURIComponent(postDataStr + "||"),
+                    type: "post",
+                    success: function(data) {
+                        //alert(data);
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        if (data2.substring(0, 3) == "<br") {
+                            alert("返回数据出错：\n" + data2);
+                            return;
+                        }
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                            //alert(Info);
+                            if (Flag == 0) {
+								
+								var strIndext=Info.indexOf("s"+streamid+"_type");
+								var stype=Info.substr(strIndext).split("||")[0].split("=")[1];
+								var pStr="s"+streamid+"_type="+stype;
+								 $.ajax({
+									url: url,
+									data: "Request=set&Section=" + section + "&exsection= 0&postDataStr=" + encodeURIComponent(pStr + "||"),
+									type: "post",
+									success: function(data) {
+										//alert(data);
+										var data2 = data.replace("\n", "");
+										data2 = $.trim(data2);
+										if (data2.substring(0, 3) == "<br") {
+											alert("返回数据出错：\n" + data2);
+											return;
+										}
+										var result = data2.split('&');
+										var Request;
+										var Section;
+										var Flag;
+										var Info;
+										if (result.length != 4) {
+											alert("返回数据解析错误");
+											return;
+										} else {
+											Request = result[0];
+											Section = result[1];
+											Flag = result[2];
+											Info = result[3];
+											// alert(Info);
+											if (Flag == 0) {
+				
+												backCount += 1;
+												if (backCount == 2) {
+													alert("设置成功！");
+													location.reload();
+												}
+											}
+										}
+										//
+									},
+									error: function() {
+										if (isAlertUrlError) {
+											alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+										}
+									}
+								});
+								
+                                //单码流恢复
+                                /*
+								var tempSplit1="s"+mystreamid+"_dptz";
+								var tempSplit2="s"+(parseInt(mystreamid,10)+1)+"_dptz";
+								var index1=Info.indexOf(tempSplit1);
+								var index2=Info.indexOf(tempSplit2);
+								var tempInfo="";
+								if(index2!=-1)
+								{
+								tempInfo=Info.substring(index1,index2);
+								}
+								else
+								{
+									tempInfo=Info.substring(index1);
+									}
+									//alert(tempInfo);
+								 $.ajax({
+                    url: url,
+                    data: "Request=set&Section=" + section + "&exsection= 0&postDataStr=" + encodeURIComponent(tempInfo + "||"),
+                    type: "post",
+                    success: function(data) {
+                        //alert(data);
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        if (data2.substring(0, 3) == "<br") {
+                            alert("返回数据出错：\n" + data2);
+                            return;
+                        }
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                            //alert(Info);
+                            if (Flag == 0) {
+                                backCount += 1;
+                                if (backCount == 2) {
+                                    alert("设置成功！");
+                                    location.reload();
+                                }
+                            }
+                        }
+                        //
+
+                    },
+                    error: function() {
+                      	if(isAlertUrlError)
+			                               {
+                                              alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+			                               }
+                    }
+                });
+								
+							*/
+
+                            }
+                        }
+                        //
+                    },
+                    error: function() {
+                        if (isAlertUrlError) {
+                            alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+                        }
+                    }
+                });
+                $.ajax({
+                    url: url,
+                    data: "Request=load_default&Section=STREAM" + streamid + "&exsection= 0&postDataStr=" + encodeURIComponent(postDataStr + "||"),
+                    type: "post",
+                    success: function(data) {
+                        //alert(data);
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        if (data2.substring(0, 3) == "<br") {
+                            alert("返回数据出错：\n" + data2);
+                            return;
+                        }
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                            // alert(Info);
+                            if (Flag == 0) {
+
+                                backCount += 1;
+                                if (backCount == 2) {
+                                    alert("设置成功！");
+                                    location.reload();
+                                }
+                            }
+                        }
+                        //
+                    },
+                    error: function() {
+                        if (isAlertUrlError) {
+                            alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+                        }
+                    }
+                });
+            }
+            //获取和设置页面中的 视频编码参数。
+            function getsetEncode(Request, streamid, postDataStr) {
+                var section = 'ENCODE';
+                $.ajax({
+                    url: url,
+                    data: "Request=" + Request + "&Section=" + section + "&exsection= 0&postDataStr=" + encodeURIComponent(postDataStr + "||"),
+                    type: "post",
+                    success: function(data) {
+                        //alert(data);
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        if (data2.substring(0, 3) == "<br") {
+                            alert("返回数据出错：\n" + data2);
+                            return;
+                        }
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                            //alert(Info);
+                            if (Flag == 0) {
+                                if (Request == 'set') {
+                                    isOk += 1;
+                                    if (isOk == 2) {
+                                        //提示语言设置
+                                        var alertInfo = "设置成功!";
+                                        var lang = getCookie('lang');
+                                        if (lang != null) {
+                                            if (lang == "zh-cn") {
+                                                alertInfo = "设置成功!";
+                                            }
+                                            if (lang == "en") {
+                                                var alertInfo = Info;
+                                            }
+                                        } else {
+                                            alertInfo = "设置成功!";
+                                        }
+                                        alert(alertInfo);
+
+                                        if (isrefresh) {
+                                            //刷新页面
+                                            location.reload();
+                                           // var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+                                            //activeX.Stop();
+                                            //var result=activeX.Play();
+											
+                                        }
+                                    }
+                                } else {
+                                    SetFormValue(Section, Info);
+                                    //alert(Info);
+                                    //alert($("#04s"+streamid+"_width").val());
+                                    $("#s_type").val($("#04s" + streamid + "_type").val());
+                                    $("#s_enc_fps").val($("#04s" + streamid + "_enc_fps").val());
+                                    $("#s_fmt").val($("#04s" + streamid + "_width").val() + " x " + $("#04s" + streamid + "_height").val());
+                                    //控制控件 enable disabled
+                                    s_typeControlStyle($("#s_type").val());
+                                    //alert($("#04s"+streamid+"_width").val()+" x "+$("#04s"+streamid+"_height").val());
+									
+									if(parent.isZY)
+									{
+										//if($("#s_fmt").val()=="720 x 576")
+										//{
+											 cbr_avg_bps_min[1]= 128;
+											 cbr_avg_bps_max[1] = 1000;
+											 vbr_min_bps_min[1] = 128;
+											 vbr_min_bps_max[1] = 1000;
+											 vbr_max_bps_min[1] = 128;
+											 vbr_max_bps_max[1] = 1000 ;
+										//}
+									}
+                                }
+                            }
+                        }
+                        //
+                    },
+                    error: function() {
+                        if (isAlertUrlError) {
+                            alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+                        }
+                    }
+                });
+            }
+            //获取和设置中的码流参数。
+            function getsetStreamInfo(Request, streamid, postDataStr) {
+                var section = 'STREAM' + streamid;
+
+                $.ajax({
+                    url: url,
+                    data: "Request=" + Request + "&Section=" + section + "&exsection= 0&postDataStr=" + encodeURIComponent(postDataStr + "||"),
+                    type: "post",
+                    success: function(data) {
+                        //alert(data);
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        if (data2.substring(0, 3) == "<br") {
+                            alert("返回数据出错：\n" + data2);
+                            return;
+                        }
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                            //alert(Info);
+                            if (Flag == 0) {
+                                if (Request == 'set') {
+                                    isOk += 1;
+                                    if (isOk == 2) {
+                                        //提示语言设置
+                                        var alertInfo = "设置成功!";
+                                        var lang = getCookie('lang');
+                                        if (lang != null) {
+                                            if (lang == "zh-cn") {
+                                                alertInfo = "设置成功!";
+                                            }
+                                            if (lang == "en") {
+                                                var alertInfo = Info;
+                                            }
+                                        } else {
+                                            alertInfo = "设置成功!";
+                                        }
+                                        alert(alertInfo);
+
+                                        if (isrefresh) {
+                                            //刷新页面
+                                            location.reload();
+                                            //var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+                                            //activeX.Stop();
+                                            //var result=activeX.Play();
+                                        }
+                                    }
+                                } else {
+                                    SetFormValue(Section, Info);
+                                    $("#s_brc").val($("#20s" + streamid + "_brc").val());
+                                    $("#s_cbr_avg_bps").val(parseInt($("#20s" + streamid + "_cbr_avg_bps").val() / 1000, 10));
+                                    $("#s_vbr_max_bps").val(parseInt($("#20s" + streamid + "_vbr_max_bps").val() / 1000, 10));
+                                    $("#s_vbr_min_bps").val(parseInt($("#20s" + streamid + "_vbr_min_bps").val() / 1000, 10));
+                                    $("#s_mjpeg_level").val($("#20s" + streamid + "_mjpeg_level").val());
+									/*var squality=$("#20s" + streamid + "_quality").val();
+									var squalityInt=parseInt(squality,10);
+									if(squalityInt<=mjpeg_quality[0]) //低
+									{
+										$("#s_quality").val(0);
+									}
+									if(squalityInt<=mjpeg_quality[1]&&squalityInt>mjpeg_quality[0]) //中
+									{
+										$("#s_quality").val(1);
+									}
+									if(squalityInt<=mjpeg_quality[2]&&squalityInt>mjpeg_quality[1]) //高
+									{
+										$("#s_quality").val(2);
+									}*/
+
+                                    //控制UI 样式
+                                    var value = $("#s_brc").val();
+                                    //alert(value);
+									if($("#s_type").val()=="1")//h264
+									{
+										if (value == '0') {
+											$("#s_cbr_avg_bps").removeAttr("disabled", "disabled");
+											$("#s_vbr_min_bps").attr("disabled", "disabled");
+											$("#s_vbr_max_bps").attr("disabled", "disabled");
+	
+										}
+										if (value == '1') {
+											$("#s_cbr_avg_bps").attr("disabled", "disabled");
+											$("#s_vbr_min_bps").removeAttr("disabled", "disabled");
+											$("#s_vbr_max_bps").removeAttr("disabled", "disabled");
+	
+										}
+										if (value == '2') {
+											$("#s_cbr_avg_bps").removeAttr("disabled", "disabled");
+											$("#s_vbr_min_bps").attr("disabled", "disabled");
+											$("#s_vbr_max_bps").attr("disabled", "disabled");
+	
+										}
+										if (value == '3') {
+											$("#s_cbr_avg_bps").attr("disabled", "disabled");
+											$("#s_vbr_min_bps").removeAttr("disabled", "disabled");
+											$("#s_vbr_max_bps").removeAttr("disabled", "disabled");
+	
+										}
+									}
+
+                                }
+                            }
+                        }
+                        //
+                    },
+                    error: function() {
+                        if (isAlertUrlError) {
+                            alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+                        }
+                    }
+                });
+            }
+            //切换码流调用
+            function changeStream(streamid) {
+				
+                $.ajax({
+                    url: url,
+                    data: "Request=get" + "&Section=ENCODE" + "&exsection=0" + "&postDataStr=" + encodeURIComponent("||"),
+                    type: "post",
+                    success: function(data) {
+                        //通用处理data  
+                        //处理后的数据 data2
+                        //返回数据中包含"\n"字符 。
+                        //$("#load").css("display","none");
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        //异步返回数据  经处理 传递给相应的函数处理。
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                        }
+                        if (Request == "get") {
+                            var index = Info.indexOf("s" + streamid + "_type");
+                            var temp = Info.substr(index, 9);
+                            var isopen = temp.split("=")[1];
+                            // alert(isopen);
+                            if (isopen != "0") {
+                                streamSection = "STREAM" + streamid; //设置全局变量
+                                globalStream = streamid;
+                                //切换动作
+                                //var cameraip=parent.getIp();
+                                //changeStream_util(streamid,cameraip);
+                                //parent.getStreamid(globalStream);
+                                var url = window.document.URL.split("?")[0];
+                                //主页刷新后 保证内页刷新 码流为当前码流
+                                var currenturlcookiename = window.location.host + "currenturl";
+                                setCookie(currenturlcookiename, getCookie(currenturlcookiename).split("?")[0] + "?streamid=" + streamid);
+                                self.location.href=url + "?streamid=" + streamid;
+								
+                                //切换动作结束
+                                //var postStr = "dptz_source=" + globalStream;
+                                //GetAndSet('set', 'DPTZ', postStr, 'process', false, true);
+                            } else {
+                                alert("当前码流关闭，打开失败！")
+                            }
+                        }
+
+                    },
+                    error: function() {
+                        if (isAlertUrlError) {
+                            alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+                        }
+                    }
+                });
+            }
+            function s_brcControlStyle(value) {
+				if($("#s_type").val()=="1")//h264
+				{
+					if (value == '0') {
+						$("#s_cbr_avg_bps").removeAttr("disabled", "disabled");
+						$("#s_vbr_min_bps").attr("disabled", "disabled");
+						$("#s_vbr_max_bps").attr("disabled", "disabled");
+	
+					}
+					if (value == '1') {
+						$("#s_cbr_avg_bps").attr("disabled", "disabled");
+						$("#s_vbr_min_bps").removeAttr("disabled", "disabled");
+						$("#s_vbr_max_bps").removeAttr("disabled", "disabled");
+	
+					}
+					if (value == '2') {
+						$("#s_cbr_avg_bps").removeAttr("disabled", "disabled");
+						$("#s_vbr_min_bps").attr("disabled", "disabled");
+						$("#s_vbr_max_bps").attr("disabled", "disabled");
+	
+					}
+					if (value == '3') {
+						$("#s_cbr_avg_bps").attr("disabled", "disabled");
+						$("#s_vbr_min_bps").removeAttr("disabled", "disabled");
+						$("#s_vbr_max_bps").removeAttr("disabled", "disabled");
+	
+					}
+				}
+            }
+            function s_typeControlStyle(value) {
+                if (value == '2') //MJEPG
+                {
+                    $("#s_brc").attr("disabled", "disabled");
+                    $("#s_cbr_avg_bps").attr("disabled", "disabled");
+                    $("#s_vbr_min_bps").attr("disabled", "disabled");
+                    $("#s_vbr_max_bps").attr("disabled", "disabled");
+                    $("#s_mjpeg_level").removeAttr("disabled", "disabled");
+                }
+                if (value == '1') //H264
+                {
+
+                    $("#s_brc").removeAttr("disabled", "disabled");
+                    $("#s_cbr_avg_bps").removeAttr("disabled", "disabled");
+                    $("#s_vbr_min_bps").removeAttr("disabled", "disabled");
+                    $("#s_vbr_max_bps").removeAttr("disabled", "disabled");
+                    $("#s_mjpeg_level").attr("disabled", "disabled");
+                    var value = $("#s_brc").val();
+                    s_brcControlStyle(value);
+                }
+            }
+			function getcbrLimits(streamid)
+			{
+				 $.ajax({
+                    url: url,
+                    data: "Request=get" + "&Section=STREAM"+streamid+ "&exsection=0" + "&postDataStr=" + encodeURIComponent("||"),
+                    type: "post",
+                    success: function(data) {
+                        //通用处理data  
+                        //处理后的数据 data2
+                        //返回数据中包含"\n"字符 。
+                        //$("#load").css("display","none");
+                        var data2 = data.replace("\n", "");
+                        data2 = $.trim(data2);
+                        //异步返回数据  经处理 传递给相应的函数处理。
+                        var result = data2.split('&');
+                        var Request;
+                        var Section;
+                        var Flag;
+                        var Info;
+                        if (result.length != 4) {
+                            alert("返回数据解析错误");
+                            return;
+                        } else {
+                            Request = result[0];
+                            Section = result[1];
+                            Flag = result[2];
+                            Info = result[3];
+                        }
+                        if (Flag == "0") {
+							//alert(Info);
+                           var minStr="s"+streamid+"_cbr_min_bps";
+						   var maxStr="s"+streamid+"_cbr_max_bps";
+						   var minIndex=Info.indexOf(minStr);
+						   var maxIndex=Info.indexOf(maxStr);
+						   var minLimits=Info.substr(minIndex).split("||")[0].split("=")[1];
+						   var maxLimits=Info.substr(maxIndex).split("||")[0].split("=")[1];
+						  // alert("minLimits="+minLimits+"-----maxLimits="+maxLimits);
+						   if(minLimits!="0"&&minLimits!=undefined&&maxLimits!="0"&&maxLimits!=undefined)
+						   {
+								cbr_avg_bps_min[streamid]= minLimits/1000;							
+								cbr_avg_bps_max[streamid] = maxLimits/1000;
+						   }
+											
+                        }
+
+                    },
+                    error: function() {
+                        if (isAlertUrlError) {
+                            alert("util.js-->GetAndSet()--调用ajax 出错！\n");
+                        }
+                    }
+                });
+			}
+        </script>
+    </head>
+    
+    <body>
+        <div class="bit-stream">
+            <h3 id="hvideocoding">
+                视频编码
+            </h3>
+            <dl id="streamInfo">
+                <dt id="dstream">
+                    码流
+                </dt>
+                <dd>
+                    <input type="radio" name="bitstream" value="0" id="radiostream0" checked="checked"
+                    />
+                    <label id="1stream">
+                        码流
+                    </label>
+                    <label>
+                        1
+                    </label>
+                </dd>
+            </dl>
+        </div>
+        <div class="down_main_content">
+            <div class="camera_top">
+                <div class="video" id="myvedio">
+                    <OBJECT CLASSID="CLSID:3BCDAA6A-7306-42FF-B8CF-BE5D3534C1E4" 
+                    WIDTH=702 HEIGHT=395 align="absmiddle" ID="GMIIPCmrWebPlugIn1" style="visibility:visible">
+                        <PARAM NAME="_Version" VALUE="65536">
+                        <PARAM NAME="_ExtentX" VALUE="19045">
+                        <PARAM NAME="_ExtentY" VALUE="11478">
+                        <PARAM NAME="_StockProps" VALUE="0">
+                        <embed src="65536" width="702" height="395" align="absmiddle" _version="65536" _extentx="19045" _extenty="11478" _stockprops="0"></embed>
+                    </OBJECT>
+                    <script>
+					  if(parent.isZY)
+					  {
+							if(mystreamid==1)
+							{
+								$("#GMIIPCmrWebPlugIn1").css("visibility","hidden");			
+							}
+							else
+						   {
+										
+								$("#GMIIPCmrWebPlugIn1").css("visibility","visible");
+										//alert($("#GMIIPCmrWebPlugIn1").css("visibility"));
+							}
+					  }
+					  else
+						{
+							$("#GMIIPCmrWebPlugIn1").css("visibility","visible");
+						}
+					</script>
+              </div>
+                <div class="camera_top_right">
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bencodingformat">
+                                编码格式
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <select id="s_type">
+                                <option value='1'>
+                                    H.264
+                                </option>
+                                <option value='2'>
+                                    MJPEG
+                                </option>
+                            </select>
+                            <input type="hidden" id="04s0_type" />
+                            <input type="hidden" id="04s1_type" />
+                            <input type="hidden" id="04s2_type" />
+                            <input type="hidden" id="04s3_type" />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bbresolution">
+                                分辨率
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <select id="s_fmt" disabled="disabled">
+                                <option value='1920 x 1080'>
+                                    1920 x 1080
+                                </option>
+                                <option value='1440 x 1080'>
+                                    1440 x 1080
+                                </option>
+                                <option value='1280 x 1024'>
+                                    1280 x 1024
+                                </option>
+                                <option value='1280 x 960'>
+                                    1280 x 960
+                                </option>
+                                <option value='1280 x 720'>
+                                    1280 x 720
+                                </option>
+                                <option value='800 x 600'>
+                                    800 x 600
+                                </option>
+                                <option value='720 x 576'>
+                                    720 x 576
+                                </option>
+                                <option value='720 x 480'>
+                                    720 x 480
+                                </option>
+                                <option value='640 x 480'>
+                                    640 x 480
+                                </option>
+                                <option value='352 x 288'>
+                                    352 x 288
+                                </option>
+                                <option value='352 x 240'>
+                                    352 x 240
+                                </option>
+                                <option value='320 x 240'>
+                                    320 x 240
+                                </option>
+                                <option value='176 x 144'>
+                                    176 x 144
+                                </option>
+                                <option value='176 x 120'>
+                                    176 x 120
+                                </option>
+                                <option value='160 x 120'>
+                                    160 x 120
+                                </option>
+                            </select>
+                            <input type="hidden" id="04s0_width" />
+                            <input type="hidden" id="04s1_width" />
+                            <input type="hidden" id="04s2_width" />
+                            <input type="hidden" id="04s3_width" />
+                            <input type="hidden" id="04s0_height" />
+                            <input type="hidden" id="04s1_height" />
+                            <input type="hidden" id="04s2_height" />
+                            <input type="hidden" id="04s3_height" />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bframerate">
+                                帧率
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <select id="s_enc_fps" disabled="disabled">
+                                <option value='8533333'>
+                                    60
+                                </option>
+                                <option value='17066667'>
+                                    30
+                                </option>
+                                <option value='20480000' selected="selected">
+                                    25
+                                </option>
+                                <option value='25600000'>
+                                    20
+                                </option>
+                                <option value='34133333'>
+                                    15
+                                </option>
+                                <option value='51200000'>
+                                    10
+                                </option>
+                                <option value='85333333'>
+                                    6
+                                </option>
+                                <option value='102400000'>
+                                    5
+                                </option>
+                                <option value='128000000'>
+                                    4
+                                </option>
+                                <option value='170666667'>
+                                    3
+                                </option>
+                                <option value='256000000'>
+                                    2
+                                </option>
+                                <option value='512000000'>
+                                    1
+                                </option>
+                            </select>
+                            <input type="hidden" id="04s0_enc_fps" />
+                            <input type="hidden" id="04s1_enc_fps" />
+                            <input type="hidden" id="04s2_enc_fps" />
+                            <input type="hidden" id="04s3_enc_fps" />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bratecontrol">
+                                H.264码率控制
+                                <br>
+                                （Kbps）
+                            </b>
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                        </div>
+                        <div class="shuru">
+                            <select id="s_brc">
+                                <option value='0' id="optionconstantbit" selected>
+                                    固定码率
+                                </option>
+                                <option value='1' id="optionvariablebit">
+                                    变码率
+                                </option>
+                                <option value='2' id="optionconstantcbr">
+                                    恒质定码率
+                                </option>
+                                <option value='3' id="optionconstantvbr">
+                                    恒质变码率
+                                </option>
+                            </select>
+                            <input type="hidden" id="20s0_brc" />
+                            <input type="hidden" id="20s1_brc" />
+                            <input type="hidden" id="20s2_brc" />
+                            <input type="hidden" id="20s3_brc" />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="baveragebit">
+                                平均码率
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <input id="s_cbr_avg_bps" maxlength="4" />
+                            <input type="hidden" id="20s0_cbr_avg_bps" />
+                            <input type="hidden" id="20s1_cbr_avg_bps" />
+                            <input type="hidden" id="20s2_cbr_avg_bps" />
+                            <input type="hidden" id="20s3_cbr_avg_bps" />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bminbit">
+                                最小码率
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <input id="s_vbr_min_bps" disabled="disabled" maxlength="4" />
+                            <input type="hidden" id="20s0_vbr_min_bps" />
+                            <input type="hidden" id="20s1_vbr_min_bps" />
+                            <input type="hidden" id="20s2_vbr_min_bps" />
+                            <input type="hidden" id="20s3_vbr_min_bps" />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bmaxbit">
+                                最大码率
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <input id="s_vbr_max_bps" disabled="disabled" maxlength="5" />
+                            <input type="hidden" id="20s0_vbr_max_bps" />
+                            <input type="hidden" id="20s1_vbr_max_bps" />
+                            <input type="hidden" id="20s2_vbr_max_bps" />
+                            <input type="hidden" id="20s3_vbr_max_bps" />
+                        </div>
+                    </div>
+                    <div class="camera_top_right_list">
+                    </div>
+                    <div class="camera_top_right_list">
+                        <div class="cam_kinds">
+                            <b id="bmjpegquality">
+                                MJPEG质量
+                            </b>
+                        </div>
+                        <div class="shuru">
+                            <select id="s_mjpeg_level">
+                                <option value='3' selected id="optionlow">
+                                   低
+                                </option>
+                                <option value='2' id="optionmiddle">
+                                   中
+                                </option>
+                                <option value='1' id="optionhigh">
+                                   高
+                                </option>
+                            </select>
+                            <input type="hidden" id="20s0_mjpeg_level" value="1"/>
+                            <input type="hidden" id="20s1_mjpeg_level" value="1"/>
+                            <input type="hidden" id="20s2_mjpeg_level" value="1"/>
+                            <input type="hidden" id="20s3_mjpeg_level" value="1"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bottom-action">
+            <input type="button" id="submit" class="btn3" value="确定" />
+            <input type="reset" class="btn3" value="取消" id="reset" />
+            <input type="button" name="restore" class="btn3" id="bdefault" value="恢复默认"
+            />
+        </div>
+    </body>
+
+</html>
