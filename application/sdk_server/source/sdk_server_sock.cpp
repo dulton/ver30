@@ -222,6 +222,7 @@ int SdkServerSock::__ReadNoneBlock(unsigned char * pData,int datalen)
         else if(ret == 0)
         {
             ERROR_INFO("read (%d)\n",readlen);
+			SETERRNO(EPIPE);
             return -EPIPE;
         }
         leftlen -= ret;

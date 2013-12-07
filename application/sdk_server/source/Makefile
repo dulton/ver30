@@ -34,6 +34,7 @@ GMI_MODULE_SRCS        += sdk_server_stream.cpp sdk_server_sys_comm.cpp
 GMI_MODULE_SRCS        += sdk_server_sys_req.cpp sdk_server_debug.cpp sdk_client_daemon.cpp
 GMI_MODULE_SRCS        += sdk_audio_buffer.cpp sdk_audio_stream.cpp sdk_audio_dec.cpp 
 GMI_MODULE_SRCS        += sdk_audio_dbuffer.cpp sdk_client_comm.cpp sdk_sys_cp.cpp
+GMI_MODULE_SRCS        += sdk_server_alarm.cpp sdk_proto_pack.cpp sdk_proto_parse.cpp
 
 # Set compile flags
 GMI_CFLAGS              = -Wall -O3 -Wno-psabi

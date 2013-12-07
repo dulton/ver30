@@ -41,8 +41,8 @@ SdkServerClient::SdkServerClient(int sock,SdkServerMgmt * pServerMgmt,int * pRun
 
     /*default is from index of 0*/
     m_CurGetStreamIds = 0;
-	m_LastSendMills = (uint64_t)0;
-	m_StartSendMills = (uint64_t)0;
+    m_LastSendMills = (uint64_t)0;
+    m_StartSendMills = (uint64_t)0;
 }
 
 
@@ -250,8 +250,8 @@ do\
 
 void SdkServerClient::Stop()
 {
-	m_LastSendMills = (uint64_t)0;
-	m_StartSendMills = (uint64_t)0;
+    m_LastSendMills = (uint64_t)0;
+    m_StartSendMills = (uint64_t)0;
     if(this->m_pSvrMgmt)
     {
         this->m_pSvrMgmt->UnRegisterSdkClient(this);
@@ -473,11 +473,6 @@ int SdkServerClient::__WriteLogin2Io()
     return 1;
 }
 
-int SdkServerClient::__WriteMessageIo()
-{
-    return -ENOTSUP;
-}
-
 
 int SdkServerClient::__WriteIoImpl()
 {
@@ -677,7 +672,6 @@ int SdkServerClient::__LoginSuccResponse(sdk_client_comm_t *& pComm,sdk_client_c
     //DEBUG_INFO("seqid %d %p\n",pComm->m_SeqId,pComm);
     pRetComm->m_Type = GMIS_PROTOCOL_TYPE_LOGGIN;
     pRetComm->m_FHB = pComm->m_FHB;
-    DEBUG_INFO("fhb %d\n",pComm->m_FHB);
     pRetComm->m_Frag = 0;
     pRetComm->m_DataId = 0;
     pRetComm->m_Offset = 0;
@@ -692,7 +686,6 @@ int SdkServerClient::__LoginSuccResponse(sdk_client_comm_t *& pComm,sdk_client_c
     presp->m_Sesid = n16;
     keeptimems = this->m_KeepAliveTime * 1000;
     presp->m_KeepTimeMS = HOST_TO_PROTO32(keeptimems);
-	DEBUG_INFO("keeptimems 0x%08x\n",presp->m_KeepTimeMS);
     //DEBUG_INFO("sessionid %d\n",pRetComm->m_SesId);
     return 0;
 }
@@ -889,7 +882,13 @@ int SdkServerClient::__ReadLoginIo()
                     break;
                 case GMIS_PROTOCOL_TYPE_LOG:
                 case GMIS_PROTOCOL_TYPE_WARNING:
+					DEBUG_INFO("Warning logging session(%d)\n",pComm->m_SesId);
                     this->__SetState(sdk_client_message_state);
+                    ret = this->m_pSvrMgmt->ChangeClientAlarm(this);
+                    if(ret < 0)
+                    {
+                        goto fail;
+                    }
                     ret = this->__HandleMessageRead(pComm);
                     break;
                 default:
@@ -1030,7 +1029,7 @@ int SdkServerClient::__HandleLogin2Message(sdk_client_comm_t*& pComm,sdk_client_
     h32 = PROTO_TO_HOST32(preq->m_HeartBeatTime);
     h32 /= 1000000;
     this->m_KeepAliveTime = h32;
-	//DEBUG_BUFFER_FMT(preq,sizeof(*preq),"GetKeepAliveTime %d heartbeattime 0x%08x",this->m_KeepAliveTime,preq->m_HeartBeatTime);
+    //DEBUG_BUFFER_FMT(preq,sizeof(*preq),"GetKeepAliveTime %d heartbeattime 0x%08x",this->m_KeepAliveTime,preq->m_HeartBeatTime);
 
     //DEBUG_INFO("username %s encdata %s passwordmd5 %s\n",
     //           preq->m_UserName,
@@ -1197,6 +1196,7 @@ int SdkServerClient::__ReadLoginSuccIo()
         goto fail;
     }
 
+	DEBUG_INFO("pComm Type (%d)\n",pComm->m_Type);
     switch(pComm->m_Type)
     {
     case GMIS_PROTOCOL_TYPE_LOGGIN:
@@ -1286,7 +1286,13 @@ int SdkServerClient::__ReadLoginSuccIo()
         break;
     case GMIS_PROTOCOL_TYPE_LOG:
     case GMIS_PROTOCOL_TYPE_WARNING:
+		DEBUG_INFO("warning change\n");
         this->__SetState(sdk_client_message_state);
+        ret = this->m_pSvrMgmt->ChangeClientAlarm(this);
+        if(ret < 0)
+        {
+            goto fail;
+        }
         ret = this->__HandleMessageRead(pComm);
         if(ret < 0)
         {
@@ -1522,7 +1528,7 @@ int SdkServerClient::LoginCallBack(int err,int reqnum,sessionid_t sesid,privledg
     //DEBUG_INFO("sesid %d\n",sesid);
     this->m_SessionId = sesid;
     this->m_Priv = priv;
-	DEBUG_INFO("keepalivetime %d\n",this->m_KeepAliveTime);
+    DEBUG_INFO("keepalivetime %d\n",this->m_KeepAliveTime);
     if(this->m_ExpireTime > expiretime || this->m_ExpireTime == 0)
     {
         this->m_ExpireTime = expiretime;
@@ -1532,12 +1538,12 @@ int SdkServerClient::LoginCallBack(int err,int reqnum,sessionid_t sesid,privledg
     {
         this->m_KeepAliveTime = keepalivetime;
     }
-	DEBUG_INFO("keepalivetime %d\n",this->m_KeepAliveTime);
+    DEBUG_INFO("keepalivetime %d\n",this->m_KeepAliveTime);
 
     /*we should change into the new session id to set*/
     this->m_pLoginComm->m_SesId = this->m_SessionId;
     this->m_pLoginComm->m_Priv = this->m_Priv;
-	
+
     /*register client session ,this will give it ok*/
     ret = this->m_pSvrMgmt->RegisterClientSession(sesid,this);
     if(ret < 0)

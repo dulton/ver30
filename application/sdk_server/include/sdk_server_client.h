@@ -24,7 +24,7 @@ typedef enum
     /*this state ,is when change config ,we should restart the decode audio data server */
     sdk_client_stream_audio_dual_pending_start_state=10,
     sdk_client_upgrade_state   = 11,
-    sdk_client_logout_state    = 12,
+    sdk_client_logout_state    = 13,
 } sdk_client_state_t ;
 
 
@@ -98,6 +98,7 @@ public:
 	int StartAudioDecodeCallBack(sdk_client_comm_t*& pComm);
 	int StopAudioDecodeCallBack(sdk_client_comm_t*& pComm);
 	int ResetLongTimeTimer();
+	int PushAlarmComm(sdk_client_comm_t* pComm);
 
 private:
     void __StopReadIo();

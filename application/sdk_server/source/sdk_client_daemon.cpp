@@ -312,7 +312,7 @@ sdk_client_comm_t* SdkClientDaemon::__GetReportComm()
     sdk_client_comm_t* pComm=NULL;
     char* pDst;
 
-    pComm = (sdk_client_comm_t*)calloc(sizeof(*pComm),1);
+    pComm = AllocateComm(DAEMON_SIZE);
     if (pComm == NULL)
     {
         return NULL;

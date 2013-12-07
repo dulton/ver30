@@ -267,6 +267,31 @@ class SdkLoginUnit(xunit.case.XUnitCase):
 			cmdtel.Logout()
 		return
 
+	def TelnetExecCmd(self,cmd,cmdtime=0):
+		utcfg = xunit.config.XUnitConfig()
+		host = utcfg.GetValue('.telnet','host','')
+		port = utcfg.GetValue('.telnet','port','23')
+		user = utcfg.GetValue('.telnet','username',None)
+		password = utcfg.GetValue('.telnet','password',None)
+		loginnote = utcfg.GetValue('.telnet','loginnote','login:')
+		passwordnote = utcfg.GetValue('.telnet','passwordnote','assword:')
+		cmdnote = utcfg.GetValue('.telnet','cmdnote','# ')
+		timeout = utcfg.GetValue('.telnet','timeout','5')
+		port = int(port)
+		timeout = float(timeout)
+		__tel = None
+		try:
+			__tel = exptel.XUnitTelnet(host,port,user,password,None,timeout,loginnote,passwordnote,cmdnote)
+			__tel.Execute(cmd,cmdtime)
+			del __tel
+			__tel = None
+		except:
+			raise RemoteConnectError('can not connect [%s:%s]=>[user:%s;password:%s]'%(host,port,user,password))
+		finally:
+			if __tel:
+				del __tel
+			__tel = None
+
 	def CopyNfsFile(self,fromfile,todir):
 		#first to map 
 		utcfg = xunit.config.XUnitConfig()
@@ -1554,6 +1579,202 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 				ssock.CloseSocket()
 			ssock = None
 			self.assertEqual(ok,1)
+		return
+	def __KillAlarm(self):
+		stime = time.time()
+		etime = stime + 5
+		ctime = stime
+		pids = []
+		while ctime < etime:
+			pids = self.FindPids(['sdk_alarm.py'],['/bin/sh'])
+			if len(pids) == 0 :
+				break
+			self.KillPids(2,pids)
+			time.sleep(0.2)
+			ctime = time.time()
+		if len(pids) != 0:
+			raise ProcessStillRunningError('process sdk_alarm.py still running %s'%(repr(pids)))			
+		return
+		
+
+	def __RunAlarm(self,wfile):
+		utcfg = xunit.config.XUnitConfig()
+		host = utcfg.GetValue('.sdkserver','host','')
+		port = utcfg.GetValue('.sdkserver','port','30000')
+		username = utcfg.GetValue('.sdkserver','username',None)
+		password = utcfg.GetValue('.sdkserver','password',None)
+		port = int(port)
+		username = str(username)
+		password = str(password)
+		host = str(host)		
+		
+		filed = os.path.dirname(os.path.abspath(__file__))
+
+		cmd = 'python %s'%(filed)
+		cmd += os.sep
+		cmd += 'sdk_alarm.py'
+		cmd += ' -H %s '%(host)
+		cmd += ' -p %d '%(port)
+		cmd += ' -u %s '%(username)
+		cmd += ' -P %s '%(password)
+		cmd += ' --write %s '%(wfile)
+		return self.CallProcessStart(cmd)
+
+	def __CheckAlarm(self,wfile,wid,wtype,wlevel,wonoff,wtime,wdevid,wdesc):
+		fp = open(wfile,'r+b')
+		lines = fp.readlines()
+		fp.close()
+		fp = None
+		matchid=0
+		matchtype=0
+		matchlevel=0
+		matchonoff=0
+		matchtime=0
+		matchdevid=0
+		matchdesc=0
+		pat = re.compile('[\w\s]+:[\s]*\(([\w-]+)\)')
+		sid = '%s'%(wid)
+		stype = '%s'%(wtype)
+		slevel = '%s'%(wlevel)
+		sonoff = '%s'%(wonoff)
+		stime = '%s'%(wtime)
+		sdevid = '%s'%(wdevid)
+		sdesc = '%s'%(wdesc)
+
+		for l in lines:
+			l = l.strip('\r\n')
+			if l.startswith('warningid'):
+				m = pat.match(l)
+				s = m.group(1)
+				if s == sid:
+					matchid = 1
+			elif matchid and matchtype == 0:
+				self.assertTrue(l.startswith('warningtype'))
+				m = pat.match(l)
+				s = m.group(1)
+				if s == stype:
+					matchtype = 1
+				else:
+					matchid = 0
+					matchtype = 0
+					matchlevel = 0
+					matchonoff = 0
+					matchtime = 0
+					matchdevid = 0
+					matchdesc = 0
+			elif matchtype and matchlevel == 0:
+				self.assertTrue(l.startswith('warninglevel'))
+				m = pat.match(l)
+				s = m.group(1)
+				if s == slevel:
+					matchlevel = 1
+				else:
+					matchid = 0
+					matchtype = 0
+					matchlevel = 0
+					matchonoff = 0
+					matchtime = 0
+					matchdevid = 0
+					matchdesc = 0
+			elif matchlevel and matchonoff == 0:
+				self.assertTrue(l.startswith('warningonoff'))
+				m = pat.match(l)
+				s = m.group(1)
+				if s == sonoff:
+					matchonoff = 1
+				else:
+					matchid = 0
+					matchtype = 0
+					matchlevel = 0
+					matchonoff = 0
+					matchtime = 0
+					matchdevid = 0
+					matchdesc = 0
+			elif matchonoff and matchtime == 0:
+				self.assertTrue(l.startswith('time'))
+				m = pat.match(l)
+				s = m.group(1)
+				if s == stime:
+					matchtime = 1
+				else:
+					matchid = 0
+					matchtype = 0
+					matchlevel = 0
+					matchonoff = 0
+					matchtime = 0
+					matchdevid = 0
+					matchdesc = 0
+			elif matchtime and matchdevid == 0:
+				self.assertTrue(l.startswith('devid'))
+				m = pat.match(l)
+				s = m.group(1)
+				if s == sdevid:
+					matchdevid = 1
+				else:
+					matchid = 0
+					matchtype = 0
+					matchlevel = 0
+					matchonoff = 0
+					matchtime = 0
+					matchdevid = 0
+					matchdesc = 0
+			elif matchdevid and matchdesc == 0:
+				self.assertTrue(l.startswith('description'))
+				m = pat.match(l)
+				s = m.group(1)
+				if s == sdesc:
+					matchdesc = 1
+					break
+				else:
+					matchid = 0
+					matchtype = 0
+					matchlevel = 0
+					matchonoff = 0
+					matchtime = 0
+					matchdevid = 0
+					matchdesc = 0
+		self.assertTrue(matchdesc == 1)
+			
+		
+		return
+
+	def test_C110ToGetMessage(self):
+		utcfg = xunit.config.XUnitConfig()
+		buildtop = utcfg.GetValue('build','topdir','.')
+		tmpdir = utcfg.GetValue('.telnet','tmpdir','/tmp')
+		messagefile='%s/messageid.txt'%(tmpdir)
+		random.seed(time.time())
+		tmpid = random.randint(130,10000)
+		tmptype = random.randint(20,3569)
+		tmplevel = random.randint(35,111)
+		tmponoff = random.randint(0,32)
+		tmptime = time.strftime('%Y%m%d-%H%M%S',time.localtime(time.time()))
+		tmpdevid = 'tmpdevid'
+		tmpdescription = 'tmpdescription'
+		shellcmd='echo "%d %d %d %d %s %s %s">%s'%(tmpid,tmptype,tmplevel,tmponoff,tmptime,tmpdevid,tmpdescription,messagefile)
+		self.TelnetExecCmd(shellcmd)
+		# now we should copy the message board
+		self.Mountdir()
+		alarmtest='%s/ipc_fw3.x_core/output/ambarella_a5s_sdk_v3.3/application/sdk_server/unittest/alarm/sdkalarm_unitest'%(buildtop)
+		self.CopyNfsFile(alarmtest,tmpdir)
+		# now we start the command
+		writefile='%s/wmessagefile.txt'%(buildtop)
+		# now we should run alarm
+		self.__KillAlarm()
+		alarmpid = self.__RunAlarm(writefile)
+		# sleep a while ,and wait it ok
+		time.sleep(0.5)
+
+		shellcmd = '%s/sdkalarm_unitest %s'%(tmpdir,messagefile)
+		self.TelnetExecCmd(shellcmd)
+
+		time.sleep(0.6)
+		self.__KillAlarm()
+		self.__CheckAlarm(writefile,tmpid,tmptype,tmplevel,tmponoff,tmptime,tmpdevid,tmpdescription)
+		shellcmd = 'rm -f %s/sdkalarm_unitest'%(tmpdir)
+		self.TelnetExecCmd(shellcmd)
+		shellcmd = 'rm -f %s'%(messagefile)
+		self.TelnetExecCmd(shellcmd)		
 		return
 
 	def __prepare_leakout(self):

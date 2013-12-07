@@ -174,12 +174,12 @@ int SdkServerClient::__PushSysRespVec(sdk_client_comm_t*& pComm)
             }
             else if(ret == 0)
             {
-				/*ret == 0 means not assembly the fragmentation ,so we handled it ,so it will ok
-				we do not check for the pComm because it will removed*/
-				SDK_ASSERT(pComm == NULL);
+                /*ret == 0 means not assembly the fragmentation ,so we handled it ,so it will ok
+                we do not check for the pComm because it will removed*/
+                SDK_ASSERT(pComm == NULL);
                 return 1;
             }
-			SDK_ASSERT(pComm == NULL);
+            SDK_ASSERT(pComm == NULL);
 
             /*now it is insert ,so we should make sure */
             SDK_ASSERT(pReassemble);
@@ -290,7 +290,7 @@ int SdkServerClient::__PushSysRespVec(sdk_client_comm_t*& pComm)
             }
             return 1;
         }
-		SDK_ASSERT(pComm == NULL);
+        SDK_ASSERT(pComm == NULL);
         return 1;
     }
     return 0;
@@ -364,10 +364,128 @@ int SdkServerClient::__HandleUpgradeRead(sdk_client_comm_t * & pComm)
     return -ENOTSUP;
 }
 
+int SdkServerClient::PushAlarmComm(sdk_client_comm_t * pComm)
+{
+    int ret,res;
+    sdk_client_comm_t* pRetComm=NULL;
+    SDK_ASSERT(this->__GetState() == sdk_client_message_state);
+    SDK_ASSERT(pComm->m_Frag == 0);
+
+    /*now allocate the new pRetComm*/
+    pRetComm = AllocateComm(pComm->m_DataLen);
+    if(pRetComm == NULL)
+    {
+        ret = GETERRNO();
+        goto fail;
+    }
+
+    pRetComm->m_SesId = this->m_SessionId;
+    pRetComm->m_Priv = this->m_Priv;
+    pRetComm->m_ServerPort = 0;
+    pRetComm->m_LocalPort = 0;
+    pRetComm->m_SeqId = pComm->m_SeqId;
+    pRetComm->m_Type = GMIS_PROTOCOL_TYPE_WARNING;
+    pRetComm->m_FHB = 0;
+    pRetComm->m_Frag = 0;
+    pRetComm->m_DataId = 0;
+    pRetComm->m_Offset = 0;
+    pRetComm->m_Totalsize = 0;
+    pRetComm->m_DataLen = pComm->m_DataLen;
+    memcpy(pRetComm->m_Data,pComm->m_Data,pComm->m_DataLen);
+
+    ret = this->__PushSysRespVec(pRetComm);
+    if(ret < 0)
+    {
+        ret = GETERRNO();
+        goto fail;
+    }
+    SDK_ASSERT(pRetComm == NULL);
+
+    return 0;
+
+fail:
+    SDK_ASSERT(ret > 0);
+    res = this->__StartFailTimer();
+    if(res < 0)
+    {
+        res = GETERRNO();
+        ERROR_INFO("[%d] could not StartFail Timer Error(%d)\n",this->GetSocket(),res);
+        this->__BreakOut();
+    }
+    FreeComm(pRetComm);
+    SETERRNO(ret);
+    return -ret;
+}
 
 int SdkServerClient::__HandleMessageRead(sdk_client_comm_t * & pComm)
 {
-    return -ENOTSUP;
+    int ret,err=0;
+    sessionid_t sesid;
+    privledge_t priv;
+    sdk_client_comm_t *pRetComm=NULL;
+    int expiretime,keeptime;
+
+    if(pComm->m_FHB == 0 && pComm->m_Type == GMIS_PROTOCOL_TYPE_LOGGIN)
+    {
+        ret = EINVAL;
+        ERROR_INFO("[%d]Message Not In The HeartBeat\n",this->GetSocket());
+        goto fail;
+    }
+
+
+    sesid = pComm->m_SesId;
+    if(this->m_SessionId != 0 && sesid != this->m_SessionId)
+    {
+        ret = EINVAL;
+        ERROR_INFO("[%d]sessionid (%d) != comm sessionid(%d)\n",this->GetSocket(),
+                   this->m_SessionId,sesid);
+        goto fail;
+    }
+    ret = this->m_pSvrMgmt->SessionRenew(sesid,priv,expiretime,keeptime,err);
+    if(ret < 0)
+    {
+        ret = GETERRNO();
+        ERROR_INFO("[%d] SessionNew(%d) Error(%d)\n",this->GetSocket(),sesid,ret);
+        goto fail;
+    }
+
+    /*now set the sessionid */
+    this->m_SessionId = sesid;
+    this->m_Priv = priv;
+
+    pRetComm = AllocateComm(sizeof(login_response_t));
+    if(pRetComm == NULL)
+    {
+        ret = GETERRNO();
+        goto fail;
+    }
+
+
+    ret = this->__LoginSuccResponse(pComm,pRetComm,sesid);
+    if(ret < 0)
+    {
+        ret = GETERRNO();
+        goto fail;
+    }
+    /*we put login type or warning type into the body*/
+    pRetComm->m_Type = pComm->m_Type;
+
+    /*nothing for read ,just call the read ok*/
+    ret = this->__PushSysRespVec(pRetComm);
+    if(ret < 0)
+    {
+        ret = GETERRNO();
+        ERROR_INFO("[%d]PushSysRespVec Error(%d)\n",this->GetSocket(),ret);
+        goto fail;
+    }
+    SDK_ASSERT(pRetComm==NULL);
+
+    return 0;
+fail:
+    SDK_ASSERT(ret > 0);
+    FreeComm(pRetComm);
+    SETERRNO(ret);
+    return -ret;
 }
 
 
@@ -378,7 +496,111 @@ int SdkServerClient::__WriteUpgradeIo()
 
 int SdkServerClient::__ReadMessageIo()
 {
-    return -ENOTSUP;
+    int ret;
+    sdk_client_comm_t* pComm = NULL;
+    SDK_ASSERT(this->m_pSock);
+    ret= this->m_pSock->Read();
+    if(ret < 0)
+    {
+        ret = GETERRNO();
+        ERROR_INFO("[%d] ReadIo Error(%d)\n",this->GetSocket(),ret);
+        SETERRNO(ret);
+        return -ret;
+    }
+    else if(ret == 0)
+    {
+        if(this->m_InsertReadTimer == 0)
+        {
+            ret = this->__StartReadTimer();
+            if(ret < 0)
+            {
+                return ret;
+            }
+        }
+        return 0;
+    }
+
+    /*stop read timer ,for it will not make error when read time out*/
+    this->__StopReadTimer();
+
+    pComm = this->m_pSock->GetRead();
+    SDK_ASSERT(pComm);
+    this->m_pSock->ClearRead();
+    ret = this->__HandleMessageRead(pComm);
+    if(ret < 0)
+    {
+        ret = GETERRNO();
+        ERROR_INFO("[%d]Handle pComm Error(%d)\n",this->GetSocket(),ret);
+        goto fail;
+    }
+
+    FreeComm(pComm);
+    return 0;
+fail:
+    SDK_ASSERT(ret > 0);
+    FreeComm(pComm);
+    SETERRNO(ret);
+    return -ret;
+}
+
+
+int SdkServerClient::__WriteMessageIo()
+{
+    int ret;
+    sdk_client_comm_t *pComm=NULL;
+
+    if(this->m_pSock->IsWriteSth())
+    {
+        ret = this->m_pSock->Write();
+        if(ret < 0)
+        {
+            return ret;
+        }
+        else if(ret == 0)
+        {
+            return 0;
+        }
+        this->m_pSock->ClearWrite();
+    }
+
+	/*we stop for the next packet get*/
+    this->__StopWriteIo();
+    this->__StopWriteTimer();
+
+    if(this->m_RespVec.size() > 0)
+    {
+        pComm = this->m_RespVec[0];
+        this->m_RespVec.erase(this->m_RespVec.begin());
+        ret = this->m_pSock->PutData(pComm);
+        if(ret < 0)
+        {
+            ret = GETERRNO();
+            goto fail;
+        }
+
+        ret = this->__StartWriteIo();
+        if(ret < 0)
+        {
+            ret =GETERRNO();
+            goto fail;
+        }
+
+        ret= this->__StartWriteTimer();
+        if(ret < 0)
+        {
+            ret =GETERRNO();
+            goto fail;
+        }
+    }
+
+    return 0;
+
+fail:
+    SDK_ASSERT(ret > 0);
+    FreeComm(pComm);
+    SETERRNO(ret);
+    return -ret;
+
 }
 
 

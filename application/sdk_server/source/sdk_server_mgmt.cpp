@@ -22,6 +22,7 @@ SdkServerMgmt::SdkServerMgmt(int * pRunningBits ,int maxclients ,int maxsessions
     SDK_ASSERT(m_pClientLogins.size() == 0);
     SDK_ASSERT(m_pClientConfs.size() == 0);
     SDK_ASSERT(m_pClientStreams.size() == 0);
+    SDK_ASSERT(m_pClientAlarms.size() == 0);
     SDK_ASSERT(m_WaitingRemoveSessionId.size() == 0);
 
     m_InsertRemoveStreamsTimer = 0;
@@ -51,6 +52,7 @@ SdkServerMgmt::SdkServerMgmt(int * pRunningBits ,int maxclients ,int maxsessions
     m_StartSeqId = 0;
     m_StopSeqId = 0;
 #endif
+    m_pAlarm = NULL;
 }
 
 SdkServerMgmt::~SdkServerMgmt()
@@ -92,6 +94,17 @@ void SdkServerMgmt::__ReleaseClientStreams()
     {
         SdkServerClient* pClient=this->m_pClientStreams[0];
         this->m_pClientStreams.erase(this->m_pClientStreams.begin());
+        delete pClient;
+    }
+    return ;
+}
+
+void SdkServerMgmt::__ReleaseClientAlarms()
+{
+    while(this->m_pClientAlarms.size() > 0)
+    {
+        SdkServerClient* pClient=this->m_pClientAlarms[0];
+        this->m_pClientAlarms.erase(this->m_pClientAlarms.begin());
         delete pClient;
     }
     return ;
@@ -452,6 +465,7 @@ do\
     SDK_ASSERT(this->m_pClientLogins.size() == 0);\
     SDK_ASSERT(this->m_pClientConfs.size() == 0);\
     SDK_ASSERT(this->m_pClientStreams.size() == 0);\
+    SDK_ASSERT(this->m_pClientAlarms.size() == 0);\
     SDK_ASSERT(this->m_WaitingRemoveSessionId.size() == 0);\
 	SDK_ASSERT(this->m_InsertRemoveStreamsTimer == 0);\
 	SDK_ASSERT(this->m_InsertRemoveConfTimer == 0);\
@@ -482,6 +496,7 @@ do\
 	SDK_ASSERT(this->m_InsertStopAudioDualFileTimer == 0);\
 	SDK_ASSERT(this->m_StartSeqId == 0);\
 	SDK_ASSERT(this->m_StopSeqId == 0);\
+	SDK_ASSERT(this->m_pAlarm == NULL);\
 }\
 while(0)
 
@@ -497,6 +512,7 @@ do\
     SDK_ASSERT(this->m_pClientLogins.size() == 0);\
     SDK_ASSERT(this->m_pClientConfs.size() == 0);\
     SDK_ASSERT(this->m_pClientStreams.size() == 0);\
+    SDK_ASSERT(this->m_pClientAlarms.size() == 0);\
     SDK_ASSERT(this->m_WaitingRemoveSessionId.size() == 0);\
 	SDK_ASSERT(this->m_InsertRemoveStreamsTimer == 0);\
 	SDK_ASSERT(this->m_InsertRemoveConfTimer == 0);\
@@ -523,6 +539,7 @@ do\
 	SDK_ASSERT(this->m_pStreamInfo == NULL);\
 	SDK_ASSERT(this->m_StreamStarted == 0);\
 	SDK_ASSERT(this->m_InsertPullTimer == 0);\
+	SDK_ASSERT(this->m_pAlarm == NULL);\
 }\
 while(0)
 
@@ -537,6 +554,7 @@ void SdkServerMgmt::Stop()
     this->__ReleaseClientConfs();
     this->__ReleaseClientLogins();
     this->__ReleaseClientStreams();
+    this->__ReleaseClientAlarms();
 
     this->__ReleaseAllSessions();
     this->__ReleaseAllRemoveSessionIds();
@@ -596,6 +614,12 @@ void SdkServerMgmt::Stop()
         delete this->m_pDaemon;
     }
     this->m_pDaemon = NULL;
+
+    if(this->m_pAlarm)
+    {
+        delete this->m_pAlarm;
+    }
+    this->m_pAlarm = NULL;
 
 
     this->__CopySysStreamInfo(NULL);
@@ -684,6 +708,16 @@ int SdkServerMgmt::Start()
     {
         delete this->m_pLoginHandler ;
         this->m_pLoginHandler = NULL;
+    }
+
+    this->m_pAlarm = new SdkServerAlarm(this);
+    ret = this->m_pAlarm->Start();
+    if(ret < 0)
+    {
+        ret = GETERRNO();
+        this->Stop();
+        SETERRNO(ret);
+        return -ret;
     }
 
 
@@ -831,6 +865,8 @@ int SdkServerMgmt::RegisterSdkClient(SdkServerClient * pClient)
     clients += this->m_pClientLogins.size();
     DEBUG_INFO("login after %d\n",clients);
     clients += this->m_pClientStreams.size();
+    DEBUG_INFO("stream after %d\n",clients);
+    clients += this->m_pClientAlarms.size();
     DEBUG_INFO("all %d\n",clients);
     DEBUG_INFO("session id %d\n",this->m_pSessions.size());
     if(clients >= this->m_MaxClients)
@@ -917,6 +953,13 @@ int SdkServerMgmt::ChangeClientStream(SdkServerClient * pClient)
     return 0;
 }
 
+int SdkServerMgmt::ChangeClientAlarm(SdkServerClient * pClient)
+{
+    ASSERT_IN_LOGIN_CLIENTS_AND_REMOVE(pClient);
+    this->m_pClientAlarms.push_back(pClient);
+    return 0;
+}
+
 #define ASSERT_NOT_IN_RANGE(pClient,vec) \
 do\
 {\
@@ -949,6 +992,7 @@ void SdkServerMgmt::__RemoveClientVectors(SdkServerClient * pClient)
             this->m_pClientLogins.erase(this->m_pClientLogins.begin()+i);
             ASSERT_NOT_IN_RANGE(pClient,this->m_pClientConfs);
             ASSERT_NOT_IN_RANGE(pClient,this->m_pClientStreams);
+            ASSERT_NOT_IN_RANGE(pClient,this->m_pClientAlarms);
             return;
         }
     }
@@ -961,6 +1005,7 @@ void SdkServerMgmt::__RemoveClientVectors(SdkServerClient * pClient)
             this->m_pClientConfs.erase(this->m_pClientConfs.begin()+i);
             ASSERT_NOT_IN_RANGE(pClient,this->m_pClientLogins);
             ASSERT_NOT_IN_RANGE(pClient,this->m_pClientStreams);
+            ASSERT_NOT_IN_RANGE(pClient,this->m_pClientAlarms);
             return;
         }
     }
@@ -974,7 +1019,21 @@ void SdkServerMgmt::__RemoveClientVectors(SdkServerClient * pClient)
             this->m_pClientStreams.erase(this->m_pClientStreams.begin()+i);
             ASSERT_NOT_IN_RANGE(pClient,this->m_pClientLogins);
             ASSERT_NOT_IN_RANGE(pClient,this->m_pClientConfs);
+            ASSERT_NOT_IN_RANGE(pClient,this->m_pClientAlarms);
             return;
+        }
+    }
+
+    for(i=0; i<this->m_pClientAlarms.size(); i++)
+    {
+        pCurCli = this->m_pClientAlarms[i];
+        if(pCurCli == pClient)
+        {
+            this->m_pClientAlarms.erase(this->m_pClientAlarms.begin() + i);
+            ASSERT_NOT_IN_RANGE(pClient,this->m_pClientLogins);
+            ASSERT_NOT_IN_RANGE(pClient,this->m_pClientConfs);
+            ASSERT_NOT_IN_RANGE(pClient,this->m_pClientStreams);
+            return ;
         }
     }
 
@@ -1486,6 +1545,7 @@ int SdkServerMgmt::GetClients()
     clients += this->m_pClientConfs.size();
     clients += this->m_pClientLogins.size();
     clients += this->m_pClientStreams.size();
+    clients += this->m_pClientAlarms.size();
     return clients;
 }
 
@@ -1641,7 +1701,7 @@ int SdkServerMgmt::UserLoginSessionCallBack(int sock,int reqnum,int err,sessioni
                 SDK_ASSERT(res == 0);
                 delete pNewSession;
                 pNewSession = NULL;
-				DEBUG_INFO("MGMT KEEPTIME %d\n",this->m_KeepTime);
+                DEBUG_INFO("MGMT KEEPTIME %d\n",this->m_KeepTime);
                 res = pFindClient->LoginCallBack(EFAULT,reqnum,sesid,priv,this->m_ExpireTime,this->m_KeepTime);
                 if(this->m_pLoginHandler)
                 {
@@ -1662,7 +1722,7 @@ int SdkServerMgmt::UserLoginSessionCallBack(int sock,int reqnum,int err,sessioni
             /*this will be new for the sessions*/
             this->m_pSessions.push_back(pNewSession);
 
-			DEBUG_INFO("MGMT KEEPTIME %d\n",this->m_KeepTime);
+            DEBUG_INFO("MGMT KEEPTIME %d\n",this->m_KeepTime);
             ret = pFindClient->LoginCallBack(err,reqnum,sesid,priv,this->m_ExpireTime,this->m_KeepTime);
             if(ret < 0)
             {
@@ -1671,10 +1731,10 @@ int SdkServerMgmt::UserLoginSessionCallBack(int sock,int reqnum,int err,sessioni
                 			and it will auto delete itself
                 		*/
                 res = pNewSession->UnRegisterServerSession(pFindClient);
-				SDK_ASSERT(pNewSession->Clients() == 0);
-				this->m_pSessions.erase(this->m_pSessions.end());
-				delete pNewSession ;
-				pNewSession = NULL;
+                SDK_ASSERT(pNewSession->Clients() == 0);
+                this->m_pSessions.erase(this->m_pSessions.end());
+                delete pNewSession ;
+                pNewSession = NULL;
                 if(res > 0)
                 {
                     ERROR_INFO("[%d] client has already register for session\n",pFindClient->GetSocket());
@@ -1701,7 +1761,7 @@ int SdkServerMgmt::UserLoginSessionCallBack(int sock,int reqnum,int err,sessioni
         else
         {
             SDK_ASSERT(findidx >= 0);
-			DEBUG_INFO("MGMT KEEPTIME %d\n",this->m_KeepTime);
+            DEBUG_INFO("MGMT KEEPTIME %d\n",this->m_KeepTime);
             ret = pFindClient->LoginCallBack(err,reqnum,sesid,priv,this->m_ExpireTime,this->m_KeepTime);
             if(ret < 0)
             {
@@ -1735,7 +1795,7 @@ int SdkServerMgmt::UserLoginSessionCallBack(int sock,int reqnum,int err,sessioni
     }
     else
     {
-		DEBUG_INFO("MGMT KEEPTIME %d\n",this->m_KeepTime);
+        DEBUG_INFO("MGMT KEEPTIME %d\n",this->m_KeepTime);
         ret = pFindClient->LoginCallBack(err,reqnum,sesid,priv,this->m_ExpireTime,this->m_KeepTime);
         if(ret < 0)
         {
@@ -3495,7 +3555,7 @@ int SdkServerMgmt::__ResetLongTimeTimer()
                            pClient,res);
                 this->__BreakOut();
             }
-            ERROR_INFO("[%d]could not reset login [%d](0x%p) client error(%d)\n",i,
+            ERROR_INFO("[%d]could not reset confs [%d](0x%p) client error(%d)\n",i,
                        pClient->GetSocket(),pClient,ret);
         }
     }
@@ -3514,7 +3574,26 @@ int SdkServerMgmt::__ResetLongTimeTimer()
                            pClient,res);
                 this->__BreakOut();
             }
-            ERROR_INFO("[%d]could not reset login [%d](0x%p) client error(%d)\n",i,
+            ERROR_INFO("[%d]could not reset stream [%d](0x%p) client error(%d)\n",i,
+                       pClient->GetSocket(),pClient,ret);
+        }
+    }
+
+    for(i=0; i<this->m_pClientAlarms.size() ; i++)
+    {
+        pClient = this->m_pClientAlarms[i];
+        ret = pClient->ResetLongTimeTimer();
+        if(ret < 0)
+        {
+            res = this->__RemoveSpecStreamClient(pClient);
+            if(res < 0)
+            {
+                ERROR_INFO("[%d]could not remove [%d](0x%p) client error(%d)\n",i,
+                           pClient->GetSocket(),
+                           pClient,res);
+                this->__BreakOut();
+            }
+            ERROR_INFO("[%d]could not reset alarms [%d](0x%p) client error(%d)\n",i,
                        pClient->GetSocket(),pClient,ret);
         }
     }
@@ -3559,6 +3638,16 @@ int SdkServerMgmt::__ResetLongTimeTimer()
         }
     }
 
+    if(this->m_pAlarm)
+    {
+        ret = this->m_pAlarm->ResetLongTimeTimer();
+        if(ret < 0)
+        {
+            ERROR_INFO("could not reset Alarm long timer error(%d)\n",ret);
+            this->__BreakOut();
+        }
+    }
+
     return 0;
 }
 
@@ -3596,3 +3685,32 @@ int SdkServerMgmt::RegisterClientSession(sessionid_t sesid,SdkServerClient * pCl
     return pFindSession->RegisterServerSession(pClient);
 }
 
+
+int SdkServerMgmt::PushAlarmInfo(sdk_client_comm_t * pComm)
+{
+    int ret;
+    unsigned int i;
+    int cnt=0;
+    SdkServerClient* pClient=NULL;
+    if(this->m_pAlarm == NULL)
+    {
+        ret = ENODEV;
+        SETERRNO(ret);
+        return -ret;
+    }
+
+    for(i=0; i<this->m_pClientAlarms.size(); i++)
+    {
+        pClient = this->m_pClientAlarms[i];
+        ret = pClient->PushAlarmComm(pComm);
+        if(ret < 0)
+        {
+            ret = GETERRNO();
+            ERROR_INFO("[%d] could not push alarm Error(%d)\n",pClient->GetSocket(),ret);
+            continue;
+        }
+        cnt ++;
+    }
+
+    return cnt;
+}

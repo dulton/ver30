@@ -12,6 +12,7 @@
 #include <sys_stream_info.h>
 #include <sdk_audio_buffer.h>
 #include <sdk_audio_dbuffer.h>
+#include <sdk_server_alarm.h>
 
 #define SDK_SERVER_MGMT_SOCK     0xffff
 
@@ -25,6 +26,7 @@ public:
 	int RegisterSdkClient(SdkServerClient* pClient);
 	int ChangeClientStream(SdkServerClient* pClient);
 	int ChangeClientConf(SdkServerClient* pClient);
+	int ChangeClientAlarm(SdkServerClient* pClient);
 	void UnRegisterSdkClient(SdkServerClient* pClient);
 	int StopAllStreams(void);
 	int StartAllStreams(sys_stream_info_t* pStreamInfo);
@@ -88,6 +90,12 @@ public:
 
 	int PushAudioDecodeData(int sock,sdk_client_comm_t*& pComm);
 
+	/***************************************
+	*   this function will copy the pComm ,so we do not 
+	*   use this 
+	***************************************/
+	int PushAlarmInfo(sdk_client_comm_t* pComm);
+
 private:
 	void __StopRemoveStreamTimer();
 	int __StartRemoveStreamTimer();
@@ -119,6 +127,7 @@ private:
 	void __ReleaseClientLogins();
 	void __ReleaseClientConfs();
 	void __ReleaseClientStreams();
+	void __ReleaseClientAlarms();
 
 	void __ReleaseAllSessions();
 
@@ -167,6 +176,7 @@ private:
 	std::vector<SdkServerClient*>m_pClientConfs;
 	/*client running for stream transfer*/
 	std::vector<SdkServerClient*>m_pClientStreams;
+	std::vector<SdkServerClient*>m_pClientAlarms;
 	std::vector<sessionid_t> m_WaitingRemoveSessionId;
 
 	/*these are the error handle timers*/
@@ -204,6 +214,7 @@ private:
 	seqid_t m_StartSeqId;
 	seqid_t m_StopSeqId;
 #endif
+	SdkServerAlarm* m_pAlarm;
 
 };
 

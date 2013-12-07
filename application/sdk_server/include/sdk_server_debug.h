@@ -14,6 +14,9 @@
 #define USE_SDK_LOG_DEBUG
 //#undef USE_SDK_LOG_DEBUG
 
+#define SETERRNO(ret)  (errno = (ret))
+#define GETERRNO() ( errno ? errno : 1)
+
 #ifdef USE_SDK_LOG_DEBUG
 
 #define  LOG_CRITICAL_LEVEL    0

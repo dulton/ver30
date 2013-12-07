@@ -101,7 +101,6 @@ int SdkServerSession::SessionRenew(sessionid_t sesid,privledge_t & priv,int& exp
 	expiretime = 0;
 #endif /*SESSION_EXPIRE_TIME*/
 	keeptime = this->m_KeepAliveTime;
-	DEBUG_INFO("KEEPTIME %d\n",keeptime);
     priv = this->m_Priv;
     return 1;
 }
