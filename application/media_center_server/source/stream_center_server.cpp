@@ -7,8 +7,8 @@
 #include "gmi_system_headers.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "ipc_fw_v3.x_setting.h"
-#include "log_client.h"
 #include "media_center_service.h"
+#include "share_memory_log_client.h"
 
 #include "media_center_open_vin_vout_device_command_executor.h"
 #include "media_center_close_vin_vout_device_command_executor.h"
@@ -72,10 +72,10 @@
 #endif
 
 void_t* DaemonHeartbeatProc( void_t *Argument );
-GMI_RESULT RegisterCommandExecutor( MediaCenterService& Service );
-GMI_RESULT GetMediaCenterServerLogConfig( uint32_t *ModuleId, char_t *ModuleName, char_t *ModulePipeName, long_t *ModulePipeMutexId, char_t *PeerPipeName, long_t *PeerPipeMutexId, char_t *ServerPipeName, long_t *ServerPipeMutexId, uint32_t *DebugLogLevel );
+GMI_RESULT GetMediaCenterServerLogConfig( uint32_t *ModuleId, char_t *ModuleName, uint16_t *ServerPort, uint16_t *ClientPort, uint32_t *DebugLogLevel );
 GMI_RESULT GetMediaCenterServerAddress( uint32_t *Address );
 GMI_RESULT GetMediaCenterServerPort( uint16_t *Port );
+GMI_RESULT RegisterCommandExecutor( MediaCenterService& Service );
 GMI_RESULT GetHeartbeatInterval( uint32_t *Interval );
 
 static uint32_t l_Heartbeat_Interval = GMI_MEDIA_CENTER_SERVER_HEARTBEAT_INTERVAL;
@@ -119,23 +119,19 @@ int32_t main( int32_t argc, char_t* argv[] )
 
     uint32_t ModuleId = 0;
     char_t   ModuleName[MAX_PATH_LENGTH] = {0};
-    char_t   ModulePipeName[MAX_PATH_LENGTH] = {0};
-    long_t   ModulePipeMutexId = 0;
-    char_t   PeerPipeName[MAX_PATH_LENGTH] = {0};
-    long_t   PeerPipeMutexId = 0;
-    char_t   ServerPipeName[MAX_PATH_LENGTH] = {0};
-    long_t   ServerPipeMutexId = 0;
+    uint16_t ServerPort = 0;
+    uint16_t ClientPort = 0;
     uint32_t ServerDebugLogLevel = 0;
 
-    GMI_RESULT Result = GetMediaCenterServerLogConfig( &ModuleId, ModuleName, ModulePipeName, &ModulePipeMutexId, PeerPipeName, &PeerPipeMutexId, ServerPipeName, &ServerPipeMutexId, &ServerDebugLogLevel );
+    GMI_RESULT Result = GetMediaCenterServerLogConfig( &ModuleId, ModuleName, &ServerPort, &ClientPort, &ServerDebugLogLevel );
     if ( FAILED( Result ) )
     {
         printf( "Media Center get log client config error \n" );
         return Result;
     }
 
-    LogClient Client;
-    Result = Client.Initialize( ModuleId, ModuleName, ModulePipeName, ModulePipeMutexId, PeerPipeName, PeerPipeMutexId, ServerPipeName, ServerPipeMutexId, GMI_IPC_LOG_FILE_PATH, ServerDebugLogLevel );
+    ShareMemoryLogClient Client;
+    Result = Client.Initialize( ModuleId, ModuleName, ServerPort, ClientPort, GMI_IPC_LOG_FILE_PATH, ServerDebugLogLevel );
     if ( FAILED( Result ) )
     {
         printf( "Media Center log client initialization error \n" );
@@ -143,16 +139,16 @@ int32_t main( int32_t argc, char_t* argv[] )
     }
 
     // log operation is low speed for now, to test other function, we comment it out
-    g_DefaultLogClient = &Client;
+    g_DefaultShareMemoryLogClient = &Client;
 
     //USER_LOG( &Client, e_UserLogType_Operation, 0, "TestUserName", 12, USER_LOG_TEST_STRING, (uint32_t) strlen(USER_LOG_TEST_STRING) );
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, " Media Center Server starting... \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, " Media Center Server starting... \n" );
 
     uint32_t MediaCenterServerAddress = 0;
     Result = GetMediaCenterServerAddress( &MediaCenterServerAddress );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "get media center server address fail, Result=%x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "get media center server address fail, Result=%x \n", (uint32_t) Result );
         Client.Deinitialize();
         return Result;
     }
@@ -161,7 +157,7 @@ int32_t main( int32_t argc, char_t* argv[] )
     Result = GetMediaCenterServerPort( &MediaCenterServerPort );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "get media center server port fail, Result=%x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "get media center server port fail, Result=%x \n", (uint32_t) Result );
         Client.Deinitialize();
         return Result;
     }
@@ -169,7 +165,7 @@ int32_t main( int32_t argc, char_t* argv[] )
     SafePtr<NetworkInitializer> Initializer( BaseMemoryManager::Instance().New<NetworkInitializer>() );
     if ( NULL == Initializer.GetPtr() )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "Initialize network failed \n" );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "Initialize network failed \n" );
         Client.Deinitialize();
         return GMI_OUT_OF_MEMORY;
     }
@@ -177,7 +173,7 @@ int32_t main( int32_t argc, char_t* argv[] )
     Result = g_MediaCenter.Initialize( MediaCenterServerAddress, MediaCenterServerPort, UDP_SESSION_BUFFER_SIZE );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenter initialize failed, Result=%x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenter initialize failed, Result=%x \n", (uint32_t) Result );
         Client.Deinitialize();
         return Result;
     }
@@ -185,7 +181,7 @@ int32_t main( int32_t argc, char_t* argv[] )
     Result = RegisterCommandExecutor( g_MediaCenter );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor failed, Result=%x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor failed, Result=%x \n", (uint32_t) Result );
         Client.Deinitialize();
         return Result;
     }
@@ -194,7 +190,7 @@ int32_t main( int32_t argc, char_t* argv[] )
     if ( FAILED( Result ) )
     {
         g_MediaCenter.Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenter Run failed, Result=%x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenter Run failed, Result=%x \n", (uint32_t) Result );
         Client.Deinitialize();
         return Result;
     }
@@ -203,25 +199,25 @@ int32_t main( int32_t argc, char_t* argv[] )
     if ( FAILED( Result ) )
     {
         g_MediaCenter.Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenter GetHeartbeatInterval failed, Result=%x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenter GetHeartbeatInterval failed, Result=%x \n", (uint32_t) Result );
         Client.Deinitialize();
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, " Media Center Server started \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, " Media Center Server started \n" );
     DaemonHeartbeatProc( &g_MediaCenter );
 
     Result = g_MediaCenter.Deinitialize();
     if ( FAILED( Result ) )
     {
         g_MediaCenter.Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenter Deinitialize failed, Result=%x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenter Deinitialize failed, Result=%x \n", (uint32_t) Result );
         Client.Deinitialize();
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, " Media Center Server exit... " );
-    g_DefaultLogClient = NULL;
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, " Media Center Server exit... " );
+    g_DefaultShareMemoryLogClient = NULL;
     Client.Deinitialize();
     printf( "media center server quit because receiving a signal from daemon \n" );
 
@@ -285,6 +281,165 @@ void* DaemonHeartbeatProc( void *Argument )
     GMI_DaemonUnInit(&DaemonData);
 #endif
     return (void_t*) GMI_SUCCESS;
+}
+
+#define MEDIA_CENTER_SERVER_CONFIG_PATH                "/Config/media_center_server/"
+#define MEDIA_CENTER_SERVER_CONFIG_HEARTBEAT_INTERVAL  "heartbeat_interval"
+#define MEDIA_CENTER_SERVER_CONFIG_SERVER_ADDRESS      "server_address"
+#define MEDIA_CENTER_SERVER_CONFIG_SERVER_PORT         "command_port"
+
+#define MEDIA_CENTER_SERVER_CONFIG_LOG_SERVER_PORT     "log_server_port"
+#define MEDIA_CENTER_SERVER_CONFIG_LOG_CLIENT_PORT     "log_client_port"
+#define MEDIA_CENTER_SERVER_CONFIG_DEBUG_LOG_LEVEL     "debug_log_level"
+
+GMI_RESULT GetMediaCenterServerLogConfig( uint32_t *ModuleId, char_t *ModuleName, uint16_t *ServerPort, uint16_t *ClientPort, uint32_t *DebugLogLevel )
+{
+    *ModuleId = GMI_LOG_MODULE_MEDIA_CENTER_SERVER_ID;
+
+#if defined( __linux__ )
+    strcpy( ModuleName, GMI_LOG_MODULE_MEDIA_CENTER_SERVER_NAME );
+
+    FD_HANDLE  Handle = NULL;
+    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    if ( FAILED( Result ) )
+    {
+        printf( "GetMediaCenterServerLogConfig, GMI_XmlOpen(%s), Result=%x \n", GMI_RESOURCE_CONFIG_FILE_NAME, (uint32_t) Result );
+        return Result;
+    }
+
+    int32_t TempServerPort = 0;
+    printf( "GetMediaCenterLogServerPort, DefaultLogServerPort=%d \n", LOG_SERVER_DEFAULT_SERVER_PORT );
+    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_LOG_SERVER_PORT, LOG_SERVER_DEFAULT_SERVER_PORT, &TempServerPort, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        printf( "GetMediaCenterLogServerPort, GMI_XmlRead, Result=%x \n", (uint32_t) Result );
+        return Result;
+    }
+    printf( "GetMediaCenterLogServerPort, DefaultLogServerPort=%d, LogServerPort=%d \n", LOG_SERVER_DEFAULT_SERVER_PORT, TempServerPort );
+    *ServerPort = (uint16_t)TempServerPort;
+
+    int32_t TempClientPort = 0;
+    printf( "GetMediaCenterLogClientPort, DefaultLogClientPort=%d \n", LOG_MEDIA_CENTER_DEFAULT_PORT );
+    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_LOG_CLIENT_PORT, LOG_MEDIA_CENTER_DEFAULT_PORT, &TempClientPort, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        printf( "GetMediaCenterLogClientPort, GMI_XmlRead, Result=%x \n", (uint32_t) Result );
+        return Result;
+    }
+    printf( "GetMediaCenterLogClientPort, DefaultLogClientPort=%d, LogClientPort=%d \n", LOG_SERVER_DEFAULT_SERVER_PORT, TempClientPort );
+    *ClientPort = (uint16_t)TempClientPort;
+
+    Result = GMI_XmlFileSave(Handle);
+    if ( FAILED( Result ) )
+    {
+        printf( "GetMediaCenterServerLogConfig, GMI_XmlFileSave(%s), Result=%x \n", GMI_RESOURCE_CONFIG_FILE_NAME, (uint32_t) Result );
+        return Result;
+    }
+
+    Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    if ( FAILED( Result ) )
+    {
+        printf( "GetMediaCenterServerLogConfig, GMI_XmlOpen(%s), Result=%x \n", GMI_SETTING_CONFIG_FILE_NAME, (uint32_t) Result );
+        return Result;
+    }
+
+    printf( "media center server, GetMediaCenterLogLevel, Default_MediaCenterLogLevel=%d \n", GMI_LOG_MODULE_MEDIA_CENTER_SERVER_DEBUG_LOG_LEVEL );
+    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_DEBUG_LOG_LEVEL, GMI_LOG_MODULE_MEDIA_CENTER_SERVER_DEBUG_LOG_LEVEL, (int32_t *) DebugLogLevel, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        printf( "GetMediaCenterLogLevel, GMI_XmlRead, Result=%x \n", (uint32_t) Result );
+        return Result;
+    }
+    printf( "media center server, GetMediaCenterLogLevel, Default_MediaCenterLogLevel=%d, Config_MediaCenterLogLevel=%d \n", GMI_LOG_MODULE_MEDIA_CENTER_SERVER_DEBUG_LOG_LEVEL, *DebugLogLevel );
+
+    Result = GMI_XmlFileSave(Handle);
+    if ( FAILED( Result ) )
+    {
+        printf( "GetMediaCenterServerLogConfig, GMI_XmlFileSave(%s), Result=%x \n", GMI_SETTING_CONFIG_FILE_NAME, (uint32_t) Result );
+        return Result;
+    }
+
+#elif defined( _WIN32 )
+    strcpy_s( ModuleName, MAX_PATH_LENGTH, GMI_LOG_MODULE_MEDIA_CENTER_SERVER_NAME );
+    *ServerPort    = LOG_SERVER_DEFAULT_SERVER_PORT;
+    *ClientPort    = LOG_MEDIA_CENTER_DEFAULT_PORT;
+    *DebugLogLevel = GMI_LOG_MODULE_MEDIA_CENTER_SERVER_DEBUG_LOG_LEVEL;
+#endif
+    return GMI_SUCCESS;
+}
+
+GMI_RESULT GetMediaCenterServerAddress( uint32_t *Address )
+{
+#if defined( __linux__ )
+
+    // upgrading server use "0.0.0.0" as upgrading server socket address, we can be the same as it, use 0 directly as log server address
+    *Address = inet_addr(LOOPBACK_IP);
+
+    printf( "GetMediaCenterServerAddress, Address=%d \n", *Address );
+
+#elif defined( _WIN32 )
+    const size_t ServerIPLength = 128;
+    char_t   ServerIP[ServerIPLength];
+    memset( ServerIP, 0, ServerIPLength );
+
+    printf( "please input media center server IP, for example: %s\n", DEFAULT_MEDIA_CENTER_SERVER_IP );
+#if defined( __linux__ )
+    int32_t ScanfResult = scanf( "%s", ServerIP );
+#elif defined( _WIN32 )
+    int32_t ScanfResult = scanf_s( "%s", ServerIP, ServerIPLength );
+#endif
+    READ_MYSELF( ScanfResult );
+
+    *Address = inet_addr(ServerIP);
+#endif
+    return GMI_SUCCESS;
+}
+
+GMI_RESULT GetMediaCenterServerPort( uint16_t *Port )
+{
+#if defined( __linux__ )
+
+    int32_t ServerPort = 0;
+
+    FD_HANDLE  Handle = NULL;
+    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    if ( FAILED( Result ) )
+    {
+        printf( "GetMediaCenterServerPort, GMI_XmlOpen, Result=%x \n", (uint32_t) Result );
+        return Result;
+    }
+
+    printf( "GetMediaCenterServerPort, Default_Port=%d \n", GMI_MEDIA_CENTER_SERVER_COMMAND_PORT );
+    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_SERVER_PORT, GMI_MEDIA_CENTER_SERVER_COMMAND_PORT, &ServerPort, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        printf( "GetMediaCenterServerPort, GMI_XmlRead, Result=%x \n", (uint32_t) Result );
+        return Result;
+    }
+    printf( "GetMediaCenterServerPort, Default_Port=%d, ServerPort=%d \n", GMI_MEDIA_CENTER_SERVER_COMMAND_PORT, ServerPort );
+    *Port = htons((uint16_t)ServerPort);
+
+    Result = GMI_XmlFileSave(Handle);
+    if ( FAILED( Result ) )
+    {
+        printf( "GetMediaCenterServerPort, GMI_XmlFileSave, Result=%x \n", (uint32_t) Result );
+        return Result;
+    }
+
+#elif defined( _WIN32 )
+    uint32_t ServerPort = 0;
+
+    printf( "please input media center server port, for example: %d\n", GMI_MEDIA_CENTER_SERVER_COMMAND_PORT );
+#if defined( __linux__ )
+    int32_t ScanfResult = scanf( "%d", &ServerPort );
+#elif defined( _WIN32 )
+    int32_t ScanfResult = scanf_s( "%d", &ServerPort );
+#endif
+    READ_MYSELF( ScanfResult );
+
+    *Port = htons((uint16_t)ServerPort);
+#endif
+    return GMI_SUCCESS;
 }
 
 GMI_RESULT RegisterCommandExecutor( MediaCenterService& Service )
@@ -1033,112 +1188,6 @@ GMI_RESULT RegisterCommandExecutor( MediaCenterService& Service )
     return GMI_SUCCESS;
 }
 
-#define MEDIA_CENTER_SERVER_CONFIG_PATH                "/Config/media_center_server/"
-#define MEDIA_CENTER_SERVER_CONFIG_HEARTBEAT_INTERVAL  "heartbeat_interval"
-#define MEDIA_CENTER_SERVER_CONFIG_SERVER_ADDRESS      "server_address"
-#define MEDIA_CENTER_SERVER_CONFIG_SERVER_PORT         "command_port"
-
-#define MEDIA_CENTER_SERVER_CONFIG_LOG_CLIENT_PIPE_NAME      "log_client_pipe_name"
-#define MEDIA_CENTER_SERVER_CONFIG_LOG_CLIENT_PIPE_MUTEX_ID  "log_client_pipe_mutex_id"
-#define MEDIA_CENTER_SERVER_CONFIG_LOG_PEER_PIPE_NAME        "log_peer_pipe_name"
-#define MEDIA_CENTER_SERVER_CONFIG_LOG_PEER_PIPE_MUTEX_ID    "log_peer_pipe_mutex_id"
-#define MEDIA_CENTER_SERVER_CONFIG_LOG_SERVER_PIPE_NAME      "log_server_pipe_name"
-#define MEDIA_CENTER_SERVER_CONFIG_LOG_SERVER_PIPE_MUTEX_ID  "log_server_pipe_mutex_id"
-#define MEDIA_CENTER_SERVER_CONFIG_DEBUG_LOG_LEVEL           "debug_log_level"
-
-GMI_RESULT GetMediaCenterServerLogConfig( uint32_t *ModuleId, char_t *ModuleName, char_t *ModulePipeName, long_t *ModulePipeMutexId, char_t *PeerPipeName, long_t *PeerPipeMutexId, char_t *ServerPipeName, long_t *ServerPipeMutexId, uint32_t *DebugLogLevel )
-{
-    *ModuleId = GMI_LOG_MODULE_MEDIA_CENTER_SERVER_ID;
-#if defined( __linux__ )
-    strcpy( ModuleName, GMI_LOG_MODULE_MEDIA_CENTER_SERVER_NAME );
-
-    FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-
-    printf( "media center server, GetMediaCenterClientPipeName, Default_MediaCenterClientPipeName=%s \n", LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_NAME );
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_LOG_CLIENT_PIPE_NAME, LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_NAME, ModulePipeName, GMI_CONFIG_READ_WRITE );
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-    printf( "media center server, GetMediaCenterClientPipeName, Default_MediaCenterClientPipeName=%s, Config_MediaCenterClientPipeName=%s \n", LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_NAME, ModulePipeName );
-
-    printf( "media center server, GetMediaCenterClientPipeMutexId, Default_MediaCenterClientPipeMutexId=%d \n", LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID );
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_LOG_CLIENT_PIPE_MUTEX_ID, LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID, (int32_t *) ModulePipeMutexId, GMI_CONFIG_READ_WRITE );
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-    printf( "media center server, GetMediaCenterClientPipeMutexId, Default_MediaCenterClientPipeMutexId=%d, Config_MediaCenterClientPipeMutexId=%ld \n", LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID, *ModulePipeMutexId );
-
-
-    printf( "media center server, GetMediaCenterPeerPipeName, Default_MediaCenterPeerPipeName=%s \n", LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_NAME );
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_LOG_PEER_PIPE_NAME, LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_NAME, PeerPipeName, GMI_CONFIG_READ_WRITE );
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-    printf( "media center server, GetMediaCenterPeerPipeName, Default_MediaCenterPeerPipeName=%s, Config_MediaCenterPeerPipeName=%s \n", LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_NAME, PeerPipeName );
-
-    printf( "media center server, GetMediaCenterClientPipeMutexId, Default_MediaCenterClientPipeMutexId=%d \n", LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID );
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_LOG_PEER_PIPE_MUTEX_ID, LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID, (int32_t *) PeerPipeMutexId, GMI_CONFIG_READ_WRITE );
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-    printf( "media center server, GetMediaCenterPeerPipeMutexId, Default_MediaCenterPeerPipeMutexId=%d, Config_MediaCenterPeerPipeMutexId=%ld \n", LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID, *PeerPipeMutexId );
-
-
-    printf( "media center server, GetMediaCenterServerPipeName, Default_MediaCenterServerPipeName=%s \n", LOG_SERVER_DEFAULT_PIPE_NAME );
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_LOG_SERVER_PIPE_NAME, LOG_SERVER_DEFAULT_PIPE_NAME, ServerPipeName, GMI_CONFIG_READ_WRITE );
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-    printf( "media center server, GetMediaCenterServerPipeName, Default_MediaCenterServerPipeName=%s, Config_MediaCenterServerPipeName=%s \n", LOG_SERVER_DEFAULT_PIPE_NAME, ServerPipeName );
-
-    printf( "media center server, GetMediaCenterServerPipeMutexId, Default_MediaCenterServerPipeMutexId=%d \n", LOG_SERVER_DEFAULT_PIPE_MUTEX_ID );
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_LOG_SERVER_PIPE_MUTEX_ID, LOG_SERVER_DEFAULT_PIPE_MUTEX_ID, (int32_t *) ServerPipeMutexId, GMI_CONFIG_READ_WRITE );
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-    printf( "media center server, GetMediaCenterServerPipeMutexId, Default_MediaCenterServerPipeMutexId=%d, Config_MediaCenterServerPipeMutexId=%ld \n", LOG_SERVER_DEFAULT_PIPE_MUTEX_ID, *ServerPipeMutexId );
-
-    printf( "media center server, GetMediaCenterLogLevel, Default_MediaCenterLogLevel=%d \n", GMI_LOG_MODULE_MEDIA_CENTER_SERVER_DEBUG_LOG_LEVEL );
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_DEBUG_LOG_LEVEL, GMI_LOG_MODULE_MEDIA_CENTER_SERVER_DEBUG_LOG_LEVEL, (int32_t *) DebugLogLevel, GMI_CONFIG_READ_WRITE );
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-    printf( "media center server, GetMediaCenterLogLevel, Default_MediaCenterLogLevel=%d, Config_MediaCenterLogLevel=%d \n", GMI_LOG_MODULE_MEDIA_CENTER_SERVER_DEBUG_LOG_LEVEL, *DebugLogLevel );
-
-    Result = GMI_XmlFileSave(Handle);
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-
-#elif defined( _WIN32 )
-    strcpy_s( ModuleName,     MAX_PATH_LENGTH, GMI_LOG_MODULE_MEDIA_CENTER_SERVER_NAME );
-
-    strcpy_s( ModulePipeName, MAX_PATH_LENGTH, LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_NAME );
-    *ModulePipeMutexId = LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID;
-
-    strcpy_s( PeerPipeName, MAX_PATH_LENGTH, LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_NAME );
-    *PeerPipeMutexId = LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID;
-
-    strcpy_s( ServerPipeName, MAX_PATH_LENGTH, LOG_SERVER_DEFAULT_PIPE_NAME );
-    *ServerPipeMutexId = LOG_SERVER_DEFAULT_PIPE_MUTEX_ID;
-    *DebugLogLevel = GMI_LOG_MODULE_MEDIA_CENTER_SERVER_DEBUG_LOG_LEVEL;
-#endif
-    return GMI_SUCCESS;
-}
-
 GMI_RESULT GetHeartbeatInterval( uint32_t *Interval )
 {
 #if defined( __linux__ )
@@ -1151,99 +1200,22 @@ GMI_RESULT GetHeartbeatInterval( uint32_t *Interval )
     }
 
     printf( "media center server, GetHeartbeatInterval, Default_Interval=%d \n", GMI_MEDIA_CENTER_SERVER_HEARTBEAT_INTERVAL );
-
     Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_HEARTBEAT_INTERVAL, GMI_MEDIA_CENTER_SERVER_HEARTBEAT_INTERVAL, (int32_t *) Interval, GMI_CONFIG_READ_WRITE );
     if ( FAILED( Result ) )
     {
+        printf( "GetHeartbeatInterval, GMI_XmlRead, Result=%x \n", (uint32_t) Result );
         return Result;
     }
+    printf( "media center server, GetHeartbeatInterval, Default_Interval=%d, Interval=%d \n", GMI_MEDIA_CENTER_SERVER_HEARTBEAT_INTERVAL, *Interval );
 
     Result = GMI_XmlFileSave(Handle);
     if ( FAILED( Result ) )
     {
         return Result;
     }
-
-    printf( "media center server, GetHeartbeatInterval, Default_Interval=%d, Interval=%d \n", GMI_MEDIA_CENTER_SERVER_HEARTBEAT_INTERVAL, *Interval );
 
 #elif defined( _WIN32 )
     *Interval = GMI_MEDIA_CENTER_SERVER_HEARTBEAT_INTERVAL;
-#endif
-    return GMI_SUCCESS;
-}
-
-GMI_RESULT GetMediaCenterServerAddress( uint32_t *Address )
-{
-#if defined( __linux__ )
-
-    // upgrading server use "0.0.0.0" as upgrading server socket address, we can be the same as it, use 0 directly as log server address
-    *Address = inet_addr(LOOPBACK_IP);
-
-    printf( "GetMediaCenterServerAddress, Address=%d \n", *Address );
-
-#elif defined( _WIN32 )
-    const size_t ServerIPLength = 128;
-    char_t   ServerIP[ServerIPLength];
-    memset( ServerIP, 0, ServerIPLength );
-
-    printf( "please input media center server IP, for example: %s\n", DEFAULT_MEDIA_CENTER_SERVER_IP );
-#if defined( __linux__ )
-    int32_t ScanfResult = scanf( "%s", ServerIP );
-#elif defined( _WIN32 )
-    int32_t ScanfResult = scanf_s( "%s", ServerIP, ServerIPLength );
-#endif
-    READ_MYSELF( ScanfResult );
-
-    *Address = inet_addr(ServerIP);
-#endif
-    return GMI_SUCCESS;
-}
-
-GMI_RESULT GetMediaCenterServerPort( uint16_t *Port )
-{
-#if defined( __linux__ )
-
-    int32_t ServerPort = 0;
-
-    FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
-    if ( FAILED( Result ) )
-    {
-        printf( "GetMediaCenterServerPort, GMI_XmlOpen, Result=%x \n", (uint32_t) Result );
-        return Result;
-    }
-
-    printf( "GetMediaCenterServerPort, Default_Port=%d \n", GMI_MEDIA_CENTER_SERVER_COMMAND_PORT );
-
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_SERVER_PORT, GMI_MEDIA_CENTER_SERVER_COMMAND_PORT, &ServerPort, GMI_CONFIG_READ_WRITE );
-    if ( FAILED( Result ) )
-    {
-        printf( "GetMediaCenterServerPort, GMI_XmlRead, Result=%x \n", (uint32_t) Result );
-        return Result;
-    }
-
-    Result = GMI_XmlFileSave(Handle);
-    if ( FAILED( Result ) )
-    {
-        printf( "GetMediaCenterServerPort, GMI_XmlFileSave, Result=%x \n", (uint32_t) Result );
-        return Result;
-    }
-
-    printf( "GetMediaCenterServerPort, Default_Port=%d, ServerPort=%d \n", GMI_MEDIA_CENTER_SERVER_COMMAND_PORT, ServerPort );
-
-    *Port = htons((uint16_t)ServerPort);
-#elif defined( _WIN32 )
-    uint32_t ServerPort = 0;
-
-    printf( "please input media center server port, for example: %d\n", GMI_MEDIA_CENTER_SERVER_COMMAND_PORT );
-#if defined( __linux__ )
-    int32_t ScanfResult = scanf( "%d", &ServerPort );
-#elif defined( _WIN32 )
-    int32_t ScanfResult = scanf_s( "%d", &ServerPort );
-#endif
-    READ_MYSELF( ScanfResult );
-
-    *Port = htons((uint16_t)ServerPort);
 #endif
     return GMI_SUCCESS;
 }
