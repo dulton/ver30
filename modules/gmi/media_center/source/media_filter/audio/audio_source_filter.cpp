@@ -1,7 +1,7 @@
 #include "audio_source_filter.h"
 
-#include "log_client.h"
 #include "media_codec_parameter.h"
+#include "share_memory_log_client.h"
 
 AudioSourceFilter::AudioSourceFilter(void)
     : m_Buffer( NULL )
@@ -16,20 +16,20 @@ AudioSourceFilter::~AudioSourceFilter(void)
 
 GMI_RESULT	AudioSourceFilter::Initialize( int32_t FilterId, const char_t *FilterName, size_t FilterNameLength, void_t *Argument, size_t ArgumentSize )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "AudioSourceFilter::Initialize begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "AudioSourceFilter::Initialize begin \n" );
 
     MediaSourceParameter *SourceParameter = reinterpret_cast<MediaSourceParameter *> (Argument);
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "AudioSourceFilter::Initialize, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d\n", SourceParameter->s_SourceId, SourceParameter->s_MediaId, SourceParameter->s_MediaType, SourceParameter->s_CodecType );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "AudioSourceFilter::Initialize, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d\n", SourceParameter->s_SourceId, SourceParameter->s_MediaId, SourceParameter->s_MediaType, SourceParameter->s_CodecType );
     if ( MEDIA_AUDIO != SourceParameter->s_MediaType )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, SourceParameter->MediaType=%d, not MEDIA_AUDIO(%d), function return %x \n", SourceParameter->s_MediaType, MEDIA_AUDIO, GMI_INVALID_PARAMETER );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, SourceParameter->MediaType=%d, not MEDIA_AUDIO(%d), function return %x \n", SourceParameter->s_MediaType, MEDIA_AUDIO, GMI_INVALID_PARAMETER );
         return GMI_INVALID_PARAMETER;
     }
 
     GMI_RESULT Result = StreamingMediaSource::Initialize( FilterId, FilterName, FilterNameLength, Argument, ArgumentSize );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, StreamingMediaSource::Initialize failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, StreamingMediaSource::Initialize failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -60,7 +60,7 @@ GMI_RESULT	AudioSourceFilter::Initialize( int32_t FilterId, const char_t *Filter
     if ( NULL == m_Buffer )
     {
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, memory used by memory pool allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, memory used by memory pool allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -71,7 +71,7 @@ GMI_RESULT	AudioSourceFilter::Initialize( int32_t FilterId, const char_t *Filter
         BaseMemoryManager::Instance().Deletes( (uint8_t *)m_Buffer );
         m_Buffer = NULL;
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, memory pool object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, memory pool object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -83,7 +83,7 @@ GMI_RESULT	AudioSourceFilter::Initialize( int32_t FilterId, const char_t *Filter
         BaseMemoryManager::Instance().Deletes( (uint8_t *)m_Buffer );
         m_Buffer = NULL;
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, memory pool initialization failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, memory pool initialization failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -97,7 +97,7 @@ GMI_RESULT	AudioSourceFilter::Initialize( int32_t FilterId, const char_t *Filter
         BaseMemoryManager::Instance().Deletes( (uint8_t *)m_Buffer );
         m_Buffer = NULL;
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, output pin object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, output pin object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -111,24 +111,24 @@ GMI_RESULT	AudioSourceFilter::Initialize( int32_t FilterId, const char_t *Filter
         BaseMemoryManager::Instance().Deletes( (uint8_t *)m_Buffer );
         m_Buffer = NULL;
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, output pin initialization failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Initialize, output pin initialization failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
     m_Outputs.push_back( OutputPin );
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "AudioSourceFilter::Initialize end \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "AudioSourceFilter::Initialize end \n" );
     return GMI_SUCCESS;
 }
 
 GMI_RESULT  AudioSourceFilter::Deinitialize()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "AudioSourceFilter::Deinitialize begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "AudioSourceFilter::Deinitialize begin \n" );
 
     GMI_RESULT Result = StreamingMediaSource::Deinitialize();
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Deinitialize, StreamingMediaSource::Deinitialize failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Deinitialize, StreamingMediaSource::Deinitialize failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -137,7 +137,7 @@ GMI_RESULT  AudioSourceFilter::Deinitialize()
         Result = m_DataPool->Deinitialize();
         if ( FAILED( Result ) )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Deinitialize, memory pool deinitialize failed, function return %x \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "AudioSourceFilter::Deinitialize, memory pool deinitialize failed, function return %x \n", (uint32_t) Result );
             return Result;
         }
     }
@@ -148,6 +148,6 @@ GMI_RESULT  AudioSourceFilter::Deinitialize()
     BaseMemoryManager::Instance().Deletes( (uint8_t *)m_Buffer );
     m_Buffer = NULL;
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "AudioSourceFilter::Deinitialize end \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "AudioSourceFilter::Deinitialize end \n" );
     return GMI_SUCCESS;
 }

@@ -5,8 +5,8 @@
 #include "ipc_fw_v3.x_resource.h"
 #include "ipc_fw_v3.x_setting.h"
 #include "ipc_media_data_dispatch.h"
-#include "log_client.h"
 #include "media_codec_parameter.h"
+#include "share_memory_log_client.h"
 
 IpcMediaDataDispatchSource::IpcMediaDataDispatchSource(void)
     : m_MediaDataClient()
@@ -40,12 +40,12 @@ IpcMediaDataDispatchSource*  IpcMediaDataDispatchSource::CreateNew()
 
 GMI_RESULT IpcMediaDataDispatchSource::Initialize( int32_t FilterId, const char_t *FilterName, size_t FilterNameLength, void_t *Argument, size_t ArgumentSize )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Initialize begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Initialize begin \n" );
 
     GMI_RESULT Result = GetDecodeSourceMonitorEnableConfig( &m_DecodeSourceMonitorEnable );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, GetDecodeSourceMonitorEnableConfig failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, GetDecodeSourceMonitorEnableConfig failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -54,7 +54,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Initialize( int32_t FilterId, const char_
         Result = GetDecodeSourceFrameCheckInterval( &m_DecodeSourceFrameCheckInterval );
         if ( FAILED( Result ) )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, GetVideoFrameCheckInterval failed, function return %x \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, GetVideoFrameCheckInterval failed, function return %x \n", (uint32_t) Result );
             return Result;
         }
     }
@@ -64,7 +64,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Initialize( int32_t FilterId, const char_
     Result = StreamingMediaSource::Initialize( FilterId, FilterName, FilterNameLength, Argument, ArgumentSize );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, StreamingMediaSource::Initialize failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, StreamingMediaSource::Initialize failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -92,7 +92,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Initialize( int32_t FilterId, const char_
     if ( NULL == m_FrameBuffer )
     {
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, memory used by frame allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, memory used by frame allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -103,7 +103,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Initialize( int32_t FilterId, const char_
         BaseMemoryManager::Instance().Deletes( (uint8_t *)m_FrameBuffer );
         m_FrameBuffer = NULL;
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, memory used by extra data allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, memory used by extra data allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -116,7 +116,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Initialize( int32_t FilterId, const char_
         BaseMemoryManager::Instance().Deletes( (uint8_t *)m_FrameBuffer );
         m_FrameBuffer = NULL;
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, memory used by memory pool allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, memory used by memory pool allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -131,7 +131,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Initialize( int32_t FilterId, const char_
         BaseMemoryManager::Instance().Deletes( (uint8_t *)m_FrameBuffer );
         m_FrameBuffer = NULL;
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, memory pool object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, memory pool object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -149,7 +149,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Initialize( int32_t FilterId, const char_
         BaseMemoryManager::Instance().Deletes( (uint8_t *)m_FrameBuffer );
         m_FrameBuffer = NULL;
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, memory pool initialization failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, memory pool initialization failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -167,7 +167,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Initialize( int32_t FilterId, const char_
         BaseMemoryManager::Instance().Deletes( (uint8_t *)m_FrameBuffer );
         m_FrameBuffer = NULL;
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, output pin object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, output pin object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -185,7 +185,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Initialize( int32_t FilterId, const char_
         BaseMemoryManager::Instance().Deletes( (uint8_t *)m_FrameBuffer );
         m_FrameBuffer = NULL;
         StreamingMediaSource::Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, output pin initialization failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Initialize, output pin initialization failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -197,23 +197,23 @@ GMI_RESULT IpcMediaDataDispatchSource::Initialize( int32_t FilterId, const char_
 
     m_Outputs.push_back( OutputPin );
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Initialize end \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Initialize end \n" );
     return GMI_SUCCESS;
 }
 
 GMI_RESULT IpcMediaDataDispatchSource::Deinitialize()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Deinitialize begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Deinitialize begin \n" );
     if ( MFS_Uninit == Status() )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Warning, "IpcMediaDataDispatchSource::Deinitialize, IpcMediaDataDispatchSource is already deinitialized, funtion return %x \n", (uint32_t) GMI_SUCCESS );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Warning, "IpcMediaDataDispatchSource::Deinitialize, IpcMediaDataDispatchSource is already deinitialized, funtion return %x \n", (uint32_t) GMI_SUCCESS );
         return GMI_SUCCESS;
     }
 
     GMI_RESULT Result = StreamingMediaSource::Deinitialize();
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Warning, "IpcMediaDataDispatchSource::Deinitialize, StreamingMediaSource::Deinitialize failed, funtion return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Warning, "IpcMediaDataDispatchSource::Deinitialize, StreamingMediaSource::Deinitialize failed, funtion return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -222,7 +222,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Deinitialize()
         Result = m_DataPool->Deinitialize();
         if ( FAILED( Result ) )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Deinitialize, memory pool deinitialize failed, function return %x \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Deinitialize, memory pool deinitialize failed, function return %x \n", (uint32_t) Result );
             return Result;
         }
     }
@@ -239,18 +239,18 @@ GMI_RESULT IpcMediaDataDispatchSource::Deinitialize()
     BaseMemoryManager::Instance().Deletes( (uint8_t *)m_FrameBuffer );
     m_FrameBuffer = NULL;
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Deinitialize end \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Deinitialize end \n" );
     return GMI_SUCCESS;
 }
 
 GMI_RESULT IpcMediaDataDispatchSource::Play()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Play begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Play begin \n" );
 
     GMI_RESULT Result = StreamingMediaSource::Play();
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, GetClientUDPPort failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, GetClientUDPPort failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -259,7 +259,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Play()
     if ( FAILED( Result ) )
     {
         StreamingMediaSource::Stop();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, GetClientUDPPort failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, GetClientUDPPort failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -269,7 +269,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Play()
     if ( FAILED( Result ) )
     {
         StreamingMediaSource::Stop();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, GetServerUDPPort failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, GetServerUDPPort failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -277,7 +277,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Play()
     if ( FAILED( Result ) )
     {
         StreamingMediaSource::Stop();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, MediaDataClient.Initialize failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, MediaDataClient.Initialize failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -288,7 +288,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Play()
     {
         m_MediaDataClient.Deinitialize();
         StreamingMediaSource::Stop();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, MediaDataClient.Register failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, MediaDataClient.Register failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -301,7 +301,7 @@ GMI_RESULT IpcMediaDataDispatchSource::Play()
         m_MediaDataClient.Unregister();
         m_MediaDataClient.Deinitialize();
         StreamingMediaSource::Stop();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, FetchThread.Create failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, FetchThread.Create failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -314,22 +314,22 @@ GMI_RESULT IpcMediaDataDispatchSource::Play()
         m_MediaDataClient.Unregister();
         m_MediaDataClient.Deinitialize();
         StreamingMediaSource::Stop();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, FetchThread.Start failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::Play, FetchThread.Start failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Play end, function return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Play end, function return %x \n", (uint32_t) Result );
     return Result;
 }
 
 GMI_RESULT IpcMediaDataDispatchSource::Stop()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Stop begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Stop begin \n" );
 
     GMI_RESULT Result = StreamingMediaSource::Stop();
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Warning, "IpcMediaDataDispatchSource::Stop, StreamingMediaSource::Stop failed, funtion return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Warning, "IpcMediaDataDispatchSource::Stop, StreamingMediaSource::Stop failed, funtion return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -340,33 +340,33 @@ GMI_RESULT IpcMediaDataDispatchSource::Stop()
     Result = m_MediaDataClient.Unregister();
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Warning, "IpcMediaDataDispatchSource::Stop, MediaDataClient::Unregister failed, funtion return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Warning, "IpcMediaDataDispatchSource::Stop, MediaDataClient::Unregister failed, funtion return %x \n", (uint32_t) Result );
         return Result;
     }
 
     Result = m_MediaDataClient.Deinitialize();
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Warning, "IpcMediaDataDispatchSource::Stop, MediaDataClient::Deinitialize failed, funtion return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Warning, "IpcMediaDataDispatchSource::Stop, MediaDataClient::Deinitialize failed, funtion return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Stop end, function return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::Stop end, function return %x \n", (uint32_t) Result );
     return Result;
 }
 
 void_t* IpcMediaDataDispatchSource::FetchThread( void_t *Argument )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::FetchThread begin, Argument=%p \n", Argument );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::FetchThread begin, Argument=%p \n", Argument );
     IpcMediaDataDispatchSource *Fetcher = reinterpret_cast<IpcMediaDataDispatchSource*> ( Argument );
     void_t *Return = Fetcher->FetchEntry();
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::FetchThread end, Return=%p \n", Return );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::FetchThread end, Return=%p \n", Return );
     return Return;
 }
 
 void_t* IpcMediaDataDispatchSource::FetchEntry()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::FetchEntry begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::FetchEntry begin \n" );
     m_ThreadWorking        = true;
 
     GMI_RESULT Result      = GMI_FAIL;
@@ -397,7 +397,7 @@ void_t* IpcMediaDataDispatchSource::FetchEntry()
 
                     double FrameRate = 1000.0f * m_FrameNumber / Duration;
 
-                    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Loop, "IpcMediaDataDispatchSource::FetchEntry, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d, FrameNumber=%lld, FrameRate=%f, second=%d:millisecond=%d \n",
+                    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Loop, "IpcMediaDataDispatchSource::FetchEntry, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d, FrameNumber=%lld, FrameRate=%f, second=%d:millisecond=%d \n",
                                GetSourceId(), GetMediaId(), GetMediaType(), GetCodecType(), m_FrameNumber, FrameRate, (int32_t) FrameTS.tv_sec, (int32_t) FrameTS.tv_usec );
                     // the following code facilitate unitest check execution, uncomment it to enable print info
                     //printf( "IpcMediaDataDispatchSource::FetchEntry, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d, FrameNumber=%lld, FrameRate=%f, second=%d:millisecond=%d \n",
@@ -408,7 +408,7 @@ void_t* IpcMediaDataDispatchSource::FetchEntry()
             Result = m_Outputs[0]->Receive( (const uint8_t *) m_FrameBuffer, FrameBufferSize, &FrameTS, m_ExtraData, ExtraDataSize );
             if ( FAILED( Result ) )
             {
-                DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::FetchEntry, output pin Receive failed and return %x , SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d, FrameBufferSize=%d, second=%d:millisecond=%d, ExtraDataSize=%d\n",
+                DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::FetchEntry, output pin Receive failed and return %x , SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d, FrameBufferSize=%d, second=%d:millisecond=%d, ExtraDataSize=%d\n",
                            (uint32_t)Result, m_SourceId, m_MediaId, m_MediaType, m_CodecType, FrameBufferSize,(int32_t) FrameTS.tv_sec, (int32_t) FrameTS.tv_usec, ExtraDataSize );
             }
         }
@@ -416,20 +416,20 @@ void_t* IpcMediaDataDispatchSource::FetchEntry()
         {
             if ( GMI_TRY_AGAIN_ERROR != Result )
             {
-                DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::FetchEntry, MediaDataClient::Read return %x \n", (uint32_t)Result );
+                DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::FetchEntry, MediaDataClient::Read return %x \n", (uint32_t)Result );
                 break;
             }
         }
     }
 
     m_ThreadWorking = false;
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::FetchEntry end, function return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::FetchEntry end, function return %x \n", (uint32_t) Result );
     return (void_t *) size_t(Result);
 }
 
 GMI_RESULT IpcMediaDataDispatchSource::GetServerUDPPort( boolean_t EncodeMode, uint32_t SourceId, uint32_t MediaId, uint32_t MediaType, uint32_t CodecType, uint16_t *UDP_Port )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetServerUDPPort begin, EncodeMode=%d, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d \n",
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetServerUDPPort begin, EncodeMode=%d, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d \n",
                EncodeMode, SourceId, MediaId, MediaType, CodecType );
 
     const char_t *ConfigPath = NULL;
@@ -446,7 +446,7 @@ GMI_RESULT IpcMediaDataDispatchSource::GetServerUDPPort( boolean_t EncodeMode, u
         case 0:
             break;
         default:
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, Audio source id(%d) is not supported, function return %x \n", SourceId, (uint32_t) GMI_INVALID_PARAMETER );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, Audio source id(%d) is not supported, function return %x \n", SourceId, (uint32_t) GMI_INVALID_PARAMETER );
             return GMI_INVALID_PARAMETER;
         }
 
@@ -468,13 +468,13 @@ GMI_RESULT IpcMediaDataDispatchSource::GetServerUDPPort( boolean_t EncodeMode, u
             Default_UDP_Port = GMI_STREAMING_MEDIA_GB28181_DECODE_AUDIO1;
             break;
         default:
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, Audio media id(%d) is not supported, function return %x \n", MediaId, (uint32_t) GMI_INVALID_PARAMETER );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, Audio media id(%d) is not supported, function return %x \n", MediaId, (uint32_t) GMI_INVALID_PARAMETER );
             return GMI_INVALID_PARAMETER;
         }
     }
     break;
     default:
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, media type(%d) is not supported, function return %x \n", MediaType, (uint32_t) GMI_INVALID_PARAMETER );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, media type(%d) is not supported, function return %x \n", MediaType, (uint32_t) GMI_INVALID_PARAMETER );
         return GMI_INVALID_PARAMETER;
     }
 
@@ -483,38 +483,38 @@ GMI_RESULT IpcMediaDataDispatchSource::GetServerUDPPort( boolean_t EncodeMode, u
     GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, GMI_XmlOpen failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, GMI_XmlOpen failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetServerUDPPort, Default_UDP_Port=%d \n", Default_UDP_Port );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetServerUDPPort, Default_UDP_Port=%d \n", Default_UDP_Port );
 
     Result = GMI_XmlRead(Handle, ConfigPath, KeyName, Default_UDP_Port, &Local_UDP_Port, GMI_CONFIG_READ_WRITE );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, GMI_XmlRead failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, GMI_XmlRead failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
     Result = GMI_XmlFileSave(Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, GMI_XmlFileSave failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, GMI_XmlFileSave failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetServerUDPPort, Default_UDP_Port=%d, Local_UDP_Port=%d \n", Default_UDP_Port, Local_UDP_Port );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetServerUDPPort, Default_UDP_Port=%d, Local_UDP_Port=%d \n", Default_UDP_Port, Local_UDP_Port );
 #endif
 
     *UDP_Port = (uint16_t) Local_UDP_Port;
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetServerUDPPort end, function return %x, EncodeMode=%d, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d \n",
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetServerUDPPort end, function return %x, EncodeMode=%d, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d \n",
                GMI_SUCCESS, EncodeMode, SourceId, MediaId, MediaType, CodecType );
     return GMI_SUCCESS;
 }
 
 GMI_RESULT IpcMediaDataDispatchSource::GetClientUDPPort( boolean_t EncodeMode, uint32_t SourceId, uint32_t MediaId, uint32_t MediaType, uint32_t CodecType, uint16_t *UDP_Port )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort begin, EncodeMode=%d, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d \n",
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort begin, EncodeMode=%d, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d \n",
                EncodeMode, SourceId, MediaId, MediaType, CodecType );
 
     const char_t *ConfigPath = NULL;
@@ -531,7 +531,7 @@ GMI_RESULT IpcMediaDataDispatchSource::GetClientUDPPort( boolean_t EncodeMode, u
         case 0:
             break;
         default:
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, Audio source id(%d) is not supported, function return %x \n", SourceId, (uint32_t) GMI_INVALID_PARAMETER );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, Audio source id(%d) is not supported, function return %x \n", SourceId, (uint32_t) GMI_INVALID_PARAMETER );
             return GMI_INVALID_PARAMETER;
         }
 
@@ -543,13 +543,13 @@ GMI_RESULT IpcMediaDataDispatchSource::GetClientUDPPort( boolean_t EncodeMode, u
             Default_UDP_Port = GMI_STREAMING_MEDIA_SERVER_DECODE_AUDIO1;
             break;
         default:
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, Audio media id(%d) is not supported, function return %x \n", MediaId, (uint32_t) GMI_INVALID_PARAMETER );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, Audio media id(%d) is not supported, function return %x \n", MediaId, (uint32_t) GMI_INVALID_PARAMETER );
             return GMI_INVALID_PARAMETER;
         }
     }
     break;
     default:
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, media type(%d) is not supported, function return %x \n", MediaType, (uint32_t) GMI_INVALID_PARAMETER );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, media type(%d) is not supported, function return %x \n", MediaType, (uint32_t) GMI_INVALID_PARAMETER );
         return GMI_INVALID_PARAMETER;
     }
 
@@ -558,31 +558,31 @@ GMI_RESULT IpcMediaDataDispatchSource::GetClientUDPPort( boolean_t EncodeMode, u
     GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, GMI_XmlOpen failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, GMI_XmlOpen failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort, Default_UDP_Port=%d \n", Default_UDP_Port );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort, Default_UDP_Port=%d \n", Default_UDP_Port );
 
     Result = GMI_XmlRead(Handle, ConfigPath, KeyName, Default_UDP_Port, &Local_UDP_Port, GMI_CONFIG_READ_WRITE );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, GMI_XmlRead failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, GMI_XmlRead failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
     Result = GMI_XmlFileSave(Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, GMI_XmlFileSave failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, GMI_XmlFileSave failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort, Default_UDP_Port=%d, Local_UDP_Port=%d \n", Default_UDP_Port, Local_UDP_Port );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort, Default_UDP_Port=%d, Local_UDP_Port=%d \n", Default_UDP_Port, Local_UDP_Port );
 #endif
 
     *UDP_Port = (uint16_t) Local_UDP_Port;
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort end, function return %x, EncodeMode=%d, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d \n",
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort end, function return %x, EncodeMode=%d, SourceId=%d, MediaId=%d, MediaType=%d, CodecType=%d \n",
                GMI_SUCCESS, EncodeMode, SourceId, MediaId, MediaType, CodecType );
     return GMI_SUCCESS;
 }
@@ -597,27 +597,27 @@ GMI_RESULT IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig( boole
     GMI_RESULT Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, GMI_XmlOpen failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, GMI_XmlOpen failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, DefaultEnable=%d \n", DefaultEnable );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, DefaultEnable=%d \n", DefaultEnable );
 
     Result = GMI_XmlRead(Handle, GMI_DECODE_SOURCE_MONITOR_CONFIG_PATH, GMI_DECODE_SOURCE_MONITOR_CONFIG_ENABLE_KEY_NAME, DefaultEnable, &IntEnable, GMI_CONFIG_READ_WRITE );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, GMI_XmlRead failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, GMI_XmlRead failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
     Result = GMI_XmlFileSave(Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, GMI_XmlFileSave failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, GMI_XmlFileSave failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, DefaultEnable=%d, IntEnable=%d \n", DefaultEnable, IntEnable );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, DefaultEnable=%d, IntEnable=%d \n", DefaultEnable, IntEnable );
 #endif
 
     // the following code facilitate unitest check execution, uncomment it to enable print info
@@ -637,27 +637,27 @@ GMI_RESULT IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval( uint32
     GMI_RESULT Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, GMI_XmlOpen failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, GMI_XmlOpen failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, DefaultFrameCheckInterval=%d \n", DefaultFrameCheckInterval );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, DefaultFrameCheckInterval=%d \n", DefaultFrameCheckInterval );
 
     Result = GMI_XmlRead(Handle, GMI_DECODE_SOURCE_MONITOR_CONFIG_PATH, GMI_DECODE_SOURCE_MONITOR_CONFIG_FRAME_CHECK_INTERVAL_KEY_NAME, DefaultFrameCheckInterval, &FrameCheckInterval, GMI_CONFIG_READ_WRITE );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, GMI_XmlRead failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, GMI_XmlRead failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
     Result = GMI_XmlFileSave(Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, GMI_XmlFileSave failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, GMI_XmlFileSave failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, DefaultFrameCheckInterval=%d, FrameCheckInterval=%d \n", DefaultFrameCheckInterval, FrameCheckInterval );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, DefaultFrameCheckInterval=%d, FrameCheckInterval=%d \n", DefaultFrameCheckInterval, FrameCheckInterval );
 #endif
 
     // the following code facilitate unitest check execution, uncomment it to enable print info

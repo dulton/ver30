@@ -4,10 +4,10 @@
 #include "gmi_system_headers.h"
 #include "GroupsockHelper.hh"
 #include "H264StreamParser.hh"
-#include "log_client.h"
 #include "MyH264VideoStreamFramer.hh"
 #include "ipc_fw_v3.x_resource.h"
 #include "ipc_media_data_dispatch.h"
+#include "share_memory_log_client.h"
 
 #define USR_DEFINED_ERROR			2
 
@@ -142,11 +142,11 @@ H264BitStreamParser::~H264BitStreamParser()
 
     if ( fConnected )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "H264BitStreamParser::~H264BitStreamParser, unreigster from media center server... \n" );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "H264BitStreamParser::~H264BitStreamParser, unreigster from media center server... \n" );
         GMI_RESULT Result = fMediaDataClient.Unregister();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "H264BitStreamParser::~H264BitStreamParser, MediaDataClient.Unregister return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "H264BitStreamParser::~H264BitStreamParser, MediaDataClient.Unregister return %x \n", (uint32_t) Result );
         fMediaDataClient.Deinitialize();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "H264BitStreamParser::~H264BitStreamParser, MediaDataClient.Deinitialize return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "H264BitStreamParser::~H264BitStreamParser, MediaDataClient.Deinitialize return %x \n", (uint32_t) Result );
 
         BaseMemoryManager::Instance().Deletes( fFrameBuffer );
         fFrameBuffer = NULL;
@@ -175,7 +175,7 @@ int H264BitStreamParser::parse()
         fFrameBuffer = BaseMemoryManager::Instance().News<uint8_t>( fMaxFrameLength );
         if ( NULL == fFrameBuffer )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "H264BitStreamParser::parse, allocating frame buffer failed(%d bytes), no good way to tell upper caller what happened, so we exit for now \n", fMaxFrameLength );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "H264BitStreamParser::parse, allocating frame buffer failed(%d bytes), no good way to tell upper caller what happened, so we exit for now \n", fMaxFrameLength );
             exit(1);
         }
 
@@ -184,24 +184,24 @@ int H264BitStreamParser::parse()
         {
             BaseMemoryManager::Instance().Deletes( fFrameBuffer );
             fFrameBuffer = NULL;
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "H264BitStreamParser::parse, allocating extra data buffer failed(%d bytes), no good way to tell upper caller what happened, so we exit for now \n", fMaxExtraDataLength );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "H264BitStreamParser::parse, allocating extra data buffer failed(%d bytes), no good way to tell upper caller what happened, so we exit for now \n", fMaxExtraDataLength );
             exit(1);
         }
 
         GMI_RESULT Result = fMediaDataClient.Initialize( fIPCMediaDataDispatchClientPort, ONVIF_STREAM_APPLICATION_ID );
         if ( FAILED( Result ) )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "H264BitStreamParser::parse, MediaDataClient.Initialize(ClientPort=%d,AppId=%d) return %x, no good way to tell upper caller what happened, so we exit for now \n",
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "H264BitStreamParser::parse, MediaDataClient.Initialize(ClientPort=%d,AppId=%d) return %x, no good way to tell upper caller what happened, so we exit for now \n",
                        ntohs(fIPCMediaDataDispatchClientPort), ONVIF_STREAM_APPLICATION_ID, (uint32_t) Result );
             exit(1);
         }
 
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "H264BitStreamParser::parse, reigster to media center server... \n" );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "H264BitStreamParser::parse, reigster to media center server... \n" );
 
         do
         {
             Result = fMediaDataClient.Register( fIPCMediaDataDispatchServerPort, MEDIA_VIDEO_H264, (uint32_t)fStreamID, true, NULL, NULL );
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Loop, "H264BitStreamParser::parse, m_MediaDataClient.Register(fIPCMediaDataDispatchServerPort=%d,MediaType=%d, fStreamID=%d, Result=%x\n",
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Loop, "H264BitStreamParser::parse, m_MediaDataClient.Register(fIPCMediaDataDispatchServerPort=%d,MediaType=%d, fStreamID=%d, Result=%x\n",
                        ntohs(fIPCMediaDataDispatchServerPort), MEDIA_VIDEO_H264, fStreamID, (int32_t) Result );
             if ( GMI_WAIT_TIMEOUT == Result )
             {
@@ -212,11 +212,11 @@ int H264BitStreamParser::parse()
 
         if ( FAILED( Result ) )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "H264BitStreamParser::parse, register to media center server failed, MediaDataClien.Register return %x, no good way to tell upper caller what happened, so we exit for now \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "H264BitStreamParser::parse, register to media center server failed, MediaDataClien.Register return %x, no good way to tell upper caller what happened, so we exit for now \n", (uint32_t) Result );
             exit(1);
         }
 
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "H264BitStreamParser::parse, reigstered to media center server \n" );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "H264BitStreamParser::parse, reigstered to media center server \n" );
         fConnected = true;
     }
 
@@ -242,7 +242,7 @@ int H264BitStreamParser::parse()
                     continue;
                 }
                 default:
-                    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "H264BitStreamParser::parse, unexpected error, Result=%x \n", (int32_t)Result );
+                    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "H264BitStreamParser::parse, unexpected error, Result=%x \n", (int32_t)Result );
                     break;
                 }
             }

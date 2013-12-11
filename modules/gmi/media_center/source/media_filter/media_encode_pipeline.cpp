@@ -5,11 +5,11 @@
 #include "g711u_audio_encode_source_filter.h"
 #include "g726_audio_encode_source_filter.h"
 #include "h264_video_source_filter.h"
-#include "log_client.h"
 #include "ipc_media_data_dispatch_handler.h"
 #include "media_codec_parameter.h"
 #include "mjpeg_image_source_filter.h"
 #include "mpeg4_video_source_filter.h"
+#include "share_memory_log_client.h"
 
 MediaEncodePipeline::MediaEncodePipeline(void)
     : m_StreamingPipelineManager( NULL )
@@ -28,7 +28,7 @@ MediaEncodePipeline::~MediaEncodePipeline(void)
 
 GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId, uint32_t MediaType, uint32_t CodecType, void_t *EncodeParameter, size_t EncodeParameterLength )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Initialize begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Initialize begin \n" );
 
     MediaSourceParameter Parameter;
     Parameter.s_SourceId         = SourceId;
@@ -46,7 +46,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource = H264_VideoSourceFilter::CreateNew();
         if ( NULL == m_MediaSource )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, H264_VideoSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, H264_VideoSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
             return GMI_OUT_OF_MEMORY;
         }
 
@@ -57,7 +57,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         {
             m_MediaSource->ReleaseRef();
             m_MediaSource = NULL;
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, H264EncodeSource parameter error, function return %x \n", (uint32_t) GMI_INVALID_PARAMETER );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, H264EncodeSource parameter error, function return %x \n", (uint32_t) GMI_INVALID_PARAMETER );
             return GMI_INVALID_PARAMETER;
         }
 
@@ -66,7 +66,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         {
             m_MediaSource->ReleaseRef();
             m_MediaSource = NULL;
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, H264EncodeSource initialization failed, function return %x \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, H264EncodeSource initialization failed, function return %x \n", (uint32_t) Result );
             return Result;
         }
         break;
@@ -76,7 +76,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource = MJPEG_ImageSourceFilter::CreateNew();
         if ( NULL == m_MediaSource )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, MJPEG_ImageSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, MJPEG_ImageSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
             return GMI_OUT_OF_MEMORY;
         }
         break;
@@ -85,7 +85,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource = Mpeg4VideoSourceFilter::CreateNew();
         if ( NULL == m_MediaSource )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, Mpeg4VideoSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, Mpeg4VideoSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
             return GMI_OUT_OF_MEMORY;
         }
         break;
@@ -95,7 +95,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource = G711A_AudioEncodeSourceFilter::CreateNew();
         if ( NULL == m_MediaSource )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711A_AudioEncodeSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711A_AudioEncodeSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
             return GMI_OUT_OF_MEMORY;
         }
 
@@ -106,7 +106,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         {
             m_MediaSource->ReleaseRef();
             m_MediaSource = NULL;
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711A_AudioEncodeSource parameter error, function return %x \n", (uint32_t) GMI_INVALID_PARAMETER );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711A_AudioEncodeSource parameter error, function return %x \n", (uint32_t) GMI_INVALID_PARAMETER );
             return GMI_INVALID_PARAMETER;
         }
 
@@ -115,7 +115,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         {
             m_MediaSource->ReleaseRef();
             m_MediaSource = NULL;
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711A_AudioEncodeSourceFilter initialization failed, function return %x \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711A_AudioEncodeSourceFilter initialization failed, function return %x \n", (uint32_t) Result );
             return Result;
         }
         break;
@@ -124,7 +124,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource = G711U_AudioEncodeSourceFilter::CreateNew();
         if ( NULL == m_MediaSource )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711U_AudioEncodeSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711U_AudioEncodeSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
             return GMI_OUT_OF_MEMORY;
         }
 
@@ -135,7 +135,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         {
             m_MediaSource->ReleaseRef();
             m_MediaSource = NULL;
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711U_AudioEncodeSource parameter error, function return %x \n", (uint32_t) GMI_INVALID_PARAMETER );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711U_AudioEncodeSource parameter error, function return %x \n", (uint32_t) GMI_INVALID_PARAMETER );
             return GMI_INVALID_PARAMETER;
         }
 
@@ -144,7 +144,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         {
             m_MediaSource->ReleaseRef();
             m_MediaSource = NULL;
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711U_AudioSource initialization failed, function return %x \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G711U_AudioSource initialization failed, function return %x \n", (uint32_t) Result );
             return Result;
         }
         break;
@@ -154,7 +154,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource = G726_AudioEncodeSourceFilter::CreateNew();
         if ( NULL == m_MediaSource )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G726_AudioEncodeSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G726_AudioEncodeSourceFilter object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
             return GMI_OUT_OF_MEMORY;
         }
 
@@ -165,7 +165,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         {
             m_MediaSource->ReleaseRef();
             m_MediaSource = NULL;
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G726_AudioEncodeSource parameter error, function return %x \n", (uint32_t) GMI_INVALID_PARAMETER );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G726_AudioEncodeSource parameter error, function return %x \n", (uint32_t) GMI_INVALID_PARAMETER );
             return GMI_INVALID_PARAMETER;
         }
 
@@ -174,14 +174,14 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         {
             m_MediaSource->ReleaseRef();
             m_MediaSource = NULL;
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G726_AudioSource initialization failed, function return %x \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, G726_AudioSource initialization failed, function return %x \n", (uint32_t) Result );
             return Result;
         }
         break;
 #endif
 
     default:
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, unsupported media type(%x), function return %x \n", MAKE_MEDIA(MediaType,CodecType), (uint32_t) GMI_NOT_SUPPORT );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, unsupported media type(%x), function return %x \n", MAKE_MEDIA(MediaType,CodecType), (uint32_t) GMI_NOT_SUPPORT );
         return GMI_NOT_SUPPORT;
     }
 
@@ -191,7 +191,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource->Deinitialize();
         m_MediaSource->ReleaseRef();
         m_MediaSource = NULL;
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, IpcMediaDataDispatchHandler object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, IpcMediaDataDispatchHandler object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -203,7 +203,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource->Deinitialize();
         m_MediaSource->ReleaseRef();
         m_MediaSource = NULL;
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, MediaDataDispatchHandler object initializaztion failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, MediaDataDispatchHandler object initializaztion failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -216,7 +216,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource->Deinitialize();
         m_MediaSource->ReleaseRef();
         m_MediaSource = NULL;
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, BaseStreamingPipelineManager object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, BaseStreamingPipelineManager object allocation failed, function return %x \n", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -231,7 +231,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource->Deinitialize();
         m_MediaSource->ReleaseRef();
         m_MediaSource = NULL;
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, BaseStreamingPipelineManager object initializaztion failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, BaseStreamingPipelineManager object initializaztion failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -247,7 +247,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource->Deinitialize();
         m_MediaSource->ReleaseRef();
         m_MediaSource = NULL;
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, BaseStreamingPipelineManager add source filter failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, BaseStreamingPipelineManager add source filter failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -263,7 +263,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource->Deinitialize();
         m_MediaSource->ReleaseRef();
         m_MediaSource = NULL;
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, BaseStreamingPipelineManager add dispatch handller filter failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, BaseStreamingPipelineManager add dispatch handller filter failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -279,7 +279,7 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
         m_MediaSource->Deinitialize();
         m_MediaSource->ReleaseRef();
         m_MediaSource = NULL;
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, BaseStreamingPipelineManager ConnectFilter failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Initialize, BaseStreamingPipelineManager ConnectFilter failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -288,19 +288,19 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
     m_MediaType = MediaType;
     m_CodecType = CodecType;
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Initialize end \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Initialize end \n" );
     return GMI_SUCCESS;
 }
 
 GMI_RESULT MediaEncodePipeline::Deinitialize()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Deinitialize begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Deinitialize begin \n" );
     Stop();
 
     GMI_RESULT Result = BaseStreamingPipelineManager::DisconnectFilter( m_MediaSource, 0, m_MediaDataDispatchHandler, 0 );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Deinitialize, BaseStreamingPipelineManager DisconnectFilter failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Deinitialize, BaseStreamingPipelineManager DisconnectFilter failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -309,7 +309,7 @@ GMI_RESULT MediaEncodePipeline::Deinitialize()
         Result = m_MediaSource->Deinitialize();
         if ( FAILED( Result ) )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Deinitialize, MediaSource Deinitialize failed, function return %x \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Deinitialize, MediaSource Deinitialize failed, function return %x \n", (uint32_t) Result );
             return Result;
         }
 
@@ -322,7 +322,7 @@ GMI_RESULT MediaEncodePipeline::Deinitialize()
         Result = m_MediaDataDispatchHandler->Deinitialize();
         if ( FAILED( Result ) )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Deinitialize, MediaDataDispatchHandler Deinitialize failed, function return %x \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Deinitialize, MediaDataDispatchHandler Deinitialize failed, function return %x \n", (uint32_t) Result );
             return Result;
         }
 
@@ -335,7 +335,7 @@ GMI_RESULT MediaEncodePipeline::Deinitialize()
         Result = m_StreamingPipelineManager->Deinitialize();
         if ( FAILED( Result ) )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Deinitialize, StreamingPipelineManager Deinitialize failed, function return %x \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Deinitialize, StreamingPipelineManager Deinitialize failed, function return %x \n", (uint32_t) Result );
             return Result;
         }
 
@@ -343,56 +343,56 @@ GMI_RESULT MediaEncodePipeline::Deinitialize()
         m_StreamingPipelineManager = NULL;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Deinitialize end \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Deinitialize end \n" );
     return GMI_SUCCESS;
 }
 
 GMI_RESULT MediaEncodePipeline::Play()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Play begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Play begin \n" );
     if ( NULL == m_StreamingPipelineManager )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Play, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Play, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
         return GMI_DEVICE_NOT_OPENED;
     }
 
     GMI_RESULT Result = m_StreamingPipelineManager->Play();
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Play, StreamingPipelineManager->Play failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Play, StreamingPipelineManager->Play failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Play end, function return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Play end, function return %x \n", (uint32_t) Result );
     return Result;
 }
 
 GMI_RESULT MediaEncodePipeline::Stop()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Stop begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Stop begin \n" );
     if ( NULL == m_StreamingPipelineManager )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Stop, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Stop, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
         return GMI_DEVICE_NOT_OPENED;
     }
 
     GMI_RESULT Result = m_StreamingPipelineManager->Stop();
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Stop, StreamingPipelineManager->Stop failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::Stop, StreamingPipelineManager->Stop failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Stop end, function return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::Stop end, function return %x \n", (uint32_t) Result );
     return Result;
 }
 
 GMI_RESULT MediaEncodePipeline::GetEncodeConfig( void_t *EncodeParameter, size_t *EncodeParameterLength )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::GetEncodeConfig begin, passed EncodeParameterLength=%d \n", *EncodeParameterLength );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::GetEncodeConfig begin, passed EncodeParameterLength=%d \n", *EncodeParameterLength );
     if ( NULL == m_MediaSource )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetEncodeConfig, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetEncodeConfig, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
         return GMI_DEVICE_NOT_OPENED;
     }
 
@@ -414,26 +414,26 @@ GMI_RESULT MediaEncodePipeline::GetEncodeConfig( void_t *EncodeParameter, size_t
         break;
 
     default:
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetEncodeConfig, unsupported media type(%x), function return %x \n", FinalMediaType, (uint32_t) GMI_NOT_SUPPORT );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetEncodeConfig, unsupported media type(%x), function return %x \n", FinalMediaType, (uint32_t) GMI_NOT_SUPPORT );
         return GMI_NOT_SUPPORT;
     }
 
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetEncodeConfig, MediaSource::GetEncodeConfig failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetEncodeConfig, MediaSource::GetEncodeConfig failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::GetEncodeConfig end and return %x, returned EncodeParameterLength=%d \n", (uint32_t) Result, *EncodeParameterLength );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::GetEncodeConfig end and return %x, returned EncodeParameterLength=%d \n", (uint32_t) Result, *EncodeParameterLength );
     return Result;
 }
 
 GMI_RESULT MediaEncodePipeline::SetEncodeConfig( const void_t *EncodeParameter, size_t EncodeParameterLength )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::SetEncodeConfig begin, passed EncodeParameterLength=%d \n", EncodeParameterLength );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::SetEncodeConfig begin, passed EncodeParameterLength=%d \n", EncodeParameterLength );
     if ( NULL == m_MediaSource )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetEncodeConfig, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetEncodeConfig, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
         return GMI_DEVICE_NOT_OPENED;
     }
 
@@ -455,26 +455,26 @@ GMI_RESULT MediaEncodePipeline::SetEncodeConfig( const void_t *EncodeParameter, 
         break;
 
     default:
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetEncodeConfig, unsupported media type(%x), function return %x \n", FinalMediaType, (uint32_t) GMI_NOT_SUPPORT );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetEncodeConfig, unsupported media type(%x), function return %x \n", FinalMediaType, (uint32_t) GMI_NOT_SUPPORT );
         return GMI_NOT_SUPPORT;
     }
 
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetEncodeConfig, MediaSource::SetEncodeConfig failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetEncodeConfig, MediaSource::SetEncodeConfig failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::SetEncodeConfig end and return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::SetEncodeConfig end and return %x \n", (uint32_t) Result );
     return Result;
 }
 
 GMI_RESULT MediaEncodePipeline::GetOsdConfig( void_t *OsdParameter, size_t *OsdParameterLength )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::GetOsdConfig begin, passed OsdParameterLength=%d \n", *OsdParameterLength );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::GetOsdConfig begin, passed OsdParameterLength=%d \n", *OsdParameterLength );
     if ( NULL == m_MediaSource )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetOsdConfig, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetOsdConfig, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
         return GMI_DEVICE_NOT_OPENED;
     }
 
@@ -488,26 +488,26 @@ GMI_RESULT MediaEncodePipeline::GetOsdConfig( void_t *OsdParameter, size_t *OsdP
         break;
 
     default:
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetOsdConfig, unsupported media type(%x), function return %x \n", FinalMediaType, (uint32_t) GMI_NOT_SUPPORT );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetOsdConfig, unsupported media type(%x), function return %x \n", FinalMediaType, (uint32_t) GMI_NOT_SUPPORT );
         return GMI_NOT_SUPPORT;
     }
 
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetOsdConfig, MediaSource::GetOsdConfig failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::GetOsdConfig, MediaSource::GetOsdConfig failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::GetOsdConfig end and return %x, returned EncodeParameterLength=%d \n", (uint32_t) Result, *OsdParameterLength );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::GetOsdConfig end and return %x, returned EncodeParameterLength=%d \n", (uint32_t) Result, *OsdParameterLength );
     return Result;
 }
 
 GMI_RESULT MediaEncodePipeline::SetOsdConfig( const void_t *OsdParameter, size_t OsdParameterLength )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::SetOsdConfig begin, passed OsdParameterLength=%d \n", OsdParameterLength );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::SetOsdConfig begin, passed OsdParameterLength=%d \n", OsdParameterLength );
     if ( NULL == m_MediaSource )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetOsdConfig, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetOsdConfig, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
         return GMI_DEVICE_NOT_OPENED;
     }
 
@@ -521,26 +521,26 @@ GMI_RESULT MediaEncodePipeline::SetOsdConfig( const void_t *OsdParameter, size_t
         break;
 
     default:
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetOsdConfig, unsupported media type(%x), function return %x \n", FinalMediaType, (uint32_t) GMI_NOT_SUPPORT );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetOsdConfig, unsupported media type(%x), function return %x \n", FinalMediaType, (uint32_t) GMI_NOT_SUPPORT );
         return GMI_NOT_SUPPORT;
     }
 
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetOsdConfig, MediaSource::SetOsdConfig failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::SetOsdConfig, MediaSource::SetOsdConfig failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::SetOsdConfig end and return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::SetOsdConfig end and return %x \n", (uint32_t) Result );
     return Result;
 }
 
 GMI_RESULT MediaEncodePipeline::ForceGenerateIdrFrame()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::ForceGenerateIdrFrame begin\n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::ForceGenerateIdrFrame begin\n" );
     if ( NULL == m_MediaSource )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::ForceGenerateIdrFrame, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::ForceGenerateIdrFrame, device is not opened, function return %x \n", (uint32_t) GMI_DEVICE_NOT_OPENED );
         return GMI_DEVICE_NOT_OPENED;
     }
 
@@ -554,16 +554,16 @@ GMI_RESULT MediaEncodePipeline::ForceGenerateIdrFrame()
         break;
 
     default:
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::ForceGenerateIdrFrame, unsupported media type(%x), function return %x \n", FinalMediaType, (uint32_t) GMI_NOT_SUPPORT );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::ForceGenerateIdrFrame, unsupported media type(%x), function return %x \n", FinalMediaType, (uint32_t) GMI_NOT_SUPPORT );
         return GMI_NOT_SUPPORT;
     }
 
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::ForceGenerateIdrFrame, MediaSource::ForceGenerateIdrFrame failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaEncodePipeline::ForceGenerateIdrFrame, MediaSource::ForceGenerateIdrFrame failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::ForceGenerateIdrFrame end and return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaEncodePipeline::ForceGenerateIdrFrame end and return %x \n", (uint32_t) Result );
     return Result;
 }

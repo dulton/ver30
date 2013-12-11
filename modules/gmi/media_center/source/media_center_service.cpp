@@ -1,8 +1,8 @@
 #include "media_center_service.h"
 
 #include "application_packet.h"
-#include "log_client.h"
 #include "media_center_packet.h"
+#include "share_memory_log_client.h"
 
 #define MEDIA_CENTER_SERVER_MAX_TIMEOUT 500 // ms unit
 
@@ -27,12 +27,12 @@ MediaCenterService::~MediaCenterService(void)
 
 GMI_RESULT MediaCenterService::Initialize( long_t Server_IP, uint16_t Server_UDP_Port, size_t SessionBufferSize )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::Initialize begin, passed Server_IP=%x, Server_UDP_Port=%d, SessionBufferSize=%d \n", ntohl(Server_IP), ntohs(Server_UDP_Port), SessionBufferSize );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::Initialize begin, passed Server_IP=%x, Server_UDP_Port=%d, SessionBufferSize=%d \n", ntohl(Server_IP), ntohs(Server_UDP_Port), SessionBufferSize );
 
     GMI_RESULT Result = InitializeNetwork( Server_IP, Server_UDP_Port, SessionBufferSize );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, InitializeNetwork failed, function return %x \n ", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, InitializeNetwork failed, function return %x \n ", (uint32_t) Result );
         return Result;
     }
 
@@ -40,7 +40,7 @@ GMI_RESULT MediaCenterService::Initialize( long_t Server_IP, uint16_t Server_UDP
     if ( NULL == m_MediaCenter.GetPtr() )
     {
         DeinitializeNetwork();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, MediaCenter object allocation failed, function return %x \n ", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, MediaCenter object allocation failed, function return %x \n ", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -49,7 +49,7 @@ GMI_RESULT MediaCenterService::Initialize( long_t Server_IP, uint16_t Server_UDP
     {
         m_MediaCenter = NULL;
         DeinitializeNetwork();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, ApplicationPacket object allocation failed, function return %x \n ", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, ApplicationPacket object allocation failed, function return %x \n ", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -59,7 +59,7 @@ GMI_RESULT MediaCenterService::Initialize( long_t Server_IP, uint16_t Server_UDP
         Packet = NULL;
         m_MediaCenter = NULL;
         DeinitializeNetwork();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, ApplicationPacket object initialization failed, function return %x \n ", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, ApplicationPacket object initialization failed, function return %x \n ", (uint32_t) Result );
         return Result;
     }
 
@@ -70,7 +70,7 @@ GMI_RESULT MediaCenterService::Initialize( long_t Server_IP, uint16_t Server_UDP
         Packet = NULL;
         m_MediaCenter = NULL;
         DeinitializeNetwork();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, ServerCommandPipelineManager object allocation failed, function return %x \n ", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, ServerCommandPipelineManager object allocation failed, function return %x \n ", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -82,7 +82,7 @@ GMI_RESULT MediaCenterService::Initialize( long_t Server_IP, uint16_t Server_UDP
         Packet = NULL;
         m_MediaCenter = NULL;
         DeinitializeNetwork();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, ServerCommandPipelineManager object initialization failed, function return %x \n ", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, ServerCommandPipelineManager object initialization failed, function return %x \n ", (uint32_t) Result );
         return Result;
     }
 
@@ -95,17 +95,17 @@ GMI_RESULT MediaCenterService::Initialize( long_t Server_IP, uint16_t Server_UDP
         Packet = NULL;
         m_MediaCenter = NULL;
         DeinitializeNetwork();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, ServerCommandPipelineManager object RegisterPacket failed, function return %x \n ", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::Initialize, ServerCommandPipelineManager object RegisterPacket failed, function return %x \n ", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::Initialize end, passed Server_IP=%x, Server_UDP_Port=%d, SessionBufferSize=%d, function return =%x \n", ntohl(Server_IP), ntohs(Server_UDP_Port), SessionBufferSize, (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::Initialize end, passed Server_IP=%x, Server_UDP_Port=%d, SessionBufferSize=%d, function return =%x \n", ntohl(Server_IP), ntohs(Server_UDP_Port), SessionBufferSize, (uint32_t) Result );
     return Result;
 }
 
 GMI_RESULT MediaCenterService::Deinitialize()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::Deinitialize begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::Deinitialize begin \n" );
 
     if ( !m_UseCallerThreadDoDispatchLoop )
     {
@@ -125,34 +125,34 @@ GMI_RESULT MediaCenterService::Deinitialize()
     m_MediaCenter = NULL;
 
     DeinitializeNetwork();
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::Deinitialize end, function return %x \n", (uint32_t) GMI_SUCCESS );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::Deinitialize end, function return %x \n", (uint32_t) GMI_SUCCESS );
     return GMI_SUCCESS;
 }
 
 GMI_RESULT MediaCenterService::RegisterCommandExecutor( SafePtr<BaseCommandExecutor> CommandExecutor )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::RegisterCommandExecutor begin, passed CommandExecutor type=%d, id=%d \n", CommandExecutor->GetCommandType(), CommandExecutor->GetCommandId() );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::RegisterCommandExecutor begin, passed CommandExecutor type=%d, id=%d \n", CommandExecutor->GetCommandType(), CommandExecutor->GetCommandId() );
     GMI_RESULT Result = m_CommandPipeline->RegisterCommandExecutor( CommandExecutor );
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::RegisterCommandExecutor end, function return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::RegisterCommandExecutor end, function return %x \n", (uint32_t) Result );
     return Result;
 }
 
 GMI_RESULT MediaCenterService::UnregisterCommandExecutor( uint32_t CommandId )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::UnregisterCommandExecutor begin, passed CommandId=%d\n", CommandId );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::UnregisterCommandExecutor begin, passed CommandId=%d\n", CommandId );
     GMI_RESULT Result = m_CommandPipeline->UnregisterCommandExecutor( CommandId );
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::UnregisterCommandExecutor end, function return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::UnregisterCommandExecutor end, function return %x \n", (uint32_t) Result );
     return Result;
 }
 
 GMI_RESULT MediaCenterService::Run( boolean_t UseCallerThreadDoDispatchLoop )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::Run begin, passed UseCallerThreadDoDispatchLoop=%d\n", UseCallerThreadDoDispatchLoop );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::Run begin, passed UseCallerThreadDoDispatchLoop=%d\n", UseCallerThreadDoDispatchLoop );
 
     GMI_RESULT Result = m_CommandPipeline->Start( 1, 1, 20 );// 20ms is an experience value, to improve command response speed.
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterService::Run, CommandPipeline start failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterService::Run, CommandPipeline start failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -160,7 +160,7 @@ GMI_RESULT MediaCenterService::Run( boolean_t UseCallerThreadDoDispatchLoop )
     if ( FAILED( Result ) )
     {
         m_CommandPipeline->Stop();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterService::Run, CommandPipeline run failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterService::Run, CommandPipeline run failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -173,7 +173,7 @@ GMI_RESULT MediaCenterService::Run( boolean_t UseCallerThreadDoDispatchLoop )
     {
         void_t *ReturnValue = DispatchEntry();
         size_t ReturnInteger = (size_t) ReturnValue;
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::Run end, function return %x \n", (uint32_t) ReturnInteger );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::Run end, function return %x \n", (uint32_t) ReturnInteger );
         return (GMI_RESULT) ReturnInteger;
     }
 
@@ -181,7 +181,7 @@ GMI_RESULT MediaCenterService::Run( boolean_t UseCallerThreadDoDispatchLoop )
     if ( FAILED( Result ) )
     {
         m_CommandPipeline->Stop();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterService::Run, DispatchThread.Create failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterService::Run, DispatchThread.Create failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -190,22 +190,22 @@ GMI_RESULT MediaCenterService::Run( boolean_t UseCallerThreadDoDispatchLoop )
     {
         m_DispatchThread.Destroy();
         m_CommandPipeline->Stop();
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterService::Run, DispatchThread.Start failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterService::Run, DispatchThread.Start failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::Run end, function return %x \n", Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::Run end, function return %x \n", Result );
     return Result;
 }
 
 GMI_RESULT MediaCenterService::InitializeNetwork( long_t Server_IP, uint16_t Server_UDP_Port, size_t SessionBufferSize )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::InitializeNetwork begin, passed Server_IP=%x, Server_UDP_Port=%d, SessionBufferSize=%d \n", ntohl(Server_IP), ntohs(Server_UDP_Port), SessionBufferSize );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::InitializeNetwork begin, passed Server_IP=%x, Server_UDP_Port=%d, SessionBufferSize=%d \n", ntohl(Server_IP), ntohs(Server_UDP_Port), SessionBufferSize );
 
     m_UDP_Socket = BaseMemoryManager::Instance().New<GMI_Socket>();
     if ( NULL == m_UDP_Socket.GetPtr() )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::InitializeNetwork, GMI_Socket object allocation failed, function return %x \n ", (uint32_t) GMI_OUT_OF_MEMORY );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::InitializeNetwork, GMI_Socket object allocation failed, function return %x \n ", (uint32_t) GMI_OUT_OF_MEMORY );
         return GMI_OUT_OF_MEMORY;
     }
 
@@ -213,7 +213,7 @@ GMI_RESULT MediaCenterService::InitializeNetwork( long_t Server_IP, uint16_t Ser
     if ( FAILED( Result ) )
     {
         m_UDP_Socket = NULL;
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::InitializeNetwork, GMI_Socket object creation failed, function return %x \n ", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::InitializeNetwork, GMI_Socket object creation failed, function return %x \n ", (uint32_t) Result );
         return Result;
     }
 
@@ -226,7 +226,7 @@ GMI_RESULT MediaCenterService::InitializeNetwork( long_t Server_IP, uint16_t Ser
     {
         m_UDP_Socket->Close();
         m_UDP_Socket = NULL;
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::InitializeNetwork, GMI_Socket object bind failed, function return %x \n ", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::InitializeNetwork, GMI_Socket object bind failed, function return %x \n ", (uint32_t) Result );
         return Result;
     }
 
@@ -234,18 +234,18 @@ GMI_RESULT MediaCenterService::InitializeNetwork( long_t Server_IP, uint16_t Ser
     m_Server_UDP_Port   = Server_UDP_Port;
     m_SessionBufferSize = SessionBufferSize;
 
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::InitializeNetwork end, function return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::InitializeNetwork end, function return %x \n", (uint32_t) Result );
     return Result;
 }
 
 GMI_RESULT MediaCenterService::DeinitializeNetwork()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::DeinitializeNetwork begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::DeinitializeNetwork begin \n" );
 
     GMI_RESULT Result = m_UDP_Socket->Close();
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::DeinitializeNetwork, GMI_Socket object closing failed, function return %x \n ", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::DeinitializeNetwork, GMI_Socket object closing failed, function return %x \n ", (uint32_t) Result );
         return Result;
     }
 
@@ -258,22 +258,22 @@ GMI_RESULT MediaCenterService::DeinitializeNetwork()
     }
 
     m_UDP_Sessions.clear();
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::DeinitializeNetwork end, function return %x \n ", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterProxy::DeinitializeNetwork end, function return %x \n ", (uint32_t) Result );
     return Result;
 }
 
 void_t* MediaCenterService::DispatchThread( void_t *Argument )
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::DispatchThread begin, Argument=%p \n", Argument );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::DispatchThread begin, Argument=%p \n", Argument );
     MediaCenterService *Dispatcher = reinterpret_cast<MediaCenterService*> ( Argument );
     void_t *Return = Dispatcher->DispatchEntry();
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::DispatchThread end, Return=%p \n", Return );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::DispatchThread end, Return=%p \n", Return );
     return Return;
 }
 
 void_t* MediaCenterService::DispatchEntry()
 {
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::DispatchEntry begin \n" );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::DispatchEntry begin \n" );
     m_ThreadWorking = true;
 
     GMI_RESULT Result = GMI_FAIL;
@@ -323,7 +323,7 @@ void_t* MediaCenterService::DispatchEntry()
                 continue;
             }
             Result = GMI_FAIL;
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterService::DispatchEntry, SelectResult=%d, errno=%d \n", SelectResult, errno );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterService::DispatchEntry, SelectResult=%d, errno=%d \n", SelectResult, errno );
             break;
         }
 
@@ -336,7 +336,7 @@ void_t* MediaCenterService::DispatchEntry()
         Result = m_UDP_Socket->ReceiveFrom( ReceiveBuffer, MaxUDPPacketSize, 0, (struct sockaddr *) &From, &FromLength, &Transferred );
         if ( FAILED( Result ) )
         {
-            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterService::DispatchEntry, UDP_Socket->ReceiveFrom return %x \n", (uint32_t) Result );
+            DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterService::DispatchEntry, UDP_Socket->ReceiveFrom return %x \n", (uint32_t) Result );
             break;
         }
 #if defined( _WIN32 )
@@ -354,7 +354,7 @@ void_t* MediaCenterService::DispatchEntry()
             if ( NULL == UDP_Session.GetPtr() )
             {
                 Result = GMI_OUT_OF_MEMORY;
-                DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterService::DispatchEntry, UDP_Session object allocation failed, function return %x \n", (uint32_t) Result );
+                DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterService::DispatchEntry, UDP_Session object allocation failed, function return %x \n", (uint32_t) Result );
                 break;
             }
 #if defined( _WIN32 )
@@ -365,7 +365,7 @@ void_t* MediaCenterService::DispatchEntry()
             if ( FAILED( Result ) )
             {
                 UDP_Session = NULL;
-                DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "MediaCenterService::DispatchEntry, UDP_Session object opening failed, function return %x \n", (uint32_t) Result );
+                DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterService::DispatchEntry, UDP_Session object opening failed, function return %x \n", (uint32_t) Result );
                 break;
             }
 
@@ -378,6 +378,6 @@ void_t* MediaCenterService::DispatchEntry()
     }
 
     m_ThreadWorking = false;
-    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenterService::DispatchEntry end, function return %x \n", (uint32_t) Result );
+    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::DispatchEntry end, function return %x \n", (uint32_t) Result );
     return (void_t *) size_t(Result);
 }
