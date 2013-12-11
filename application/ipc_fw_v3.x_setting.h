@@ -33,7 +33,7 @@
 #define CAPABILITY_SW_FILE_NAME                   "/opt/config/capability_sw.xml"
 #define CAPABILITY_AUTO_FILE_NAME                 "/opt/config/capability_auto.xml"
 #define CAPABILITY_CONFIGURABLE_FILE_NAME         "/opt/config/capability_configurable.xml"
-//stream combine 
+//stream combine
 #define COMBINE_720P_FILE_NAME                    "/opt/config/720p_combine.xml"
 #define COMBINE_1080P_FILE_NAME                   "/opt/config/1080p_combine.xml"
 //limits
@@ -181,13 +181,13 @@
 #define VIDEO_IMAGE_DAY_NIGHT_SCHED_START_TIME      0
 //0~24*3600
 #define VIDEO_IMAGE_DAY_NIGHT_SCHED_END_TIME        0
-typedef enum 
+typedef enum
 {
-	DN_MODE_DAY = 0,
-	DN_MODE_NIGHT,
-	DN_MODE_AUTO,
-	DN_MODE_TIMING
-}DayNightMode;
+    DN_MODE_DAY = 0,
+    DN_MODE_NIGHT,
+    DN_MODE_AUTO,
+    DN_MODE_TIMING
+} DayNightMode;
 
 #define VIDEO_IRCUT_MODE_PATH                       "/Config/IRCUT/Mode/"
 #define VIDEO_IRCUT_MODE                            0
@@ -213,10 +213,10 @@ typedef enum
 #define VIDEO_LUX10_DAY_ADJUST_AVG                  230
 typedef enum
 {
-	IRCUT_MODE_AE = 0,
-	IRCUT_MODE_ADC,
-	IRCUT_MODE_AE_EX_INTENSITY
-}IrcutMode;
+    IRCUT_MODE_AE = 0,
+    IRCUT_MODE_ADC,
+    IRCUT_MODE_AE_EX_INTENSITY
+} IrcutMode;
 
 //video image key
 #define VIDEO_SOURCE_IMAGE_EXPOSURE_MODE_KEY        "ExposureMode"
@@ -229,7 +229,7 @@ typedef enum
 #define VIDEO_SOURCE_IMAGE_HUE_KEY                  "Hue"
 #define VIDEO_SOURCE_IMAGE_SHARPNESS_KEY            "Sharpness"
 
-#define VIDEO_IMAGE_ADVANCE_METERING_MODE_KEY       "MeteringMode"     
+#define VIDEO_IMAGE_ADVANCE_METERING_MODE_KEY       "MeteringMode"
 #define VIDEO_IMAGE_ADVANCE_BACKLIGHTCOMP_KEY       "BacklightCompFlag"
 #define VIDEO_IMAGE_ADVANCE_DCIRIS_FLAG_KEY         "DcIrisFlag"
 #define VIDEO_IMAGE_ADVANCE_LOCAL_EXPOSURE_KEY      "LocalExposure"
@@ -436,7 +436,7 @@ typedef enum
 #define OSD_TEXT_ROTATE_KEY                          "TextRotate"
 #define OSD_TEXT_CONTENT_KEY                         "TextContent"
 
-/////////audio 
+/////////audio
 #define AUDIO_ENCODE_PATH                           "/Config/Audio/Encode/"
 #define AUDIO_ENCODE_TYPE                           1
 #define AUDIO_ENCODE_CHANNEL                        1
@@ -560,6 +560,9 @@ typedef enum
 #define GMI_LOG_MODULE_SDK_ID                                 14
 #define GMI_LOG_MODULE_SDK_NAME                               "sdk"
 #define GMI_LOG_MODULE_SDK_DEBUG_LOG_LEVEL                    GMI_LOG_MODULE_DEFAULT_DEBUG_LOG_LEVEL
+
+#define LOG_SERVER_CONFIG_SHARE_MEMORY_SIZE                   "share_memory_size"
+#define GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE                     (1024*1024)
 
 #define GMI_H264_VIDEO_MONITOR_CONFIG_PATH                              "/Config/media_center/h264_video_monitor/"
 #define GMI_H264_VIDEO_MONITOR_CONFIG_ENABLE_KEY_NAME                   "enable"

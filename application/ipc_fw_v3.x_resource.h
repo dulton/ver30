@@ -30,8 +30,8 @@
 #define GMI_DAEMON_HEARDBEAT_GB28181                56785
 #define GMI_DAEMON_HEARDBEAT_ONVIF                  56786
 #define GMI_DAEMON_HEARDBEAT_WEB                    56787
-#define GMI_DAEMON_HEARTBEAT_SDK		    56788
-#define GMI_DAEMON_HEARTBEAT_AUTH		    56789
+#define GMI_DAEMON_HEARTBEAT_SDK		            56788
+#define GMI_DAEMON_HEARTBEAT_AUTH		            56789
 #define GMI_DAEMON_HEARTBEAT_CONFIG_TOOL            56790
 #define GMI_MONITOR_TO_SDK_PORT_DEFAULT             57008
 //onvif server
@@ -56,7 +56,7 @@
 //media center server
 #define GMI_MEDIA_CENTER_SERVER_COMMAND_PORT        56630
 #define GMI_MEDIA_CENTER_CLIENT_COMMAND_PORT        56631
-//streaming media server 
+//streaming media server
 #define MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH            "/Config/media_center_server/ipc_media_data_dispatch/"
 #define MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_SERVER_UDP_PORT "server_udp_port"
 #define GMI_STREAMING_MEDIA_SERVER_ENCODE_VIDEO1    56650
@@ -124,6 +124,22 @@
 
 //authentication server port
 #define GMI_AUTH_SERVER_PORT                        51243
+
+// these UDP port used by share memory log server and client
+#define LOG_SERVER_DEFAULT_SERVER_PORT              50000
+#define LOG_UPGRADE_DEFAULT_PORT                    50001
+#define LOG_MEDIA_CENTER_DEFAULT_PORT               50002
+#define LOG_CONTROL_CENTER_DEFAULT_PORT             50003
+#define LOG_GB28181_DEFAULT_PORT                    50004
+#define LOG_ONVIF_DEFAULT_PORT                      50005
+#define LOG_PRIVATE_STREAM_DEFAULT_PORT             50006
+#define LOG_STORAGE_DEFAULT_PORT                    50007
+#define LOG_WEB_DEFAULT_PORT                        50008
+#define LOG_AUTHENTICATION_DEFAULT_PORT             50009
+#define LOG_GB_RTP_DEFAULT_PORT                     50010
+#define LOG_ONVIF_RTSP_DEFAULT_PORT                 50011
+#define LOG_SDK_DEFAULT_PORT                        50012
+
 /************************ tcp port  ************************/
 // log server
 // publish server port, later log will use SDK to transmit log information and don't use this tcp port
@@ -134,98 +150,25 @@
 /************************ pipe name ************************/
 //daemon server
 
-/********* log *********/
-// log_server
-#define LOG_SERVER_DEFAULT_PIPE_NAME                    "log_server_pipe"
-// upgrade log
-#define LOG_UPGRADE_DEFAULT_CLIENT_PIPE_NAME            "log_upgrade_client_pipe"
-#define LOG_UPGRADE_DEFAULT_PEER_PIPE_NAME              "log_upgrade_peer_pipe"
-// media center log
-#define LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_NAME       "log_media_center_client_pipe"
-#define LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_NAME         "log_media_center_peer_pipe"
-// control center log
-#define LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_NAME     "log_control_center_client_pipe"
-#define LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_NAME       "log_control_center_peer_pipe"
-// gb28181 log
-#define LOG_GB28181_DEFAULT_CLIENT_PIPE_NAME            "log_gb28181_client_pipe"
-#define LOG_GB28181_DEFAULT_PEER_PIPE_NAME              "log_gb28181_peer_pipe"
-// onvif log
-#define LOG_ONVIF_DEFAULT_CLIENT_PIPE_NAME              "log_onvif_client_pipe"
-#define LOG_ONVIF_DEFAULT_PEER_PIPE_NAME                "log_onvif_peer_pipe"
-// transport log
-#define LOG_PRIVATE_STREAM_DEFAULT_CLIENT_PIPE_NAME     "log_private_stream_client_pipe"
-#define LOG_PRIVATE_STREAM_DEFAULT_PEER_PIPE_NAME       "log_private_stream_peer_pipe"
-// storage log
-#define LOG_STORAGE_DEFAULT_CLIENT_PIPE_NAME            "log_storage_client_pipe"
-#define LOG_STORAGE_DEFAULT_PEER_PIPE_NAME              "log_storage_peer_pipe"
-// web log
-#define LOG_WEB_DEFAULT_CLIENT_PIPE_NAME                "log_web_client_pipe"
-#define LOG_WEB_DEFAULT_PEER_PIPE_NAME                  "log_web_peer_pipe"
-// authentication log
-#define LOG_AUTHENTICATION_DEFAULT_CLIENT_PIPE_NAME     "log_authentication_client_pipe"
-#define LOG_AUTHENTICATION_DEFAULT_PEER_PIPE_NAME       "log_authentication_peer_pipe"
-// gb rtp log
-#define LOG_GB_RTP_DEFAULT_CLIENT_PIPE_NAME             "log_gb_rtp_client_pipe"
-#define LOG_GB_RTP_DEFAULT_PEER_PIPE_NAME               "log_gb_rtp_peer_pipe"
-// onvif rtsp log
-#define LOG_ONVIF_RTSP_DEFAULT_CLIENT_PIPE_NAME         "log_onvif_rtsp_client_pipe"
-#define LOG_ONVIF_RTSP_DEFAULT_PEER_PIPE_NAME           "log_onvif_rtsp_peer_pipe"
-// sdk log
-#define LOG_SDK_DEFAULT_CLIENT_PIPE_NAME                "log_sdk_client_pipe"
-#define LOG_SDK_DEFAULT_PEER_PIPE_NAME                  "log_sdk_peer_pipe"
+#define  GMI_RESOURCE_XML                           "/opt/config/gmi_resource.xml"
+#define  GMI_SYS_SDK_PORT_PATH                      "/ipc/connect_port_resource"
+#define  GMI_SYS_SERVER_TO_SDK_PORT_ITEM            "sys_server_to_sdk_port"
+#define  GMI_SDK_TO_SYS_SERVER_PORT_ITEM            "sdk_to_sys_server_port"
 
-#define  GMI_RESOURCE_XML                               "/opt/config/gmi_resource.xml"
-#define  GMI_SYS_SDK_PORT_PATH                          "/ipc/connect_port_resource"
-#define  GMI_SYS_SERVER_TO_SDK_PORT_ITEM                "sys_server_to_sdk_port"
-#define  GMI_SDK_TO_SYS_SERVER_PORT_ITEM                "sdk_to_sys_server_port"
-
-#define SYS_SERVER_TO_SDK_PORT                          57000
-#define SDK_TO_SYS_SERVER_PORT                          57002
+#define SYS_SERVER_TO_SDK_PORT                      57000
+#define SDK_TO_SYS_SERVER_PORT                      57002
 
 
 /************************ mutex id ************************/
 //daemon server
 
 /********* log *********/
-#define LOG_SERVER_DEFAULT_PIPE_MUTEX_ID                1234
-// upgrade log
-#define LOG_UPGRADE_DEFAULT_CLIENT_PIPE_MUTEX_ID        1236
-#define LOG_UPGRADE_DEFAULT_PEER_PIPE_MUTEX_ID          1238
-// media center log
-#define LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID   1240
-#define LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID     1242
-// control center log
-#define LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID 1244
-#define LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID   1246
-// gb28181 log
-#define LOG_GB2818_DEFAULT_CLIENT_PIPE_MUTEX_ID         1248
-#define LOG_GB2818_DEFAULT_PEER_PIPE_MUTEX_ID           1250
-// onvif log
-#define LOG_ONVIF_DEFAULT_CLIENT_PIPE_MUTEX_ID          1252
-#define LOG_ONVIF_DEFAULT_PEER_PIPE_MUTEX_ID            1254
-// transport log
-#define LOG_PRIVATE_STREAM_DEFAULT_CLIENT_PIPE_MUTEX_ID 1256
-#define LOG_PRIVATE_STREAM_DEFAULT_PEER_PIPE_MUTEX_ID   1258
-// storage log
-#define LOG_STORAGE_DEFAULT_CLIENT_PIPE_MUTEX_ID        1260
-#define LOG_STORAGE_DEFAULT_PEER_PIPE_MUTEX_ID          1262
-// web log
-#define LOG_WEB_DEFAULT_CLIENT_PIPE_MUTEX_ID            1264
-#define LOG_WEB_DEFAULT_PEER_PIPE_MUTEX_ID              1266
-// authentication log
-#define LOG_AUTHENTICATION_DEFAULT_CLIENT_PIPE_MUTEX_ID 1268
-#define LOG_AUTHENTICATION_DEFAULT_PEER_PIPE_MUTEX_ID   1270
-// gb rtp log
-#define LOG_GB_RTP_DEFAULT_CLIENT_PIPE_MUTEX_ID         1272
-#define LOG_GB_RTP_DEFAULT_PEER_PIPE_MUTEX_ID           1274
-// onvif rtsp log
-#define LOG_ONVIF_RTSP_DEFAULT_CLIENT_PIPE_MUTEX_ID     1276
-#define LOG_ONVIF_RTSP_DEFAULT_PEER_PIPE_MUTEX_ID       1278
-// sdk log
-#define LOG_SDK_DEFAULT_CLIENT_PIPE_MUTEX_ID            1280
-#define LOG_SDK_DEFAULT_PEER_PIPE_MUTEX_ID              1282
+#define LOG_SERVER_CONFIG_PATH                                       "/Config/log_server/"
+//log server
+#define LOG_SERVER_CONFIG_SHARE_MEMORY_MUTEX_ID                      "share_memory_mutex_id"
+#define GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID             2340
 
-//streaming media data dispatch 
+//streaming media data dispatch
 #define MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH             "/Config/media_center_server/ipc_media_data_dispatch/"
 #define MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_IPC_MUTEX_KEY    "ipc_mutex_key"
 #define GMI_STREAMING_MEDIA_SERVER_ENCODE_VIDEO1_IPC_MUTEX_KEY       2346
@@ -236,7 +179,12 @@
 #define GMI_STREAMING_MEDIA_SERVER_DECODE_AUDIO1_IPC_MUTEX_KEY       2356
 
 /************************ share memory key ************************/
-//streaming media center server 
+
+//log server
+#define LOG_SERVER_CONFIG_SHARE_MEMORY_KEY                           "share_memory_key"
+#define GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY                       1230
+
+//streaming media center server
 // the same as MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_IPC_MUTEX_KEY
 //#define MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH             "/Config/media_center_server/ipc_media_data_dispatch/"
 #define MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_SHARE_MEMORY_KEY "share_memory_key"
@@ -248,7 +196,7 @@
 #define GMI_STREAMING_MEDIA_SERVER_DECODE_AUDIO1_SHARE_MEMORY_KEY    1239
 
 /************************ multicast address ************************/
-//onvif rtsp server 
+//onvif rtsp server
 #define GMI_ONVIF_RTSP_SERVER_ENCODE_VIDEO1_MULTICAST_ADDRESS        "224.0.0.100"
 #define GMI_ONVIF_RTSP_SERVER_ENCODE_VIDEO2_MULTICAST_ADDRESS        "224.0.0.100"
 #define GMI_ONVIF_RTSP_SERVER_ENCODE_VIDEO3_MULTICAST_ADDRESS        "224.0.0.100"
