@@ -40,6 +40,7 @@ enum LogStorageLimitMode
     e_LogStorageLimitMode_Duration     = 3,// in day unit
 };
 
+// used to transport between processes in IPC, and log server and log tool
 struct UserLogInfo
 {
     uint16_t    s_Type;

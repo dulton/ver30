@@ -5,8 +5,10 @@
 #include "gmi_system_headers.h"
 #include "log_header.h"
 
+#if !defined( FILE_LOGGER_SERVER_MODULE_ID )
 #define FILE_LOGGER_SERVER_MODULE_ID   0
 #define FILE_LOGGER_SERVER_MODULE_NAME "log_server"
+#endif//FILE_LOGGER_SERVER_MODULE_ID
 
 class ApplicationPacket;
 class GMI_LogHandler;

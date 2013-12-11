@@ -10,7 +10,7 @@ protected:
 public:
     virtual ~BaseSession(void);
 
-    virtual GMI_RESULT Close() = 0;
+    virtual GMI_RESULT Close();
     virtual GMI_RESULT Receive() = 0;
     virtual GMI_RESULT Receive( const uint8_t *Buffer, size_t BufferSize ) = 0;
     // To UDP session server case, FD_HANDLE can not identify some client session.

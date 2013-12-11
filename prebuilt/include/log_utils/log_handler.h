@@ -16,18 +16,6 @@ public:
     virtual GMI_RESULT  Deinitialize() = 0;
     virtual GMI_RESULT  UserLog( uint16_t Type, uint16_t Subtype, uint64_t LogTime, const char_t *UserName, uint32_t UserNameLength, const void_t *SpecificData, uint32_t SpecificDataLength ) = 0;
     virtual GMI_RESULT  DebugLog( uint16_t Level, uint64_t LogTime, uint64_t ProcessId, uint64_t ThreadId, uint32_t ModuleId, const char_t *ModuleName, const char_t *FileName, const char_t *FunctionName, uint32_t LineNumber, const void_t *SpecificData, uint32_t SpecificDataLength ) = 0;
-    virtual boolean_t   IsPrinter()
-    {
-        return false;
-    }
-    virtual boolean_t   IsPublisher()
-    {
-        return false;
-    }
-    virtual boolean_t   IsRepository()
-    {
-        return false;
-    }
 
     void_t  ProcessUserLog( boolean_t Enable )
     {

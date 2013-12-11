@@ -37,9 +37,6 @@ public:
     GMI_RESULT  QueryDebugLog( uint64_t StartTime, uint64_t EndTime, uint8_t *Reply, uint32_t *ReplyLength );
 
 private:
-    GMI_RESULT  GetSystemTime( uint32_t& Second, uint32_t& Microsecond );
-
-private:
     FileLogger                                                          m_LogClientOperationFile;
     boolean_t                                                           m_LogClientOperationFileOwner;
     uint32_t                                                            m_ModuleId;
@@ -59,4 +56,4 @@ private:
 #define DEBUG_LOG( Client, LogLevel, Format, ... )                                                    if (NULL!=Client) (Client)->DebugLogV( LogLevel, __FILE__, __FUNCTION__, __LINE__, Format, ##__VA_ARGS__ )
 #endif//DEBUG_LOG_DEFINITION
 
-extern  LogClient* g_DefaultLogClient;
+extern  LogClient* g_DefaultPipeLogClient;

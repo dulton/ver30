@@ -18,7 +18,6 @@ public:
     GMI_RESULT  DebugLogV( uint16_t Level, const char_t *FileName, const char_t *FunctionName, uint32_t LineNumber, const char_t *Format, ... );
 
 private:
-    GMI_RESULT  GetSystemTime( uint32_t& Second, uint32_t& Microsecond );
 
     GMI_RESULT  GetLogFileName( char_t *LogFileName, long_t FileNameBufferLength );
     GMI_RESULT  GetDebugLogFullPath( char_t *LogFullPath, long_t FullPathBufferLength, const char_t *LogPathName, const char_t *LogFileName, const char_t *ModuleName );
