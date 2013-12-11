@@ -6,7 +6,6 @@
 #include "gmi_system_headers.h"
 #include "log_printer.h"
 #include "log_publisher.h"
-#include "log_server.h"
 #include "log_tcp_server.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "ipc_fw_v3.x_setting.h"
@@ -14,14 +13,14 @@
 #include "gmi_config_api.h"
 #include "gmi_daemon_heartbeat_api.h"
 #endif
+#include "share_memory_log_server.h"
 
 void* DaemonHeartbeatProc( void *Argument );
 
-GMI_RESULT GetHeartbeatInterval( uint32_t *Interval );
-GMI_RESULT GetLogServerPipeName( char_t *PipeName, size_t *BufferLength );
-GMI_RESULT GetLogServerPipeMutexId( uint32_t *MutexId );
 GMI_RESULT GetLogPublishServerAddress( uint32_t *Address );
 GMI_RESULT GetLogPublishServerPort( uint16_t *Port );
+GMI_RESULT GetLogServerConfig( uint16_t *ServerPort, long_t *ShareMemoryKey, size_t *ShareMemorySize, long_t *IpcMutexKey, uint32_t *DebugLogLevel );
+GMI_RESULT GetHeartbeatInterval( uint32_t *Interval );
 
 static uint32_t l_Heartbeat_Interval = GMI_LOG_SERVER_HEARTBEAT_INTERVAL;
 
@@ -109,29 +108,17 @@ int32_t main( int32_t argc, char_t* argv[] )
     Publisher.ProcessUserLog( true );
     Publisher.ProcessDebugLog( true );
 
-#if defined( __linux__ )
-    char_t PipeName[MAX_CHAR_BUF_LEN];
-    size_t PipeNameLength = MAX_CHAR_BUF_LEN;
-#elif defined( _WIN32 )
-    char_t PipeName[MAX_PATH_LENGTH];
-    size_t PipeNameLength = MAX_PATH_LENGTH;
-#endif
-    Result = GetLogServerPipeName( PipeName, &PipeNameLength );
+    uint16_t ServerPort = 0;
+    long_t   ShareMemoryKey = 0;
+    size_t   ShareMemorySize = 0;
+    long_t   IpcMutexKey = 0;
+    uint32_t DebugLogLevel = 0;
+    Result = GetLogServerConfig( &ServerPort, &ShareMemoryKey, &ShareMemorySize, &IpcMutexKey, &DebugLogLevel );
     if ( FAILED( Result ) )
     {
         Publisher.Deinitialize();
         Printer.Deinitialize();
-        printf( "get log server pipe name fail, Result=%x \n", (uint32_t) Result );
-        return Result;
-    }
-
-    uint32_t MutexId = 0;
-    Result = GetLogServerPipeMutexId( &MutexId );
-    if ( FAILED( Result ) )
-    {
-        Publisher.Deinitialize();
-        Printer.Deinitialize();
-        printf( "get log server pipe mutex id fail, Result=%x \n", (uint32_t) Result );
+        printf( "get log server config fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -146,7 +133,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 
 #define USE_PIPE_TO_IMPLEMENT_LOG 1
 
-    LogServer Server;
+    ShareMemoryLogServer Server;
 #if USE_PIPE_TO_IMPLEMENT_LOG
     GMI_Thread HeartBeatThread;
     Result = HeartBeatThread.Create( NULL, 0, DaemonHeartbeatProc, &Server );
@@ -169,7 +156,7 @@ int32_t main( int32_t argc, char_t* argv[] )
     }
 #endif
 
-    Result = Server.Initialize( PipeName, MutexId, GMI_IPC_LOG_FILE_PATH );
+    Result = Server.Initialize( ServerPort, ShareMemoryKey, ShareMemorySize, IpcMutexKey, GMI_IPC_LOG_FILE_PATH, DebugLogLevel );
     if ( FAILED( Result ) )
     {
 #if USE_PIPE_TO_IMPLEMENT_LOG
@@ -302,120 +289,14 @@ void* DaemonHeartbeatProc( void *Argument )
     return (void_t*) GMI_SUCCESS;
 }
 
-#define LOG_SERVER_CONFIG_PATH                    "/Config/log_server/"
-#define LOG_SERVER_CONFIG_HEARTBEAT_INTERVAL      "heartbeat_interval"
-#define LOG_SERVER_CONFIG_SERVER_PIPE_NAME        "server_pipe_name"
-#define LOG_SERVER_CONFIG_SERVER_MUTEX_ID         "server_mutex_id"
+
+#define LOG_SERVER_CONFIG_SERVER_UDP_PORT         "server_udp_port"
 
 #define LOG_SERVER_CONFIG_PUBLISH_SERVER_ADDRESS  "publish_server_address"
 #define LOG_SERVER_CONFIG_PUBLISH_SERVER_PORT     "publish_server_port"
+#define LOG_SERVER_CONFIG_DEBUG_LOG_LEVEL         "debug_log_level"
 
-GMI_RESULT GetHeartbeatInterval( uint32_t *Interval )
-{
-#if defined( __linux__ )
-
-    FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-
-    printf( "log server, GetHeartbeatInterval, Default_Interval=%d \n", GMI_LOG_SERVER_HEARTBEAT_INTERVAL );
-
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_HEARTBEAT_INTERVAL, GMI_LOG_SERVER_HEARTBEAT_INTERVAL, (int32_t *) Interval, GMI_CONFIG_READ_WRITE );
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-
-    Result = GMI_XmlFileSave(Handle);
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-
-    printf( "log server, GetHeartbeatInterval, Default_Interval=%d, Interval=%d \n", GMI_LOG_SERVER_HEARTBEAT_INTERVAL, *Interval );
-
-#elif defined( _WIN32 )
-    *Interval = GMI_LOG_SERVER_HEARTBEAT_INTERVAL;
-#endif
-    return GMI_SUCCESS;
-}
-
-GMI_RESULT GetLogServerPipeName( char_t *PipeName, size_t *BufferLength )
-{
-#if defined( __linux__ )
-
-#if 1
-    FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
-    if ( FAILED( Result ) )
-    {
-        printf( "GetLogServerPipeName, GMI_XmlOpen, Result=%x \n", (uint32_t) Result );
-        return Result;
-    }
-
-    printf( "log server, GetLogServerPipeName, Default_PipeName=%s \n", LOG_SERVER_DEFAULT_PIPE_NAME );
-
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SERVER_PIPE_NAME, LOG_SERVER_DEFAULT_PIPE_NAME, PipeName, GMI_CONFIG_READ_WRITE );
-    if ( FAILED( Result ) )
-    {
-        printf( "GetLogServerPipeName, GMI_XmlRead, Result=%x \n", (uint32_t) Result );
-        return Result;
-    }
-
-    Result = GMI_XmlFileSave(Handle);
-    if ( FAILED( Result ) )
-    {
-        printf( "GetLogServerPipeName, GMI_XmlFileSave, Result=%x \n", (uint32_t) Result );
-        return Result;
-    }
-#else
-    // GMI_XmlRead can not read string for now, so we copy a test string
-    strcpy( PipeName, LOG_SERVER_DEFAULT_PIPE_NAME );
-#endif
-    printf( "log server, GetLogServerPipeName, Default_PipeName=%s, PipeName=%s \n", LOG_SERVER_DEFAULT_PIPE_NAME, PipeName );
-
-#elif defined( _WIN32 )
-    strcpy_s( PipeName, *BufferLength, LOG_SERVER_DEFAULT_PIPE_NAME );
-#endif
-    *BufferLength = strlen( PipeName );
-    return GMI_SUCCESS;
-}
-
-GMI_RESULT GetLogServerPipeMutexId( uint32_t *MutexId )
-{
-#if defined( __linux__ )
-
-    FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-
-    printf( "log server, GetLogServerPipeMutexId, Default_MutexId=%d \n", LOG_SERVER_DEFAULT_PIPE_MUTEX_ID );
-
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SERVER_MUTEX_ID, LOG_SERVER_DEFAULT_PIPE_MUTEX_ID, (int32_t *) MutexId, GMI_CONFIG_READ_WRITE );
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-
-    Result = GMI_XmlFileSave(Handle);
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-
-    printf( "log server, GetLogServerPipeMutexId, Default_MutexId=%d, MutexId=%d \n", LOG_SERVER_DEFAULT_PIPE_MUTEX_ID, *MutexId );
-
-#elif defined( _WIN32 )
-    *MutexId = LOG_SERVER_DEFAULT_PIPE_MUTEX_ID;
-#endif
-    return GMI_SUCCESS;
-}
+#define LOG_SERVER_CONFIG_HEARTBEAT_INTERVAL      "heartbeat_interval"
 
 GMI_RESULT GetLogPublishServerAddress( uint32_t *Address )
 {
@@ -459,12 +340,13 @@ GMI_RESULT GetLogPublishServerPort( uint16_t *Port )
     }
 
     printf( "GetLogPublishServerPort, Default_Port=%d \n", GMI_LOG_PUBLISH_SERVER_PORT );
-
     Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_PUBLISH_SERVER_PORT, GMI_LOG_PUBLISH_SERVER_PORT, &ServerPort, GMI_CONFIG_READ_WRITE );
     if ( FAILED( Result ) )
     {
         return Result;
     }
+    printf( "GetLogPublishServerPort, Default_Port=%d, ServerPort=%d \n", GMI_LOG_PUBLISH_SERVER_PORT, ServerPort );
+    *Port = htons((uint16_t)ServerPort);
 
     Result = GMI_XmlFileSave(Handle);
     if ( FAILED( Result ) )
@@ -472,9 +354,6 @@ GMI_RESULT GetLogPublishServerPort( uint16_t *Port )
         return Result;
     }
 
-    printf( "GetLogPublishServerPort, Default_Port=%d, ServerPort=%d \n", GMI_LOG_PUBLISH_SERVER_PORT, ServerPort );
-
-    *Port = htons((uint16_t)ServerPort);
 #elif defined( _WIN32 )
     uint32_t ServerPort = 0;
 
@@ -487,6 +366,120 @@ GMI_RESULT GetLogPublishServerPort( uint16_t *Port )
     READ_MYSELF( ScanfResult );
 
     *Port = htons((uint16_t)ServerPort);
+#endif
+    return GMI_SUCCESS;
+}
+
+GMI_RESULT GetLogServerConfig( uint16_t *ServerPort, long_t *ShareMemoryKey, size_t *ShareMemorySize, long_t *IpcMutexKey, uint32_t *DebugLogLevel )
+{
+    int32_t TempServerPort = 0;
+#if defined( __linux__ )
+
+    FD_HANDLE  Handle = NULL;
+    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+
+    printf( "log server, GetLogServerUDPPort, Default_UDP_Port=%d \n", LOG_SERVER_DEFAULT_SERVER_PORT );
+    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SERVER_UDP_PORT, LOG_SERVER_DEFAULT_SERVER_PORT, (int32_t *) &TempServerPort, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+    printf( "log server, GetLogServerUDPPort, Default_UDP_Port=%d, UDP_Port==%d \n", LOG_SERVER_DEFAULT_SERVER_PORT, TempServerPort );
+
+    printf( "log server, GetLogServerShareMemoryKey, DefaultShareMemoryKey=%d \n", GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY );
+    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_KEY, GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY, (int32_t *) ShareMemoryKey, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+    printf( "log server, GetLogServerShareMemoryKey, DefaultShareMemoryKey=%d, ShareMemoryKey==%ld \n", GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY, *ShareMemoryKey );
+
+    printf( "log server, GetLogServerIpcMutexKey, DefaultIpcMutexKey=%d \n", GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID );
+    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_MUTEX_ID, GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID, (int32_t *) IpcMutexKey, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+    printf( "log server, GetLogServerIpcMutexKey, DefaultIpcMutexKey=%d, IpcMutexKey==%ld \n", GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID, *IpcMutexKey );
+
+    Result = GMI_XmlFileSave(Handle);
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+
+    Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+
+    printf( "log server, GetLogServerShareMemorySize, DefaultShareMemorySize=%d \n", GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE );
+    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_SIZE, GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE, (int32_t *) ShareMemorySize, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+    printf( "log server, GetLogServerShareMemorySize, DefaultShareMemorySize=%d, ShareMemorySize=%d \n", GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE, *ShareMemorySize );
+
+    printf( "log server, GetLogServerDebugLevel, DefaultDebugLogLevel=%d \n", GMI_LOG_MODULE_LOG_DEBUG_LOG_LEVEL );
+    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_DEBUG_LOG_LEVEL, GMI_LOG_MODULE_LOG_DEBUG_LOG_LEVEL, (int32_t *) DebugLogLevel, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+    printf( "log server, GetLogServerDebugLevel, DefaultDebugLogLevel=%d, DebugLogLevel=%d \n", GMI_LOG_MODULE_LOG_DEBUG_LOG_LEVEL, *DebugLogLevel );
+
+    Result = GMI_XmlFileSave(Handle);
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+
+#elif defined( _WIN32 )
+    TempServerPort    = LOG_SERVER_DEFAULT_SERVER_PORT;
+    *ShareMemoryKey   = GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY;
+    *IpcMutexKey      = GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID;
+
+    *ShareMemorySize  = GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE;
+    *DebugLogLevel    = GMI_LOG_MODULE_LOG_DEBUG_LOG_LEVEL;
+#endif
+    *ServerPort       = (uint16_t) TempServerPort;
+
+    return GMI_SUCCESS;
+}
+
+GMI_RESULT GetHeartbeatInterval( uint32_t *Interval )
+{
+#if defined( __linux__ )
+
+    FD_HANDLE  Handle = NULL;
+    GMI_RESULT Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+
+    printf( "log server, GetHeartbeatInterval, Default_Interval=%d \n", GMI_LOG_SERVER_HEARTBEAT_INTERVAL );
+    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_HEARTBEAT_INTERVAL, GMI_LOG_SERVER_HEARTBEAT_INTERVAL, (int32_t *) Interval, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+    printf( "log server, GetHeartbeatInterval, Default_Interval=%d, Interval=%d \n", GMI_LOG_SERVER_HEARTBEAT_INTERVAL, *Interval );
+
+    Result = GMI_XmlFileSave(Handle);
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+
+#elif defined( _WIN32 )
+    *Interval = GMI_LOG_SERVER_HEARTBEAT_INTERVAL;
 #endif
     return GMI_SUCCESS;
 }
