@@ -388,7 +388,7 @@ GMI_RESULT GetLogServerConfig( uint16_t *ServerPort, long_t *ShareMemoryKey, siz
     {
         return Result;
     }
-    printf( "log server, GetLogServerUDPPort, Default_UDP_Port=%d, UDP_Port==%d \n", LOG_SERVER_DEFAULT_SERVER_PORT, TempServerPort );
+    printf( "log server, GetLogServerUDPPort, Default_UDP_Port=%d, UDP_Port=%d \n", LOG_SERVER_DEFAULT_SERVER_PORT, TempServerPort );
 
     printf( "log server, GetLogServerShareMemoryKey, DefaultShareMemoryKey=%d \n", GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY );
     Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_KEY, GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY, (int32_t *) ShareMemoryKey, GMI_CONFIG_READ_WRITE );
@@ -396,7 +396,7 @@ GMI_RESULT GetLogServerConfig( uint16_t *ServerPort, long_t *ShareMemoryKey, siz
     {
         return Result;
     }
-    printf( "log server, GetLogServerShareMemoryKey, DefaultShareMemoryKey=%d, ShareMemoryKey==%ld \n", GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY, *ShareMemoryKey );
+    printf( "log server, GetLogServerShareMemoryKey, DefaultShareMemoryKey=%d, ShareMemoryKey=%ld \n", GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY, *ShareMemoryKey );
 
     printf( "log server, GetLogServerIpcMutexKey, DefaultIpcMutexKey=%d \n", GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID );
     Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_MUTEX_ID, GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID, (int32_t *) IpcMutexKey, GMI_CONFIG_READ_WRITE );
@@ -404,7 +404,7 @@ GMI_RESULT GetLogServerConfig( uint16_t *ServerPort, long_t *ShareMemoryKey, siz
     {
         return Result;
     }
-    printf( "log server, GetLogServerIpcMutexKey, DefaultIpcMutexKey=%d, IpcMutexKey==%ld \n", GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID, *IpcMutexKey );
+    printf( "log server, GetLogServerIpcMutexKey, DefaultIpcMutexKey=%d, IpcMutexKey=%ld \n", GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID, *IpcMutexKey );
 
     Result = GMI_XmlFileSave(Handle);
     if ( FAILED( Result ) )
