@@ -14,9 +14,21 @@ extern "C"
 #define MAX_LEN_ADDR_DISK   64
 #define MAX_LEN_FILE_REC    128
 
+/*磁盘介质类型*/
 #define TYPE_STORAGE_SD     0
 #define TYPE_STORAGE_USB    1
 #define TYPE_STORAGE_NAS    2
+
+/*磁盘状态*/
+#define STATUS_DISK_NORMAL   0    //正常
+#define STATUS_DISK_ERR      1    //异常
+#define STATUS_DISK_FULL     2    //已满
+#define STATUS_DISK_NOFORMAT 3    //未格式化
+
+/*磁盘属性*/
+#define ATTR_DISK_WR         0    //可读写
+#define ATTR_DISK_W          1    //可写
+#define ATTR_DISK_R          2    //可读
 
 
 
@@ -34,7 +46,7 @@ typedef struct tagStorageFormat
 typedef struct tagStorageInit
 {
     uint32_t   s_StorageDevice;   //存储介质类型：0-SD（默认），1-USB，2-NAS
-    uint32_t   s_RecFileSize;                      //录像文件大小，{64、128、256、512}单位MB，默认256MB
+    uint32_t   s_RecFileSize;     //录像文件大小，{64、128、256、512}单位MB，默认256MB
     uint32_t   s_Reserved[4];
 }StorageInitIn;
 
@@ -58,7 +70,7 @@ typedef struct tagStorageStatusQueryRes
     uint32_t   s_StorageDiskNo;       //磁盘号：从1开始
     uint32_t   s_TotalSpaceVolume;    //磁盘总容量，单位MB
     uint32_t   s_FreeSpaceVolume;     //磁盘剩余空间容量，单位MB
-    uint8_t    s_DiskStatus;          //磁盘状态：0-正常（默认）、1-异常、2-已满
+    uint8_t    s_DiskStatus;          //磁盘状态：0-正常（默认）、1-异常、2-已满、3-未格式化
     uint8_t    s_DiskType;            //磁盘类型：0-SD（默认）、1-USB、2-NAS
     uint8_t    s_DiskAttribute;       //磁盘属性：0-可读写（默认）、1-可写、2-可读
     uint8_t    s_DiskFormatRate;      //磁盘格式化进度，[0-100], 单位%
@@ -86,8 +98,8 @@ typedef struct tagRecordScheduleConfig
 {
     uint8_t   s_Enable;                //录像计划是否启用标记：0-未启用，1-启用
     uint8_t   s_Reserved[11];        
-    uint32_t  s_RecStartTime[7][4];    //录像起始时间
-    uint32_t  s_RecEndTime[7][4];      //录像停止时间
+    uint32_t  s_RecStartTime[7][4];    //录像起始时间,高16位-时刻，低16位分钟
+    uint32_t  s_RecEndTime[7][4];      //录像停止时间,高16位-时刻，低16位分钟
 }RecordScheduleConfigIn;
 
 //NAS配置输入参数
@@ -106,7 +118,13 @@ typedef struct tagRecordCtrl
     uint8_t   s_RecTrigMode;          //录像触发类型：0-定时录像（默认），1-手动录像，2-移动侦测,3-报警
     uint8_t   s_RecTrigChan;          //触发通道号
     uint8_t   s_AlarmTrigNo;          //报警触发通道号
+    uint8_t   s_EncodeType;          //0-None, 1-H264,2-MJPEG
+    uint8_t   s_AudioType;           //0-None,1-G711a, 2-G711u, 3-G726
+    uint8_t   s_VideoFrame;          //视频帧率
+    uint8_t   s_AudioFrame;          //音频帧率
     uint8_t   s_Reserved[4]; 
+    uint16_t   s_VideoWide;           //视频宽
+    uint16_t   s_VideoHeight;          //视频高
 }RecordCtrlIn;
 
 //录像文件查询输入参数
@@ -133,30 +151,54 @@ typedef struct tagRecordFileQueryRes
 }RecordFileQueryResOut;
 
 //录像下载和回放查询输入参数
+typedef struct tagTimeInfo
+{
+    uint32_t  s_RecReplayStartTime;    //录像回放起始时间点，UTC时间，单位：秒，
+                                       //当录像查询类型为回放时用
+    uint32_t  s_RecReplayEndTime;      //录像回放结束时间点，UTC时间，单位：秒，
+                                       //当录像查询类型为回放时用
+    uint32_t  s_LastReplayStartTime;   //上次录像回放文件的起始时间，UTC时间，
+                                       //第一次进行回放查询时与录像回放起始时间点相同
+    uint32_t  s_LastReplayEndTime;     //上次录像回放文件的终止时间，UTC时间，
+                                       //第一次进行回放查询时与录像回放起始时间点相同
+    uint16_t  s_ExpReplayFileNo;       //期望回放的录像文件在回放总文件数中的序号，从1开始
+    uint16_t  s_Reserved;
+}ReplayInfo ;
+
 typedef struct tagRecordDownReplayQuery
 {
- 	uint8_t   s_RecQueryType;                   //录像查询类型：0-下载，1-回放
- 	uint8_t   s_Reserved[7];          
-    char_t   s_RecFileName[MAX_LEN_FILE_REC];   //录像文件名称（查询显示在web上的文件名称）,
-                                                //当录像查询类型为下载时用
-    uint32_t  s_RecReplayTime;                  //录像回放时间点，UTC时间，单位：秒，
-                                                //当录像查询类型为回放时用
+    uint8_t      s_RecQueryType;                     //录像查询类型：0-下载，1-回放
+    uint8_t      s_Reserved[7];          
+    union 
+    {
+        char_t   s_RecFileName[MAX_LEN_FILE_REC];     //录像文件名称（查询显示在web上的文件名称）,
+                                                      //当录像查询类型为下载时用
+        ReplayInfo s_TimeRangeInfo;                   //录像回放起始和结束时间点，UTC时间，单位：秒，
+                                                      //当录像查询类型为回放时用
+    }RecDownReplayInfo;
 }RecordDownReplayQueryIn;
 
+//录像下载和回放查询输出参数
 typedef struct tagRecordDownReplayQueryRes
 {
- 	uint8_t   s_RecQueryType;                     //录像查询类型：0-下载，1-回放
- 	uint8_t   s_Reserved0[7];          
-    char_t   s_RecFileName[MAX_LEN_FILE_REC];     //录像文件路径和名称（真正磁盘中存储的文件名称）
-    uint32_t  s_RecFileOffset;                    //录像文件读取位置
-    uint32_t  s_RecFileSize;		              //录像文件大小，回放时录像文件大小包括当前时间点到一
-                                                  //天结束位置的总数据量大小
-    uint16_t  s_RecFileTotalNum;                  //录像文件总数，对录像回放有用
-    uint16_t  s_RecFileReplayNum;                 //需要回放的录像文件数，对录像回放有用 
-    uint16_t  s_RecFileCurNo;                     //回放的录像数据处于当前文件的序号，对录像回放有用，
-                                                  //从1开始
-    uint8_t  s_RecDiskTotalNum;                   // 磁盘总数，对录像回放有用
-    uint8_t  s_RecDiskCurNo;                      //当前磁盘序号，对录像回放有用，从1开始
+    uint8_t   s_RecQueryType;        //录像查询类型：0-下载，1-回放
+    uint8_t   s_StreamType;          //0-PS,1-ES    
+	uint8_t   s_EncodeType; 		 //0-None, 1-H264,2-MJPEG	
+    uint8_t   s_AudioType;			 //0-None,1-G711a, 2-G711u, 3-G726, 	
+    uint8_t   s_Reserved[2]; 
+    uint16_t   s_VideoWide;           //视频宽
+    uint16_t   s_VideoHeight;         //视频高           
+    char_t    s_RecFileName[MAX_LEN_FILE_REC];     //录像文件路径和名称（真正磁盘中存储的文件名称）
+    uint32_t  s_RecFileOffset;        //录像文件读取位置
+    uint32_t  s_RecFileSize;		  //录像文件大小，回放时作为当前要回放的文件大小,
+                                      //单位：字节
+    uint16_t  s_RecFileReplayNum;     //需要回放的录像文件数，对录像回放有用 
+    uint16_t  s_RecFileCurNo;         //回放的录像数据处于当前文件的序号，对录像回放有用，
+                                      //从1开始
+    uint32_t  s_CurFileStartTime;     //当前回放文件的起始时间点，UTC时间，单位：秒，
+                                      //当录像查询类型为回放时用
+    uint32_t  s_CurFileEndTime;       //当前回放文件的结束时间点，UTC时间，单位：秒，
+                                      //当录像查询类型为回放时用
 }RecordDownReplayQueryResOut;
 
 /*===============================================================
@@ -189,14 +231,16 @@ GMI_RESULT GMI_StorageDeviceUninit(StorageUninitIn *StorageUninitParamPtr);
 /*===============================================================
 func name:GMI_StorageDeviceStatusQuery
 func:query status of  storage device
-input:DevStatusQueryPtr--query parameter;
+input:DevStatusQueryPtr-query parameter;
+        DevStatusQueryNum-number of query array
 output:DevStatusQueryResPtr-query result;
           DevStatusNum-query number;
 return:success--return GMI_SUCCESS, 
 	failed -- return ERROR CODE
 ---------------------------------------------------------------------*/
 GMI_RESULT GMI_StorageDeviceStatusQuery(StorageStatusQueryIn *DevStatusQueryPtr,
-	                                            StorageStatusQueryResOut **DevStatusQueryResPtr, uint32_t  *DevStatusNum);
+	                                            StorageStatusQueryResOut **DevStatusQueryResPtr, 
+	                                            uint32_t DevStatusQueryNum, uint32_t  *DevStatusNum);
 
 
 /*===============================================================
