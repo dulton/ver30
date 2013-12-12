@@ -326,7 +326,7 @@ GMI_RESULT GetMediaCenterServerLogConfig( uint32_t *ModuleId, char_t *ModuleName
         printf( "GetMediaCenterLogClientPort, GMI_XmlRead, Result=%x \n", (uint32_t) Result );
         return Result;
     }
-    printf( "GetMediaCenterLogClientPort, DefaultLogClientPort=%d, LogClientPort=%d \n", LOG_SERVER_DEFAULT_SERVER_PORT, TempClientPort );
+    printf( "GetMediaCenterLogClientPort, DefaultLogClientPort=%d, LogClientPort=%d \n", LOG_MEDIA_CENTER_DEFAULT_PORT, TempClientPort );
     *ClientPort = (uint16_t)TempClientPort;
 
     Result = GMI_XmlFileSave(Handle);
