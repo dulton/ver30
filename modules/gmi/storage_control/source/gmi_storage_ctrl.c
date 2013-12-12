@@ -170,5 +170,40 @@ GMI_RESULT  GMI_RecordScheduleConfig(RecordScheduleConfigIn *RecordScheduleConfi
 	return GMI_SUCCESS;
 }
 
+GMI_RESULT  GMI_NasParamConfig(NasParamConfigIn *NasParamConfigPtr)
+{
+	DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "NAS no support.\n");
+	return GMI_NOT_SUPPORT;	
+}
+
+GMI_RESULT  GMI_RecordCtrl(RecordCtrlIn *RecordCtrlPtr)
+{
+	if(NULL == RecordCtrlPtr)
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		return GMI_INVALID_PARAMETER;
+	}
+
+	if(LOCAL_RET_OK != RecordCtrlNotify(RecordCtrlPtr))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "SetRecConfigParam error.\n");
+		return GMI_FAIL;
+	}
+	
+	return GMI_SUCCESS;
+}
+
+GMI_RESULT  GMI_StorageVersionQuery(char_t *StorageVer, int32_t VerMaxLen)
+{
+	if((NULL == StorageVer) || (strlen(VERSION_STORAGE)+1 > VerMaxLen))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		return GMI_INVALID_PARAMETER;
+	}
+
+	memcpy(StorageVer, VERSION_STORAGE, strlen(VERSION_STORAGE));
+
+	return GMI_SUCCESS;
+}
 
 

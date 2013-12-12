@@ -30,6 +30,13 @@ extern "C"
 #define ATTR_DISK_W          1    //可写
 #define ATTR_DISK_R          2    //可读
 
+/*录像类型*/
+#define TYPE_REC_TRIG_TIME   0
+#define TYPE_REC_TRIG_MANU   1
+#define TYPE_REC_TRIG_MOTION 2
+#define TYPE_REC_TRIG_ALARM  3
+#define TYPE_REC_TRIG_ALL    10
+
 
 
 //format parameter
@@ -297,10 +304,11 @@ GMI_RESULT GMI_RecordFileQuery(RecordFileQueryIn *RecordFileQueryPtr, uint32_t C
 func name:GMI_StorageVersionQuery
 func:query storage version
 output:StorageVer--version;
+          VerMaxLen--max length of version string 
 return:success--return GMI_SUCCESS, 
 	failed -- return ERROR CODE
 ---------------------------------------------------------------------*/
-GMI_RESULT  GMI_StorageVersionQuery(char_t *StorageVer);
+GMI_RESULT  GMI_StorageVersionQuery(char_t *StorageVer, int32_t VerMaxLen);
 
 
 #ifdef __cplusplus

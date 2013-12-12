@@ -58,7 +58,7 @@ extern "C"
 #define  MIN_SEG_REC_LEN   		(512<<10) 	//512KB
 #define  MAX_SEG_PER_FILE  		(STREAM_FILE_LEN/MIN_SEG_REC_LEN)
 
-#define SEG_REC_LEN_PER_FILE 	(MAX_SEG_PER_FILE*sizeof(SEGMENT_IDX_RECORD))
+#define SEG_REC_LEN_PER_FILE 	(MAX_SEG_PER_FILE*sizeof(SegmentIdxRecord))
 
 #define TIME_INTERVAL_UPDATE	15						/*最小更新间隔时间(已写了片段簇固定数目后更新)*/
 
@@ -94,11 +94,28 @@ extern "C"
 #define ROUND_DOWN(x, align)    ((int)(x) & ~((align) - 1))
 
 /*保存I帧的最大个数*/
-#define MAX_NUM_IFRAME          200
+#define MAX_NUM_IFRAME            200
 
 #define MEDIA_BUFFER_SIZE         0x00100000UL   /*  视频回调接收缓冲区大小,1M  */
 #define AUDIO_BUFFER_SIZE         0x00020000UL   /*  音频接收缓冲区大小,128K  */
 
+/*分辨率尺寸*/
+#define RESOLUTION_1080P_WIDTH     1920
+#define RESOLUTION_1080P_HEIGHT    1080
+#define RESOLUTION_720P_WIDTH      1280
+#define RESOLUTION_720P_HEIGHT     720
+#define RESOLUTION_576P_WIDTH      720
+#define RESOLUTION_576P_HEIGHT     576
+#define RESOLUTION_D1_WIDTH        704
+#define RESOLUTION_D1_HEIGHT       576
+#define RESOLUTION_480P_WIDTH      640
+#define RESOLUTION_480P_HEIGHT     480
+#define RESOLUTION_CIF_WIDTH       352
+#define RESOLUTION_CIF_HEIGHT      288
+
+
+/*版本*/
+#define VERSION_STORAGE           "storage library v1.0"
 
 /*索引文件的文件头信息*/
 typedef struct tagFileIdxHeader
@@ -131,7 +148,7 @@ typedef struct tagSegmentIdxRecord
 	time_t			s_EndTime;							/*结束时间*/
 	uint32_t        s_SegFileInfo;                      /*从低到高：bit0-bit7代表音频帧率，
 	                                                                                          bit8-bit15代表视频帧率，
-	                                                                                          bit16-bit19代表分别视频分辨率(0-None,1-1080P,2-720P,3-576P,4-D1,5-CIF)，
+	                                                                                          bit16-bit19代表分别视频分辨率(0-None,1-1080P,2-720P,3-576P,4-D1,5-480P,6-CIF)，
 	                                                                                          bit20-bit23代表音频编码类型(0-None,1-G711a, 2-G711u, 3-G726)，
 	                                                                                          bit24-bit27代表视频编码类型(0-None, 1-H264,2-MJPEG)*/
 }SegmentIdxRecord;
@@ -161,7 +178,7 @@ typedef struct tagRecordTriggerMsg
     uint32_t   s_TriggerChans;   /*联动通道*/
     uint32_t   s_SegFileInfo;    /*从低到高：bit0-bit7代表音频帧率，
 								  bit8-bit15代表视频帧率，
-								  bit16-bit19代表分别视频分辨率(0-None,1-1080P,2-720P,3-576P,4-D1,5-CIF)，
+								  bit16-bit19代表分别视频分辨率(0-None,1-1080P,2-720P,3-576P,4-D1,5-480P, 6-CIF)，
 								  bit20-bit23代表音频编码类型(0-None,1-G711a, 2-G711u, 3-G726)，
 								  bit24-bit27代表视频编码类型(0-None, 1-H264,2-MJPEG)*/
 	char_t     s_Reserved[8];       
@@ -306,6 +323,9 @@ int32_t SetRecConfigParam(RecordParamConfigIn *InParam);
 
 /*配置录像计划*/
 int32_t SetRecScheduleConfig(RecordScheduleConfigIn *InParam);
+
+/*录像操作通知*/
+int32_t  RecordCtrlNotify(RecordCtrlIn *InParam);
 
 #ifdef __cplusplus
 }

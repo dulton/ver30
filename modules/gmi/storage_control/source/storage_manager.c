@@ -2176,5 +2176,80 @@ int32_t SetRecScheduleConfig(RecordScheduleConfigIn *InParam)
 	}
 
 	return LOCAL_RET_OK;
-}
+}	
 
+int32_t  RecordCtrlNotify(RecordCtrlIn *InParam)
+{
+	int32_t  Chan = 0;
+	uint32_t TmpInfo = 0;
+	int32_t  TmpResolutionIdx = 0;
+	if((NULL == InParam)
+		|| (InParam->s_RecTrigChan >= MAX_ENCODER_NUM)
+		|| ((InParam->s_AudioFrame <= 0) && (InParam->s_AudioFrame > 127))
+		|| ((InParam->s_AudioType< 0) && (InParam->s_AudioType > 3))
+		|| ((InParam->s_VideoFrame <= 0) && (InParam->s_AudioFrame > 127))
+		|| ((InParam->s_VideoWide <= 0) && (InParam->s_VideoWide > RESOLUTION_1080P_WIDTH))
+		|| ((InParam->s_VideoHeight <= 0) && (InParam->s_VideoHeight > RESOLUTION_1080P_HEIGHT))
+		|| ((InParam->s_EncodeType < 0) && (InParam->s_EncodeType > 2))
+	   )
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam error.\n");
+		return LOCAL_RET_ERR;
+	}
+
+	Chan = InParam->s_RecTrigChan;
+	TmpInfo = (InParam->s_AudioFrame) & 0xFF;
+	TmpInfo = (TmpInfo | (InParam->s_VideoFrame << 8)) & 0xFFFF;
+	if((RESOLUTION_1080P_WIDTH == InParam->s_VideoWide) 
+		&& (RESOLUTION_1080P_HEIGHT== InParam->s_VideoHeight))
+	{
+		TmpResolutionIdx = 1;
+	}
+	else if((RESOLUTION_720P_WIDTH == InParam->s_VideoWide) 
+		&& (RESOLUTION_720P_HEIGHT== InParam->s_VideoHeight))
+	{
+		TmpResolutionIdx = 2;
+	}
+	else if((RESOLUTION_576P_WIDTH == InParam->s_VideoWide) 
+		&& (RESOLUTION_576P_HEIGHT== InParam->s_VideoHeight))
+	{
+		TmpResolutionIdx = 3;
+	}
+	else if((RESOLUTION_D1_WIDTH == InParam->s_VideoWide) 
+		&& (RESOLUTION_D1_HEIGHT== InParam->s_VideoHeight))
+	{
+		TmpResolutionIdx = 4;
+	}
+	else if((RESOLUTION_480P_WIDTH == InParam->s_VideoWide) 
+		&& (RESOLUTION_480P_HEIGHT== InParam->s_VideoHeight))
+	{
+		TmpResolutionIdx = 5;
+	}
+	else if((RESOLUTION_CIF_WIDTH == InParam->s_VideoWide) 
+		&& (RESOLUTION_CIF_HEIGHT== InParam->s_VideoHeight))
+	{
+		TmpResolutionIdx = 6;
+	}
+	TmpInfo = (TmpInfo | (TmpResolutionIdx << 16)) & 0xFFFFF;
+
+	TmpInfo = (TmpInfo | (InParam->s_AudioType << 20)) & 0xFFFFFF;
+	TmpInfo = (TmpInfo | (InParam->s_EncodeType << 24)) & 0x0FFFFFFF;
+
+	g_SegFileInfo[Chan] = TmpInfo;
+
+
+	switch(InParam->s_RecTrigMode)
+	{
+		case TYPE_REC_TRIG_MANU:
+		case TYPE_REC_TRIG_MOTION:
+		case TYPE_REC_TRIG_ALARM:
+			DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "s_RecTrigMode %d no support.\n", InParam->s_RecTrigMode);
+		    return LOCAL_RET_ERR;
+			break;
+		case TYPE_REC_TRIG_TIME:
+		default:
+			break;
+	}
+
+	return LOCAL_RET_OK;
+}
