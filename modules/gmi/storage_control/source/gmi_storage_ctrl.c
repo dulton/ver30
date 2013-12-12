@@ -1,6 +1,9 @@
+#include "storage_common.h"
+
 #include "gmi_storage_ctrl.h"
 #include "log_record.h"
 #include "storage_manager.h"
+
 
 
 GMI_RESULT GMI_StorageDeviceFormat(StorageFormatIn *StorageFormatParamPtr)
@@ -24,7 +27,7 @@ GMI_RESULT GMI_StorageDeviceFormat(StorageFormatIn *StorageFormatParamPtr)
 			if( LOCAL_RET_OK != Sdformat(StorageFormatParamPtr->s_RecFileSize))
 			{
 				DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "Sdformat error[%s].\n", strerror(errno));
-				RetVal = GMI_NOT_SUPPORT;
+				RetVal = GMI_FAIL;
 			}
 			break;
 	}
@@ -34,13 +37,135 @@ GMI_RESULT GMI_StorageDeviceFormat(StorageFormatIn *StorageFormatParamPtr)
 
 GMI_RESULT GMI_StorageDeviceInit(StorageInitIn *StorageInitParamPtr)
 {
+	int32_t RetVal = GMI_SUCCESS;
 	if(NULL == StorageInitParamPtr)
 	{
 		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
 		return GMI_INVALID_PARAMETER;
 	}
 
+	if(LOCAL_RET_OK != VidRecordInit())
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "VidRecordInit error.\n");
+		return GMI_SYSTEM_ERROR;
+	}
+
+	switch(StorageInitParamPtr->s_StorageDevice)
+	{
+		case TYPE_STORAGE_USB:
+		case TYPE_STORAGE_NAS:
+			DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "DeviceType %d (0-sd,1-usb,2-nas)no support.\n", StorageInitParamPtr->s_StorageDevice);
+			RetVal = GMI_NOT_SUPPORT;
+			break;
+		case TYPE_STORAGE_SD:
+		default:
+			if( LOCAL_RET_OK != InitPartion(StorageInitParamPtr->s_RecFileSize))
+			{
+				DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "Sdformat error[%s].\n", strerror(errno));
+				RetVal = GMI_FAIL;
+			}
+			break;
+	}
+
+	do
+	{
+		if(GMI_SUCCESS == RetVal)
+		{
+			if(LOCAL_RET_OK != CreateRecProcessThread(0))
+			{
+				RetVal = GMI_FAIL;
+				break;
+			}
+			
+		}
+	}while(0);
 	
+	return RetVal;
+}
+
+GMI_RESULT GMI_StorageDeviceUninit(StorageUninitIn *StorageUninitParamPtr)
+{
+	int32_t RetVal = GMI_SUCCESS;
+	if(NULL == StorageUninitParamPtr)
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		return GMI_INVALID_PARAMETER;
+	}
+
+	if(LOCAL_RET_OK != VidRecordUninit())
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "VidRecordUninit error.\n");
+		return GMI_SYSTEM_ERROR;	
+	}
+
+	return RetVal;
+}
+
+
+GMI_RESULT GMI_StorageDeviceStatusQuery(StorageStatusQueryIn *DevStatusQueryPtr,
+	                                   StorageStatusQueryResOut **DevStatusQueryResPtr, 
+	                                   uint32_t DevStatusQueryNum,uint32_t  *DevStatusNum)
+{
+	int32_t RetVal = GMI_SUCCESS;
+	if((NULL == DevStatusQueryPtr)
+		|| (NULL == DevStatusQueryResPtr)
+		|| (NULL == DevStatusNum)
+		|| (0 == DevStatusQueryNum))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		return GMI_INVALID_PARAMETER;
+	}
+
+	switch(DevStatusQueryPtr->s_StorageDevice)
+	{
+		case TYPE_STORAGE_USB:
+		case TYPE_STORAGE_NAS:
+			DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "DeviceType %d (0-sd,1-usb,2-nas)no support.\n", DevStatusQueryPtr->s_StorageDevice);
+			RetVal = GMI_NOT_SUPPORT;
+			break;
+		case TYPE_STORAGE_SD:
+		default:
+			if(LOCAL_RET_OK != GetSDStatus(DevStatusQueryResPtr, DevStatusQueryNum, DevStatusNum))
+			{
+				DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "GetSDStatus error.\n");
+				RetVal = GMI_FAIL;
+			}
+			break;
+	}
+
+	return RetVal;
+}
+
+GMI_RESULT GMI_RecordParamConfig(RecordParamConfigIn *RecordParamConfigPtr)
+{
+	if(NULL == RecordParamConfigPtr)
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		return GMI_INVALID_PARAMETER;
+	}
+
+	if(LOCAL_RET_OK != SetRecConfigParam(RecordParamConfigPtr))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "SetRecConfigParam error.\n");
+		return GMI_FAIL;
+	}
+
+	return GMI_SUCCESS;
+}
+
+GMI_RESULT  GMI_RecordScheduleConfig(RecordScheduleConfigIn *RecordScheduleConfigPtr)
+{
+	if(NULL == RecordScheduleConfigPtr)
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		return GMI_INVALID_PARAMETER;
+	}
+
+	if(LOCAL_RET_OK != SetRecScheduleConfig(RecordScheduleConfigPtr))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "SetRecConfigParam error.\n");
+		return GMI_FAIL;
+	}
 	
 	return GMI_SUCCESS;
 }

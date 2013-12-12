@@ -12,7 +12,7 @@
 #define LENGTH_LOG_MAX                500*1024 
 LogClient LogClientHd;
 
-void ERR_PRINT_LOG(LogClient *LogClientHd, enum DebugLogLevel PrtLevel, char *FileName, const char *FuncName, int32_t LineNum, const char *fmt, ...)
+void ERR_PRINT_LOG(LogClient *LogClientHd, enum DebugLogLevel PrtLevel, const char *FileName, const char *FuncName, int32_t LineNum, const char *fmt, ...)
 {
 	static pthread_mutex_t logMutex = PTHREAD_MUTEX_INITIALIZER;
 	FILE *fp = NULL;
@@ -81,7 +81,7 @@ void ERR_PRINT_LOG(LogClient *LogClientHd, enum DebugLogLevel PrtLevel, char *Fi
 }
 
 
-void ERR_PRINT_LOG_TEST(LogClient *LogClientHd, enum DebugLogLevel PrtLevel, char *FileName, const char *FuncName, int32_t LineNum, const char *fmt, ...)
+void ERR_PRINT_LOG_TEST(LogClient *LogClientHd, enum DebugLogLevel PrtLevel, const char *FileName, const char *FuncName, int32_t LineNum, const char *fmt, ...)
 {
 	va_list ap;
 	time_t curr;

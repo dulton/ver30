@@ -46,7 +46,7 @@ void ERR_PRINT_LOG_TEST(LogClient *LogClientHd, enum DebugLogLevel PrtLevel, cha
 
 
 #ifdef __cplusplus
-}; //end of extern "C" {
+} //end of extern "C" {
 #endif
 
 #endif //__LOG_RECORD_H__

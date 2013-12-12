@@ -3,6 +3,11 @@
 
 #include "sqlite3.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /*记录查询方式*/
 #define		METHOD_QUERY_NO			0			/*录像记录号查询*/
 #define		METHOD_QUERY_TIME		1			/*录像时间查询*/
@@ -60,5 +65,8 @@ int backupMainDb(sqlite3 *pDb);
 
 /*从备份数据库文件中恢复数据到主数据库文件*/
 int recoverMainDb(sqlite3 **pDb);
+#ifdef __cplusplus
+}
+#endif
 
 #endif

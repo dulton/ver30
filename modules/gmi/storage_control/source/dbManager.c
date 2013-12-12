@@ -133,7 +133,7 @@ int createDbTable(sqlite3 *dbFd, const int cmdType)
 			#endif
 			
 			
-			sprintf(tmpParam,"%s%s%s", "CREATE TABLE ", VIDEO_TABLE_NAME,"(s_SId INTEGER PRIMARY KEY,s_RecFileNo INTEGER,s_RecSegNo INTEGER,s_RecLastSegLen INTEGER,s_RecSegLen SMALLINTEGER,s_RecType TINYINTEGER,s_RecEncodeNo TINYINTEGER,s_StartTime INTEGER, s_EndTime INTEGER)");
+			sprintf(tmpParam,"%s%s%s", "CREATE TABLE ", VIDEO_TABLE_NAME,"(s_SId INTEGER PRIMARY KEY,s_RecFileNo INTEGER,s_RecSegNo INTEGER,s_RecLastSegLen INTEGER,s_RecSegLen SMALLINTEGER,s_RecType TINYINTEGER,s_RecEncodeNo TINYINTEGER,s_StartTime INTEGER, s_EndTime INTEGER, s_SegFileInfo INTEGER)");
 			ret = sqlite3_exec(dbFd , tmpParam , 0 , 0 , 0);
 			break;
 		case RECORD_ADD_FILE:
@@ -306,6 +306,7 @@ void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *
 					segInfoRecord.s_RecEncodeNo = atoi(azResult[i+6]);
 					segInfoRecord.s_StartTime = atoi(azResult[i+7]);
 					segInfoRecord.s_EndTime = atoi(azResult[i+8]);
+					segInfoRecord.s_SegFileInfo = atoi(azResult[i+9]);
 					j = i/ncolumn - 1;
 					memcpy(queryResult[j], &segInfoRecord, sizeof(segInfoRecord));
 					i += ncolumn;
@@ -369,9 +370,9 @@ int addDbRecord(sqlite3 *dbFd, const int cmdType, char *param)
 		case RECORD_ADD_SEG:
 			memcpy(&segInfoRecord, param, sizeof(segInfoRecord));		
 			strLen = sprintf(tmpParam, "%s%s%s", "INSERT INTO ", VIDEO_TABLE_NAME, " VALUES(");
-			sprintf(tmpParam+strLen, "%d,%d,%d,%d,%d,%d,%d,%d,%d%s", segInfoRecord.s_SId, segInfoRecord.s_RecFileNo, 
+			sprintf(tmpParam+strLen, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d%s", segInfoRecord.s_SId, segInfoRecord.s_RecFileNo, 
 				segInfoRecord.s_RecSegNo, segInfoRecord.s_RecLastSegLen, segInfoRecord.s_RecSegLen, segInfoRecord.s_RecType, 
-				segInfoRecord.s_RecEncodeNo, (int)(segInfoRecord.s_StartTime), (int)(segInfoRecord.s_EndTime), ")");
+				segInfoRecord.s_RecEncodeNo, (int)(segInfoRecord.s_StartTime), (int)(segInfoRecord.s_EndTime), (int)(segInfoRecord.s_SegFileInfo),")");
 			PRT_TEST(("%s\n", tmpParam));
 			ret = sqlite3_exec(dbFd, tmpParam , 0 , 0 , 0);
 			break;
@@ -418,7 +419,7 @@ int updateDbRecord(sqlite3 *dbFd, const int cmdType, const int recNo, char *para
 			sprintf(tmpParam, "%s%s%s", "UPDATE ", VIDEO_TABLE_NAME, " SET ");
 			sprintf(tmpParam+strlen(tmpParam), "s_RecFileNo=%d,s_RecSegNo=%d,s_RecLastSegLen=%d,s_RecSegLen=%d,s_RecType=%d,s_RecEncodeNo=%d,s_StartTime=%d,s_EndTime=%d", 
 				segInfoRecord.s_RecFileNo, segInfoRecord.s_RecSegNo, segInfoRecord.s_RecLastSegLen, segInfoRecord.s_RecSegLen, segInfoRecord.s_RecType, 
-				segInfoRecord.s_RecEncodeNo, (int)(segInfoRecord.s_StartTime), (int)(segInfoRecord.s_EndTime));
+				segInfoRecord.s_RecEncodeNo, (int)(segInfoRecord.s_StartTime), (int)(segInfoRecord.s_EndTime), (int)(segInfoRecord.s_SegFileInfo));
 			sprintf(tmpParam+strlen(tmpParam), "%s%d", " WHERE s_SId=", segInfoRecord.s_SId);	
 			PRT_TEST(("%s\n", tmpParam));
 			ret = sqlite3_exec(dbFd, tmpParam , 0 , 0 , 0);
