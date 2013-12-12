@@ -30,6 +30,7 @@ enum SocketProtocol
 //#define GMI_SOCKET_OPTION_RECV_TIMEOUT      3
 //#define GMI_SOCKET_OPTION_SEND_BUFFER_SIZE  4
 //#define GMI_SOCKET_OPTION_RECV_BUFFER_SIZE  5
+#define GMI_SOCKET_OPTION_REUSE_ADDRESS       6
 
 class BaseSocket : public BaseCommunication
 {

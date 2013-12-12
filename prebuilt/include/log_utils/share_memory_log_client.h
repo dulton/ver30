@@ -63,5 +63,5 @@ private:
 #endif//DEBUG_LOG_DEFINITION
 
 extern  ShareMemoryLogClient* g_DefaultShareMemoryLogClient;
-// to keep compatible with old interface, we define g_DefaultLogClient using g_DefaultShareMemoryLogClient, then function process will write log by default to share memory log client, instead of pipe log client
+// to keep compatible with old interface, we define g_DefaultLogClient using g_DefaultShareMemoryLogClient, then other application process will write log by default to share memory log client, instead of pipe log client
 #define g_DefaultLogClient g_DefaultShareMemoryLogClient
