@@ -2387,7 +2387,6 @@ static int SearchRecordFiles(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *Cu
 				}
 			}
 
-			SegParam.s_RecType = RecordFileQueryPtr->s_RecQueryType;
 			SegParam.s_StartTime = RecordFileQueryPtr->s_RecQueryTime[0];
 			SegParam.s_EndTime = RecordFileQueryPtr->s_RecQueryTime[1];
 			
@@ -2489,3 +2488,171 @@ int32_t QueryRecordFile(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQuer
 	return LOCAL_RET_OK;
 		
 }
+
+/*Filename:record_XX(通道号)_XXXX(文件号)_XXXX(片段号)_XXXXXXXXXX(起始时间)_XXXXXXXXXX(终止时间)*/
+static int32_t FindDownFileInfo(char_t *FileName, RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr)
+{
+	uint32_t StartTime = 0;
+	uint32_t EndTime = 0;
+	char_t  *CurPos = NULL;
+	SegmentIdxRecord SegParam;
+	char_t **QueryResult;
+	int32_t RowRes = 0;
+	int32_t RetVal = LOCAL_RET_OK;
+	int32_t RecordSize = 0;
+	char_t StrName[MAX_LEN_FILE_REC];
+	int32_t Width = 0;
+	int32_t Height = 0;
+	
+	if((NULL == FileName)
+		|| (41 > strlen(FileName))
+		|| (NULL == RecordDownReplayQueryResPtr)
+		|| (NULL == *RecordDownReplayQueryResPtr))
+	{
+		PRT_ERR(("FindDownFileInfo  InParam error.\n"));
+		return LOCAL_RET_ERR;
+	}
+
+	CurPos = FileName+20; //偏移至起始时间
+	StartTime = atoi(CurPos);
+	CurPos = FileName+31; //偏移至终止时间
+	EndTime = atoi(CurPos);
+
+	QueryResult = (char**)malloc(1 * sizeof(char *));
+	memset(QueryResult, 0, 1 * sizeof(char *));
+	QueryResult[0] = (char *)malloc(sizeof(SegmentIdxRecord) + sizeof(char));
+	if(NULL == QueryResult[0])
+	{
+		PRT_ERR(("queryResult[0] malloc error, please reboot.\n"));
+		return LOCAL_RET_ERR;
+	}
+	memset(QueryResult[0], 0, sizeof(SegmentIdxRecord) + sizeof(char));
+
+	do
+	{
+		memset(&SegParam, 0, sizeof(SegParam));
+		SegParam.s_SId = 0;		
+		SegParam.s_RecType = TYPE_REC_TIME;
+		SegParam.s_StartTime = StartTime;
+		SegParam.s_EndTime = EndTime;
+		queryDbRecord(g_DbFd,RECORD_QUERY_SEG,METHOD_QUERY_TIME,(char_t*)&SegParam,QueryResult, 1, &RowRes);
+
+		if(RowRes < 0)
+		{
+			RetVal = LOCAL_RET_ERR;
+			break;
+		}
+		
+		memset(&SegParam, 0, sizeof(SegParam));
+		memcpy(&SegParam, QueryResult[0], sizeof(SegmentIdxRecord));
+		
+		(*RecordDownReplayQueryResPtr)[0].s_RecQueryType = OPERATE_RECORD_DOWN;
+		(*RecordDownReplayQueryResPtr)[0].s_RecFileOffset = SegParam.s_RecSegNo*MIN_SEG_REC_LEN;
+		
+		/*片段录像的最后一个片段簇的实际使用的大小决定录像长度计算方式*/
+		if((SegParam.s_RecLastSegLen <= 0) || (SegParam.s_RecLastSegLen >= MIN_SEG_REC_LEN))
+		{
+			RecordSize = MIN_SEG_REC_LEN * SegParam.s_RecSegLen;
+		}
+		else
+		{
+			if(SegParam.s_RecSegLen > 0)
+			{
+				RecordSize = MIN_SEG_REC_LEN * (SegParam.s_RecSegLen-1) + SegParam.s_RecLastSegLen;
+			}
+			else
+			{
+				RecordSize = SegParam.s_RecLastSegLen;
+			}
+		}
+		(*RecordDownReplayQueryResPtr)[0].s_RecFileSize = RecordSize;
+		memset(StrName, 0, sizeof(StrName));
+	    sprintf(StrName, "%s/record%04d%s", DST_PATH_NAME_SD, SegParam.s_RecFileNo, AV_FILE_NAME);
+		memcpy((*RecordDownReplayQueryResPtr)[0].s_RecFileName, StrName, strlen(StrName));
+		(*RecordDownReplayQueryResPtr)[0].s_StreamType = 0;
+		(*RecordDownReplayQueryResPtr)[0].s_EncodeType = (SegParam.s_SegFileInfo >> 24)&0x0F;
+		(*RecordDownReplayQueryResPtr)[0].s_AudioType = (SegParam.s_SegFileInfo >> 20)&0x0F;
+		(*RecordDownReplayQueryResPtr)[0].s_VideoFrame = (SegParam.s_SegFileInfo >> 8)&0xFF;
+		(*RecordDownReplayQueryResPtr)[0].s_AudioFrame = (SegParam.s_SegFileInfo)&0xFF;
+
+		switch(((SegParam.s_SegFileInfo >> 16)&0x0F))
+		{
+			case 1:
+				Width = RESOLUTION_1080P_WIDTH;
+				Height = RESOLUTION_1080P_HEIGHT;
+				break;
+			case 2:
+				Width = RESOLUTION_720P_WIDTH;
+				Height = RESOLUTION_720P_HEIGHT;
+				break;
+			case 3:
+				Width = RESOLUTION_576P_WIDTH;
+				Height = RESOLUTION_576P_HEIGHT;
+				break;
+			case 4:
+				Width = RESOLUTION_D1_WIDTH;
+				Height = RESOLUTION_D1_HEIGHT;
+				break;
+			case 5:
+				Width = RESOLUTION_480P_WIDTH;
+				Height = RESOLUTION_480P_HEIGHT;
+				break;
+			case 6:
+				Width = RESOLUTION_CIF_WIDTH;
+				Height = RESOLUTION_CIF_HEIGHT;
+				break;
+			default:
+				break;
+		}
+		
+		(*RecordDownReplayQueryResPtr)[0].s_VideoWide = Width;
+		(*RecordDownReplayQueryResPtr)[0].s_VideoHeight = Height;
+		(*RecordDownReplayQueryResPtr)[0].s_RecFileReplayNum = 0;
+		(*RecordDownReplayQueryResPtr)[0].s_RecFileCurNo = 0;
+		(*RecordDownReplayQueryResPtr)[0].s_CurFileStartTime = SegParam.s_StartTime;
+		(*RecordDownReplayQueryResPtr)[0].s_CurFileEndTime = SegParam.s_EndTime;
+	}while(0);
+
+	if(NULL != QueryResult)
+	{
+		if(NULL != QueryResult[0])
+		{
+			free(QueryResult[0]);
+			QueryResult[0] = NULL;
+		}
+		free(QueryResult);
+		QueryResult = NULL;
+	}
+	return RetVal;
+}
+
+int32_t QueryDownReplayRecordFile(RecordDownReplayQueryIn *RecordDownReplayQueryPtr,
+       RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t QueryResArraySize)
+{
+	if((NULL == RecordDownReplayQueryPtr)
+		|| ((OPERATE_RECORD_DOWN != RecordDownReplayQueryPtr->s_RecQueryType)
+		&& (OPERATE_RECORD_REPLAY != RecordDownReplayQueryPtr->s_RecQueryType))
+		|| (NULL == RecordDownReplayQueryResPtr)
+		|| (NULL == *RecordDownReplayQueryResPtr)
+		|| (0 >= QueryResArraySize))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		return LOCAL_RET_ERR;
+	}
+
+	switch(RecordDownReplayQueryPtr->s_RecQueryType)
+	{
+		case OPERATE_RECORD_REPLAY:
+			break;
+		case OPERATE_RECORD_DOWN:
+	    default:
+			if(LOCAL_RET_OK != FindDownFileInfo(RecordDownReplayQueryPtr->RecDownReplayInfo.s_RecFileName, RecordDownReplayQueryResPtr))
+			{
+				return LOCAL_RET_ERR;
+			}
+			break;
+	}
+	
+	return LOCAL_RET_OK;
+}
+

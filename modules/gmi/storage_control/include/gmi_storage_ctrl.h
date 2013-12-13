@@ -45,6 +45,8 @@ extern "C"
 /*查询记录最大条数*/
 #define	MAX_NUM_QUERY_RECORD  25			/*一次性查询记录最大数*/			
 
+#define OPERATE_RECORD_DOWN   0
+#define OPERATE_RECORD_REPLAY 1
 
 //format parameter
 typedef struct tagStorageFormat
@@ -199,7 +201,9 @@ typedef struct tagRecordDownReplayQueryRes
     uint8_t   s_RecQueryType;        //录像查询类型：0-下载，1-回放
     uint8_t   s_StreamType;          //0-PS,1-ES    
 	uint8_t   s_EncodeType; 		 //0-None, 1-H264,2-MJPEG	
-    uint8_t   s_AudioType;			 //0-None,1-G711a, 2-G711u, 3-G726, 	
+    uint8_t   s_AudioType;			 //0-None,1-G711a, 2-G711u, 3-G726, 
+    uint8_t   s_VideoFrame;          //视频帧率
+    uint8_t   s_AudioFrame;          //音频帧率
     uint8_t   s_Reserved[2]; 
     uint16_t   s_VideoWide;           //视频宽
     uint16_t   s_VideoHeight;         //视频高           
@@ -321,8 +325,8 @@ return:success--return GMI_SUCCESS,
 	failed -- return ERROR CODE
 ---------------------------------------------------------------------*/
 
-GMI_RESULT GMI_RecordDownReplayQuery(RecordDownReplayQueryIn*RecordDownReplayQueryPtr,
-       RecordDownReplayQueryResOut**RecordDownReplayQueryResPtr, uint32_t QueryResArraySize);
+GMI_RESULT GMI_RecordDownReplayQuery(RecordDownReplayQueryIn *RecordDownReplayQueryPtr,
+       RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t QueryResArraySize);
 
 
 /*===============================================================

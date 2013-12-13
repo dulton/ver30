@@ -234,5 +234,24 @@ GMI_RESULT GMI_RecordFileQuery(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *
 }
 
 
+GMI_RESULT GMI_RecordDownReplayQuery(RecordDownReplayQueryIn *RecordDownReplayQueryPtr,
+       RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t QueryResArraySize)
+{
+	if((NULL == RecordDownReplayQueryPtr)
+		|| (NULL == RecordDownReplayQueryResPtr)
+		|| (NULL == *RecordDownReplayQueryResPtr))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		return GMI_INVALID_PARAMETER;
+	}
+
+	if(LOCAL_RET_OK != QueryDownReplayRecordFile(RecordDownReplayQueryPtr, RecordDownReplayQueryResPtr, QueryResArraySize))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "QueryDownReplayRecordFile error.\n");
+		return GMI_FAIL;
+	}
+
+	return GMI_SUCCESS;
+}
 
 

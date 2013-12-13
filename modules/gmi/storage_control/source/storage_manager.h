@@ -332,6 +332,9 @@ int32_t QueryRecordFile(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQuer
                             RecordFileQueryResOut **RecordFileQueryResPtr, uint32_t QueryResArraySize,
                             uint32_t  *QueryResTotalNum, uint32_t  *QueryResCurNum);
 
+/*录像文件下载或回放*/
+int32_t QueryDownReplayRecordFile(RecordDownReplayQueryIn *RecordDownReplayQueryPtr,
+       RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t QueryResArraySize);
 
 #ifdef __cplusplus
 }
