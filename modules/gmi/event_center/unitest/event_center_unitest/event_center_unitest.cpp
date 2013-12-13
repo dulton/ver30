@@ -11,5 +11,5 @@ int32_t _tmain( int32_t argc, _TCHAR* argv[] )
 int32_t main( int32_t argc, char_t* argv[] )
 #endif
 {
-	return 0;
+    return 0;
 }

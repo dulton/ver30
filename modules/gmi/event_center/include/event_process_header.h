@@ -8,18 +8,14 @@
 #define EVENT_PRIORITY_MEDIUM   1
 #define EVENT_PRIORITY_HIGH     2
 
+// event id macro
 #define MAKE_DETECTOR_ID(p,i)   ((p<<16)+i)
 #define QUERY_EVENT_PRIORITY(x) (((uint32_t)x)>>16)
 
-// priority need to set according to configuration, which improve flexibility.
-enum EventCenterDetectorId
+enum EventDetectorType
 {
-	e_EventCenterDetectorId_GPIO = 0,
-};
-
-enum EventCenterProcessorId
-{
-	e_EventCenterProcessorId_ProcessCenter = 0,
+    e_EventDetectorType_Active = 1,
+    e_EventDetectorType_Passive,
 };
 
 #endif//EVENT_PROCESS_HEADER

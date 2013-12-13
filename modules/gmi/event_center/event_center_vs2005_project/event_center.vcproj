@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\prebuilt\include\command_pipeline;..\..\..\..\prebuilt\include\log_utils;..\..\..\..\prebuilt\include\osal"
+				AdditionalIncludeDirectories="..\include;..\source;..\..\..\..\prebuilt\include\command_pipeline;..\..\..\..\prebuilt\include\log_utils;..\..\..\..\prebuilt\include\osal"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,6 +61,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="..\library\$(ProjectName)_vs2005_d.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -103,10 +104,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\prebuilt\include\osal"
+				AdditionalIncludeDirectories="..\include;..\source;..\..\..\..\prebuilt\include\command_pipeline;..\..\..\..\prebuilt\include\log_utils;..\..\..\..\prebuilt\include\osal"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -122,6 +123,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="..\library\$(ProjectName)_vs2005.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -143,42 +145,50 @@
 	<References>
 	</References>
 	<Files>
-		<File
-			RelativePath=".\event_center.cpp"
+		<Filter
+			Name="inlcude"
 			>
-		</File>
-		<File
-			RelativePath=".\event_center.h"
+			<File
+				RelativePath="..\include\event_center.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\event_detector.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\event_process_header.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\event_processor.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="source"
 			>
-		</File>
-		<File
-			RelativePath=".\event_detect_center.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\event_detect_center.h"
-			>
-		</File>
-		<File
-			RelativePath=".\event_detector.h"
-			>
-		</File>
-		<File
-			RelativePath=".\event_process_center.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\event_process_center.h"
-			>
-		</File>
-		<File
-			RelativePath=".\event_process_header.h"
-			>
-		</File>
-		<File
-			RelativePath=".\event_processor.h"
-			>
-		</File>
+			<File
+				RelativePath="..\source\event_center.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\source\event_detect_center.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\source\event_detect_center.h"
+				>
+			</File>
+			<File
+				RelativePath="..\source\event_process_center.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\source\event_process_center.h"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>
