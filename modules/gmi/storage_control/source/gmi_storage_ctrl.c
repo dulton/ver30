@@ -4,6 +4,7 @@
 #include "log_record.h"
 #include "storage_manager.h"
 
+#include "stream_process.h"
 
 
 GMI_RESULT GMI_StorageDeviceFormat(StorageFormatIn *StorageFormatParamPtr)
@@ -79,7 +80,8 @@ GMI_RESULT GMI_StorageDeviceInit(StorageInitIn *StorageInitParamPtr)
 			
 		}
 	}while(0);
-	
+
+	test();
 	return RetVal;
 }
 

@@ -26,6 +26,7 @@ GMI_MODULE_TARGET_NAME  = $(GMI_MODULE_NAME)
 
 # Set the source code files to compile
 GMI_MODULE_SRCS         = $(wildcard *.c)
+GMI_MODULE_SRCS         += $(wildcard *.cpp)
 
 # Set compile flags
 GMI_CFLAGS              = -Wall -O3
@@ -45,6 +46,9 @@ GMI_INCLUDE_DIR = ../../../../application/
 # Set other header file path
 GMI_INCLUDE_DIR += ./
 GMI_INCLUDE_DIR += ../../../../prebuilt/include/sqlite3
+GMI_INCLUDE_DIR += ../../../../prebuilt/include/ipc_media_data_dispatch
+GMI_INCLUDE_DIR += ../../../../prebuilt/include/command_pipeline
+GMI_INCLUDE_DIR += ../../../../prebuilt/include/media
 
 # Include rules.mk
 include $(GMI_TOPDIR)/build/rules.mk

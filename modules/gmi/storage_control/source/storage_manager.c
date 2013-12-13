@@ -72,6 +72,45 @@ static int32_t MountHdisk(char_t *InSrcPathName, char_t *InDstPathName, char_t *
 	#endif
 }
 
+
+/*  将接收到的数据写入录像缓冲区*/
+int32_t	VidAudDataToBuf(uint32_t Channel, char_t *PBuffer, int32_t Size, int32_t FrameType)
+{
+	RecordInfoManage *PVidRecMan = &g_VidRecConfig[Channel];
+	RecordDataBuffer *PRecordBuffer = &PVidRecMan->s_RecordBuffer;
+	RecordMsgType RecMsg;
+	unsigned int  WritePos  = 0;
+	unsigned int  RecLen    = 0;
+	int MsgLen              = sizeof(RecordMsgType) - sizeof(long);	
+	
+	WritePos = PRecordBuffer->s_WritePos;
+    RecLen   = MEDIA_BUFFER_SIZE - PRecordBuffer->s_WritePos;
+	if (Size > RecLen)
+	{
+	    memcpy(PRecordBuffer->s_Buffer + PRecordBuffer->s_WritePos, PBuffer, RecLen);
+		memcpy(PRecordBuffer->s_Buffer, PBuffer + RecLen, Size - RecLen);
+	}
+	else
+	{
+	    memcpy(PRecordBuffer->s_Buffer + PRecordBuffer->s_WritePos, PBuffer, Size);
+	}
+    PRecordBuffer->s_WritePos += Size;
+	PRecordBuffer->s_WritePos %= MEDIA_BUFFER_SIZE;	
+
+	memset(&RecMsg, 0, sizeof(RecordMsgType));
+	RecMsg.s_MsgType = MSG_TYPE_REC;	
+	if(FrameType == 2)//VIDEO_I_FRAME
+	{		
+	    RecMsg.s_CmdType = CMD_TYPE_REFRESH_I;
+        RecMsg.s_Idx     = WritePos;
+	    RecMsg.s_Time    = time(NULL);		
+	} 
+	msgsnd(PVidRecMan->s_RecordMsgId, &RecMsg, MsgLen, IPC_NOWAIT);
+	
+	return LOCAL_RET_OK;
+}
+
+
 static int32_t IsNoFormat()
 {
 	char_t TmpParam[256];
@@ -264,7 +303,7 @@ int32_t VidRecordUninit()
 }
 
 
-void_t InitHdPart()
+static void_t InitHdPart()
 {
 	g_DbFd = NULL;
 	memset(&g_HdPart, 0, sizeof(g_HdPart));
@@ -976,7 +1015,7 @@ ErrExit:
 }
 
 /*刷新录像BUF里的I帧信息*/
-void RefreshIFrameInfo(int32_t Chan, ulong_t Idx, time_t Time)
+static void RefreshIFrameInfo(int32_t Chan, ulong_t Idx, time_t Time)
 {
     int32_t          i,j;
     int              PreRecordTime = 0;  /*预录时间*/
@@ -1034,7 +1073,7 @@ void RefreshIFrameInfo(int32_t Chan, ulong_t Idx, time_t Time)
 	}/*end else*/
 }
 
-int32_t writeFile(int32_t FdId, char_t *Data, int32_t DataLen)
+static int32_t writeFile(int32_t FdId, char_t *Data, int32_t DataLen)
 {
 	int nLen = 0;
 	if((FdId < 0) || (NULL == Data))
@@ -1051,7 +1090,7 @@ int32_t writeFile(int32_t FdId, char_t *Data, int32_t DataLen)
 	return LOCAL_RET_OK;
 }
 
-int32_t hdPart_Service(int32_t CmdType, SegmentIdxRecord * SegParam)
+static int32_t hdPart_Service(int32_t CmdType, SegmentIdxRecord * SegParam)
 {
 	time_t   CurrTime;	
 	char_t   StrFileName[64];
@@ -1278,7 +1317,7 @@ errExit:
 }
 
 /*查找可写文件*/
-int32_t FindNewFile()
+static int32_t FindNewFile()
 {
 	int32_t Fd = -1;
 	int32_t  Retry;

@@ -96,8 +96,8 @@ extern "C"
 /*保存I帧的最大个数*/
 #define MAX_NUM_IFRAME            200
 
-#define MEDIA_BUFFER_SIZE         0x00100000UL   /*  视频回调接收缓冲区大小,1M  */
-#define AUDIO_BUFFER_SIZE         0x00020000UL   /*  音频接收缓冲区大小,128K  */
+#define MEDIA_BUFFER_SIZE         0x00200000UL   /*  视频& 音频接收缓冲区大小,2M  */
+//#define AUDIO_BUFFER_SIZE         0x00020000UL   /*  音频接收缓冲区大小,128K  */
 
 /*分辨率尺寸*/
 #define RESOLUTION_1080P_WIDTH     1920
@@ -290,8 +290,6 @@ int32_t VidRecordInit();
 /*录像相关内容反初始化*/
 int32_t VidRecordUninit();
 
-/* 初始化分区全局变量*/
-void_t InitHdPart();
 
 /* 更新索引文件*/
 int32_t  ModifyHdIdxFile(SegmentIdxRecord *InParam);
@@ -335,6 +333,10 @@ int32_t QueryRecordFile(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQuer
 /*录像文件下载或回放*/
 int32_t QueryDownReplayRecordFile(RecordDownReplayQueryIn *RecordDownReplayQueryPtr,
        RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t QueryResArraySize);
+
+/*  将接收到的数据写入录像缓冲区*/
+int32_t	VidAudDataToBuf(uint32_t Channel, char_t *PBuffer, int32_t Size, int32_t FrameType);
+
 
 #ifdef __cplusplus
 }
