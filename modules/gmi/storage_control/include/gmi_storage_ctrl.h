@@ -37,6 +37,13 @@ extern "C"
 #define TYPE_REC_TRIG_ALARM  3
 #define TYPE_REC_TRIG_ALL    10
 
+/*录像查询类型*/
+#define TYPE_REC_QUERY_TIME   0    //按时间查询
+#define TYPE_REC_QUERY_TRIG   1    //按录像触发类型查询
+#define TYPE_REC_QUERY_ALL    2    //按时间和类型查询
+
+/*查询记录最大条数*/
+#define	MAX_NUM_QUERY_RECORD  25			/*一次性查询记录最大数*/			
 
 
 //format parameter
@@ -141,7 +148,8 @@ typedef struct tagRecordFileQuery
                                       //2-按时间和录像触发类型
     uint8_t   s_RecTrigMode;          //录像触发类型，从低到高位，第1位为1-定时录像
                                       //第2位为1-手动录像，第3位为1-移动侦测，第4位为1-报警
-    uint8_t   s_Reserved[6];          
+    uint8_t   s_Channel;              //录像通道号
+    uint8_t   s_Reserved[5];          
     uint32_t  s_RecQueryTime[2];      //录像查询时间段，UTC时间，单位：秒
 }RecordFileQueryIn;
 
@@ -290,15 +298,32 @@ GMI_RESULT  GMI_RecordCtrl(RecordCtrlIn *RecordCtrlPtr);
 func name:GMI_RecordFileQuery
 func:query record file
 input:RecordFileQueryPtr--query condition of record;
-        CurQueryPosNo--current query starting number;
+        CurQueryPosNo--current query starting number+return the last record number of current query result;
+        QueryResArraySize--size of array of query result
 output:RecordFileQueryResPtr-query result;
           QueryResTotalNum-query record total number;
           QueryResCurNum-current record number;
 return:success--return GMI_SUCCESS, 
 	failed -- return ERROR CODE
 ---------------------------------------------------------------------*/
-GMI_RESULT GMI_RecordFileQuery(RecordFileQueryIn *RecordFileQueryPtr, uint32_t CurQueryPosNo, RecordFileQueryResOut **RecordFileQueryResPtr, 
+GMI_RESULT GMI_RecordFileQuery(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQueryPosNo, 
+                                     RecordFileQueryResOut **RecordFileQueryResPtr, uint32_t QueryResArraySize, 
 	                                 uint32_t  *QueryResTotalNum, uint32_t  *QueryResCurNum);
+
+
+/*===============================================================
+func name:GMI_RecordDownReplayQuery
+func:query record file of download or replay
+input:RecordDownReplayQueryPtr--query condition of record;       
+        QueryResArraySize--size of array of query result
+output:RecordDownReplayQueryResPtr-query result;
+return:success--return GMI_SUCCESS, 
+	failed -- return ERROR CODE
+---------------------------------------------------------------------*/
+
+GMI_RESULT GMI_RecordDownReplayQuery(RecordDownReplayQueryIn*RecordDownReplayQueryPtr,
+       RecordDownReplayQueryResOut**RecordDownReplayQueryResPtr, uint32_t QueryResArraySize);
+
 
 /*===============================================================
 func name:GMI_StorageVersionQuery

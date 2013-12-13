@@ -327,6 +327,12 @@ int32_t SetRecScheduleConfig(RecordScheduleConfigIn *InParam);
 /*录像操作通知*/
 int32_t  RecordCtrlNotify(RecordCtrlIn *InParam);
 
+/*录像文件查询*/
+int32_t QueryRecordFile(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQueryPosNo, 
+                            RecordFileQueryResOut **RecordFileQueryResPtr, uint32_t QueryResArraySize,
+                            uint32_t  *QueryResTotalNum, uint32_t  *QueryResCurNum);
+
+
 #ifdef __cplusplus
 }
 #endif

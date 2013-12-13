@@ -439,7 +439,7 @@ int32_t InitPartion(int32_t FileSize)
 	
 	if(NULL != g_DbFd)
 	{
-		queryDbRecord(g_DbFd, RECORD_QUERY_FILE, METHOD_QUERY_NO, (char_t*)&PartInfo, &QueryResult, &RowRes);
+		queryDbRecord(g_DbFd, RECORD_QUERY_FILE, METHOD_QUERY_NO, (char_t*)&PartInfo, &QueryResult, 1, &RowRes);
 		sleep(1);		
 	}
 
@@ -463,7 +463,7 @@ int32_t InitPartion(int32_t FileSize)
 				memset(&SegPartInfo, 0, sizeof(SegPartInfo));
 				RowRes = 0;
 				SegPartInfo.s_SId = g_HdPart.s_FirstRecordNo;
-				queryDbRecord(g_DbFd, RECORD_QUERY_SEG, METHOD_QUERY_NO, (char_t*)&SegPartInfo, &QueryResult, &RowRes);
+				queryDbRecord(g_DbFd, RECORD_QUERY_SEG, METHOD_QUERY_NO, (char_t*)&SegPartInfo, &QueryResult, 1, &RowRes);
 				/*片段记录中查不到首条记录*/
 				if(RowRes <= 0)
 				{
@@ -473,7 +473,7 @@ int32_t InitPartion(int32_t FileSize)
 				{
 					RowRes = 0;
 					SegPartInfo.s_SId = g_HdPart.s_LastRecordNo;
-					queryDbRecord(g_DbFd, RECORD_QUERY_SEG, METHOD_QUERY_NO, (char_t*)&SegPartInfo, &QueryResult, &RowRes);
+					queryDbRecord(g_DbFd, RECORD_QUERY_SEG, METHOD_QUERY_NO, (char_t*)&SegPartInfo, &QueryResult, 1, &RowRes);
 					/*片段记录中查不到最后一条记录*/
 					if(RowRes <= 0)
 					{
@@ -500,7 +500,7 @@ int32_t InitPartion(int32_t FileSize)
 			memset(QueryResult, 0, sizeof(FileIdxHeader)+sizeof(char));
 			RowRes = 0;
 			/*主数据库文件恢复后重新查找文件记录信息*/
-			queryDbRecord(g_DbFd, RECORD_QUERY_FILE, METHOD_QUERY_NO, (char_t*)&PartInfo, &QueryResult, &RowRes);
+			queryDbRecord(g_DbFd, RECORD_QUERY_FILE, METHOD_QUERY_NO, (char_t*)&PartInfo, &QueryResult, 1, &RowRes);
 			if(RowRes <= 0)
 			{
 				PRT_TEST(("recover main database error, please try again after reboot or format disk.\n"));
@@ -517,7 +517,7 @@ int32_t InitPartion(int32_t FileSize)
 			memset(&SegPartInfo, 0, sizeof(SegPartInfo));
 			RowRes = 0;
 			SegPartInfo.s_SId = g_HdPart.s_FirstRecordNo;
-			queryDbRecord(g_DbFd, RECORD_QUERY_SEG, METHOD_QUERY_NO, (char_t*)&SegPartInfo, &QueryResult, &RowRes);
+			queryDbRecord(g_DbFd, RECORD_QUERY_SEG, METHOD_QUERY_NO, (char_t*)&SegPartInfo, &QueryResult, 1, &RowRes);
 			/*片段记录中查不到首条记录*/
 			if(RowRes <= 0)
 			{
@@ -530,7 +530,7 @@ int32_t InitPartion(int32_t FileSize)
 			{
 				RowRes = 0;
 				SegPartInfo.s_SId = g_HdPart.s_LastRecordNo;
-				queryDbRecord(g_DbFd, RECORD_QUERY_SEG, METHOD_QUERY_NO, (char_t*)&SegPartInfo, &QueryResult, &RowRes);
+				queryDbRecord(g_DbFd, RECORD_QUERY_SEG, METHOD_QUERY_NO, (char_t*)&SegPartInfo, &QueryResult, 1, &RowRes);
 				/*片段记录中查不到最后一条记录*/
 				if(RowRes <= 0)
 				{
@@ -1139,7 +1139,7 @@ int32_t hdPart_Service(int32_t CmdType, SegmentIdxRecord * SegParam)
 						RowRes = 0;
 						SegTmpParam.s_SId = g_HdPart.s_FirstRecordNo;		
 						/*按ID逐条查询*/
-						queryDbRecord(g_DbFd,RECORD_QUERY_SEG,METHOD_QUERY_NO,(char_t *)(&SegTmpParam),QueryResult, &RowRes);
+						queryDbRecord(g_DbFd,RECORD_QUERY_SEG,METHOD_QUERY_NO,(char_t *)(&SegTmpParam),QueryResult, 1, &RowRes);
 						if((NULL != QueryResult[0]) && (0 < RowRes))
 						{
 							memcpy(&SegTmpParam, QueryResult[0], sizeof(SegmentIdxRecord));
@@ -1219,7 +1219,7 @@ int32_t hdPart_Service(int32_t CmdType, SegmentIdxRecord * SegParam)
 					/*更新最早片段录像记录时间*/
 					memset(&SegTmpParam, 0, sizeof(SegTmpParam));
 					SegTmpParam.s_SId = g_HdPart.s_FirstRecordNo;
-					queryDbRecord(g_DbFd,RECORD_QUERY_SEG,METHOD_QUERY_NO,(char_t *)(&SegTmpParam),QueryResult, &RowRes);
+					queryDbRecord(g_DbFd,RECORD_QUERY_SEG,METHOD_QUERY_NO,(char_t *)(&SegTmpParam),QueryResult, 1, &RowRes);
 					if((NULL != QueryResult[0]) && (0 < RowRes))
 					{
 						memcpy(&SegTmpParam, QueryResult[0], sizeof(SegmentIdxRecord));
@@ -2084,6 +2084,7 @@ int32_t GetSDStatus(StorageStatusQueryResOut **QueryResPtr,
 	int32_t FreeSpace = 0;
 	if((NULL == QueryResPtr)
 		|| (NULL == QueryResNum)
+		|| (NULL == *QueryResPtr)
 		|| (0 == QueryArrayNum))
 	{
 		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
@@ -2252,4 +2253,239 @@ int32_t  RecordCtrlNotify(RecordCtrlIn *InParam)
 	}
 
 	return LOCAL_RET_OK;
+}
+
+
+/*根据上层统一上传录像文件的名称*/
+static void MakeRecFileName(int32_t RecType,  SegmentIdxRecord *PQueryResult, int32_t QueryResultSize, RecordFileQueryResOut **RecordFileQueryResPtr, uint32_t QueryResArraySize)
+{
+	int32_t i;
+	char_t StrFileName[64];
+	int32_t StrLen = 0;
+	int32_t RecordSize = 0;
+
+	if((NULL == PQueryResult) 
+		|| (NULL == RecordFileQueryResPtr)
+		|| (NULL == *RecordFileQueryResPtr)
+		|| (NUM_RECORD_MAX < QueryResultSize)
+		|| (NUM_RECORD_MAX > QueryResArraySize))
+	{
+		PRT_ERR(("mkRecFileName param error.\n"));
+		return;
+	}
+
+	for(i=0; i<QueryResultSize; i++)
+	{
+		memset(StrFileName, 0, sizeof(StrFileName));
+		StrLen = sprintf(StrFileName, "record_%02d_%04d_%04d_%d_%d", PQueryResult[i].s_RecEncodeNo, PQueryResult[i].s_RecFileNo,
+			    PQueryResult[i].s_RecSegNo, PQueryResult[i].s_StartTime, PQueryResult[i].s_EndTime);
+		(*RecordFileQueryResPtr)[i].s_RecTrigMode = RecType;
+		memcpy((*RecordFileQueryResPtr)[i].s_RecFileName, StrFileName, MIN(StrLen, MAX_LEN_FILE_REC));
+		/*片段录像的最后一个片段簇的实际使用的大小决定录像长度计算方式*/
+		if((PQueryResult[i].s_RecLastSegLen <= 0) || (PQueryResult[i].s_RecLastSegLen >= MIN_SEG_REC_LEN))
+		{
+			RecordSize = MIN_SEG_REC_LEN * PQueryResult[i].s_RecSegLen;
+		}
+		else
+		{
+			if(PQueryResult[i].s_RecSegLen > 0)
+			{
+				RecordSize = MIN_SEG_REC_LEN * (PQueryResult[i].s_RecSegLen-1) + PQueryResult[i].s_RecLastSegLen;
+			}
+			else
+			{
+				RecordSize = PQueryResult[i].s_RecLastSegLen;
+			}
+		}
+		(*RecordFileQueryResPtr)[i].s_RecFileSize = RecordSize;
+		(*RecordFileQueryResPtr)[i].s_RecFileTime[0] = PQueryResult[i].s_StartTime;
+		(*RecordFileQueryResPtr)[i].s_RecFileTime[1] = PQueryResult[i].s_EndTime;
+		if(i == QueryResArraySize-1)
+		{
+			break;
+		}
+	}
+	
+}
+
+
+/* 搜索录像文件记录*/
+static int SearchRecordFiles(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQueryPosNo, 
+                                 RecordFileQueryResOut **RecordFileQueryResPtr, uint32_t QueryResArraySize,
+                                 uint32_t  *QueryResTotalNum, uint32_t  *QueryResCurNum)
+{
+
+	if((RecordFileQueryPtr->s_Channel >=  MAX_ENCODER_NUM)
+		|| (RecordFileQueryPtr->s_RecQueryTime[0] >=  RecordFileQueryPtr->s_RecQueryTime[1])
+		|| (RecordFileQueryPtr->s_RecQueryType > TYPE_REC_QUERY_ALL))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		return LOCAL_RET_ERR;
+	}
+
+	int32_t RetResult = LOCAL_RET_OK;
+	SegmentIdxRecord SegParam;
+	SegmentIdxRecord *PQueryResult = NULL;
+	char_t **QueryResult;
+	int32_t i = 0;
+	int32_t RowRes = 0;
+	int32_t RecordTotalNum = 0;
+	int32_t StartQueryNo = 0;
+	int32_t RealRecordNum = 0;
+
+	memset(&SegParam, 0, sizeof(SegmentIdxRecord));
+	PQueryResult = (SegmentIdxRecord *)malloc(NUM_RECORD_MAX * sizeof(SegmentIdxRecord));
+	if(NULL == PQueryResult)
+	{
+		PRT_ERR(("pQueryResult malloc error, please reboot.\n"));
+		RetResult = LOCAL_RET_ERR;
+		goto ErrExit;
+	}
+	QueryResult = (char**)malloc(NUM_RECORD_MAX * sizeof(char *));
+	memset(QueryResult, 0, NUM_RECORD_MAX * sizeof(char *));
+	for(i = 0; i < NUM_RECORD_MAX; i++)
+	{
+		QueryResult[i] = (char *)malloc(sizeof(SegmentIdxRecord) + sizeof(char));
+		if(NULL == QueryResult[i])
+		{
+			PRT_ERR(("queryResult[i] malloc error, please reboot.\n"));
+			RetResult = LOCAL_RET_ERR;
+			goto ErrExit;
+		}
+		memset(QueryResult[i], 0, sizeof(SegmentIdxRecord) + sizeof(char));
+	}
+
+	if(NULL != g_DbFd)
+	{
+		do
+		{
+			RowRes = 0;
+			memset(&SegParam, 0, sizeof(SegParam));
+			if(0 < *CurQueryPosNo)
+			{
+				StartQueryNo = *CurQueryPosNo+1;
+			}
+			SegParam.s_SId = StartQueryNo; 					//起始查询的记录号
+
+			if(TYPE_REC_QUERY_TIME == RecordFileQueryPtr->s_RecQueryType)
+			{
+				SegParam.s_RecType = TYPE_REC_TIME;
+			}
+			else if(TYPE_REC_QUERY_TRIG == RecordFileQueryPtr->s_RecQueryType)
+			{
+				if((RecordFileQueryPtr->s_RecTrigMode)&0x04)
+				{
+					SegParam.s_RecType = TYPE_REC_MOTION;
+				}
+				else if((RecordFileQueryPtr->s_RecTrigMode)&0x08)
+				{
+					SegParam.s_RecType = TYPE_REC_ALARM;
+				}
+				else
+				{
+					SegParam.s_RecType = TYPE_REC_TIME;
+				}
+			}
+
+			SegParam.s_RecType = RecordFileQueryPtr->s_RecQueryType;
+			SegParam.s_StartTime = RecordFileQueryPtr->s_RecQueryTime[0];
+			SegParam.s_EndTime = RecordFileQueryPtr->s_RecQueryTime[1];
+			
+			/*全部录像*/
+			if(TYPE_REC_TIME == SegParam.s_RecType)
+			{
+				LOCK(&g_LockHDPart);
+				queryDbRecord(g_DbFd,RECORD_QUERY_SEG,METHOD_QUERY_TIME,(char_t*)&SegParam,QueryResult, NUM_RECORD_MAX, &RowRes);
+				UNLOCK(&g_LockHDPart);
+			}
+			/*一般录像*/
+			else if(TYPE_REC_TIME != SegParam.s_RecType)
+			{
+				LOCK(&g_LockHDPart);
+				queryDbRecord(g_DbFd,RECORD_QUERY_SEG,METHOD_QUERY_MIX,(char_t*)&SegParam,QueryResult, NUM_RECORD_MAX, &RowRes);
+				UNLOCK(&g_LockHDPart);
+			}
+			else
+			{
+				PRT_ERR(("query record recType %d error.\n", SegParam.s_RecType));
+				RetResult = LOCAL_RET_ERR;
+				goto ErrExit;
+			}
+
+			RealRecordNum = MIN(RowRes, NUM_RECORD_MAX);
+				
+			if((NULL != QueryResult[0]) && (RealRecordNum > 0))
+			{
+				for(i = 0; i < RealRecordNum; i++)
+				{
+					memset(&SegParam, 0, sizeof(SegParam));
+					memcpy(&SegParam, QueryResult[i], sizeof(SegmentIdxRecord));
+					memcpy(&(PQueryResult[i]), &SegParam, sizeof(SegmentIdxRecord));
+				}	
+				StartQueryNo = PQueryResult[RealRecordNum-1].s_SId + 1;
+			}
+			RecordTotalNum = RowRes;
+			MakeRecFileName(RecordFileQueryPtr->s_RecTrigMode, PQueryResult, RecordTotalNum, RecordFileQueryResPtr, QueryResArraySize);
+			PRT_TEST(("select over,recordTotalNum = %d, RealRecordNum = %d\n", RecordTotalNum, RealRecordNum));
+			
+		}while(0);
+	}
+
+	*QueryResTotalNum = RecordTotalNum;
+	*QueryResCurNum = RealRecordNum;
+ErrExit:
+	if(NULL != PQueryResult)
+	{
+		free(PQueryResult);
+		PQueryResult = NULL;
+	}
+	for(i = 0; i < NUM_RECORD_MAX; i++)
+	{
+		if(NULL != QueryResult[i])
+		{
+			free(QueryResult[i]);
+			QueryResult[i] = NULL;
+		}
+	}
+	if(NULL != QueryResult)
+	{
+		free(QueryResult);
+		QueryResult = NULL;
+	}
+	
+    return RetResult;
+}
+
+
+
+int32_t QueryRecordFile(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQueryPosNo, 
+                            RecordFileQueryResOut **RecordFileQueryResPtr, uint32_t QueryResArraySize,
+                            uint32_t  *QueryResTotalNum, uint32_t  *QueryResCurNum)
+{
+	if((NULL == RecordFileQueryPtr)
+		|| (NULL == CurQueryPosNo)
+		|| (NULL == RecordFileQueryResPtr)
+		|| (NULL == *RecordFileQueryResPtr)
+		|| (NULL == QueryResTotalNum)
+		|| (NULL == QueryResCurNum))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		return LOCAL_RET_ERR;
+	}
+
+	switch(RecordFileQueryPtr->s_RecQueryType)
+	{
+		case TYPE_REC_QUERY_TRIG:
+			break;
+		case TYPE_REC_QUERY_ALL:
+			break;
+		case TYPE_REC_QUERY_TIME:
+		default:
+			SearchRecordFiles(RecordFileQueryPtr, CurQueryPosNo, RecordFileQueryResPtr, 
+				QueryResArraySize, QueryResTotalNum, QueryResCurNum);
+			break;
+	}
+
+	return LOCAL_RET_OK;
+		
 }

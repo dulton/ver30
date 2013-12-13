@@ -31,7 +31,7 @@ extern "C"
 #define		RECORD_UPDATE_FILE		1			/*文件记录更新*/
 
 /*查询记录条数*/
-#define		NUM_RECORD_MAX			50			/*一次性查询记录最大数*/			
+#define		NUM_RECORD_MAX			25			/*一次性查询记录最大数*/			
 
 /*打开数据库文件*/
 int openDbFile(sqlite3 **dbFd);
@@ -46,7 +46,7 @@ int createDbTable(sqlite3 *dbFd, const int cmdType);
 int openDbBackupFile(sqlite3 **dbFd);
 
 /*查询数据记录，支持单条记录查询、时间段查询、录像类型查询*/
-void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *param, char **queryResult, int *rowResult);
+void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *param, char **queryResult, int queryResultNum,int *rowResult);
 
 /*增加片段录像和录像文件信息记录*/
 int addDbRecord(sqlite3 *dbFd, const int cmdType, char *param);

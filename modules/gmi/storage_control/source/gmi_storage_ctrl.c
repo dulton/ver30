@@ -109,6 +109,7 @@ GMI_RESULT GMI_StorageDeviceStatusQuery(StorageStatusQueryIn *DevStatusQueryPtr,
 	int32_t RetVal = GMI_SUCCESS;
 	if((NULL == DevStatusQueryPtr)
 		|| (NULL == DevStatusQueryResPtr)
+		|| (NULL == *DevStatusQueryResPtr)
 		|| (NULL == DevStatusNum)
 		|| (0 == DevStatusQueryNum))
 	{
@@ -205,5 +206,33 @@ GMI_RESULT  GMI_StorageVersionQuery(char_t *StorageVer, int32_t VerMaxLen)
 
 	return GMI_SUCCESS;
 }
+
+GMI_RESULT GMI_RecordFileQuery(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQueryPosNo, 
+	                                 RecordFileQueryResOut **RecordFileQueryResPtr, uint32_t QueryResArraySize,
+	                                 uint32_t  *QueryResTotalNum, uint32_t  *QueryResCurNum)
+{
+	if((NULL == RecordFileQueryPtr)
+		|| (NULL == RecordFileQueryResPtr)
+		|| (NULL == *RecordFileQueryResPtr)
+		|| (MAX_NUM_QUERY_RECORD > QueryResArraySize)
+		|| (NULL == QueryResTotalNum)
+		|| (NULL == QueryResCurNum))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		return GMI_INVALID_PARAMETER;
+	}
+
+	if(LOCAL_RET_OK != QueryRecordFile(RecordFileQueryPtr, CurQueryPosNo, 
+	                                 RecordFileQueryResPtr, QueryResArraySize,
+	                                 QueryResTotalNum, QueryResCurNum))
+	{
+		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "QueryRecordFile error.\n");
+		return GMI_FAIL;
+	}
+
+	return GMI_SUCCESS;
+}
+
+
 
 

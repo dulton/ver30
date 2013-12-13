@@ -168,7 +168,7 @@ int createDbTable(sqlite3 *dbFd, const int cmdType)
 
 
 /*查询数据记录，支持单条记录查询、批量时间段查询、批量录像类型查询*/
-void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *param, char **queryResult, int *rowResult)
+void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *param, char **queryResult, int queryResultNum, int *rowResult)
 {
 	FileIdxHeader fileInfoRecord;
 	SegmentIdxRecord segInfoRecord;
@@ -180,7 +180,7 @@ void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *
 	int ret = -1;
 	int i = 0, j = 0;
 
-	if((NULL == param)  || (NULL == dbFd))
+	if((NULL == param)  || (NULL == dbFd) || (0 <= queryResultNum))
 	{
 		PRT_ERR(("queryDbRecord param NULL.\n"));
 		return;
@@ -310,6 +310,10 @@ void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *
 					j = i/ncolumn - 1;
 					memcpy(queryResult[j], &segInfoRecord, sizeof(segInfoRecord));
 					i += ncolumn;
+					if(j >= (queryResultNum-1))
+					{
+						break;
+					}
 				}
 				break;
 			case RECORD_QUERY_FILE:
@@ -331,6 +335,10 @@ void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *
 					j = i/ncolumn - 1;
 					memcpy(queryResult[j], &fileInfoRecord, sizeof(fileInfoRecord));
 					i += ncolumn;
+					if(j >= (queryResultNum-1))
+					{
+						break;
+					}
 				}
 				break;
 			default:
