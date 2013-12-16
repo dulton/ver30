@@ -9,6 +9,12 @@ GMI_RESULT SysInitialize(uint16_t LocalAuthRudpPort);
 GMI_RESULT SysInitializeExt(struct timeval *TimeoutPtr, uint16_t TryCount);
 GMI_RESULT SysDeinitialize();
 
+/*
+*in:SysLogInfoSearch
+*out:SysLogInfoInt, SysLogInfo
+*/
+GMI_RESULT SysGetLogInfo(uint16_t SessionId, uint32_t AuthValue, SysPkgLogInfoSearch *SysLogInfoSearch, SysPkgLogInfoInt *SysLogInfoInt, SysPkgLogInfo *SysLogInfo);
+
 /*************************************************
   *ModuleId:
                 "auth_center_api.h" :
@@ -114,6 +120,9 @@ GMI_RESULT SysGetAutoFocusCfg(uint16_t SessionId, uint32_t AuthValue, SysPkgAuto
 GMI_RESULT SysSetAutoFocusCfg(uint16_t SessionId, uint32_t AuthValue, SysPkgAutoFocus *SysAutoFocusPtr);
 GMI_RESULT SysFocusGlobalScan(uint16_t SessionId, uint32_t AuthValue);
 GMI_RESULT SysSearchPtzPresetInfo(uint16_t SessionId, uint32_t AuthValue, uint32_t PresetIndex, boolean_t *Setted,  char_t PresetName[128]);
+GMI_RESULT SysSetPtzPresetInfo(uint16_t SessionId, uint32_t AuthValue, SysPkgPtzPresetInfo *SysPtzPresetInfoPtr);
+GMI_RESULT SysGetMaxPresetNum(uint16_t SessionId, uint32_t AuthValue, int32_t *MaxNumPtr);
+GMI_RESULT SysGetPtzPresetInfo(uint16_t SessionId, uint32_t AuthValue, int32_t MaxNum, SysPkgPtzPresetInfo *SysPtzPresetInfoPtr, int32_t *RspNum);
 
 GMI_RESULT SysGetShowInfo(uint16_t SessionId, uint32_t AuthValue, SysPkgShowCfg *SysShowInfoPtr, uint32_t ReqShowInfoNum, uint32_t *RspShowInfoNum);
 GMI_RESULT SysSetShowInfo(uint16_t SessionId, uint32_t AuthValue, SysPkgShowCfg *SysShowInfoPtr);

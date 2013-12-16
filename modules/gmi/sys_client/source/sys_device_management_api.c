@@ -1578,3 +1578,94 @@ GMI_RESULT SysExecuteImportFile(uint16_t SessionId, uint32_t AuthValue, SysPkgCo
 
     return GMI_FAIL;
 }
+
+
+GMI_RESULT SysGetLogInfo(uint16_t SessionId, uint32_t AuthValue, SysPkgLogInfoSearch *SysLogInfoSearch, SysPkgLogInfoInt *SysLogInfoInt, SysPkgLogInfo *SysLogInfo)
+{
+    GMI_RESULT   Result = GMI_SUCCESS;  
+    SysAttr      SysReqAttr = {0};
+    SysPkgLogInfoSearch SysLogInfoSch;
+    SysAttr      *SysRspAttrPtr    = NULL;
+    SysAttr      *SysRspAttrTmpPtr = NULL;
+    uint16_t     RspAttrCnt        = 0;
+    uint16_t     ReqAttrCnt        = 1;
+    boolean_t    Exist             = false;
+
+    if (NULL == SysLogInfoInt
+       || NULL == SysLogInfo)
+    {
+       return GMI_INVALID_PARAMETER;
+    }
+
+    do
+    {
+        memset(&SysLogInfoSch, 0, sizeof(SysPkgLogInfoSearch));
+        memcpy(&SysLogInfoSch, SysLogInfoSearch, sizeof(SysPkgLogInfoSearch));
+        SysLogInfoSch.s_SelectMode = htonl(SysLogInfoSch.s_SelectMode);
+        SysLogInfoSch.s_MajorType  = htonl(SysLogInfoSch.s_MajorType);
+        SysLogInfoSch.s_MinorType  = htonl(SysLogInfoSch.s_MinorType);
+        SysLogInfoSch.s_Offset     = htonl(SysLogInfoSch.s_Offset);
+        SysLogInfoSch.s_MaxNum     = htonl(SysLogInfoSch.s_MaxNum);       
+
+        SysReqAttr.s_Type      = TYPE_LOGINFO_SEARCH;
+        SysReqAttr.s_Attr      = (void_t*)&SysLogInfoSch;
+        SysReqAttr.s_AttrLength = sizeof(SysPkgLogInfoSearch);
+        Result = SysGetCmdExcuteWithAttrs(SessionId, AuthValue, SYSCODE_GET_LOGINFO_REQ, ReqAttrCnt, &SysReqAttr, &RspAttrCnt, &SysRspAttrPtr);
+        if (FAILED(Result))
+        {
+            SYS_CLIENT_ERROR("SysGetCmdExcuteWithAttrs fail, Result = 0x%lx\n", Result);
+            break;
+        }
+
+        if (RspAttrCnt <= 0
+            || SysRspAttrPtr == NULL)
+        {
+            SYS_CLIENT_ERROR("RspAttrCnt %d incorrect or SysRspAttrPtr is Null\n", RspAttrCnt);
+            break;
+        }
+        
+        SysRspAttrTmpPtr = SysRspAttrPtr;
+        if (SysRspAttrTmpPtr->s_Type == TYPE_LOGINFO_INT
+            && SysRspAttrTmpPtr->s_AttrLength == sizeof(SysPkgLogInfoInt))
+        {
+            memcpy(SysLogInfoInt, SysRspAttrTmpPtr->s_Attr, SysRspAttrTmpPtr->s_AttrLength);
+            SysLogInfoInt->s_Total = ntohl(SysLogInfoInt->s_Total);
+            SysLogInfoInt->s_Count = ntohl(SysLogInfoInt->s_Count);
+        }
+
+        if (SysLogInfoInt->s_Count != RspAttrCnt-1)
+        {
+            SYS_CLIENT_ERROR("loginfo count %d,but loginfo attr is %d\n", SysLogInfoInt->s_Count, RspAttrCnt-1);
+            break;
+        }
+
+        SysRspAttrTmpPtr++;
+        for (int32_t i = 0, j = 0; i < SysLogInfoInt->s_Count; i++)
+        {
+            if (SysRspAttrTmpPtr->s_Type == TYPE_LOGINFO
+                && SysRspAttrTmpPtr->s_AttrLength == sizeof(SysPkgLogInfo))
+            {
+                memcpy(&SysLogInfo[j], SysRspAttrTmpPtr->s_Attr, SysRspAttrTmpPtr->s_AttrLength);
+                SysLogInfo[j].s_LogId     = ntohll(SysLogInfo[j].s_LogId);
+                SysLogInfo[j].s_MajorType = ntohl(SysLogInfo[j].s_MajorType);
+                SysLogInfo[j].s_MinorType = ntohl(SysLogInfo[j].s_MinorType);
+                j++;
+                Exist = true;
+            }
+            SysRspAttrTmpPtr++;
+        }                       
+        
+        if (!Exist)
+        {
+            SYS_CLIENT_ERROR("not found valid data\n");
+            break;
+        }
+
+        SysGetCmdAttrFree(RspAttrCnt, SysRspAttrPtr);
+        return GMI_SUCCESS;
+    }
+    while (0);
+
+    SysGetCmdAttrFree(RspAttrCnt, SysRspAttrPtr);
+    return GMI_FAIL;
+}

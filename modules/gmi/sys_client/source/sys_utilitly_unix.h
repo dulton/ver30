@@ -59,6 +59,9 @@ extern "C"
 
     GMI_RESULT NetReadMacChar(char_t EthName[32], char_t Mac[6]);
 
+    unsigned long long ntohll(unsigned long long val);
+    unsigned long long htonll(unsigned long long val);
+    
 #ifdef __cpluscplus
 }
 #endif

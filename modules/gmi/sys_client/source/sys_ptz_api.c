@@ -216,3 +216,117 @@ GMI_RESULT SysSearchPtzPresetInfo(uint16_t SessionId, uint32_t AuthValue, uint32
 	SysGetCmdAttrFree(RspAttrCnt, SysRspAttrPtr);
     return GMI_FAIL;
 }
+
+
+GMI_RESULT SysSetPtzPresetInfo(uint16_t SessionId, uint32_t AuthValue, SysPkgPtzPresetInfo *SysPtzPresetInfoPtr)
+{
+    GMI_RESULT Result     = GMI_SUCCESS;  
+    uint16_t   ReqAttrCnt = 1;
+    SysAttr    SysReqAttr = {0};
+    SysPkgPtzPresetInfo SysPtzPresetInfo;
+
+    do
+    {
+        if (NULL == SysPtzPresetInfoPtr)
+        {
+            return GMI_INVALID_PARAMETER;
+        }
+
+        memset(&SysPtzPresetInfo, 0, sizeof(SysPkgPtzPresetInfo));
+        memcpy(&SysPtzPresetInfo, SysPtzPresetInfoPtr, sizeof(SysPkgPtzPresetInfo));
+        SysPtzPresetInfo.s_PtzId       = htonl(SysPtzPresetInfo.s_PtzId);
+        SysPtzPresetInfo.s_PresetIndex = htonl(SysPtzPresetInfo.s_PresetIndex);
+        SysReqAttr.s_Type       = TYPE_PTZPRESET;
+        SysReqAttr.s_Attr       = (void_t*)&SysPtzPresetInfo;
+        SysReqAttr.s_AttrLength = sizeof(SysPkgPtzPresetInfo);
+        
+        Result = SysSetCmdExcute(SessionId, AuthValue, SYSCODE_SET_PTZPRESET_REQ, ReqAttrCnt, &SysReqAttr);
+        if (FAILED(Result))
+        {
+            break;
+        }
+
+        return GMI_SUCCESS;    
+    }
+    while (0);
+
+    return GMI_FAIL;
+}
+
+
+GMI_RESULT SysGetMaxPresetNum(uint16_t SessionId, uint32_t AuthValue, int32_t *MaxNumPtr)
+{
+    if (NULL == MaxNumPtr)
+    {
+        return GMI_FAIL;
+    }
+
+    *MaxNumPtr = MAX_PRESETS;
+
+    return GMI_SUCCESS;
+}
+
+
+GMI_RESULT SysGetPtzPresetInfo(uint16_t SessionId, uint32_t AuthValue, int32_t MaxNum, SysPkgPtzPresetInfo *SysPtzPresetInfoPtr, int32_t *RspNum)
+{
+    uint8_t    i;
+    GMI_RESULT Result           = GMI_SUCCESS;
+    boolean_t  Exist            = false;
+    uint16_t   RspAttrCnt       = 0;
+    uint16_t   PresetCnt        = 0;
+    uint16_t   RspCnt           = 0;
+    SysAttr   *SysRspAttrPtr    = NULL;
+    SysAttr   *SysRspAttrTmpPtr = NULL;
+
+    do 
+    {
+        Result = SysGetCmdExcute(SessionId, AuthValue, SYSCODE_GET_PTZPRESET_REQ, &RspAttrCnt, &SysRspAttrPtr);
+        if (FAILED(Result))
+        {
+            SYS_CLIENT_ERROR("SysGetCmdExcute fail, Result = 0x%lx\n", Result);
+            printf("SysGetCmdExcute fail, Result = 0x%lx\n", Result);
+            break;
+        }
+
+        if (RspAttrCnt <= 0
+                || SysRspAttrPtr == NULL)
+        {
+            SYS_CLIENT_ERROR("RspAttrCnt %d incorrect or SysRspAttrPtr is Null\n", RspAttrCnt);
+            printf("RspAttrCnt %d incorrect or SysRspAttrPtr is Null\n", RspAttrCnt);
+            break;
+        }
+
+        PresetCnt = MaxNum >= RspAttrCnt ?  RspAttrCnt : MaxNum;
+        SysRspAttrTmpPtr = SysRspAttrPtr;
+        SYS_CLIENT_INFO("PresetCnt %d\n", PresetCnt);
+        for (i = 0; i < PresetCnt; i++)
+        {        
+            SYS_CLIENT_INFO("s_Type %d, s_AttrLength %d\n", SysRspAttrTmpPtr->s_Type, SysRspAttrTmpPtr->s_AttrLength);   
+            //printf("s_Type %d, s_AttrLength %d\n", SysRspAttrTmpPtr->s_Type, SysRspAttrTmpPtr->s_AttrLength);  
+            if (SysRspAttrTmpPtr->s_Type == TYPE_PTZPRESET
+                && SysRspAttrTmpPtr->s_AttrLength == sizeof(SysPkgPtzPresetInfo))
+            {
+                memcpy(&SysPtzPresetInfoPtr[i], SysRspAttrTmpPtr->s_Attr, SysRspAttrTmpPtr->s_AttrLength);
+                SysPtzPresetInfoPtr[i].s_PtzId       = ntohl(SysPtzPresetInfoPtr[i].s_PtzId);
+                SysPtzPresetInfoPtr[i].s_PresetIndex = ntohl(SysPtzPresetInfoPtr[i].s_PresetIndex);    
+                Exist = true;     
+                RspCnt++;   
+            }
+            SysRspAttrTmpPtr++;
+        }
+
+        if (!Exist)
+        {
+            SYS_CLIENT_ERROR("not found valid data\n");
+            break;
+        }
+
+        *RspNum = RspCnt;
+        SysGetCmdAttrFree(RspAttrCnt, SysRspAttrPtr);
+        return GMI_SUCCESS;
+    }
+    while (0);
+
+    SysGetCmdAttrFree(RspAttrCnt, SysRspAttrPtr);
+    return GMI_FAIL;
+}

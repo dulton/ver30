@@ -417,4 +417,15 @@ GMI_RESULT NetReadMacChar(char_t EthName[32], char_t Mac[6])
 }
 
 
+unsigned long long ntohll(unsigned long long val)
+{
+    return (((unsigned long long )htonl((int)((val << 32) >> 32))) << 32) | (unsigned int)htonl((int)(val >> 32));
+}
+
+
+unsigned long long htonll(unsigned long long val)
+{
+    return (((unsigned long long )htonl((int)((val << 32) >> 32))) << 32) | (unsigned int)htonl((int)(val >> 32));    
+}
+
 
