@@ -19,6 +19,8 @@ extern "C"
 #define FALSE   0
 #define TRUE    1
 
+#define FRAME_TYPE_P            0
+#define FRAME_TYPE_I            1
 
 #define  HD_NORMAL         		0
 #define  HD_ERROR          		1

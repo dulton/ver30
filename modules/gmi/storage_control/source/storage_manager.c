@@ -1,6 +1,7 @@
 #include "storage_common.h"
-
 #include "storage_manager.h"
+#include "stream_process.h"
+
 #include "log_record.h"
 #include "dbManager.h"
 
@@ -20,6 +21,8 @@ RecordParamConfigIn     g_RecRefenceParam;
 static int32_t l_RecProcessThreadcreated = 0;
 static int32_t l_DbProcessThreadcreated = 0;
 static int32_t l_IsStartDbProcessTask = 0;
+int32_t l_IsStartDataRecTask[4] = {0};
+
 
 #define		PRT_ERR(x)	printf x
 #define		PRT_TEST(x)	printf x
@@ -99,7 +102,7 @@ int32_t	VidAudDataToBuf(uint32_t Channel, char_t *PBuffer, int32_t Size, int32_t
 
 	memset(&RecMsg, 0, sizeof(RecordMsgType));
 	RecMsg.s_MsgType = MSG_TYPE_REC;	
-	if(FrameType == 2)//VIDEO_I_FRAME
+	if(FrameType == FRAME_TYPE_I)
 	{		
 	    RecMsg.s_CmdType = CMD_TYPE_REFRESH_I;
         RecMsg.s_Idx     = WritePos;
@@ -309,6 +312,37 @@ static void_t InitHdPart()
 	memset(&g_HdPart, 0, sizeof(g_HdPart));
 	
 }
+
+static int32_t CreateDataReceivedThread(int32_t ChanId, int32_t StreamId)
+{
+	pthread_t DataRecTid;
+    int32_t RetVal;
+
+	if((StreamId<0) || (StreamId>1))
+	{
+		PRT_ERR(("CreateDataReceivedThread inParam error.\n"));
+		return LOCAL_RET_ERR;
+	}
+
+	l_IsStartDataRecTask[StreamId] = 1;
+	if(1 == l_IsStartDataRecTask[StreamId])
+	{
+        DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "DataReceived has created.");
+		return LOCAL_RET_OK;
+	}
+
+    RetVal = pthread_create(&DataRecTid, NULL, RecordDataReceiveTask, &StreamId);
+    if (0 != RetVal)
+    {
+        DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordDataReceiveTask thread create error.");
+		l_IsStartDbProcessTask = 0;
+        return LOCAL_RET_ERR;
+    }
+	l_IsStartDataRecTask[StreamId] = 1;
+
+	return LOCAL_RET_OK;
+}
+
 
 int32_t InitPartion(int32_t FileSize)
 {
@@ -609,6 +643,7 @@ int32_t InitPartion(int32_t FileSize)
 	free(QueryResult);
 	QueryResult = NULL;
 	RetVal = LOCAL_RET_OK;
+	CreateDataReceivedThread(0,0);
 errExit:
 	if(NULL != QueryResult)
 	{
