@@ -58,8 +58,6 @@ extern "C" {
 #define SYSCODE_FIND_STORAGEFILE_RSP      1102
 #define SYSCODE_GET_STORAGEFILE_REQ       1103
 #define SYSCODE_GET_STORAGEFILE_RSP       1104
-#define SYSCODE_GET_LOGINFO_REQ           1111
-#define SYSCODE_GET_LOGINFO_RSP           1112
 #define SYSCODE_SET_HIDEAREA_REQ          1121
 #define SYSCODE_SET_HIDEAREA_RSP          1122
 #define SYSCODE_GET_HIDEAREA_REQ          1123
@@ -118,6 +116,10 @@ extern "C" {
 #define SYSCODE_GET_DAY_NIGHT_RSP         1224
 #define SYSCODE_SET_DAY_NIGHT_REQ         1225
 #define SYSCODE_SET_DAY_NIGHT_RSP         1226
+#define SYSCODE_GET_LOGINFO_REQ           1227
+#define SYSCODE_GET_LOGINFO_RSP           1228
+#define SYSCODE_GET_ALARM_REQ             1229
+#define SYSCODE_GET_ALARM_RSP             1230
 
 //inner use
 #define SYSCODE_START_AUDIO_DECODE_REQ    2002 
@@ -182,6 +184,11 @@ extern "C" {
 #define TYPE_AUTO_FOCUS         116
 #define TYPE_WHITE_BALANCE      117
 #define TYPE_DAY_NIGHT          118
+#define TYPE_LOGINFO_SEARCH     119
+#define TYPE_LOGINFO            120
+#define TYPE_LOGINFO_INT        121
+#define TYPE_WARING_INFO        122
+
 //inner use
 #define TYPE_AUDIO_DECODE       201
 #define TYPE_CONFIG_FILE        202
@@ -193,7 +200,7 @@ extern "C" {
 #define MODULE_TYPE_MEDIA        1
 #define MODULE_TYPE_PTZ          2
 #define MODULE_TYPE_RECORD       3
-//#define MODULE_TYPE_LOG          4
+#define MODULE_TYPE_LOG_INFO     4
 #define MODULE_TYPE_EVENT        5
 #define MAKE_RETCODE(r, m, e)   ((r<<31)+(m<<16)+e)
 #define RETCODE_OK              MAKE_RETCODE(RET_TYPE_SUCCESS, MODULE_TYPE_DEVICE, 0)
@@ -214,9 +221,9 @@ extern "C" {
 #define RETCODE_NOSPECDISK      MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 2)
 #define RETCODE_FORMATING       MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 3)
 #define RETCODE_OTHERUSER_FORMAITING MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 4)
-#define RETCODE_IP_INVAILD  MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 5)
-#define RETCODE_IP_CONFLICT MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 6)
-#define RETCODE_SYSTEM_RNNING MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 7)
+#define RETCODE_IP_INVAILD      MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 5)
+#define RETCODE_IP_CONFLICT     MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 6)
+#define RETCODE_SYSTEM_RNNING   MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 7)
 
 
 #define SYS_COMM_VERSION            1
@@ -732,7 +739,7 @@ typedef struct tagUserInfo
 	char_t    s_UserName[128];
 	char_t    s_UserPass[128];
 	uint16_t  s_UserFlag;//admin--1, operator--2, viewer--3
-	uint16_t  s_UserLevel;//operator 0-9
+	uint16_t  s_UserLevel;//user auth
 }SysPkgUserInfo;
 
 
@@ -779,17 +786,47 @@ typedef struct tagLogInfoSearch
 	int32_t  s_MinorType; //all type --0
 	char_t   s_StartTime[32];
 	char_t   s_StopTime[32];
+    int32_t  s_Offset; 
+    int32_t  s_MaxNum; //show count one page
 }SysPkgLogInfoSearch;
 
 
 //log info
 typedef struct tagLogInfo
 {
+    uint64_t s_LogId;
 	int32_t  s_MajorType;
 	int32_t  s_MinorType;
 	char_t   s_LogTime[32];
+    char_t   s_UserName[32];
+    char_t   s_RemoteHostIp[32];
 	char_t   s_LogData[128];
+    char_t   s_Reserved[4];
 }SysPkgLogInfo;
+
+//log info num
+typedef struct tagLogInfoInt
+{
+    int32_t s_Total; //total loginfo count
+    int32_t s_Count; //loginfo count in preset
+}SysPkgLogInfoInt;
+
+
+//alarm info
+typedef struct tagAlarmInfo
+{
+    uint64_t s_WaringId;
+    int32_t  s_WaringType;
+    int32_t  s_WaringLevel;//1 for hight level, 5 for low level
+    int32_t  s_OnOff; //0 for off, 1 for on;
+    uint8_t  s_Time[36];
+    uint8_t  s_DevId[64];
+    uint8_t  s_Description[128];
+    union
+    {
+        uint32_t s_IoNum;
+    }s_ExtraInfo;
+}SysPkgAlarmInfo;
 
 
 //log major type and minor type
@@ -1202,7 +1239,7 @@ typedef struct tagPtzHomeCfg
 typedef struct tagPtzPresetInfo
 {
 	int32_t s_PtzId;
-	int32_t s_PresetIndex;
+	int32_t s_PresetIndex; // 1<<16 :have setted, 0<<16:not setted
 	char_t  s_PresetName[128];
 }SysPkgPtzPresetInfo;
 
