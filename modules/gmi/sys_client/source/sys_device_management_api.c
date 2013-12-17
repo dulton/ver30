@@ -293,6 +293,44 @@ GMI_RESULT SysCtrlSystem(uint16_t SessionId, uint32_t AuthValue, int32_t SysCtrl
 }
 
 
+GMI_RESULT GMI_ConfigToolIrCultOpen(uint16_t SessionId, uint32_t AuthValue)
+{
+    GMI_RESULT Result = GMI_SUCCESS;
+    
+    do
+    {  
+        Result = GMI_BrdIrcutOpen();
+        if (FAILED(Result))
+        {
+            SYS_CLIENT_ERROR("GMI_ConfigToolIrCultOpen fail, Result = 0x%lx\n", Result);
+            break;
+        }
+        
+        return Result;
+    }
+    while(0);
+    
+    return Result;
+}
+
+GMI_RESULT GMI_ConfigToolIrCultClose(uint16_t SessionId, uint32_t AuthValue)
+{
+    GMI_RESULT Result = GMI_SUCCESS;
+    
+    do
+    {
+        Result = GMI_BrdIrcutClose();
+        if (FAILED(Result))
+        {
+            SYS_CLIENT_ERROR("GMI_ConfigToolIrCultClose fail, Result = 0x%lx\n", Result);
+            break;
+        }
+        return Result;
+    }
+    while(0);
+    
+    return Result;
+}
 
 GMI_RESULT GMI_ConfigToolOpenDcIris(uint16_t SessionId, uint32_t AuthValue)
 {
@@ -347,32 +385,50 @@ GMI_RESULT GMI_ConfigToolWatchDogTest(uint16_t SessionId, uint32_t AuthValue)
             break;
         }
 
-    	return Result;
+    	return GMI_SUCCESS;
     }
     while(0);
     
-    return Result;
+    return GMI_FAIL;
 }
 
-GMI_RESULT GMI_ConfigToolSetMac(uint16_t SessionId, uint32_t AuthValue,char_t MacAddrs[128])
+GMI_RESULT GMI_ConfigToolSetMac(uint16_t SessionId, uint32_t AuthValue,const char_t *MacAddrs)
 {
     GMI_RESULT Result     = GMI_SUCCESS;
 
     do
-    {
+    {       
+	char_t SystemMac[64];
+	SYS_CLIENT_ERROR("GMI_ConfigToolSetMac Start MAC = [%s]\n",MacAddrs);
 
-	Result = GMI_BrdSetSystemNetworkMac(MacAddrs);
-        if (FAILED(Result))
-        {
-            SYS_CLIENT_ERROR("GMI_BrdSetSystemNetworkMac fail, Result = 0x%lx\n", Result);
-            break;
-        }
+	memset(SystemMac, 0, sizeof(SystemMac));
+	sprintf(SystemMac, "nandwrite -E %s", (char_t *)MacAddrs);
+	SYS_CLIENT_ERROR("GMI_ConfigToolSetMac end MAC = [%s]\n",SystemMac);
 
-    	return Result;
+	if(system(SystemMac) < 0)
+	{
+		Result = GMI_FAIL;
+		return Result;
+	}
+	
+	SYS_CLIENT_ERROR("GMI_ConfigToolSetMac Start MAC = [%s]\n",SystemMac);
+
+	struct stat FileInfo;		 
+	Result = stat("/etc/udev/rules.d/70-persistent-net.rules", &FileInfo);
+	if (0 == Result)
+	{
+		memset(SystemMac, 0, sizeof(SystemMac));
+		sprintf(SystemMac, "rm -f %s", "/etc/udev/rules.d/70-persistent-net.rules");
+		system(SystemMac);
+	}	
+
+	SYS_CLIENT_ERROR("GMI_ConfigToolSetMac Start MAC = [%s]\n",SystemMac);
+
+    	return GMI_SUCCESS;
     }
     while(0);
     
-    return Result;
+    return GMI_FAIL;
 }
 
 GMI_RESULT GMI_ConfigToolAfConfigDetect(uint16_t SessionId, uint32_t AuthValue,int32_t *FileFlags)
@@ -418,6 +474,48 @@ GMI_RESULT GMI_ConfigToolAfConfigDetect(uint16_t SessionId, uint32_t AuthValue,i
  
      return GMI_SUCCESS;
 }
+
+
+/*==============================================================
+name				:	GMI_BrdSetSystemNetworkMac
+function			:  Get Eth interface Link state
+lgorithm implementation	:	no
+global variable			:	no
+parameter declaration		:     byEthId  ,Ethernet port
+                                               Link  ,Pointer to Ethernet Port state. 0 Link down  1 Link up
+return				:    FAIL:  GMI_FAIL
+                                     SUCCESS : GMI_SUCCESS
+---------------------------------------------------------------
+modification	:
+	date		version		 author 	modification
+	6/13/2013	1.0.0.0.0     minchao.wang         establish
+================================================================*/
+GMI_RESULT  GMI_SetSystemNetworkMac(const char_t *NetMac)
+{
+    if(NULL == NetMac)
+    {
+	return GMI_INVALID_PARAMETER;
+    }
+
+    char_t  CmdBuffer[255];
+
+    memset(CmdBuffer, 0, sizeof(CmdBuffer));
+    sprintf(CmdBuffer,"nandwrite -E %s",(char_t *)NetMac);
+    if(system(CmdBuffer) < 0)
+    {
+	return GMI_FAIL;
+    }
+        
+    memset(CmdBuffer, 0, sizeof(CmdBuffer));
+    sprintf(CmdBuffer, "rm -f %s", "/etc/udev/rules.d/70-persistent-net.rules");
+    if(system(CmdBuffer) < 0)
+    {
+   // return GMI_FAIL;
+    }   
+
+    return GMI_SUCCESS;
+}
+
 
 GMI_RESULT GMI_FactoryDefaultLocalApi(void)
 {
