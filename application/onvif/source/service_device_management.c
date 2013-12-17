@@ -1669,9 +1669,9 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__GetCapabilities(struct soap *soap_ptr, struct _
         if (_Category == tt__CapabilityCategory__All
                 || _Category == tt__CapabilityCategory__Imaging)
         {
-            tds__GetCapabilitiesResponse->Capabilities->Imaging = NULL;//(struct tt__ImagingCapabilities*)soap_malloc(soap, sizeof(struct tt__ImagingCapabilities));
-            //tds__GetCapabilitiesResponse->Capabilities->Imaging->XAddr = (char *)soap_malloc_zero(soap, sizeof(char) * INFO_LENGTH);
-            //sprintf(tds__GetCapabilitiesResponse->Capabilities->Imaging->XAddr, "http://%s:%d/%s", IP, HttpPort, g_WsdlArry[IMAGING_WSDL_ID].SvrName);
+            tds__GetCapabilitiesResponse->Capabilities->Imaging = (struct tt__ImagingCapabilities*)soap_malloc(soap, sizeof(struct tt__ImagingCapabilities));
+            tds__GetCapabilitiesResponse->Capabilities->Imaging->XAddr = (char *)soap_malloc_zero(soap, sizeof(char) * INFO_LENGTH);
+            sprintf(tds__GetCapabilitiesResponse->Capabilities->Imaging->XAddr, "http://%s:%d/%s", IP, HttpPort, g_WsdlArry[IMAGING_WSDL_ID].SvrName);
         }
 
         //events

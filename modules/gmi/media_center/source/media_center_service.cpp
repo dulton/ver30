@@ -122,7 +122,11 @@ GMI_RESULT MediaCenterService::Deinitialize()
         m_CommandPipeline = NULL;
     }
 
-    m_MediaCenter = NULL;
+    if ( NULL != m_MediaCenter.GetPtr() )
+    {
+        m_MediaCenter->ReleaseCodecResource();
+        m_MediaCenter = NULL;
+    }
 
     DeinitializeNetwork();
     DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::Deinitialize end, function return %x \n", (uint32_t) GMI_SUCCESS );

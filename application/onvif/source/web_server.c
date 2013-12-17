@@ -94,44 +94,38 @@ int main(int argc, const char *argv[])
     sigprocmask(SIG_BLOCK, &NewMask, &OldMask);
 
     //log init
-	ONVIF_INFO("LogInitial start\n");
+    ONVIF_INFO("LogInitial start\n");
     Result = LogInitial();
     if (FAILED(Result))
     {
         ONVIF_ERROR("LogInitial fail, Result = 0x%lx\n", Result);
         return Result;
     }
-	ONVIF_INFO("LogInitial end\n");
+    ONVIF_INFO("LogInitial end\n");
 
-	ONVIF_INFO("DaemonRegister start\n");
+    ONVIF_INFO("DaemonRegister start\n");
     //daemon register to daemon server
     Result = DaemonRegister();
     if (FAILED(Result))
     {
-    	ONVIF_ERROR("DaemonRegister fail, Result = 0x%lx\n", Result);
-    	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, " DaemonRegister fail, Result = 0x%lx\n", Result);
-    	return Result;
+        ONVIF_ERROR("DaemonRegister fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, " DaemonRegister fail, Result = 0x%lx\n", Result);
+        return Result;
     }
-	ONVIF_INFO("DaemonRegister end\n");
+    ONVIF_INFO("DaemonRegister end\n");
 
     //system initial
     Result = SysInitialize(GMI_ONVIF_AUTH_PORT);
     if (FAILED(Result))
-    {    	
-    	DaemonUnregister();
-    	ONVIF_ERROR("SysInitialize fail, Result = 0x%lx\n", Result);
-    	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, " SysInitialize fail, Result = 0x%lx\n", Result);
-    	return Result;
-    }   
-    
+    {
+        DaemonUnregister();
+        ONVIF_ERROR("SysInitialize fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, " SysInitialize fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+
     //soap server init
     soap_init1(&soap, SOAP_ENC_MTOM);
-    //do not set send & recv timeout, promise recv complete.
-    //11/6/2013 guoqiang.lu
-    #if 1
-    soap.send_timeout    = 5;
-    soap.recv_timeout    = 5;    
-    #else
     soap.socket_flags    = MSG_NOSIGNAL;
     soap.accept_flags   |= SO_LINGER;
     soap.connect_flags  |= SO_LINGER;
@@ -142,16 +136,14 @@ int main(int argc, const char *argv[])
     soap.accept_timeout  = 10;
     soap.connect_timeout = 10;
     soap.keep_alive      = 5;
-    #endif
     soap_set_mode(&soap, SOAP_C_UTFSTRING);
     master = soap_bind(&soap, NULL, DEFAULT_SERVER_PORT, 30);
     if (!soap_valid_socket(master))
-    {      
-    	ONVIF_ERROR("soap_bind fail, Result = 0x%lx\n", Result);
-    	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, " soap_bind fail, Result = 0x%lx\n", Result);
+    {
+        ONVIF_ERROR("soap_bind fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, " soap_bind fail, Result = 0x%lx\n", Result);
         soap_print_fault(&soap, stderr);
         SysDeinitialize();
-        //daemon unregister
         DaemonUnregister();
         exit(1);
     }
@@ -165,7 +157,7 @@ int main(int argc, const char *argv[])
     soap_done(&soap);
     ONVIF_INFO("soap_end stop\n");
 
-   	ONVIF_INFO("SysDeinitialize start\n");
+    ONVIF_INFO("SysDeinitialize start\n");
     SysDeinitialize();
     ONVIF_INFO("SysDeinitialize end\n");
     ONVIF_INFO("DaemonUnregister start\n");
@@ -188,7 +180,7 @@ static GMI_RESULT ServerLoop(struct soap *soap)
 
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
 
-	ONVIF_INFO("%s In.........\n", __func__);
+    ONVIF_INFO("%s In.........\n", __func__);
     //onvif probe service start
     OnvifDevProbeServiceStart();
     PtzTimeoutProcessStart();
@@ -197,7 +189,7 @@ static GMI_RESULT ServerLoop(struct soap *soap)
     //daemon start
     DaemonStart();
     ONVIF_INFO("DaemonStart end\n");
-    
+
     //accept
     for (Request = 1; l_ServerStopFlag != true; Request++)
     {
@@ -227,12 +219,11 @@ static GMI_RESULT ServerLoop(struct soap *soap)
         THREAD_TYPE TidSoap;
         void *ThreadRet;
 
-		printf("=======>Thread count %d\n", l_ThreadCnt);
+        printf("=======>Thread count %d\n", l_ThreadCnt);
         tsoap = soap_copy(soap);
         if (tsoap)
         {
             tsoap->user = (void*)(SOAP_SOCKET)SoapSock;
-            //THREAD_CREATE(&TidSoap, ProcessRequest, (void*)tsoap); //guoqiang.lu mask, 11/20/2013
             pthread_create(&TidSoap, NULL, ProcessRequest, (void*)tsoap);
             pthread_join(TidSoap, &ThreadRet);
         }
@@ -246,7 +237,7 @@ static GMI_RESULT ServerLoop(struct soap *soap)
     DaemonStop();
     //probe service stop
     OnvifDevProbeServiceStop();
-	ONVIF_INFO("%s out.........\n", __func__);
+    ONVIF_INFO("%s out.........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s out.........\n", __func__);
     return GMI_SUCCESS;
 }
@@ -258,16 +249,16 @@ static void *ProcessRequest(void *soap)
     struct soap *tsoap = (struct soap*)soap;
 
     //pthread_detach(pthread_self()); //guoqiang.lu mask,11/20/2013
-    
-	l_ThreadCnt++;
-	
-    Ret = soap_serve(tsoap);   
+
+    l_ThreadCnt++;
+
+    Ret = soap_serve(tsoap);
     if (SOAP_OK != Ret
             && (tsoap->error != SOAP_EOF
                 || (tsoap->errnum != 0 && !(tsoap->omode & SOAP_IO_KEEPALIVE))))
     {
         fprintf(stderr, "Thread %d completed with failure %d, Ret %d\n", \
-        	(int)(SOAP_SOCKET)tsoap->user, tsoap->error, Ret);        
+                (int)(SOAP_SOCKET)tsoap->user, tsoap->error, Ret);
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Thread %d completed with failure %d\n", (int)(SOAP_SOCKET)tsoap->user, tsoap->error);
         soap_print_fault(tsoap, stderr);
     }
@@ -275,12 +266,12 @@ static void *ProcessRequest(void *soap)
     soap_destroy(tsoap);
     soap_end(tsoap);
     soap_done(tsoap);
-    soap_free(tsoap); 
+    soap_free(tsoap);
     close((SOAP_SOCKET)tsoap->user);
 
-	l_ThreadCnt--;
-	
-	printf("======>%s %d exit, Total ThreadCnt %d\n", __func__, __LINE__, l_ThreadCnt);
+    l_ThreadCnt--;
+
+    printf("======>%s %d exit, Total ThreadCnt %d\n", __func__, __LINE__, l_ThreadCnt);
     pthread_exit(NULL);
 }
 

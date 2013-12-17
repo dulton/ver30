@@ -640,6 +640,54 @@ GMI_RESULT MediaCenter::ForceGenerateIdrFrame( FD_HANDLE CodecHandle )
     return GMI_INVALID_PARAMETER;
 }
 
+GMI_RESULT MediaCenter::ReleaseCodecResource()
+{
+    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenter::ReleaseCodecResource begin \n" );
+
+    GMI_RESULT Result = GMI_FAIL;
+    std::vector< SafePtr<MediaEncodePipeline> >::iterator EncodePipelineIt = m_EncodePipelines.begin(), EncodePipelineEnd = m_EncodePipelines.end();
+    for ( ; EncodePipelineIt != EncodePipelineEnd; ++EncodePipelineIt )
+    {
+
+        Result = (*EncodePipelineIt)->Stop();
+        if ( FAILED( Result ) )
+        {
+            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Warning, "MediaCenter::ReleaseCodecResource, EncodePipeline::Stop failed, CodecHandle=%p, function return %x \n", EncodePipelineIt->GetPtr(), (uint32_t) Result );
+        }
+        else
+        {
+            Result = (*EncodePipelineIt)->Deinitialize();
+            if ( FAILED( Result ) )
+            {
+                DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Warning, "MediaCenter::ReleaseCodecResource, EncodePipeline::Deinitialize failed, CodecHandle=%p, function return %x \n", EncodePipelineIt->GetPtr(), (uint32_t) Result );
+            }
+        }
+    }
+    m_EncodePipelines.clear();
+
+    std::vector< SafePtr<MediaDecodePipeline> >::iterator DecodePipelineIt = m_DecodePipelines.begin(), DecodePipelineEnd = m_DecodePipelines.end();
+    for ( ; DecodePipelineIt != DecodePipelineEnd; ++DecodePipelineIt )
+    {
+        Result = (*DecodePipelineIt)->Stop();
+        if ( FAILED( Result ) )
+        {
+            DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Warning, "MediaCenter::ReleaseCodecResource, DecodePipeline::Stop failed, CodecHandle=%p, function return %x \n", DecodePipelineIt->GetPtr(), (uint32_t) Result );
+        }
+        else
+        {
+            Result = (*DecodePipelineIt)->Deinitialize();
+            if ( FAILED( Result ) )
+            {
+                DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Warning, "MediaCenter::ReleaseCodecResource, DecodePipeline::Deinitialize failed, CodecHandle=%p, function return %x \n", DecodePipelineIt->GetPtr(), (uint32_t) Result );
+            }
+        }
+    }
+    m_DecodePipelines.clear();
+
+    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "MediaCenter::ReleaseCodecResource end \n" );
+    return GMI_SUCCESS;
+}
+
 GMI_RESULT MediaCenter::OpenImageDevice( uint16_t SensorId, uint16_t ChannelId, FD_HANDLE *ImageHandle )
 {
     // now implement in MediaCenterProxy, 2013/07/08

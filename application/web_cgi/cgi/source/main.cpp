@@ -66,7 +66,7 @@ int32_t main(int32_t argc, char_t *argv[])
                 memset(Query, 0, ConLen+1);
 
                 int32_t Size = fread(Query, 1, ConLen, stdin);
-                if (Size != ConLen)  
+                if (Size != ConLen)
                 {
                     CGI_ERROR("ConLen %d, Size %d, not equal!!!\n", ConLen, Size);
                     break;
@@ -99,7 +99,7 @@ int32_t main(int32_t argc, char_t *argv[])
             }
 
             Result =  SysInitialize(GMI_CGI_AUTH_PORT);
-	   // Result = SysInitialize(GMI_CGI_C_PORT_START, GMI_CGI_C_PORT_END,GMI_CGI_S_PORT_START, GMI_CGI_S_PORT_END,GMI_CONTROL_S_PORT, GMI_CGI_AUTH_PORT);
+            // Result = SysInitialize(GMI_CGI_C_PORT_START, GMI_CGI_C_PORT_END,GMI_CGI_S_PORT_START, GMI_CGI_S_PORT_END,GMI_CONTROL_S_PORT, GMI_CGI_AUTH_PORT);
             if (FAILED(Result))
             {
                 InitCgi(NULL);
@@ -109,11 +109,11 @@ int32_t main(int32_t argc, char_t *argv[])
             struct timeval ComTimeout;
             ComTimeout.tv_sec  = 60;
             ComTimeout.tv_usec = 0;
-            Result = SysInitializeExt(&ComTimeout, 1);	 
+            Result = SysInitializeExt(&ComTimeout, 1);
             if (FAILED(Result))
             {
-            	InitCgi(NULL);
-            	break;
+                InitCgi(NULL);
+                break;
             }
 
             Result = CgiCmdProcess(FncCmd);

@@ -652,7 +652,7 @@ uint16_t ConfigureService::GetDaemonLocalPort()
     return GMI_DAEMON_HEARTBEAT_CONFIG_TOOL;
 }
 
-uint16_t ConfigureService::GetDaemonRebootPort()
+uint16_t ConfigureService::GetDaemonServerPort()
 {
     return GMI_MONITOR_TO_SDK_PORT_DEFAULT;
 }

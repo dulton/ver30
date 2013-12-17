@@ -1,7 +1,7 @@
 #include <signal.h>
 
 #include "application.h"
-#include "heart_beat.h"
+#include "daemon_service.h"
 #include "configure_service.h"
 #include "service_dispatch.h"
 
@@ -80,7 +80,7 @@ GMI_RESULT Application::Start()
         }
 
         // Initialize heart beat
-        RetVal = HeartBeat::GetInstance().Initialize();
+        RetVal = DaemonService::GetInstance().Initialize();
         if (RetVal != GMI_SUCCESS)
         {
             PRINT_LOG(ERROR, "Failed to initialize heart beat");
@@ -137,7 +137,7 @@ GMI_RESULT Application::Start()
         PcapSessionClose(PcapHnd);
     }
 
-    HeartBeat::GetInstance().Uninitialize();
+    DaemonService::GetInstance().Uninitialize();
     ConfigureService::GetInstance().Uninitialize();
 
     return RetVal;
@@ -190,7 +190,7 @@ void_t Application::HeartBeatTask(void_t * Data)
 
     // PRINT_LOG(VERBOSE, "Try to report to daemon process");
 
-    RetVal = HeartBeat::GetInstance().Report(NeedQuit);
+    RetVal = DaemonService::GetInstance().Report(NeedQuit);
     if (RetVal != GMI_SUCCESS)
     {
         PRINT_LOG(WARNING, "Failed to report to daemon");

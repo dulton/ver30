@@ -42,7 +42,7 @@
 				{
 					fso.CreateTextFile("c:\\Program Data\\config.txt", true);
 					f = fso.OpenTextFile("c:\\Program Data\\config.txt", 2);
-					var stmp = "<recordpath>C:\\Program Data\\IPC\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>0</netplay>";
+					var stmp = "<recordpath>C:\\Program Data\\IPC\\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>0</netplay>";
 					f.WriteLine(stmp);
 					f.Close();
 					return stmp;
@@ -57,7 +57,7 @@
 			}
 			catch(e)
 			{
-				return "<recordpath>C:\\Program Data\\IPC\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>0</netplay>";
+				return "<recordpath>C:\\Program Data\\IPC\\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>0</netplay>";
 			}
 		}
 		function changeLanguage(lang)

@@ -9,7 +9,7 @@
 H264_VideoSourceFilter::H264_VideoSourceFilter(void)
     : m_HardwareSource( NULL )
 #if SAVE_H264_FILE
-    , m_VideoFile( NULL )
+    , m_VideoRecordFile( NULL )
 #endif
     , m_VideoMonitorEnable( GMI_H264_VIDEO_MONITOR_CONFIG_ENABLE_VALUE )
     , m_VideoFrameCheckInterval( GMI_H264_VIDEO_MONITOR_CONFIG_FRAME_CHECK_INTERVAL_VALUE )
@@ -19,6 +19,15 @@ H264_VideoSourceFilter::H264_VideoSourceFilter(void)
     , m_TotalFrameInterval( 0 )
     , m_MaxFrameInterval( 0 )
     , m_MinFrameInterval( 1000000 )
+#endif
+#if USE_SIMULATOR_VIDEO_SOUCRE
+    , m_SimulatedDataSourceThread()
+    , m_ThreadWorking( false )
+    , m_ThreadExitFlag( false )
+    , m_VideoSourceFile( NULL )
+    , m_VideoSourceFileLength( 0 )
+    , m_VideoData( NULL )
+    , m_FrameRate( 0.0f )
 #endif
 {
     m_FirstFrameTime.tv_sec  = 0;
@@ -96,18 +105,23 @@ GMI_RESULT	H264_VideoSourceFilter::Initialize( int32_t FilterId, const char_t *F
         return Result;
     }
 
+#if USE_SIMULATOR_VIDEO_SOUCRE
+    m_FrameRate = EncParam->s_FrameRate;
+#endif
+
 #if SAVE_H264_FILE
     char_t FileName[MAX_PATH_LENGTH];
 #if defined( __linux__ )
+    //sprintf( FileName, "/mnt/nfs/%p_H264.264", this );
     sprintf( FileName, "%p_H264.264", this );
 #elif defined( _WIN32 )
     sprintf_s( FileName, MAX_PATH_LENGTH, "%p_H264.264", this );
 #endif
     printf( "File Name : %s\n", FileName );
 #if defined( __linux__ )
-    m_VideoFile = fopen( FileName, "wb" );
+    m_VideoRecordFile = fopen( FileName, "wb" );
 #elif defined( _WIN32 )
-    fopen_s( &m_VideoFile, FileName, "wb" );
+    fopen_s( &m_VideoRecordFile, FileName, "wb" );
 #endif
 #endif
 
@@ -119,10 +133,10 @@ GMI_RESULT  H264_VideoSourceFilter::Deinitialize()
 {
     DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "H264_VideoSourceFilter::Deinitialize begin \n" );
 #if SAVE_H264_FILE
-    if ( NULL != m_VideoFile )
+    if ( NULL != m_VideoRecordFile )
     {
-        fclose( m_VideoFile );
-        m_VideoFile = NULL;
+        fclose( m_VideoRecordFile );
+        m_VideoRecordFile = NULL;
     }
 #endif
 
@@ -159,6 +173,48 @@ GMI_RESULT  H264_VideoSourceFilter::Play()
         return Result;
     }
 
+#if USE_SIMULATOR_VIDEO_SOUCRE
+
+    printf( " test code, we will open file: media_video.h264 \n" );
+    m_VideoSourceFile = fopen( "media_video.h264", "r" );
+    if ( NULL == m_VideoSourceFile )
+    {
+        VideoSourceFilter::Stop();
+        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "H264_VideoSourceFilter::Play, fopen failed, errno=%d, function return %x \n", errno, (uint32_t) GMI_OPEN_DEVICE_FAIL );
+        return GMI_OPEN_DEVICE_FAIL;
+    }
+
+    fseek(m_VideoSourceFile, 0, SEEK_END);
+    m_VideoSourceFileLength = ftell(m_VideoSourceFile);
+    m_VideoData = BaseMemoryManager::Instance().News<uint8_t>(m_VideoSourceFileLength);
+    if ( NULL == m_VideoData )
+    {
+        VideoSourceFilter::Stop();
+        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "H264_VideoSourceFilter::Play, allocating memory failed, function return %x \n", errno, (uint32_t) GMI_OUT_OF_MEMORY );
+        return GMI_OUT_OF_MEMORY;
+    }
+    fseek(m_VideoSourceFile, 0, SEEK_SET);
+
+    m_ThreadWorking = false;
+    m_ThreadExitFlag = false;
+
+    Result = m_SimulatedDataSourceThread.Create( NULL, 0, H264_VideoSourceFilter::SimulatedDataSourceThread, this );
+    if ( FAILED( Result ) )
+    {
+        VideoSourceFilter::Stop();
+        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "H264_VideoSourceFilter::Play, SimulatedDataSourceThread.Create failed, function return %x \n", (uint32_t) Result );
+        return Result;
+    }
+
+    Result = m_SimulatedDataSourceThread.Start();
+    if ( FAILED( Result ) )
+    {
+        m_SimulatedDataSourceThread.Destroy();
+        StreamingMediaSource::Stop();
+        DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Exception, "H264_VideoSourceFilter::Play, SimulatedDataSourceThread.Start failed, function return %x \n", (uint32_t) Result );
+        return Result;
+    }
+#else
     Result = GMI_VideoEncStart( m_HardwareSource );
     if ( FAILED( Result ) )
     {
@@ -166,11 +222,12 @@ GMI_RESULT  H264_VideoSourceFilter::Play()
         DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "H264_VideoSourceFilter::Play, GMI_VideoEncStart failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
+#endif
 
     gettimeofday1( &m_FirstFrameTime, NULL );
 
     DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "H264_VideoSourceFilter::Play end \n" );
-    return GMI_SUCCESS;
+    return Result;
 }
 
 GMI_RESULT  H264_VideoSourceFilter::Stop()
@@ -189,15 +246,27 @@ GMI_RESULT  H264_VideoSourceFilter::Stop()
         return Result;
     }
 
+#if USE_SIMULATOR_VIDEO_SOUCRE
+    m_ThreadExitFlag = true;
+    while ( m_ThreadWorking ) GMI_Sleep( 10 );
+    m_SimulatedDataSourceThread.Destroy();
+
+    BaseMemoryManager::Instance().Deletes( m_VideoData );
+    m_VideoData = NULL;
+
+    fclose( m_VideoSourceFile );
+    m_VideoSourceFile = NULL;
+#else
     Result = GMI_VideoEncStop( m_HardwareSource );
     if ( FAILED( Result ) )
     {
         DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "H264_VideoSourceFilter::Play, GMI_VideoEncStop failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
+#endif
 
     DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "H264_VideoSourceFilter::Stop end \n" );
-    return GMI_SUCCESS;
+    return Result;
 }
 
 GMI_RESULT H264_VideoSourceFilter::GetEncodeConfig( void_t *EncodeParameter, size_t *EncodeParameterLength )
@@ -443,9 +512,9 @@ void_t H264_VideoSourceFilter::MediaEncCallBack( void_t *UserDataPtr, MediaEncIn
     H264_VideoSourceFilter *VideoSourceFilter = (H264_VideoSourceFilter *) UserDataPtr;
 
 #if SAVE_H264_FILE
-    if ( NULL != VideoSourceFilter->m_VideoFile )
+    if ( NULL != VideoSourceFilter->m_VideoRecordFile )
     {
-        fwrite( EncInfo->s_StreamAddr, 1, EncInfo->s_StreamSize, VideoSourceFilter->m_VideoFile );
+        fwrite( EncInfo->s_StreamAddr, 1, EncInfo->s_StreamSize, VideoSourceFilter->m_VideoRecordFile );
     }
 #endif
 
@@ -534,6 +603,165 @@ void_t H264_VideoSourceFilter::MediaEncCallBack( void_t *UserDataPtr, MediaEncIn
     }
 #endif
 }
+
+#if USE_SIMULATOR_VIDEO_SOUCRE
+void_t* H264_VideoSourceFilter::SimulatedDataSourceThread( void_t *Argument )
+{
+    H264_VideoSourceFilter *SimulatedDataSource = reinterpret_cast<H264_VideoSourceFilter*> ( Argument );
+    void_t *Return = SimulatedDataSource->SimulatedDataSourceEntry();
+    return Return;
+}
+
+// Definition of nalu unit type
+#define NALU_TYPE_NONIDR            1
+#define NALU_TYPE_IDR               5
+#define NALU_TYPE_SEI               6
+#define NALU_TYPE_SPS               7
+#define NALU_TYPE_PPS               8
+#define NALU_TYPE_AUD               9
+
+struct VideoFrameInfo
+{
+    uint8_t *s_Frame;
+    size_t  s_FrameLength;
+    VideoFrameInfo( uint8_t *Frame, size_t FrameLength ) : s_Frame( Frame ), s_FrameLength( FrameLength ) {}
+};
+
+void_t* H264_VideoSourceFilter::SimulatedDataSourceEntry()
+{
+    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "H264_VideoSourceFilter::SimulatedDataSourceEntry begin \n" );
+    m_ThreadWorking        = true;
+    GMI_RESULT Result      = GMI_FAIL;
+
+    // read video file
+    uint8_t  * From = m_VideoData;
+    uint32_t   Left = m_VideoSourceFileLength;
+    while ( !feof(m_VideoSourceFile) )
+    {
+        uint32_t ReadBytes = fread(From, 1, Left, m_VideoSourceFile);
+        if (ReadBytes < 0)
+        {
+            printf( "H264_VideoSourceFilter::SimulatedDataSourceEntry, read file error \n" );
+            return (void_t *) size_t(GMI_FAIL);
+        }
+        else if (ReadBytes == 0)
+        {
+            break;
+        }
+
+        printf( "H264_VideoSourceFilter::SimulatedDataSourceEntry, read %d bytes \n", ReadBytes );
+
+        From += ReadBytes;
+        Left -= ReadBytes;
+    }
+
+    m_VideoSourceFileLength -= Left;
+
+    From = m_VideoData;
+    Left = m_VideoSourceFileLength;
+
+    // parse video frame
+    boolean_t   LastNaluIsVCL = false;
+
+    std::vector< VideoFrameInfo> VideoFrames;
+    while (Left > 0)
+    {
+        uint8_t   * p    = From;
+        uint32_t    Size = 0;
+
+        if (Left < 5)
+        {
+            break;
+        }
+
+        while (Left > 0)
+        {
+            uint32_t Next4Bytes = ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
+            if (Next4Bytes == 0x00000001)
+            {
+                if (Left > 4)
+                {
+                    uint8_t NaluType = (p[4] & 0x1F);
+                    if (NaluType == NALU_TYPE_NONIDR || NaluType == NALU_TYPE_IDR)
+                    {
+                        LastNaluIsVCL = true;
+                    }
+                    else if (LastNaluIsVCL)
+                    {
+                        LastNaluIsVCL = false;
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+
+                p    += 4;
+                Left -= 4;
+                Size += 4;
+            }
+
+            uint32_t SkipBytes = 1;
+            if (p[3] > 0)
+            {
+                SkipBytes = 4;
+            }
+            else if (p[2] > 0)
+            {
+                SkipBytes = 3;
+            }
+            else if (p[1] > 0)
+            {
+                SkipBytes = 2;
+            }
+
+            if (SkipBytes > Left)
+            {
+                SkipBytes = Left;
+            }
+
+            p    += SkipBytes;
+            Left -= SkipBytes;
+            Size += SkipBytes;
+        }
+
+        VideoFrames.push_back( VideoFrameInfo( From, Size ) );
+        From += Size;
+    }
+    // parsing end
+
+    if ( 0 == VideoFrames.size() )
+    {
+        printf( "H264_VideoSourceFilter::SimulatedDataSourceEntry, no video frame \n" );
+        return (void_t *) size_t(GMI_NO_AVAILABLE_DATA);
+    }
+
+    uint32_t index = 0;
+    uint32_t SleepTime = (uint32_t)(1000/m_FrameRate);
+    while( !m_ThreadExitFlag )
+    {
+        struct timeval CurrentTime;
+        gettimeofday1( &CurrentTime, NULL );
+
+        // notify base class of new data coming
+        GMI_RESULT Result = Receive( 0, VideoFrames[index].s_Frame, VideoFrames[index].s_FrameLength, &CurrentTime, NULL, 0 );
+        Result = m_Outputs[0]->Receive( VideoFrames[index].s_Frame, VideoFrames[index].s_FrameLength, &CurrentTime, NULL, 0 );
+        READ_MYSELF(Result);
+
+        if ( ++index == VideoFrames.size() )
+        {
+            index = 0;
+        }
+        GMI_Sleep( SleepTime );
+    }
+
+    VideoFrames.clear();
+    m_ThreadWorking = false;
+    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "H264_VideoSourceFilter::SimulatedDataSourceThread end, function return %x \n", (uint32_t) Result );
+    return (void_t *) size_t(Result);
+}
+#endif
 
 GMI_RESULT H264_VideoSourceFilter::GetVideoMonitorEnableConfig( boolean_t *Enable )
 {

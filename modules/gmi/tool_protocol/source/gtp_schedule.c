@@ -4,6 +4,7 @@
 #ifdef _WIN32
 #include <winsock2.h>
 #else
+#include <time.h>
 #include <sys/time.h>
 #endif
 
@@ -11,23 +12,35 @@
 
 #include "debug.h"
 
+static void_t GetCurrentTime(struct timeval * TvPtr);
+
 #ifdef _WIN32
 typedef union tagTimeStruct
 {
-	long long u_100NSec;
-	FILETIME  u_FileTime;
+    long long u_100NSec;
+    FILETIME  u_FileTime;
 } TimeStruct;
 
-static void_t gettimeofday(struct timeval * TvPtr, void * TzPtr)
+static void_t GetCurrentTime(struct timeval * TvPtr)
 {
     TimeStruct NowTime;
 
     ASSERT(TvPtr != NULL, "TvPtr MUST NOT be non-pointer");
-    ASSERT(TzPtr == NULL, "TzPtr MUST be non-pointer");
 
-	GetSystemTimeAsFileTime (&NowTime.u_FileTime);
-	TvPtr->tv_usec = (long)((NowTime.u_100NSec / 10LL) % 1000000LL);
-	TvPtr->tv_sec = (long)((NowTime.u_100NSec - 116444736000000000LL) / 10000000LL);
+    GetSystemTimeAsFileTime (&NowTime.u_FileTime);
+    TvPtr->tv_usec = (long)((NowTime.u_100NSec / 10LL) % 1000000LL);
+    TvPtr->tv_sec = (long)((NowTime.u_100NSec - 116444736000000000LL) / 10000000LL);
+}
+#else
+static void_t GetCurrentTime(struct timeval * TvPtr)
+{
+    struct timespec NowTime;
+
+    ASSERT(TvPtr != NULL, "TvPtr MUST NOT be non-pointer");
+
+    clock_gettime(CLOCK_MONOTONIC, &NowTime);
+    TvPtr->tv_usec = (long)(NowTime.tv_nsec / 1000);
+    TvPtr->tv_sec = (long)NowTime.tv_sec;
 }
 #endif
 
@@ -86,7 +99,7 @@ GMI_RESULT GtpScheduleAddDelayTask(GtpList * ScheduledList, CbOnSchedule CbFunc,
     Task->s_DeleteMark = false;
 
     // Get current time
-    gettimeofday(&Task->s_Timeval, NULL);
+    GetCurrentTime(&Task->s_Timeval);
 
     // Set time up
     Task->s_Timeval.tv_sec += Sec;
@@ -141,7 +154,7 @@ GMI_RESULT GtpScheduleUpdateDelayTask(GtpList * ScheduledList, CbOnSchedule CbFu
     }
 
     // Get current time
-    gettimeofday(&Task->s_Timeval, NULL);
+    GetCurrentTime(&Task->s_Timeval);
 
     // Set time up
     Task->s_Timeval.tv_sec += Sec;
@@ -190,13 +203,13 @@ GMI_RESULT GtpScheduleTask(GtpList * ScheduledList)
     }
 
     // Get current time
-    gettimeofday(&Now, NULL);
+    GetCurrentTime(&Now);
 
     GTP_LIST_FOR_EACH(Node, ScheduledList)
     {
         GtpScheduledTask * Task = GTP_LIST_ENTRY(Node, GtpScheduledTask);
 
-	if (Task->s_DeleteMark == true)
+        if (Task->s_DeleteMark == true)
         {
             Node = GTP_LIST_REMOVE(ScheduledList, Task);
             free(Task);

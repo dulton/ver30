@@ -1,4 +1,6 @@
 #include <signal.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #include "application.h"
 #include "heartbeat.h"
@@ -31,6 +33,10 @@ Application::Application(int32_t argc, const char_t * argv [])
     , m_StreamCtrl()
 {
     // TODO: Parse the parameter from command line
+
+    int32_t RetVal = setpriority(PRIO_PROCESS, getpid(), -20);
+    PRINT_LOG(INFO, "RetVal = %d", RetVal);
+
 
     // Register singal handler
     signal(SIGTERM, Application::SignalStop);

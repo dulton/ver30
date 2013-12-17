@@ -44,7 +44,7 @@ GMI_LFLAGS              =
 #GMI_LFLAGS             = -g
 
 # Set related modules
-GMI_RELATED_MODULES     = pthread osal log_utils rudp daemon_heartbeat rt command_pipeline sys_client auth_center des
+GMI_RELATED_MODULES     = pthread osal log_utils rudp daemon_heartbeat rt command_pipeline sys_client gmi_brdwrapper auth_center des
 
 # Set header file path for this module
 GMI_MODULE_INCLUDE_DIR  = ../include

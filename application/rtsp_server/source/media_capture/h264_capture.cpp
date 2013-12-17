@@ -330,8 +330,10 @@ void_t * H264FrameCapture::ThreadEntry(void_t * Data)
 uint32_t H264FrameCapture::ThreadEntryImpl()
 {
     PRINT_LOG(VERBOSE, "Start to capture H264 frames");
-	struct timeval   TimeStamp = {0, 0};
-    H264Frame      * NextFrame = NULL;
+
+    struct timeval    TimeStamp = {0, 0};
+    struct timespec   LastStamp = {0, 0};
+    H264Frame       * NextFrame = NULL;
     while (m_Working)
     {
         if (NULL == NextFrame)
@@ -351,14 +353,27 @@ uint32_t H264FrameCapture::ThreadEntryImpl()
 
         uint8_t        * Addr             = Frame.Addr();
         uint32_t         Size             = Frame.MaxLength();
-        struct timeval   presentationTime = {0, 0};
+        struct timeval   PresentationTime = {0, 0};
         GMI_RESULT       RetVal           = GMI_SUCCESS;
 
         // Read one frame data
-        RetVal = m_MediaDataClient.Read(Addr, &Size, &presentationTime, NULL, NULL, m_Sleep);
+        RetVal = m_MediaDataClient.Read(Addr, &Size, &PresentationTime, NULL, NULL, m_Sleep);
         if (RetVal != GMI_SUCCESS)
         {
             continue;
+        }
+
+        struct timespec CurrentStamp = {0, 0};
+        clock_gettime(CLOCK_MONOTONIC, &CurrentStamp);
+
+        int64_t Delta = CurrentStamp.tv_nsec - LastStamp.tv_nsec;
+        Delta += (CurrentStamp.tv_sec - LastStamp.tv_sec) * 1000000000;
+
+        LastStamp = CurrentStamp;
+
+        if (Delta > 500000000)
+        {
+            PRINT_LOG(INFO, "Stream %u, Delta = %12lld", m_SubStreamInfo.s_StreamId, Delta);
         }
 
         if (0 == m_UsingFrameCount)
@@ -375,10 +390,10 @@ uint32_t H264FrameCapture::ThreadEntryImpl()
             }
         }
 
-        presentationTime = TimeStamp;
+        PresentationTime = TimeStamp;
 
         Frame.SetLength(Size);
-        Frame.SetTimeStamp(presentationTime);
+        Frame.SetTimeStamp(PresentationTime);
 
         // Use frame rate to calculate
         Frame.SetDuration(0); //m_FrameDuration);

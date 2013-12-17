@@ -32,13 +32,13 @@ private:
     // Interface for thread
     virtual GMI_RESULT ThreadEntry();
 
-    inline boolean_t NeedUpdate() const { return m_NeedUpdate; }
+    boolean_t NeedUpdate() const;
 
     // Binding transactions
     std::vector<GtpTransHandle> m_TransList;
 
-    // Response string update flag
-    boolean_t                   m_NeedUpdate;
+    // Last update time of response string
+    struct timespec             m_LastUpdateTime;
 
     // Response string
     std::string                 m_ResponseString;

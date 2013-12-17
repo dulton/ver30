@@ -71,6 +71,7 @@ public:
 private:	
 	GMI_RESULT Lock();
 	GMI_RESULT Unlock();
+	GMI_RESULT GetOsdFontSizeDefault(int32_t StreamId, int32_t *SizePtr);
 	
 private:
     char_t m_FactorySettingFile[128];

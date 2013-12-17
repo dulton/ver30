@@ -43,7 +43,7 @@ static void Unescape(char_t *s)
 }
 
 
-char_t *GetCgi(char_t *Name)
+char_t *GetCgi(std::string Name)
 {
     ENTRY e, *ep;
 
@@ -53,7 +53,7 @@ char_t *GetCgi(char_t *Name)
         return NULL;
     }
 
-    e.key = Name;
+    e.key = (char_t*)Name.c_str();
     hsearch_r(e, FIND, &ep, &htab);
     if (ep)
     {
@@ -496,7 +496,7 @@ GMI_RESULT CheckIpExist(const char_t* InData)
 
 GMI_RESULT GMI_GetUpdatePort(int32_t  *UpgradePort)
 {
-  
+
     GMI_RESULT Result = GMI_FAIL;
     FD_HANDLE  Handle = NULL;
 

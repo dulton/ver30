@@ -2,6 +2,9 @@
 #include "service_dispatch.h"
 #include "application.h"
 #include "configure_service.h"
+#include "daemon_service.h"
+
+#define UPDATE_INVALID_SECONDS 120
 
 // Create service
 static ServiceSearch l_ServiceSearchInstance;
@@ -72,6 +75,23 @@ static inline GMI_RESULT FillNetworkInfo(TiXmlElement * Parent, const NetworkInf
     return RetVal;
 }
 
+static inline GMI_RESULT FillDeviceStatus(TiXmlElement * Parent, DaemonService::SystemStatus Status)
+{
+    TiXmlElement * XmlElement = NULL;
+    TiXmlText    * XmlText    = NULL;
+    GMI_RESULT     RetVal     = GMI_SUCCESS;
+
+    do
+    {
+        // Create device status element
+        NEW_XML_ELEMENT(XmlElement, "DeviceStatus", Parent, RetVal);
+        NEW_XML_TEXT(XmlText, DaemonService::SystemStatus2String(Status), XmlElement, RetVal);
+
+    } while (0);
+
+    return RetVal;
+}
+
 static inline GMI_RESULT FillDeviceInfo(TiXmlElement * Parent, const DeviceInfo & DevInfo)
 {
     TiXmlElement * XmlDevInfo = NULL;
@@ -136,9 +156,9 @@ static inline GMI_RESULT FillServicePorts(TiXmlElement * Parent, const ServicePo
 
 ServiceSearch::ServiceSearch()
     : m_TransList()
-    , m_NeedUpdate(true)
     , m_ResponseString()
 {
+    memset(&m_LastUpdateTime, 0x00, sizeof(m_LastUpdateTime));
     ServiceDispatch::GetInstance().Register(this, this);
 }
 
@@ -298,7 +318,12 @@ void_t ServiceSearch::OnTime()
         RetVal = Wait(&ThreadRetVal);
         if (GMI_SUCCESS == RetVal)
         {
-            if (ThreadRetVal != GMI_SUCCESS)
+            if (GMI_SUCCESS == ThreadRetVal)
+            {
+                // Update last update time
+                clock_gettime(CLOCK_MONOTONIC, &m_LastUpdateTime);
+            }
+            else
             {
                 PRINT_LOG(ERROR, "Failed to run thread");
                 DUMP_VARIABLE(ThreadRetVal);
@@ -376,6 +401,30 @@ GMI_RESULT ServiceSearch::ThreadEntry()
         // We will ignore the return value below
         do
         {
+            // Query system status
+            DaemonService::SystemStatus Status = DaemonService::eUnexpect;
+            RetVal = DaemonService::GetInstance().QuerySystemStatus(Status);
+            if (RetVal != GMI_SUCCESS)
+            {
+                PRINT_LOG(WARNING, "Failed to query system status");
+                break;
+            }
+
+            // Convert device status to XML format
+            RetVal = FillDeviceStatus(XmlRootElement, Status);
+            if (RetVal != GMI_SUCCESS)
+            {
+                PRINT_LOG(ERROR, "Failed to fill device status");
+                break;
+            }
+
+            if (Status != DaemonService::eOnLine)
+            {
+                PRINT_LOG(INFO, "System is not ready yet");
+                RetVal = GMI_TRY_AGAIN_ERROR;
+                break;
+            }
+
             // Get device information
             RetVal = ConfigureService::GetInstance().GetDeviceInfo(DevInfo);
             if (RetVal != GMI_SUCCESS)
@@ -418,12 +467,6 @@ GMI_RESULT ServiceSearch::ThreadEntry()
             break;
         }
 
-        // If every thing is OK, then remove the update flag
-        if (RetVal == GMI_SUCCESS)
-        {
-            m_NeedUpdate = false;
-        }
-
         m_ResponseString.assign(XmlPrinter.CStr(), XmlPrinter.Size());
         return GMI_SUCCESS;
     } while (0); 
@@ -434,5 +477,22 @@ GMI_RESULT ServiceSearch::ThreadEntry()
     m_ResponseString = ErrResponse;
 
     return RetVal;
+}
+
+boolean_t ServiceSearch::NeedUpdate() const
+{
+    struct timespec Now = {0, 0};
+    clock_gettime(CLOCK_MONOTONIC, &Now);
+
+    if (m_LastUpdateTime.tv_sec + UPDATE_INVALID_SECONDS > Now.tv_sec)
+    {
+        return false;
+    }
+    else if (m_LastUpdateTime.tv_sec + UPDATE_INVALID_SECONDS == Now.tv_sec && m_LastUpdateTime.tv_nsec > Now.tv_nsec)
+    {
+        return false;
+    }
+
+    return true;
 }
 

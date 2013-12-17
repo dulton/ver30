@@ -598,6 +598,7 @@ GMI_RESULT ServiceGetFile::SendNextPacket()
 
     static uint8_t Buffer[1400];
     GMI_RESULT     RetVal  = GMI_SUCCESS;
+    GMI_RESULT     Result  = GMI_SUCCESS;
     int32_t        ReadRet = fread(Buffer, 1, sizeof(Buffer), m_File);
     if (ReadRet > 0)
     {
@@ -611,12 +612,10 @@ GMI_RESULT ServiceGetFile::SendNextPacket()
         if (GMI_SUCCESS == RetVal)
         {
             SwitchState(eSendingResponse);
-        }
-        else
-        {
-            PRINT_LOG(ERROR, "Failed to send response");
+            return GMI_SYSTEM_ERROR;
         }
 
+        PRINT_LOG(ERROR, "Failed to send response");
         return RetVal;
     }
 
@@ -650,7 +649,7 @@ GMI_RESULT ServiceGetFile::SendNextPacket()
         if (!XmlDoc.Accept(&XmlPrinter))
         {
             PRINT_LOG(ERROR, "Failed to generate response XML string");
-            RetVal = GMI_FAIL;
+            Result = GMI_FAIL;
             break;
         }
 
@@ -667,16 +666,14 @@ GMI_RESULT ServiceGetFile::SendNextPacket()
         return RetVal;
     } while (0);
 
-    RetVal = SendSimpleResponse(m_TransHandle, "GetFile", RetVal);
+    RetVal = SendSimpleResponse(m_TransHandle, "GetFile", Result);
     if (GMI_SUCCESS == RetVal)
     {
         SwitchState(eSendingResponse);
-    }
-    else
-    {
-        PRINT_LOG(ERROR, "Failed to send response");
+        return Result;
     }
 
+    PRINT_LOG(ERROR, "Failed to send response");
     return RetVal;
 }
 

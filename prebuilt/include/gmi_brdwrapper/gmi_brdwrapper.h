@@ -16,9 +16,7 @@ typedef struct
     uint8_t s_byLedAppRun;
     uint8_t s_byLedHD;   //Soft  cannot detect  ,return LED  off
 }
-#if defined( __linux__ )
 __attribute__ ((packed))
-#endif
 TBrdGMIPC2000LedDesc;
 
 //LED information struct
@@ -154,6 +152,16 @@ return				:    no
 GMI_RESULT  GMI_BrdHwReset(void);
 
 /*==============================================================
+name				:	GMI_BrdWatchdogReset
+function			:  Hardware Watchdong reboot System
+algorithm implementation	:	no
+global variable			:	no
+parameter declaration		:     no
+return				:    no
+******************************************************************************/
+GMI_RESULT GMI_BrdWatchdogReset(void);
+
+/*==============================================================
 name				:	GMI_SysHwWatchDogDisable
 function			:  HardWare Hw Watchdog Disable
 algorithm implementation	:	no
@@ -216,6 +224,16 @@ return				:    FAIL:  GMI_FAIL
 ================================================================*/
 GMI_RESULT GMI_BrdGetAnalogInputValue(uint8_t byPort, int32_t* volts);
 
+/*==============================================================
+name				:	GMI_BrdDcirsValueUpdate
+function			:  modify device DCIRS value
+lgorithm implementation	:	no
+global variable			:	no
+parameter declaration		:     Value : DCIRS Value 0 ~1000
+return				:    FAIL:  ERROR
+                                     SUCCESS : OK
+================================================================*/
+GMI_RESULT GMI_BrdDcirsValueUpdate(int32_t Value);
 
 //#######################     ALARM   API  START  #####################################
 
@@ -246,6 +264,28 @@ GMI_RESULT GMI_BrdSetAlarmOutput(int32_t mode,uint8_t byPort, uint8_t byState);
 
 //#######################     NetWork   API  START  #####################################
 
+/*==============================================================
+name				:	GMI_BrdSetSystemNetworkMac
+function			:  Get System Network Mac
+lgorithm implementation	:	no
+global variable			:	no
+parameter declaration		:     NetMac  ,System Mac
+
+return				:    FAIL:  GMI_FAIL
+                                     SUCCESS : GMI_SUCCESS
+================================================================*/
+GMI_RESULT  GMI_BrdGetSystemNetworkMac(char_t *NetMac);
+
+/*==============================================================
+name				:	GMI_BrdSetSystemNetworkMac
+function			:  Set System Network Mac
+lgorithm implementation	:	no
+global variable			:	no
+parameter declaration		:     NetMac  ,System Mac
+return				:    FAIL:  GMI_FAIL
+                                     SUCCESS : GMI_SUCCESS
+================================================================*/
+GMI_RESULT  GMI_BrdSetSystemNetworkMac(const char_t *NetMac);
 
 /*==============================================================
 name				:	GMI_BrdGetEthLinkStat
@@ -360,6 +400,29 @@ return				:    FAIL:  GMI_FAIL
 ================================================================*/
 GMI_RESULT GMI_PtzCfgWrite( char_t * FileName, const char_t *ItemPath, UartCtrlCfg *CtrlCfg);
 
+
+/*==============================================================
+name				:	GMI_BrdIrcutOpen
+function			:  Open device Ircut 
+lgorithm implementation	:	no
+global variable			:	no
+parameter declaration		:     
+                                    
+return				:    FAIL:  GMI_FAIL
+                                     SUCCESS : GMI_SUCCESS
+================================================================*/
+GMI_RESULT GMI_BrdIrcutOpen(void);
+
+/*==============================================================
+name				:	GMI_BrdIrcutClose
+function			:  Close device Ircut
+lgorithm implementation	:	no
+global variable			:	no
+parameter declaration		:                                         
+return				:    FAIL:  GMI_FAIL
+                                     SUCCESS : GMI_SUCCESS
+================================================================*/
+GMI_RESULT GMI_BrdIrcutClose(void);
 
 #ifdef __cplusplus
 }

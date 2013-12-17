@@ -717,7 +717,7 @@ function changeStream_util(streamId, hostname) {
             activeX.Play();
 			setBuffer(streamId);//设置buffer
         } catch(e) {
-            alert(e);
+            alert("changeStream_util"+e);
             return;
         }
     }

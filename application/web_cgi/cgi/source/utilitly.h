@@ -2,12 +2,13 @@
 #define __UTILITLY_H__
 #include <assert.h>
 #include <search.h>
+#include <string>
 #include "gmi_system_headers.h"
 #include "sys_env_types.h"
 
 GMI_RESULT InitCgi(char_t *Query);
 
-char_t *GetCgi(char_t *Name);
+char_t *GetCgi(std::string Name);
 
 GMI_RESULT NET_GetIpInfo(char_t *EthName, char_t *IP);
 

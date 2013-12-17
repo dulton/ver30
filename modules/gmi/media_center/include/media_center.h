@@ -29,6 +29,8 @@ public:
     GMI_RESULT GetOsdConfig          ( FD_HANDLE CodecHandle, void_t *OsdParameter, size_t *OsdParameterLength );
     GMI_RESULT SetOsdConfig          ( FD_HANDLE CodecHandle, const void_t *OsdParameter, size_t OsdParameterLength );
     GMI_RESULT ForceGenerateIdrFrame ( FD_HANDLE CodecHandle );
+    // this method is called when media center attempt to exit, which will stop codec and release related resource if required.
+    GMI_RESULT ReleaseCodecResource  ();
 
     GMI_RESULT OpenImageDevice       ( uint16_t SensorId, uint16_t ChannelId, FD_HANDLE *ImageHandle );
     GMI_RESULT CloseImageDevice      ( FD_HANDLE& ImageHandle );

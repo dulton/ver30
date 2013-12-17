@@ -254,9 +254,7 @@ GMI_RESULT NET_CheckIPString(char_t *Str)
 
 
 GMI_RESULT Soap_WSSE_Authentication(struct soap *soap_ptr)
-{
-    //ONVIF_INFO("\n");
-    //ONVIF_INFO("%s in............\n", __func__);
+{   
     char_t  PassWord[128];
 
     if ((NULL != soap_ptr->header)
@@ -265,28 +263,14 @@ GMI_RESULT Soap_WSSE_Authentication(struct soap *soap_ptr)
             && (NULL != soap_ptr->header->wsse__Security->UsernameToken->Username)
             && (NULL != soap_ptr->header->wsse__Security->UsernameToken->Password)
             && (0 < strlen(soap_ptr->header->wsse__Security->UsernameToken->Username)))
-    {
-        if ((NULL == soap_ptr->header->wsse__Security->UsernameToken->Nonce)
-                || (NULL == soap_ptr->header->wsse__Security->UsernameToken->wsu__Created)
-                || (NULL == soap_ptr->header->wsse__Security->UsernameToken->Password->Type))
-        {
-            goto errExit;
-        }
-
-        //ONVIF_INFO("Username    = %s\n", soap_ptr->header->wsse__Security->UsernameToken->Username);
-        //ONVIF_INFO("Password    = %s\n", soap_ptr->header->wsse__Security->UsernameToken->Password->__item);
-        //ONVIF_INFO("PasswordType= %s\n", soap_ptr->header->wsse__Security->UsernameToken->Password->Type);
-        //ONVIF_INFO("Nonce       = %s\n", soap_ptr->header->wsse__Security->UsernameToken->Nonce);
-        //ONVIF_INFO("Created     = %s\n", soap_ptr->header->wsse__Security->UsernameToken->wsu__Created);
-        //ONVIF_INFO("\n");
-
+    {    	
         if (0 == strcmp(soap_ptr->header->wsse__Security->UsernameToken->Username,  "admin")
-                || 0 == strcmp(soap_ptr->header->wsse__Security->UsernameToken->Username,  "inc"))
+        	|| 0 == strcmp(soap_ptr->header->wsse__Security->UsernameToken->Username,  "inc"))
         {
-            memcpy(PassWord, "12345", sizeof(PassWord));
+            memcpy(PassWord, "admin", sizeof(PassWord));
         }
         else
-        {
+        {        	
             ONVIF_ERROR("Username %s mismatch.........\n", soap_ptr->header->wsse__Security->UsernameToken->Username);
             goto errExit;
         }
@@ -298,15 +282,10 @@ GMI_RESULT Soap_WSSE_Authentication(struct soap *soap_ptr)
         //	ONVIF_ERROR("password verify error.........\n");
         //	goto errExit;
         //}
-
     }
-
-    //ONVIF_INFO("%s normal exit.........\n", __func__);
-    //ONVIF_INFO("\n");
+    
     return GMI_SUCCESS;
-errExit:
-    //ONVIF_INFO("%s abnormal exit.........\n", __func__);
-    //ONVIF_INFO("\n");
+errExit:   
     return GMI_FAIL;
 }
 

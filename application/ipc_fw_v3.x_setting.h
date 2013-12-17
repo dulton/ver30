@@ -318,6 +318,13 @@ typedef enum
 #define VIDEO_ENCODE_QCIF_STREAM_BITRATE_UP         1000
 #define VIDEO_ENCODE_QCIF_STREAM_BITRATE_DOWN       100
 
+//osd font size
+#define OSD_FONT_SIZE_BIGNESS                       48
+#define OSD_FONT_SIZE_BIG                           40
+#define OSD_FONT_SIZE_MEDIUM                        32
+#define OSD_FONT_SIZE_SMALL                         24
+#define OSD_FONT_SIZE_SMALLNESS                     16
+
 //1~60
 #define VIDEO_ENCODE_STREAM_FRAME_RATE              25
 //25,30,50,60,100
@@ -469,10 +476,10 @@ typedef enum
 #define DEVICE_NAME                                 "IPCamera"
 #define DEVICE_ID                                   1
 #define DEVICE_MODEL                                "iHDNC"
-#define DEVICE_MANUFACTUER                          "XXX"
+#define DEVICE_MANUFACTUER                          "inc"
 #define DEVICE_FWVER                                "0.0"
-#define DEVICE_HWVER                                "0.0"
-#define DEVICE_SN                                   "123456"
+#define DEVICE_HWVER                                "V2.0"
+#define DEVICE_SN                                   "34789345"
 //device info key
 #define DEVICE_NAME_KEY                             "Name"
 #define DEVICE_ID_KEY                               "Id"

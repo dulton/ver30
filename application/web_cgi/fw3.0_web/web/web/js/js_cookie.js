@@ -158,7 +158,7 @@
 			deleteCookie(oldhost+"currenturl");
 			top.location.href="login.html";
 		}
-		catch(e){alert(e);}
+		catch(e){alert("outLogin"+e);}
 		
 	}
 	function isLogin()

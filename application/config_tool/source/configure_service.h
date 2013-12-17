@@ -160,7 +160,7 @@ public:
 
     uint16_t GetDaemonRemotePort();
     uint16_t GetDaemonLocalPort();
-    uint16_t GetDaemonRebootPort();
+    uint16_t GetDaemonServerPort();
     int32_t GetDaemonLocalModuleId();
 
 private:

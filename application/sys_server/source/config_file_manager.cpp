@@ -1,10 +1,22 @@
 #include <string.h>
 #include "config_file_manager.h"
 #include "log.h"
-#include "capability_operation.h"
+#include "factory_setting_operation.h"
 #include "gmi_system_headers.h"
 #include "gmi_config_api.h"
 
+//OSD Font Size Map Table
+static int32_t l_OSD_FontSize[][2] = 
+{
+	{RES_1080P_HEIGHT, OSD_FONT_SIZE_BIGNESS},
+	{RES_720P_HEIGHT, OSD_FONT_SIZE_BIG},
+	{RES_D1_PAL_HEIGHT, OSD_FONT_SIZE_MEDIUM},
+	{RES_D1_NTSC_HEIGHT, OSD_FONT_SIZE_MEDIUM},
+	{RES_CIF_PAL_HEIGHT, OSD_FONT_SIZE_SMALL},
+	{RES_CIF_NTSC_HEIGHT, OSD_FONT_SIZE_SMALL},
+	{RES_QCIF_PAL_HEIGHT, OSD_FONT_SIZE_SMALLNESS},
+	{RES_QVGA_HEIGHT, OSD_FONT_SIZE_SMALLNESS}
+};
 
 ConfigFileManager::ConfigFileManager()
 {
@@ -22,8 +34,7 @@ GMI_RESULT ConfigFileManager::Initialize()
     memcpy(m_DefaultSettingFile, GMI_DEFAULT_SETTING_CONFIG_FILE_NAME, sizeof(m_DefaultSettingFile));
     memcpy(m_SettingFile, GMI_SETTING_CONFIG_FILE_NAME, sizeof(m_SettingFile));
     memcpy(m_ResourceFile, GMI_RESOURCE_CONFIG_FILE_NAME, sizeof(m_ResourceFile));
-    memcpy(m_PresetsFile, GMI_PTZ_PRESETS_PATROLS_FILE_NAME, sizeof(m_PresetsFile));
-
+    memcpy(m_PresetsFile, GMI_PTZ_PRESETS_PATROLS_FILE_NAME, sizeof(m_PresetsFile));    
     GMI_RESULT Result = m_Mutex.Create(NULL);
     if (FAILED(Result))
     {
@@ -137,8 +148,8 @@ GMI_RESULT ConfigFileManager::GetStreamCombine(SysPkgEncStreamCombine *SysEncStr
     int32_t MaxStreamNum;
     int32_t MaxPicWidth;
     int32_t MaxPicHeight;
-    CapabilityOperation CapOperation;
-    Result = CapOperation.GetVideoMaxCapability(&MaxStreamNum, &MaxPicWidth, &MaxPicHeight);
+    FactorySettingOperation FactoryOperation;
+    Result = FactoryOperation.GetVideoMaxCapability(&MaxStreamNum, &MaxPicWidth, &MaxPicHeight);
     if (FAILED(Result))
     {
         return Result;
@@ -196,8 +207,8 @@ GMI_RESULT ConfigFileManager::GetSysEncStreamCombineDefault(SysPkgEncStreamCombi
     int32_t MaxStreamNum;
     int32_t MaxPicWidth;
     int32_t MaxPicHeight;
-    CapabilityOperation CapOperation;
-    GMI_RESULT Result = CapOperation.GetVideoMaxCapability(&MaxStreamNum, &MaxPicWidth, &MaxPicHeight);
+    FactorySettingOperation FactoryOperation;
+    GMI_RESULT Result = FactoryOperation.GetVideoMaxCapability(&MaxStreamNum, &MaxPicWidth, &MaxPicHeight);
     if (FAILED(Result))
     {
         return Result;
@@ -322,8 +333,8 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeSettings(int32_t StreamId, SysPkgEnc
     //first col:width, second col:height
     int32_t Res[16][4];
     memset(Res, 0, sizeof(Res));
-    CapabilityOperation CapOperation;
-    Result = CapOperation.GetVideoParams(StreamNum, CombineNo, Res);
+    FactorySettingOperation FactoryOperation;
+    Result = FactoryOperation.GetVideoParams(StreamNum, CombineNo, Res);
     if (FAILED(Result))
     {
         SYS_ERROR("get video params from capability fail , Result=0x%lx\n", Result);
@@ -365,7 +376,7 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeSettings(int32_t StreamId, SysPkgEnc
             Result = GMI_XmlRead(Handle, (const char_t*)StreamXPath, VIDEO_ENCODE_STREAM_BITRATEDOWN_KEY,   BitRateDown,                     (int32_t*)&VidEncParam[Id].s_BitRateDown,   GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)StreamXPath, VIDEO_ENCODE_STREAM_GOP_KEY,           VIDEO_ENCODE_STREAM_GOP,          &VidEncParam[Id].s_FrameInterval, GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)StreamXPath, VIDEO_ENCODE_STREAM_QUALITY_KEY,       VIDEO_ENCODE_STREAM_QUALITY,      &VidEncParam[Id].s_EncodeQulity,  GMI_CONFIG_READ_WRITE);
-            Result = GMI_XmlRead(Handle, (const char_t*)StreamXPath, VIDEO_ENCODE_STREAM_ROTATE_KEY,        VIDEO_ENCODE_STREAM_ROTATE,       &VidEncParam[Id].s_Rotate,        GMI_CONFIG_READ_WRITE);
+            Result = GMI_XmlRead(Handle, (const char_t*)StreamXPath, VIDEO_ENCODE_STREAM_ROTATE_KEY,        VIDEO_ENCODE_STREAM_ROTATE,       &VidEncParam[Id].s_Rotate,        GMI_CONFIG_READ_WRITE);            
         }
 
         if (FAILED(Result))
@@ -414,8 +425,8 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeSettingsDefault(int32_t StreamId, Sy
     //first col:width, second col:height
     int32_t Res[16][4];
     memset(Res, 0, sizeof(Res));
-    CapabilityOperation CapOperation;
-    Result = CapOperation.GetVideoParams(StreamNum, CombineNo, Res);
+    FactorySettingOperation FactoryOperation;
+    Result = FactoryOperation.GetVideoParams(StreamNum, CombineNo, Res);
     if (FAILED(Result))
     {
         SYS_ERROR("get video params from capability fail , Result=0x%lx\n", Result);
@@ -494,8 +505,8 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeSettingsDefault(int32_t StreamId, Sy
     //first col:width, second col:height
     int32_t Res[16][4];
     memset(Res, 0, sizeof(Res));
-    CapabilityOperation CapOperation;
-    Result = CapOperation.GetVideoParams(StreamNum, CombineNo, Res);
+    FactorySettingOperation FactoryOperation;
+    Result = FactoryOperation.GetVideoParams(StreamNum, CombineNo, Res);
     if (FAILED(Result))
     {
         SYS_ERROR("get video params from capability fail , Result=0x%lx\n", Result);
@@ -700,6 +711,52 @@ GMI_RESULT ConfigFileManager::GetOsdTextNum(int32_t StreamId, int32_t *TextNum)
 }
 
 
+GMI_RESULT ConfigFileManager::GetOsdFontSizeDefault(int32_t StreamId, int32_t *FontSize)
+{	
+	SysPkgEncStreamCombine SysEncStreamCombine;	
+	GMI_RESULT Result = GetStreamCombine(&SysEncStreamCombine);
+	if (FAILED(Result))
+	{
+		return Result;
+	}		
+	
+	if (0xff == StreamId)
+	{		
+		ReferrencePtr<VideoEncodeParam, DefaultObjectsDeleter> VidEncParamPtr(BaseMemoryManager::Instance().News<VideoEncodeParam>(SysEncStreamCombine.s_EnableStreamNum));
+		if (NULL == VidEncParamPtr.GetPtr())
+		{
+			return GMI_OUT_OF_MEMORY;
+		}
+		
+		Result = GetVideoEncodeSettings(StreamId, &SysEncStreamCombine, VidEncParamPtr.GetPtr());
+		if (FAILED(Result))
+		{
+			return Result;
+		}
+
+		for (int32_t Id = 0; Id < SysEncStreamCombine.s_EnableStreamNum; Id++)
+		{
+			uint32_t Row;
+			for (Row = 0; Row < sizeof(l_OSD_FontSize)/(sizeof(l_OSD_FontSize[0][0])*2); Row++)
+			{
+			    if (VidEncParamPtr.GetPtr()[Id].s_EncodeHeight == l_OSD_FontSize[Row][0])
+			    {
+			        FontSize[Id] = l_OSD_FontSize[Row][1];
+			        break;
+			    }
+			}
+
+			if (Row >= sizeof(l_OSD_FontSize)/(sizeof(l_OSD_FontSize[0][0])*2))
+			{
+				FontSize[Id] = OSD_FONT_SIZE_MEDIUM;
+			}
+		}
+	}	
+
+	return GMI_SUCCESS;
+}
+
+
 GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum, VideoOSDParam *OsdParamPtr)
 {
     GMI_RESULT Result;
@@ -708,6 +765,7 @@ GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum
     int32_t    TextId;
     int32_t    TextNum[16];
     char_t     OsdXPath[128] = {0};
+    ReferrencePtr<int32_t, DefaultObjectsDeleter> FontSize;
 
     if (StreamId == 0xff)
     {
@@ -719,8 +777,20 @@ GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum
                 return Result;
             }
         }
-    }
 
+		FontSize = BaseMemoryManager::Instance().News<int32_t>(StreamNum);
+		if (NULL == FontSize.GetPtr())
+		{
+			return GMI_OUT_OF_MEMORY;
+		}
+		//get font size according to resolution   
+        Result = GetOsdFontSizeDefault(StreamId, FontSize.GetPtr());
+        if (FAILED(Result))
+        {
+        	memset(FontSize.GetPtr(), OSD_FONT_SIZE_MEDIUM, sizeof(int32_t)*StreamNum);
+        }
+    }
+    
     Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
@@ -732,7 +802,7 @@ GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum
     if (StreamId == 0xff)
     {
         for (Id = 0; Id < StreamNum; Id++)
-        {
+        {        	     	        	
             OsdParamPtr[Id].s_StreamId = Id;
             memset(OsdXPath, 0, sizeof(OsdXPath));
             sprintf(OsdXPath, OSD_PATH, Id);
@@ -745,7 +815,7 @@ GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_DATE_STYLE_KEY, OSD_TIME_DATE_STYLE,   &(OsdParamPtr[Id].s_TimeDisplay.s_DateStyle), GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_STYLE_KEY, OSD_TIME_STYLE,        &(OsdParamPtr[Id].s_TimeDisplay.s_TimeStyle), GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_FONT_COLOR_KEY, OSD_TIME_FONT_COLOR,   &(OsdParamPtr[Id].s_TimeDisplay.s_FontColor), GMI_CONFIG_READ_WRITE);
-            Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_FONT_STYLE_KEY, OSD_TIME_FONT_STYLE,   &(OsdParamPtr[Id].s_TimeDisplay.s_FontStyle), GMI_CONFIG_READ_WRITE);
+            Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_FONT_STYLE_KEY, FontSize.GetPtr()[Id],   &(OsdParamPtr[Id].s_TimeDisplay.s_FontStyle), GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_FONT_BLOD_KEY,  OSD_TIME_FONT_BLOD,    &(OsdParamPtr[Id].s_TimeDisplay.s_FontBlod),  GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_ROTATE_KEY,    OSD_TIME_ROTATE,       &(OsdParamPtr[Id].s_TimeDisplay.s_Rotate),    GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_ITALIC_KEY,    OSD_TIME_ITALIC,       &(OsdParamPtr[Id].s_TimeDisplay.s_Italic),    GMI_CONFIG_READ_WRITE);
@@ -761,7 +831,7 @@ GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum
                 sprintf(OsdXPath, OSD_TEXT_PATH, Id, TextId);
                 Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_ENABLE_KEY,     OSD_TEXT_ENABLE,       &(OsdParamPtr[Id].s_TextDisplay[TextId].s_Flag),      GMI_CONFIG_READ_WRITE);
                 Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_FONT_COLOR_KEY, OSD_TEXT_FONT_COLOR,   &(OsdParamPtr[Id].s_TextDisplay[TextId].s_FontColor), GMI_CONFIG_READ_WRITE);
-                Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_FONT_STYLE_KEY, OSD_TEXT_FONT_STYLE,   &(OsdParamPtr[Id].s_TextDisplay[TextId].s_FontStyle), GMI_CONFIG_READ_WRITE);
+                Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_FONT_STYLE_KEY, FontSize.GetPtr()[Id],   &(OsdParamPtr[Id].s_TextDisplay[TextId].s_FontStyle), GMI_CONFIG_READ_WRITE);
                 Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_FONT_BLOD_KEY,  OSD_TEXT_FONT_BLOD,    &(OsdParamPtr[Id].s_TextDisplay[TextId].s_FontBlod),  GMI_CONFIG_READ_WRITE);
                 Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_ROTATE_KEY,     OSD_TEXT_ROTATE,       &(OsdParamPtr[Id].s_TextDisplay[TextId].s_Rotate),    GMI_CONFIG_READ_WRITE);
                 Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_ITALIC_KEY,     OSD_TEXT_ITALIC,       &(OsdParamPtr[Id].s_TextDisplay[TextId].s_Italic),    GMI_CONFIG_READ_WRITE);
@@ -893,8 +963,8 @@ GMI_RESULT ConfigFileManager::GetImageSettings(int32_t SourceId, int32_t ChanId,
     boolean_t  GetImageFail = false;
     int32_t    Images[32];
     memset(Images, 0, sizeof(Images));
-    CapabilityOperation CapOperation;
-    Result = CapOperation.GetImageParams(Images);
+    FactorySettingOperation FactoryOperation;
+    Result = FactoryOperation.GetImageParams(Images);
     if (FAILED(Result))
     {
         SYS_ERROR("get image params form capoperation fail, Result = 0x%lx\n", Result);
@@ -956,8 +1026,8 @@ GMI_RESULT ConfigFileManager::GetImageSettingsDefault(int32_t SourceId, int32_t 
     boolean_t  GetImageFail = false;
     int32_t    Images[32];
     memset(Images, 0, sizeof(Images));
-    CapabilityOperation CapOperation;
-    GMI_RESULT Result = CapOperation.GetImageParams(Images);
+    FactorySettingOperation FactoryOperation;
+    GMI_RESULT Result = FactoryOperation.GetImageParams(Images);
     if (FAILED(Result))
     {
         SYS_ERROR("get image params form capoperation fail, Result = 0x%lx\n", Result);
@@ -1044,8 +1114,8 @@ GMI_RESULT ConfigFileManager::GetImageAdvanceSettings(int32_t SourceId, int32_t 
     boolean_t  GetImageFail = false;
     int32_t    Images[32];
     memset(Images, 0, sizeof(Images));
-    CapabilityOperation CapOperation;
-    Result = CapOperation.GetImageParams(Images);
+    FactorySettingOperation FactoryOperation;
+    Result = FactoryOperation.GetImageParams(Images);
     if (FAILED(Result))
     {
         SYS_ERROR("get image params form capoperation fail, Result = 0x%lx\n", Result);
@@ -1100,8 +1170,8 @@ GMI_RESULT ConfigFileManager::GetImageAdvanceSettingsDefault(int32_t SourceId, i
     boolean_t  GetImageFail = false;
     int32_t    Images[32];
     memset(Images, 0, sizeof(Images));
-    CapabilityOperation CapOperation;
-    GMI_RESULT Result = CapOperation.GetImageParams(Images);
+    FactorySettingOperation FactoryOperation;
+    GMI_RESULT Result = FactoryOperation.GetImageParams(Images);
     if (FAILED(Result))
     {
         SYS_ERROR("get image params form capoperation fail, Result = 0x%lx\n", Result);
@@ -1341,8 +1411,8 @@ GMI_RESULT ConfigFileManager::GetDaynightSettings(int32_t SourceId, ImageDnParam
     int8_t     IrcutMode;
     int8_t     DayToNightThr;
     int8_t     NightToDayThr;
-    CapabilityOperation CapOperation;
-    Result = CapOperation.GetIrCutModeDnThr(&IrcutMode, &DayToNightThr, &NightToDayThr);
+    FactorySettingOperation FactoryOperation;
+    Result = FactoryOperation.GetIrCutModeDnThr(&IrcutMode, &DayToNightThr, &NightToDayThr);
     if (FAILED(Result))
     {
         SYS_ERROR("get ircut mode daytonight nighttoday threshold form capoperation fail, Result = 0x%lx\n", Result);
@@ -1475,10 +1545,10 @@ GMI_RESULT ConfigFileManager::GetDaynightSettingsDefault(int32_t SourceId, SysPk
     boolean_t  GetIrcutDnFail = false;
     int8_t     IrcutMode;
     int8_t     DayToNightThr;
-    int8_t     NightToDayThr;
-
-    CapabilityOperation CapOperation;
-    GMI_RESULT Result = CapOperation.GetIrCutModeDnThr(&IrcutMode, &DayToNightThr, &NightToDayThr);
+    int8_t     NightToDayThr;  
+    
+    FactorySettingOperation FactoryOperation;
+    GMI_RESULT Result = FactoryOperation.GetIrCutModeDnThr(&IrcutMode, &DayToNightThr, &NightToDayThr);
     if (FAILED(Result))
     {
         SYS_ERROR("get ircut mode daytonight nighttoday threshold form capoperation fail, Result = 0x%lx\n", Result);
@@ -1761,6 +1831,17 @@ GMI_RESULT ConfigFileManager::GetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr)
     FD_HANDLE  Handle;
     char_t     DeviceInfoPath[128] = {0};
 
+	boolean_t  GetDeviceInfoFail = false;
+	SysPkgDeviceInfo SysDeviceInfoFactory;
+	memset(&SysDeviceInfoFactory, 0, sizeof(SysPkgDeviceInfo));
+	FactorySettingOperation FactoryOperation;
+	Result = FactoryOperation.GetDeviceInfo(&SysDeviceInfoFactory);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("get factory device informaiton form capoperation fail, Result = 0x%lx\n", Result);
+		GetDeviceInfoFail = true;
+	}
+
     Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
@@ -1771,13 +1852,25 @@ GMI_RESULT ConfigFileManager::GetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr)
 
     memset(DeviceInfoPath, 0, sizeof(DeviceInfoPath));
     strcpy(DeviceInfoPath, DEVICE_INFO_PATH);
-    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_NAME_KEY,  DEVICE_NAME,  (char_t*)&(SysDeviceInfoPtr->s_DeviceName),     GMI_CONFIG_READ_WRITE);
-    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_ID_KEY,    DEVICE_ID,    (int32_t*)&(SysDeviceInfoPtr->s_DeviceId),      GMI_CONFIG_READ_WRITE);
-    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MODEL_KEY, DEVICE_MODEL, (char_t*)&(SysDeviceInfoPtr->s_DeviceModel),    GMI_CONFIG_READ_WRITE);
-    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MANUFACTUER_KEY, DEVICE_MANUFACTUER, (char_t*)&(SysDeviceInfoPtr->s_DeviceManufactuer), GMI_CONFIG_READ_WRITE);
-    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_SN_KEY,    DEVICE_SN,    (char_t*)&(SysDeviceInfoPtr->s_DeviceSerialNum),GMI_CONFIG_READ_WRITE);
-    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_FWVER_KEY, DEVICE_FWVER, (char_t*)&(SysDeviceInfoPtr->s_DeviceFwVer),    GMI_CONFIG_READ_WRITE);
-    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_HWVER_KEY, DEVICE_HWVER, (char_t*)&(SysDeviceInfoPtr->s_DeviceHwVer),    GMI_CONFIG_READ_WRITE);
+    if (GetDeviceInfoFail)
+    {
+	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_NAME_KEY,  DEVICE_NAME,  (char_t*)&(SysDeviceInfoPtr->s_DeviceName),     GMI_CONFIG_READ_WRITE);
+	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_ID_KEY,    DEVICE_ID,    (int32_t*)&(SysDeviceInfoPtr->s_DeviceId),      GMI_CONFIG_READ_WRITE);
+	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MODEL_KEY, DEVICE_MODEL, (char_t*)&(SysDeviceInfoPtr->s_DeviceModel),    GMI_CONFIG_READ_WRITE);
+	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MANUFACTUER_KEY, DEVICE_MANUFACTUER, (char_t*)&(SysDeviceInfoPtr->s_DeviceManufactuer), GMI_CONFIG_READ_WRITE);
+	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_SN_KEY,    DEVICE_SN,    (char_t*)&(SysDeviceInfoPtr->s_DeviceSerialNum),GMI_CONFIG_READ_WRITE);	   
+	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_HWVER_KEY, DEVICE_HWVER, (char_t*)&(SysDeviceInfoPtr->s_DeviceHwVer),    GMI_CONFIG_READ_WRITE);
+    }
+    else
+    {
+    	Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_NAME_KEY,  SysDeviceInfoFactory.s_DeviceName,  (char_t*)&(SysDeviceInfoPtr->s_DeviceName),     GMI_CONFIG_READ_WRITE);
+	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_ID_KEY,    SysDeviceInfoFactory.s_DeviceId,    (int32_t*)&(SysDeviceInfoPtr->s_DeviceId),      GMI_CONFIG_READ_WRITE);
+	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MODEL_KEY, SysDeviceInfoFactory.s_DeviceModel, (char_t*)&(SysDeviceInfoPtr->s_DeviceModel),    GMI_CONFIG_READ_WRITE);
+	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MANUFACTUER_KEY, SysDeviceInfoFactory.s_DeviceManufactuer, (char_t*)&(SysDeviceInfoPtr->s_DeviceManufactuer), GMI_CONFIG_READ_WRITE);
+	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_SN_KEY,    SysDeviceInfoFactory.s_DeviceSerialNum,    (char_t*)&(SysDeviceInfoPtr->s_DeviceSerialNum),GMI_CONFIG_READ_WRITE);	    
+	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_HWVER_KEY, SysDeviceInfoFactory.s_DeviceHwVer, (char_t*)&(SysDeviceInfoPtr->s_DeviceHwVer),    GMI_CONFIG_READ_WRITE);
+    }
+    
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
@@ -1816,11 +1909,11 @@ GMI_RESULT ConfigFileManager::SetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr)
 
     Result = GMI_XmlWrite(Handle, (const char_t*)DeviceInfoPath,  DEVICE_NAME_KEY, (const char_t*)(SysDeviceInfoPtr->s_DeviceName));
     Result = GMI_XmlWrite(Handle, (const char_t*)DeviceInfoPath,  DEVICE_ID_KEY,   (const int32_t)(SysDeviceInfoPtr->s_DeviceId));
-    Result = GMI_XmlWrite(Handle, (const char_t*)DeviceInfoPath,  DEVICE_MODEL_KEY,(const char_t*)(SysDeviceInfoPtr->s_DeviceModel));
-    Result = GMI_XmlWrite(Handle, (const char_t*)DeviceInfoPath,  DEVICE_MANUFACTUER_KEY,(const char_t*)(SysDeviceInfoPtr->s_DeviceManufactuer));
-    Result = GMI_XmlWrite(Handle, (const char_t*)DeviceInfoPath,  DEVICE_SN_KEY,   (const char_t*)(SysDeviceInfoPtr->s_DeviceSerialNum));
+    //Result = GMI_XmlWrite(Handle, (const char_t*)DeviceInfoPath,  DEVICE_MODEL_KEY,(const char_t*)(SysDeviceInfoPtr->s_DeviceModel));
+    //Result = GMI_XmlWrite(Handle, (const char_t*)DeviceInfoPath,  DEVICE_MANUFACTUER_KEY,(const char_t*)(SysDeviceInfoPtr->s_DeviceManufactuer));
+    //Result = GMI_XmlWrite(Handle, (const char_t*)DeviceInfoPath,  DEVICE_SN_KEY,   (const char_t*)(SysDeviceInfoPtr->s_DeviceSerialNum));
     //Result = GMI_XmlWrite(Handle, (const char_t*)DeviceInfoPath,  DEVICE_FWVER_KEY,(const char_t*)(SysDeviceInfoPtr->s_DeviceFwVer));
-    Result = GMI_XmlWrite(Handle, (const char_t*)DeviceInfoPath,  DEVICE_HWVER_KEY,(const char_t*)(SysDeviceInfoPtr->s_DeviceHwVer));
+    //Result = GMI_XmlWrite(Handle, (const char_t*)DeviceInfoPath,  DEVICE_HWVER_KEY,(const char_t*)(SysDeviceInfoPtr->s_DeviceHwVer));
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
@@ -2296,8 +2389,8 @@ GMI_RESULT ConfigFileManager::GetPtzSpeedMap(char_t HSpeed[10][64], char_t VSpee
     char_t Vs[10][64];
     memset(Hs, 0, sizeof(Hs));
     memset(Vs, 0, sizeof(Vs));
-    CapabilityOperation CapOperation;
-    GMI_RESULT Result = CapOperation.GetPtzSpeed(Hs, Vs);
+    FactorySettingOperation FactoryOperation;
+    GMI_RESULT Result = FactoryOperation.GetPtzSpeed(Hs, Vs);
     if (FAILED(Result))
     {
         SYS_ERROR("get ptz speed map form gmi_factory_setting.xml fail, Result = 0x%lx\n", Result);

@@ -36,7 +36,7 @@ GMI_CFLAGS              = -Wall -O3
 GMI_LFLAGS              =
 
 # Set related modules
-GMI_RELATED_MODULES     = osal pcap pcap_session tool_protocol tinyxml pthread sys_client rudp auth_center des rt daemon_heartbeat
+GMI_RELATED_MODULES     = osal pcap pcap_session tool_protocol tinyxml pthread sys_client rudp auth_center des rt daemon_heartbeat gmi_brdwrapper
 
 # Set other header file path
 GMI_INCLUDE_DIR         = $(GMI_TOPDIR)/application

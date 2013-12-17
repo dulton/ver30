@@ -3,14 +3,24 @@
 
 #include "H264RealTimeStreamRTPSink.hh"
 
+#include "common_def.h"
+
 H264RealTimeStreamRTPSink::H264RealTimeStreamRTPSink(UsageEnvironment & env, Groupsock * RTPgs, unsigned char rtpPayloadFormat)
-    : VideoRTPSink(env, RTPgs, rtpPayloadFormat, 90000, "H264")
+    : RTPSink(env, RTPgs, rtpPayloadFormat, 90000, "H264", 1)
     , fFmtpSDPLine(NULL)
     , fSPS(NULL)
     , fSPSSize(0)
     , fPPS(NULL)
     , fPPSSize(0)
+    , fPacket()
+    , fWaiting(False)
+    , fSending(False)
+    , fFirstPacketInFrame(True)
 {
+    // Initialize RTP packet
+    fPacket.removeMarkerBit();
+    fPacket.setPayloadType(rtpPayloadFormat);
+    fPacket.setSSRC(SSRC());
 }
 
 H264RealTimeStreamRTPSink::~H264RealTimeStreamRTPSink() {
@@ -25,17 +35,10 @@ H264RealTimeStreamRTPSink * H264RealTimeStreamRTPSink::createNew(UsageEnvironmen
     return new H264RealTimeStreamRTPSink(env, RTPgs, rtpPayloadFormat);
 }
 
-void H264RealTimeStreamRTPSink::doSpecialFrameHandling(unsigned /*fragmentationOffset*/, unsigned char * /*frameStart*/,
-    unsigned /*numBytesInFrame*/, struct timeval framePresentationTime, unsigned /*numRemainingBytes*/) {
-    if (fSource != NULL) {
-        H264VideoStreamFramer * framerSource = (H264VideoStreamFramer*)fSource;
-        if (framerSource->pictureEndMarker()) {
-            setMarkerBit();
-            framerSource->pictureEndMarker() = False;
-        }
-    }
-
-    setTimestamp(framePresentationTime);
+Boolean H264RealTimeStreamRTPSink::continuePlaying()
+{
+    sendNextPacket();
+    return True;
 }
 
 char const * H264RealTimeStreamRTPSink::auxSDPLine() {
@@ -77,5 +80,76 @@ char const * H264RealTimeStreamRTPSink::auxSDPLine() {
 
     fFmtpSDPLine = fmtp;
     return fFmtpSDPLine;
+}
+
+void H264RealTimeStreamRTPSink::afterGettingFrameProc(void * clientData, unsigned numBytesRead, unsigned numTruncatedBytes, struct timeval presentationTime, unsigned durationInMicroseconds) {
+    H264RealTimeStreamRTPSink * sink = (H264RealTimeStreamRTPSink *)clientData;
+    sink->afterGettingFrame(numBytesRead, numTruncatedBytes, presentationTime, durationInMicroseconds);
+}
+
+void H264RealTimeStreamRTPSink::afterGettingFrame(unsigned numBytesRead, unsigned numTruncatedBytes, struct timeval presentationTime, unsigned durationInMicroseconds)
+{
+    fPacket.setPayloadSize(numBytesRead);
+    if (fFirstPacketInFrame)
+    {
+        fPacket.setTimestamp(convertToRTPTimestamp(presentationTime));
+        fFirstPacketInFrame = False;
+    }
+
+    if (fSource != NULL)
+    {
+        H264VideoStreamFramer * framerSource = (H264VideoStreamFramer*)fSource;
+        if (framerSource->pictureEndMarker()) {
+            fPacket.setMarkerBit();
+            framerSource->pictureEndMarker() = False;
+            fFirstPacketInFrame = True;
+        }
+    }
+
+    if (!fRTPInterface.sendPacket(fPacket.packet(), fPacket.packetSize()))
+    {
+        // PRINT_LOG(ERROR, "Failed to send packet");
+    }
+
+    ++ fPacketCount;
+    fTotalOctetCount += fPacket.packetSize();
+    fOctetCount += fPacket.payloadSize();
+
+    fPacket.increaseSequenceNumer();
+
+#if 1
+    fWaiting = False;
+
+    if (!fSending) {
+        nextTask() = envir().taskScheduler().scheduleDelayedTask(0, sendNextPacketProc, this);
+    }
+#else
+
+    nextTask() = envir().taskScheduler().scheduleDelayedTask(0, sendNextPacketProc, this);
+#endif
+}
+
+void H264RealTimeStreamRTPSink::sendNextPacketProc(void * clientData)
+{
+    H264RealTimeStreamRTPSink * sink = (H264RealTimeStreamRTPSink *)clientData;
+    sink->sendNextPacket();
+}
+
+void H264RealTimeStreamRTPSink::sendNextPacket()
+{
+#if 1
+    fSending = True;
+
+    do {
+        fPacket.removeMarkerBit();
+        fWaiting = True;
+        fSource->getNextFrame(fPacket.payload(), fPacket.maxPayloadSize(), afterGettingFrameProc, this, NULL, NULL);
+    } while (!fWaiting);
+
+    fSending = False;
+#else
+
+    fSource->getNextFrame(fPacket.payload(), fPacket.maxPayloadSize(), afterGettingFrameProc, this, NULL, NULL);
+#endif
 }
 

@@ -106,8 +106,8 @@
 					//创建文件
 					fso.CreateTextFile("c:\\Program Data\\config.txt", true);
 					f = fso.OpenTextFile("c:\\Program Data\\config.txt", 2);
-					var stmp = "<recordpath>C:\\Program Data\\IPC\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>0</netplay>";
-				recordpath = "C:\\Program Data\\IPC\media\\";
+					var stmp = "<recordpath>C:\\Program Data\\IPC\\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>0</netplay>";
+				recordpath = "C:\\Program Data\\IPC\\media\\";
 				picpath = "C:\\Program Data\\IPC\\Image\\";
 				recordtype = "MP4";
 				pictype = "bmp";
@@ -145,11 +145,11 @@
 			}
 				if(recordpath == "")
 				{
-					recordpath = "C:\\Program Data\\IPC\media\\";
+					recordpath = "C:\\Program Data\\IPC\\media\\";
 				}
 				if(picpath == "")
 				{
-					picpath = "C:\\Program Data\\IPC\Image\\";
+					picpath = "C:\\Program Data\\IPC\\Image\\";
 				}
 				if(recordtype == "")
 				{
@@ -222,7 +222,28 @@
 				}
 			}
 			IFERROR();
-
+			//获取设备能力集码流数
+			function getStreamNumInfo()
+			{
+					GetAndSet("GetCapabilities","xml","{SessionId:"+parent.id+",AuthValue:}"+parent.Authvalue, sucess_getStreamNumNLJ);	
+			}
+			getStreamNumInfo();
+			function sucess_getStreamNumNLJ(data)
+			{
+                var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode!="0")
+					{
+						alert("获取设备能力集失败，获取码流数失败！");
+						delete PackDate;
+						return;
+					}
+					StreamNum_NLJ = PackDate.Content.XmlBuf.capabilities.device.media.maxstreamnum;
+					StreamNum_NLJ = parseInt(parent.StreamNum_NLJ,10);
+				}
+				delete PackDate;
+			}
 				//var stmp = document.getElementById("vision");
 				//stmp.style.visibility = "hidden";
 				getip();
@@ -626,7 +647,7 @@
                                 </li>
                             </ul>
                         </li>
-                        <li class="level1 last"  style="display:none">
+                        <li class="level1 last" style="display:none">
                             <a href="#none" name="log_management.html" id="alogmanagement" level="1">
                                 日志管理
                             </a>

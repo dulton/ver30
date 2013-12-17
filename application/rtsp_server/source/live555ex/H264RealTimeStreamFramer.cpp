@@ -69,6 +69,8 @@ H264RealTimeStreamFramer::~H264RealTimeStreamFramer() {
 }
 
 void H264RealTimeStreamFramer::doGetNextFrame() {
+    struct timespec TimeSpec = {0, 0};
+
     if (fNeedNextFrame) {
         if (fFirstFrame) {
             nextTask() = envir().taskScheduler().scheduleDelayedTask(0, (TaskFunc *)&tryGetNextFrame, this);
@@ -84,6 +86,11 @@ void H264RealTimeStreamFramer::doGetNextFrame() {
         }
 
         // ASSERT(nextFrame->IsH264Frame(), "nextFrame MUST be H264Frame");
+
+        PRINT_LOG(ASSERT, "Get %c frame, size = %u", nextFrame->IsKeyFrame() ? 'I' : 'P', nextFrame->Length());
+
+        clock_gettime(CLOCK_MONOTONIC, &TimeSpec);
+        PRINT_LOG(VERBOSE, "Time to get frame :  %12ld.%9ld", TimeSpec.tv_sec, TimeSpec.tv_nsec);
 
         fCurrentFrame = dynamic_cast<H264Frame *>(nextFrame);
         fNeedNextFrame = False;
@@ -165,6 +172,12 @@ void H264RealTimeStreamFramer::doGetNextFrame() {
     }
 
     afterGetting(this);
+
+    if (fNeedNextFrame)
+    {
+        clock_gettime(CLOCK_MONOTONIC, &TimeSpec);
+        PRINT_LOG(VERBOSE, "Time to sent frame : %12ld.%9ld", TimeSpec.tv_sec, TimeSpec.tv_nsec);
+    }
 }
 
 void H264RealTimeStreamFramer::doStopGettingFrames() {

@@ -178,12 +178,22 @@ var t;
 		   //------ wk add 获取码流
 		   var SessID = parent.id;
 		   var AuthId = parent.Authvalue;
+
 			//获取设备能力集码流数
 			function getStreamNumInfo()
 			{
 					GetAndSet("GetCapabilities","xml","{SessionId:"+parent.id+",AuthValue:}"+parent.Authvalue, sucess_getStreamNumNLJ);	
 			}
-			getStreamNumInfo();
+			if(parent.StreamNum_NLJ != 0)
+			{
+				getMaxStreamNum(false,SessID,AuthId,0);	
+			}
+			else
+			{
+				//获取能力集
+				getStreamNumInfo();	
+			}
+			
 			function sucess_getStreamNumNLJ(data)
 			{
                 var PackDate=new UnPackData(data);

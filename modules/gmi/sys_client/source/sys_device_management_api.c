@@ -13,6 +13,9 @@
 #include "gmi_daemon_heartbeat_api.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "ipc_fw_v3.x_setting.h"
+#include "gmi_brdwrapperdef.h"
+#include "gmi_brdwrapper.h"
+
 
 
 #define  LAST_START_TIME_FILE  "/opt/log/LastStartTime"
@@ -287,6 +290,133 @@ GMI_RESULT SysCtrlSystem(uint16_t SessionId, uint32_t AuthValue, int32_t SysCtrl
     }
 
     return GMI_SUCCESS;
+}
+
+
+
+GMI_RESULT GMI_ConfigToolOpenDcIris(uint16_t SessionId, uint32_t AuthValue)
+{
+    GMI_RESULT Result	  = GMI_SUCCESS;
+    
+    do
+    {  
+        Result = GMI_BrdDcirsValueUpdate(100);
+        if (FAILED(Result))
+        {
+            SYS_CLIENT_ERROR("GMI_BrdDcirsValueUpdate fail, Result = 0x%lx\n", Result);
+            break;
+        }
+        
+        return Result;
+    }
+    while(0);
+    
+    return Result;
+}
+
+GMI_RESULT GMI_ConfigToolCloseDcIris(uint16_t SessionId, uint32_t AuthValue)
+{
+    GMI_RESULT Result	  = GMI_SUCCESS;
+    
+    do
+    {
+        Result = GMI_BrdDcirsValueUpdate(1000);
+        if (FAILED(Result))
+        {
+            SYS_CLIENT_ERROR("GMI_BrdDcirsValueUpdate fail, Result = 0x%lx\n", Result);
+            break;
+        }
+        return Result;
+    }
+    while(0);
+    
+    return Result;
+}
+
+GMI_RESULT GMI_ConfigToolWatchDogTest(uint16_t SessionId, uint32_t AuthValue)
+{
+    GMI_RESULT Result     = GMI_SUCCESS;
+
+    do
+    {
+
+	Result = GMI_BrdWatchdogReset();
+        if (FAILED(Result))
+        {
+            SYS_CLIENT_ERROR("GMI_BrdWatchdogReset fail, Result = 0x%lx\n", Result);
+            break;
+        }
+
+    	return Result;
+    }
+    while(0);
+    
+    return Result;
+}
+
+GMI_RESULT GMI_ConfigToolSetMac(uint16_t SessionId, uint32_t AuthValue,char_t MacAddrs[128])
+{
+    GMI_RESULT Result     = GMI_SUCCESS;
+
+    do
+    {
+
+	Result = GMI_BrdSetSystemNetworkMac(MacAddrs);
+        if (FAILED(Result))
+        {
+            SYS_CLIENT_ERROR("GMI_BrdSetSystemNetworkMac fail, Result = 0x%lx\n", Result);
+            break;
+        }
+
+    	return Result;
+    }
+    while(0);
+    
+    return Result;
+}
+
+GMI_RESULT GMI_ConfigToolAfConfigDetect(uint16_t SessionId, uint32_t AuthValue,int32_t *FileFlags)
+{
+    int32_t Result;
+    struct stat FileInfo;
+    int32_t TmpFileFlags = 0;
+    
+    Result = stat("/opt/config/focus_range_DF003.cfg", &FileInfo);
+    if (0 == Result)
+    {
+        TmpFileFlags += 1;
+    }	 
+    
+    Result = stat("/opt/config/focus_zoom_DF003.cfg", &FileInfo);
+    if (0 == Result)
+    {
+        TmpFileFlags += 1;
+    }  
+    
+    Result = stat("/opt/config/param_day.cfg", &FileInfo);
+    if (0 == Result)
+    {
+        TmpFileFlags += 1;
+    }  
+    
+    Result = stat("/opt/config/param_night.cfg", &FileInfo);
+    if (0 == Result)
+    {
+        TmpFileFlags += 1;
+    }  
+    
+    Result = stat("/opt/config/motor_lens.cfg", &FileInfo);
+    if (0 == Result)
+    {
+        TmpFileFlags += 1;
+    }  
+
+    if(TmpFileFlags < 5)
+        *FileFlags = 0;
+    else
+        *FileFlags = 1;
+ 
+     return GMI_SUCCESS;
 }
 
 GMI_RESULT GMI_FactoryDefaultLocalApi(void)

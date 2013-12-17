@@ -77,6 +77,18 @@ static CgiFncHandler WebFncTable[] =
     {"FactoryDefaultAll",CgiFactoryDefaultAll},
     {"SysSearchPtzPresetInfo",CgiSysSearchPtzPresetInfo},
     {"SysGetDeviceStartedTime",CgiSysGetDeviceStartedTime},
+    {"ConfigToolGetDeviceInfo",CgiConfigToolGetDeviceInfo},
+    {"ConfigToolSetDeviceInfo",CgiConfigToolSetDeviceInfo},
+    {"ConfigToolSetIrCutStatus",CgiConfigToolSetIrCutStatus},
+    {"ConfigToolGetRtcTime",CgiConfigToolGetRtcTime},
+    {"ConfigToolTestWatchdog",CgiConfigToolTestWatchdog},
+    {"ConfigToolOpenDcIris",CgiConfigToolOpenDcIris},
+    {"ConfigToolCloseDcIris", CgiConfigToolCloseDcIris},
+    {"ConfigToolTestAFConfigFile",CgiConfigToolTestAFConfigFile},
+    {"ConfigToolGetMac",CgiConfigToolGetMac},
+    {"ConfigToolSetMac",CgiConfigToolSetMac},
+    {"ConfigToolIrCutOpen",CgiConfigToolIrCutOpen},
+    {"ConfigToolIrCutClose",CgiConfigToolIrCutClose},
     {}
 };
 

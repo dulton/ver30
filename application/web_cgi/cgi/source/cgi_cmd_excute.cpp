@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string>
 #include "cgi_cmd_entry.h"
 #include "cgi_cmd_excute.h"
 #include "utilitly.h"
@@ -63,7 +63,7 @@ GMI_RESULT CgiLogIn(const char_t *FncCmd)
     DaemonData_t DaemonData;
 
     CGI_ERROR("GMI_DaemonInit start[%d] \n",__LINE__);
-    
+
     Result = GMI_DaemonInit( &DaemonData, WEB_SERVER_ID, GMI_DAEMON_HEARDBEAT_SERVER, GMI_DAEMON_HEARDBEAT_WEB);
     if (FAILED(Result))
     {
@@ -72,7 +72,7 @@ GMI_RESULT CgiLogIn(const char_t *FncCmd)
         RetFormat = "cgiFncCmd=%s&cgiContentType=%s&Content={\"RetCode\":\"%d\"}";
         fprintf(stdout, RetFormat, FncCmd, CONTENT_TYPE_JSON, RetCode);
         GMI_DaemonUnInit(&DaemonData);
-	return GMI_FAIL;
+        return GMI_FAIL;
     }
 
     do
@@ -85,26 +85,26 @@ GMI_RESULT CgiLogIn(const char_t *FncCmd)
             CGI_ERROR("CgiLogIn  Error \n");
             break;
         }
-        
-	CGI_ERROR("GMI_InquiryServerStatus Start [%d] \n",__LINE__);
+
+        CGI_ERROR("GMI_InquiryServerStatus Start [%d] \n",__LINE__);
 
         uint16_t Status = 0;
         Result = GMI_InquiryServerStatus(&DaemonData, GMI_MONITOR_TO_SDK_PORT_DEFAULT ,GMI_DAEMON_APPLICATION_STATUS_QUIRY, SDK_SERVER_ID, &Status);
         if (FAILED(Result))
         {
-    	   RetCode = RETCODE_SYSTEM_RNNING;
-    	   CGI_ERROR("Call SysAuthLogin Error Result = %ld\n",Result);
-    	   break;
+            RetCode = RETCODE_SYSTEM_RNNING;
+            CGI_ERROR("Call SysAuthLogin Error Result = %ld\n",Result);
+            break;
         }
 
-	CGI_ERROR("GMI_DaemonInit [%d] Status = %d\n",__LINE__, Status);
+        CGI_ERROR("GMI_DaemonInit [%d] Status = %d\n",__LINE__, Status);
 
         if (1 == Status)
         {
             uint32_t Authvalue = 0;
             uint16_t OutSessionId = 0;
             uint8_t UserFlag =0;
-    
+
             Result = SysAuthLogin(UserName, Password, atoi(InSessionId), ID_MOUDLE_REST_WEB, &OutSessionId, &UserFlag, &Authvalue);
             if (FAILED(Result))
             {
@@ -112,18 +112,18 @@ GMI_RESULT CgiLogIn(const char_t *FncCmd)
                 CGI_ERROR("Call SysAuthLogin Error Result = %ld\n",Result);
                 break;
             }
-    
+
             RetFormat = "cgiFncCmd=%s&cgiContentType=%s&Content={\"RetCode\":\"%d\",\"SessionId\":\"%d\",\"UserFlag\":\"%d\",\"Authvalue\":\"%u\"}";
             fprintf(stdout, RetFormat, FncCmd, CONTENT_TYPE_JSON, RetCode, OutSessionId, UserFlag, Authvalue);
 
-   	    GMI_DaemonUnInit(&DaemonData);
-   	    return GMI_SUCCESS;
+            GMI_DaemonUnInit(&DaemonData);
+            return GMI_SUCCESS;
         }
-        else 
+        else
         {
-    	   RetCode = RETCODE_SYSTEM_RNNING;
-    	   CGI_ERROR("Call SysAuthLogin Error Result = %ld\n",Result);
-    	   break;
+            RetCode = RETCODE_SYSTEM_RNNING;
+            CGI_ERROR("Call SysAuthLogin Error Result = %ld\n",Result);
+            break;
         }
 
     } while(0);
@@ -141,7 +141,7 @@ GMI_RESULT CgiLogOut(const char_t *FncCmd)
     char_t *SessionId = WEB_GET_VAR("SessionId");
     const char_t *RetFormat;
     int32_t RetCode = RETCODE_OK;
-    GMI_RESULT Result = GMI_FAIL;
+//    GMI_RESULT Result = GMI_FAIL;
 
     do
     {
@@ -177,9 +177,9 @@ GMI_RESULT CgiGetIpInfo(const char_t *FncCmd)
     char_t *AuthValue = WEB_GET_VAR("AuthValue");
     const char_t *RetFormat;
     char_t  Cmd[CMD_BUFFER_LENTH];
-    char_t *InterfName = "eth0";
-    char_t Ipv4Address[MIN_BUFFER_LENTH];
-    char_t HwAddress[MIN_BUFFER_LENTH];
+//    char_t *InterfName = "eth0";
+//   char_t Ipv4Address[MIN_BUFFER_LENTH];
+    //  char_t HwAddress[MIN_BUFFER_LENTH];
     int32_t RetCode   = RETCODE_OK;
     GMI_RESULT Result = GMI_FAIL;
 
@@ -403,7 +403,7 @@ GMI_RESULT CgiSetNetworkPort(const char_t *FncCmd)
             RetCode = RETCODE_ERROR;
             break;
         }
-        
+
         if (NULL != HTTP_Port)
             SysNetworkPort.s_HTTP_Port = atoi(HTTP_Port);
         if (NULL != RTSP_Port)
@@ -411,7 +411,7 @@ GMI_RESULT CgiSetNetworkPort(const char_t *FncCmd)
         if (NULL != SDK_Port)
             SysNetworkPort.s_SDK_Port = atoi(SDK_Port);
         if (NULL != Upgrade_Port)
-             SysNetworkPort.s_Upgrade_Port = atoi(Upgrade_Port);
+            SysNetworkPort.s_Upgrade_Port = atoi(Upgrade_Port);
 
         //Call network port setting api
         Result = SysSetNetworkPort(atoi(SessionId), atoi(AuthValue), &SysNetworkPort);
@@ -677,7 +677,7 @@ GMI_RESULT CgiGetFtpServerInfo(const char_t *FncCmd)
     const char_t *RetFormat;
     char_t  Cmd[CMD_BUFFER_LENTH];
     int32_t RetCode = RETCODE_OK;
-    GMI_RESULT Result = GMI_FAIL;
+//    GMI_RESULT Result = GMI_FAIL;
 
     sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
     do
@@ -876,7 +876,7 @@ GMI_RESULT CgiSetTime(const char_t *FncCmd)
             RetCode = RETCODE_ERROR;
             break;
         }
-	
+
         SysPkgDateTimeType  SysDateTimeType;
         memset(&SysDateTimeType, 0, sizeof(SysPkgDateTimeType));
 
@@ -1027,30 +1027,30 @@ GMI_RESULT CgiSystemSimpleDefaultCmd(const char_t *FncCmd)
     char_t  Cmd[CMD_BUFFER_LENTH];
     int32_t RetCode = RETCODE_OK;
     GMI_RESULT Result = GMI_FAIL;
-    
+
     sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
-    
+
     do
     {
         if (NULL == SessionId || NULL == AuthValue)
         {
-         RetCode = RETCODE_ERROR;
-         break;
+            RetCode = RETCODE_ERROR;
+            break;
         }
-        
+
         //Call SysCtrlSystem
         Result = FactorySimpleDefaultAll(atoi(SessionId), atoi(AuthValue));
         if (FAILED(Result))
         {
-             RetCode = RETCODE_ERROR;
-             break;
+            RetCode = RETCODE_ERROR;
+            break;
         }
-        
+
         RetFormat = "cgiFncCmd=%s&cgiContentType=%s&Content={\"RetCode\":\"%d\"}";
         fprintf(stdout, RetFormat, FncCmd, CONTENT_TYPE_JSON, RetCode);
         return GMI_SUCCESS;
     } while(0);
-    
+
     RetFormat = "%s={\"RetCode\":\"%d\"}";
     fprintf(stdout, RetFormat, Cmd, RetCode);
     return GMI_FAIL;
@@ -1062,7 +1062,6 @@ GMI_RESULT CgiGetUsers(const char_t *FncCmd)
     char_t *SessionId = WEB_GET_VAR("SessionId");
     const char_t *AuthValue = WEB_GET_VAR("AuthValue");
     const char_t *RetFormat;
-    const char_t *UserInfo;
     char_t  Cmd[CMD_BUFFER_LENTH];
     int32_t RetCode = RETCODE_OK;
     GMI_RESULT Result = GMI_FAIL;
@@ -1107,7 +1106,7 @@ GMI_RESULT CgiGetUsers(const char_t *FncCmd)
 
         char_t TmpBuf[MAX_CHAR_BUFFER_LENTH];
         memset(TmpBuf, 0, sizeof(TmpBuf));
-        int32_t i=0, Length= 0;
+        uint32_t i=0, Length= 0;
         for (i=0; i<RealUserCnt; i++)
         {
             Length += sprintf(TmpBuf+Length,",\"UserName%d\":\"%s\",\"UserPass%d\":\"%s\",\"UserLevel%d\":\"%u\",\"UserFlag%d\":\"%u\"",      \
@@ -1122,7 +1121,7 @@ GMI_RESULT CgiGetUsers(const char_t *FncCmd)
         }
         return GMI_SUCCESS;
     } while(0);
-    
+
     RetFormat = "%s={\"RetCode\":\"%d\"}";
     fprintf(stdout, RetFormat, Cmd, RetCode);
     return GMI_FAIL;
@@ -1437,18 +1436,18 @@ GMI_RESULT CgiGetEncodeCfg(const char_t *FncCmd)
 
         RetFormat = "%s={\"RetCode\":\"%d\",\"RspEncodeCfgNum\":\"%u\"%s}";
 
-        int32_t Length = 0, i = 0;
+        uint32_t Length = 0, i = 0;
         char_t TmpBuf[MAX_CHAR_BUFFER_LENTH];
-        memset(TmpBuf, 0, sizeof(TmpBuf));	
+        memset(TmpBuf, 0, sizeof(TmpBuf));
         for(i=0; i<RspEncodeCfgNum; i++)
         {
             Length += sprintf(TmpBuf+Length,",\"VideoId%d\":\"%d\",\"StreamType%d\":\"%d\",\"Compression%d\":\"%d\",\"PicWidth%d\":\"%d\",\"PicHeight%d\":\"%d\""
-                             ",\"BitrateCtrl%d\":\"%d\",\"Quality%d\":\"%d\",\"FPS%d\":\"%d\",\"BitRateAverage%d\":\"%d\",\"BitRateUp%d\":\"%d\""
-                             ",\"BitRateDown%d\":\"%d\",\"Gop%d\":\"%d\",\"Rotate%d\":\"%d\",\"Flag%d\":\"%d\"",                                                               \
-                             i, SysEncodeCfg[i].s_VideoId, i,SysEncodeCfg[i].s_StreamType,i, SysEncodeCfg[i].s_Compression, i, SysEncodeCfg[i].s_PicWidth,     \
-                             i,SysEncodeCfg[i].s_PicHeight,i ,SysEncodeCfg[i].s_BitrateCtrl, i, SysEncodeCfg[i].s_Quality, i, SysEncodeCfg[i].s_FPS,                       \
-                             i, SysEncodeCfg[i].s_BitRateAverage, i, SysEncodeCfg[i].s_BitRateUp, i, SysEncodeCfg[i].s_BitRateDown,                                            \
-                             i, SysEncodeCfg[i].s_Gop, i, SysEncodeCfg[i].s_Rotate, i, SysEncodeCfg[i].s_Flag);
+                              ",\"BitrateCtrl%d\":\"%d\",\"Quality%d\":\"%d\",\"FPS%d\":\"%d\",\"BitRateAverage%d\":\"%d\",\"BitRateUp%d\":\"%d\""
+                              ",\"BitRateDown%d\":\"%d\",\"Gop%d\":\"%d\",\"Rotate%d\":\"%d\",\"Flag%d\":\"%d\"",                                                               \
+                              i, SysEncodeCfg[i].s_VideoId, i,SysEncodeCfg[i].s_StreamType,i, SysEncodeCfg[i].s_Compression, i, SysEncodeCfg[i].s_PicWidth,     \
+                              i,SysEncodeCfg[i].s_PicHeight,i ,SysEncodeCfg[i].s_BitrateCtrl, i, SysEncodeCfg[i].s_Quality, i, SysEncodeCfg[i].s_FPS,                       \
+                              i, SysEncodeCfg[i].s_BitRateAverage, i, SysEncodeCfg[i].s_BitRateUp, i, SysEncodeCfg[i].s_BitRateDown,                                            \
+                              i, SysEncodeCfg[i].s_Gop, i, SysEncodeCfg[i].s_Rotate, i, SysEncodeCfg[i].s_Flag);
         }
 
         fprintf(stdout, RetFormat, Cmd, RetCode, RspEncodeCfgNum, TmpBuf);
@@ -1939,12 +1938,12 @@ GMI_RESULT CgiGetCapabilities(const char_t *FncCmd)
         SysPkgXml SysXml;
         memset(&SysXml, 0, sizeof(SysPkgXml));
 
-	XmlBuf = (char_t *)malloc(MAX_XML_BUFFER_LENTH);
-	if(NULL == XmlBuf)
-	{      
-                XmlBuf = NULL;
-		RetCode = RETCODE_ERROR;
-		break;
+        XmlBuf = (char_t *)malloc(MAX_XML_BUFFER_LENTH);
+        if(NULL == XmlBuf)
+        {
+            XmlBuf = NULL;
+            RetCode = RETCODE_ERROR;
+            break;
         }
         memset(XmlBuf, 0, sizeof(XmlBuf));
 
@@ -1962,11 +1961,11 @@ GMI_RESULT CgiGetCapabilities(const char_t *FncCmd)
         char_t *XmlBufTmp = NULL;
         XmlBufTmp = (char_t *)malloc(MAX_XML_BUFFER_LENTH);
         if(NULL == XmlBufTmp)
-        {	   
+        {
             XmlBufTmp = NULL;
             RetCode = RETCODE_ERROR;
             free(XmlBuf);
-	    XmlBuf = NULL;
+            XmlBuf = NULL;
             break;
         }
 
@@ -1975,16 +1974,16 @@ GMI_RESULT CgiGetCapabilities(const char_t *FncCmd)
 
         const char_t SrcRpl[MIN_BUFFER_LENTH]="<";
         const char_t DstRpl[MIN_BUFFER_LENTH]="<;";
-       
+
         BufIn = (char_t *)malloc(MAX_XML_BUFFER_LENTH);
         if(NULL == BufIn)
-        {	  
+        {
             BufIn = NULL;
             RetCode = RETCODE_ERROR;
             free(XmlBuf);
-	    XmlBuf = NULL;
+            XmlBuf = NULL;
             free(XmlBufTmp);
-	    XmlBufTmp = NULL;
+            XmlBufTmp = NULL;
             break;
         }
         memset(BufIn, 0, sizeof(BufIn));
@@ -2000,15 +1999,15 @@ GMI_RESULT CgiGetCapabilities(const char_t *FncCmd)
 
         BufOut = (char_t *)malloc(MAX_XML_BUFFER_LENTH);
         if(NULL == BufOut)
-        {	  
+        {
             BufOut = NULL;
             RetCode = RETCODE_ERROR;
             free(XmlBuf);
-	    XmlBuf = NULL;
+            XmlBuf = NULL;
             free(XmlBufTmp);
-	    XmlBufTmp = NULL;
+            XmlBufTmp = NULL;
             free(BufIn);
-	    BufIn = NULL;
+            BufIn = NULL;
             break;
         }
 
@@ -2021,26 +2020,26 @@ GMI_RESULT CgiGetCapabilities(const char_t *FncCmd)
 
         RetFormat = "%s={\"RetCode\":\"%d\",\"SessionId\":\"%d\",\"XmlBuf\":\"%s\"}";
         fprintf(stdout, RetFormat, Cmd, RetCode, *SessionId, BufOut);
-        
+
         if(NULL != XmlBuf)
         {
-             free(XmlBuf);
-	     XmlBuf = NULL;
+            free(XmlBuf);
+            XmlBuf = NULL;
         }
         if(NULL != XmlBufTmp)
         {
-             free(XmlBufTmp);
-	     XmlBufTmp = NULL;
+            free(XmlBufTmp);
+            XmlBufTmp = NULL;
         }
         if(NULL != BufIn)
         {
-             free(BufIn);
-	     BufIn = NULL;
+            free(BufIn);
+            BufIn = NULL;
         }
         if(NULL != BufOut)
         {
-             free(BufOut);
-	     BufOut = NULL;
+            free(BufOut);
+            BufOut = NULL;
         }
 
         return GMI_SUCCESS;
@@ -2256,7 +2255,7 @@ GMI_RESULT CgiGetSystemAutoFocusIsValid(const char_t *FncCmd)
     const char_t *RetFormat;
     char_t  Cmd[CMD_BUFFER_LENTH];
     int32_t RetCode = RETCODE_OK;
-    GMI_RESULT Result = GMI_FAIL;
+//    GMI_RESULT Result = GMI_FAIL;
 
     sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
 
@@ -2336,24 +2335,24 @@ GMI_RESULT CgiGetShowInfo(const char_t *FncCmd)
 
         RetFormat = "%s={\"RetCode\":\"%d\",\"RspShowNum\":\"%u\"%s}";
 
-        int32_t Length = 0, i = 0;
+        uint32_t Length = 0, i = 0;
         char_t TmpBuf[4096];
         memset(TmpBuf, 0, 4096);
         for (i=0; i < RspShowNum; i++)
         {
             Length += sprintf(TmpBuf+Length,",\"Flag%d\":\"%d\",\"TimeEnable%d\":\"%d\",\"Language%d\":\"%d\""
-                             ",\"TimeDisplayX%d\":\"%d\",\"TimeDisplayY%d\":\"%d\",\"DateStyle%d\":\"%d\",\"TimeStyle%d\":\"%d\",\"TimeFontColor%d\":\"%d\""
-                             ",\"TimeFontSize%d\":\"%d\",\"TimeFontBlod%d\":\"%d\",\"TimeFontRotate%d\":\"%d\",\"TimeFontItalic%d\":\"%d\",\"FontOutline%d\":\"%d\""
-                             ",\"ChannelEnable%d\":\"%d\",\"ChannelDisplayX%d\":\"%d\",\"ChannelDisplayY%d\":\"%d\",\"ChannelFontColor%d\":\"%d\",\"ChannelFontSize%d\":\"%d\""
-                             ",\"ChannelFontBlod%d\":\"%d\",\"ChannelFontRotate%d\":\"%d\",\"ChannelFontItalic%d\":\"%d\",\"ChannelOutline%d\":\"%d\",\"ChannelName%d\":\"%s\""
-                             ,i , SysShowCfg[i].s_Flag, i , SysShowCfg[i].s_TimeInfo.s_Enable , i ,SysShowCfg[i].s_TimeInfo.s_Language                                                          \
-                             ,i , SysShowCfg[i].s_TimeInfo.s_DisplayX, i, SysShowCfg[i].s_TimeInfo.s_DisplayY, i, SysShowCfg[i].s_TimeInfo.s_DateStyle                                 \
-                             ,i , SysShowCfg[i].s_TimeInfo.s_TimeStyle ,i , SysShowCfg[i].s_TimeInfo.s_FontColor, i, SysShowCfg[i].s_TimeInfo.s_FontSize                              \
-                             ,i , SysShowCfg[i].s_TimeInfo.s_FontBlod, i, SysShowCfg[i].s_TimeInfo.s_FontRotate,i , SysShowCfg[i].s_TimeInfo.s_FontItalic                             \
-                             ,i , SysShowCfg[i].s_TimeInfo.s_FontOutline, i, SysShowCfg[i].s_ChannelInfo.s_Enable, i,SysShowCfg[i].s_ChannelInfo.s_DisplayX                        \
-                             ,i , SysShowCfg[i].s_ChannelInfo.s_DisplayY, i, SysShowCfg[i].s_ChannelInfo.s_FontColor, i, SysShowCfg[i].s_ChannelInfo.s_FontSize                  \
-                             ,i , SysShowCfg[i].s_ChannelInfo.s_FontBlod, i, SysShowCfg[i].s_ChannelInfo.s_FontRotate, i, SysShowCfg[i].s_ChannelInfo.s_FontItalic               \
-                             ,i , SysShowCfg[i].s_ChannelInfo.s_FontOutline , i, SysShowCfg[i].s_ChannelInfo.s_ChannelName);
+                              ",\"TimeDisplayX%d\":\"%d\",\"TimeDisplayY%d\":\"%d\",\"DateStyle%d\":\"%d\",\"TimeStyle%d\":\"%d\",\"TimeFontColor%d\":\"%d\""
+                              ",\"TimeFontSize%d\":\"%d\",\"TimeFontBlod%d\":\"%d\",\"TimeFontRotate%d\":\"%d\",\"TimeFontItalic%d\":\"%d\",\"FontOutline%d\":\"%d\""
+                              ",\"ChannelEnable%d\":\"%d\",\"ChannelDisplayX%d\":\"%d\",\"ChannelDisplayY%d\":\"%d\",\"ChannelFontColor%d\":\"%d\",\"ChannelFontSize%d\":\"%d\""
+                              ",\"ChannelFontBlod%d\":\"%d\",\"ChannelFontRotate%d\":\"%d\",\"ChannelFontItalic%d\":\"%d\",\"ChannelOutline%d\":\"%d\",\"ChannelName%d\":\"%s\""
+                              ,i , SysShowCfg[i].s_Flag, i , SysShowCfg[i].s_TimeInfo.s_Enable , i ,SysShowCfg[i].s_TimeInfo.s_Language                                                          \
+                              ,i , SysShowCfg[i].s_TimeInfo.s_DisplayX, i, SysShowCfg[i].s_TimeInfo.s_DisplayY, i, SysShowCfg[i].s_TimeInfo.s_DateStyle                                 \
+                              ,i , SysShowCfg[i].s_TimeInfo.s_TimeStyle ,i , SysShowCfg[i].s_TimeInfo.s_FontColor, i, SysShowCfg[i].s_TimeInfo.s_FontSize                              \
+                              ,i , SysShowCfg[i].s_TimeInfo.s_FontBlod, i, SysShowCfg[i].s_TimeInfo.s_FontRotate,i , SysShowCfg[i].s_TimeInfo.s_FontItalic                             \
+                              ,i , SysShowCfg[i].s_TimeInfo.s_FontOutline, i, SysShowCfg[i].s_ChannelInfo.s_Enable, i,SysShowCfg[i].s_ChannelInfo.s_DisplayX                        \
+                              ,i , SysShowCfg[i].s_ChannelInfo.s_DisplayY, i, SysShowCfg[i].s_ChannelInfo.s_FontColor, i, SysShowCfg[i].s_ChannelInfo.s_FontSize                  \
+                              ,i , SysShowCfg[i].s_ChannelInfo.s_FontBlod, i, SysShowCfg[i].s_ChannelInfo.s_FontRotate, i, SysShowCfg[i].s_ChannelInfo.s_FontItalic               \
+                              ,i , SysShowCfg[i].s_ChannelInfo.s_FontOutline , i, SysShowCfg[i].s_ChannelInfo.s_ChannelName);
         }
 
         fprintf(stdout, RetFormat, Cmd, RetCode, RspShowNum, TmpBuf);
@@ -2378,7 +2377,7 @@ GMI_RESULT CgiSetShowInfo(const char_t *FncCmd)
     const char_t *AuthValue = WEB_GET_VAR("AuthValue");
     const char_t *Flag = WEB_GET_VAR("Flag");
     const char_t *TimeEnable = WEB_GET_VAR("TimeEnable");
-    const char_t *Language = WEB_GET_VAR("Language");
+    //const char_t *Language = WEB_GET_VAR("Language");
     const char_t *TimeDisplayX = WEB_GET_VAR("TimeDisplayX");
     const char_t *TimeDisplayY = WEB_GET_VAR("TimeDisplayY");
     const char_t *DateStyle = WEB_GET_VAR("DateStyle");
@@ -2386,7 +2385,7 @@ GMI_RESULT CgiSetShowInfo(const char_t *FncCmd)
     const char_t *TimeFontColor = WEB_GET_VAR("TimeFontColor");
     const char_t *TimeFontSize = WEB_GET_VAR("TimeFontSize");
     const char_t *TimeFontBlod = WEB_GET_VAR("TimeFontBlod");
-    const char_t *TimeFontRotate = WEB_GET_VAR("TimeFontRotate");
+    //const char_t *TimeFontRotate = WEB_GET_VAR("TimeFontRotate");
     const char_t *TimeFontItalic = WEB_GET_VAR("TimeFontItalic");
     const char_t *FontOutline = WEB_GET_VAR("FontOutline");
     const char_t *ChannelEnable = WEB_GET_VAR("ChannelEnable");
@@ -2395,7 +2394,7 @@ GMI_RESULT CgiSetShowInfo(const char_t *FncCmd)
     const char_t *ChannelFontColor = WEB_GET_VAR("ChannelFontColor");
     const char_t *ChannelFontSize = WEB_GET_VAR("ChannelFontSize");
     const char_t *ChannelFontBlod = WEB_GET_VAR("ChannelFontBlod");
-    const char_t *ChannelFontRotate = WEB_GET_VAR("ChannelFontRotate");
+    //const char_t *ChannelFontRotate = WEB_GET_VAR("ChannelFontRotate");
     const char_t *ChannelFontItalic = WEB_GET_VAR("ChannelFontItalic");
     const char_t *ChannelOutline = WEB_GET_VAR("ChannelOutline");
     const char_t *ChannelName = WEB_GET_VAR("ChannelName");
@@ -2413,7 +2412,7 @@ GMI_RESULT CgiSetShowInfo(const char_t *FncCmd)
             RetCode = RETCODE_ERROR;
             break;
         }
-	
+
         SysPkgShowCfg SysShowCfg;
         memset(&SysShowCfg, 0, sizeof(SysPkgShowCfg));
         SysShowCfg.s_VideoId = 1;
@@ -2973,7 +2972,7 @@ GMI_RESULT CgiGetVideoEncStreamCombine(const char_t *FncCmd)
     char_t  Cmd[CMD_BUFFER_LENTH];
     int32_t RetCode = RETCODE_OK;
     GMI_RESULT Result = GMI_FAIL;
-    
+
     sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
 
     do
@@ -2983,7 +2982,7 @@ GMI_RESULT CgiGetVideoEncStreamCombine(const char_t *FncCmd)
             RetCode = RETCODE_ERROR;
             break;
         }
-        
+
         SysPkgEncStreamCombine SysEncStreamCombinePtrl;
         memset(&SysEncStreamCombinePtrl, 0 ,sizeof(SysPkgEncStreamCombine));
         Result =  SysGetVideoEncStreamCombine(atoi(SessionId), atoi(AuthValue), &SysEncStreamCombinePtrl);
@@ -2992,13 +2991,13 @@ GMI_RESULT CgiGetVideoEncStreamCombine(const char_t *FncCmd)
             RetCode = RETCODE_ERROR;
             break;
         }
-        
+
         RetFormat = "%s={\"RetCode\":\"%d\",\"EnableStreamNum\":\"%d\",\"StreamCombineNo\":\"%d\"}";
-        
+
         fprintf(stdout, RetFormat, Cmd, RetCode, SysEncStreamCombinePtrl.s_EnableStreamNum, SysEncStreamCombinePtrl.s_StreamCombineNo);
-        return GMI_SUCCESS;  
+        return GMI_SUCCESS;
     } while(0);
-    
+
     RetFormat = "%s={\"RetCode\":\"%d\"}";
     fprintf(stdout, RetFormat, Cmd, RetCode);
     return GMI_FAIL;
@@ -3015,7 +3014,7 @@ GMI_RESULT CgiSetVideoEncStreamCombine(const char_t *FncCmd)
     char_t  Cmd[CMD_BUFFER_LENTH];
     int32_t RetCode = RETCODE_OK;
     GMI_RESULT Result = GMI_FAIL;
-    
+
     sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
 
     do
@@ -3025,7 +3024,7 @@ GMI_RESULT CgiSetVideoEncStreamCombine(const char_t *FncCmd)
             RetCode = RETCODE_ERROR;
             break;
         }
-        
+
         SysPkgEncStreamCombine SysEncStreamCombinePtrl;
         Result =  SysGetVideoEncStreamCombine(atoi(SessionId), atoi(AuthValue), &SysEncStreamCombinePtrl);
         if (FAILED(Result))
@@ -3033,29 +3032,29 @@ GMI_RESULT CgiSetVideoEncStreamCombine(const char_t *FncCmd)
             RetCode = RETCODE_ERROR;
             break;
         }
-        
+
         //VideoId defoult value 1
         SysEncStreamCombinePtrl.s_VideoId = 1;
-        
+
         if (NULL != EnableStreamNum)
             SysEncStreamCombinePtrl.s_EnableStreamNum = atoi(EnableStreamNum);
         if (NULL != StreamCombineNo)
             SysEncStreamCombinePtrl.s_StreamCombineNo = atoi(StreamCombineNo);
-        
+
         Result =  SysSetVideoEncStreamCombine(atoi(SessionId), atoi(AuthValue), &SysEncStreamCombinePtrl);
         if (FAILED(Result))
         {
             RetCode = RETCODE_ERROR;
             break;
         }
-        
+
         RetFormat = "%s={\"RetCode\":\"%d\"}";
-        
+
         fprintf(stdout, RetFormat, Cmd, RetCode);
         return GMI_SUCCESS;
-        
+
     } while(0);
-    
+
     RetFormat = "%s={\"RetCode\":\"%d\"}";
     fprintf(stdout, RetFormat, Cmd, RetCode);
     return GMI_FAIL;
@@ -3071,7 +3070,7 @@ GMI_RESULT CgiGetAudioEncCfg(const char_t *FncCmd)
     char_t  Cmd[CMD_BUFFER_LENTH];
     int32_t RetCode = RETCODE_OK;
     GMI_RESULT Result = GMI_FAIL;
-    
+
     sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
 
     do
@@ -3081,23 +3080,23 @@ GMI_RESULT CgiGetAudioEncCfg(const char_t *FncCmd)
             RetCode = RETCODE_ERROR;
             break;
         }
-        
+
         uint32_t AudioId = 0;
-	uint8_t EncodeType = 0;
+        uint8_t EncodeType = 0;
         uint16_t CapVolume = 0, PlayVolume = 0;
-	Result =  SysGetAudioEncCfg(atoi(SessionId), atoi(AuthValue), &AudioId, &EncodeType, &CapVolume, &PlayVolume);
+        Result =  SysGetAudioEncCfg(atoi(SessionId), atoi(AuthValue), &AudioId, &EncodeType, &CapVolume, &PlayVolume);
         if (FAILED(Result))
         {
             RetCode = RETCODE_ERROR;
             break;
         }
-        
+
         RetFormat = "%s={\"RetCode\":\"%d\",\"EncodeType\":\"%u\",\"CapVolume\":\"%u\",\"PlayVolume\":\"%u\"}";
-        
+
         fprintf(stdout, RetFormat, Cmd, RetCode, EncodeType, CapVolume, PlayVolume);
-        return GMI_SUCCESS;  
+        return GMI_SUCCESS;
     } while(0);
-    
+
     RetFormat = "%s={\"RetCode\":\"%d\"}";
     fprintf(stdout, RetFormat, Cmd, RetCode);
     return GMI_FAIL;
@@ -3106,53 +3105,53 @@ GMI_RESULT CgiGetAudioEncCfg(const char_t *FncCmd)
 
 GMI_RESULT CgiSetAudioEncCfg(const char_t *FncCmd)
 {
-	char_t *SessionId = WEB_GET_VAR("SessionId");
-	const char_t *AuthValue = WEB_GET_VAR("AuthValue");
-        const char_t *EncodeType = WEB_GET_VAR("EncodeType");
-        const char_t *CapVolume = WEB_GET_VAR("CapVolume");
-        const char_t *PlayVolume = WEB_GET_VAR("PlayVolume");
-	const char_t *RetFormat;
-	char_t	Cmd[CMD_BUFFER_LENTH];
-	int32_t RetCode = RETCODE_OK;
-	GMI_RESULT Result = GMI_FAIL;
-	
-	sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *EncodeType = WEB_GET_VAR("EncodeType");
+    const char_t *CapVolume = WEB_GET_VAR("CapVolume");
+    const char_t *PlayVolume = WEB_GET_VAR("PlayVolume");
+    const char_t *RetFormat;
+    char_t	Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
 
-	do
-	{
-		if (NULL == SessionId || NULL == AuthValue)
-		{
-			RetCode = RETCODE_ERROR;
-			break;
-		}
-		
-		uint8_t EncodeTypeValue = 0;
-		uint16_t CapVolumeValue = 0;
-		uint16_t PlayVolumeValue = 0;
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
 
-                if (NULL != EncodeType)
-                    EncodeTypeValue = atoi(EncodeType);
-                if (NULL != CapVolume)
-                    CapVolumeValue = atoi(CapVolume);
-                if (NULL != EncodeType)
-                    PlayVolumeValue = atoi(PlayVolume);
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
 
-	        Result =  SysSetAudioEncCfg(atoi(SessionId), atoi(AuthValue), 1, EncodeTypeValue, CapVolumeValue, PlayVolumeValue);
-		if (FAILED(Result))
-		{
-			RetCode = RETCODE_ERROR;
-			break;
-		}
-		
-		RetFormat = "%s={\"RetCode\":\"%d\"}";
-		
-		fprintf(stdout, RetFormat, Cmd, RetCode);
-		return GMI_SUCCESS;  
-	} while(0);
-	
-	RetFormat = "%s={\"RetCode\":\"%d\"}";
-	fprintf(stdout, RetFormat, Cmd, RetCode);
-	return GMI_FAIL;
+        uint8_t EncodeTypeValue = 0;
+        uint16_t CapVolumeValue = 0;
+        uint16_t PlayVolumeValue = 0;
+
+        if (NULL != EncodeType)
+            EncodeTypeValue = atoi(EncodeType);
+        if (NULL != CapVolume)
+            CapVolumeValue = atoi(CapVolume);
+        if (NULL != EncodeType)
+            PlayVolumeValue = atoi(PlayVolume);
+
+        Result =  SysSetAudioEncCfg(atoi(SessionId), atoi(AuthValue), 1, EncodeTypeValue, CapVolumeValue, PlayVolumeValue);
+        if (FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        RetFormat = "%s={\"RetCode\":\"%d\"}";
+
+        fprintf(stdout, RetFormat, Cmd, RetCode);
+        return GMI_SUCCESS;
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
 
 }
 
@@ -3164,7 +3163,7 @@ GMI_RESULT CgiGetUpdateCfg(const char_t *FncCmd)
     char_t  Cmd[CMD_BUFFER_LENTH];
     int32_t RetCode = RETCODE_OK;
     GMI_RESULT Result = GMI_FAIL;
-    
+
     sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
 
     do
@@ -3174,21 +3173,21 @@ GMI_RESULT CgiGetUpdateCfg(const char_t *FncCmd)
             RetCode = RETCODE_ERROR;
             break;
         }
-        
+
         int32_t  UpgradePort = 0;
-	Result =  GMI_GetUpdatePort(&UpgradePort);
+        Result =  GMI_GetUpdatePort(&UpgradePort);
         if (FAILED(Result))
         {
             RetCode = RETCODE_ERROR;
             break;
         }
-        
+
         RetFormat = "%s={\"RetCode\":\"%d\",\"UpgradePort\":\"%d\"}";
-        
+
         fprintf(stdout, RetFormat, Cmd, RetCode, UpgradePort);
-        return GMI_SUCCESS;  
+        return GMI_SUCCESS;
     } while(0);
-    
+
     RetFormat = "%s={\"RetCode\":\"%d\"}";
     fprintf(stdout, RetFormat, Cmd, RetCode);
     return GMI_FAIL;
@@ -3203,7 +3202,7 @@ GMI_RESULT CgiSystemRebootCmd(const char_t *FncCmd)
     char_t  Cmd[CMD_BUFFER_LENTH];
     int32_t RetCode = RETCODE_OK;
     GMI_RESULT Result = GMI_FAIL;
-    
+
     sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
 
     DaemonData_t DaemonData;
@@ -3218,6 +3217,7 @@ GMI_RESULT CgiSystemRebootCmd(const char_t *FncCmd)
         GMI_DaemonUnInit(&DaemonData);
         return GMI_FAIL;
     }
+
     do
     {
         if  (NULL == SessionId
@@ -3227,7 +3227,7 @@ GMI_RESULT CgiSystemRebootCmd(const char_t *FncCmd)
             CGI_ERROR("CgiSystemRebootCmd	Error \n");
             break;
         }
-        
+
         Result = GMI_SystemReboot(&DaemonData, GMI_MONITOR_TO_SDK_PORT_DEFAULT);
         if (FAILED(Result))
         {
@@ -3235,16 +3235,23 @@ GMI_RESULT CgiSystemRebootCmd(const char_t *FncCmd)
             CGI_ERROR("Call GMI_SystemReboot Error Result = %ld\n",Result);
             break;
         }
-        
-        fprintf(stdout, RetFormat, FncCmd, CONTENT_TYPE_JSON, RetCode);
+
+        RetFormat = "%s={\"RetCode\":\"%d\"}";
+
+  //      fprintf(stdout, RetFormat, FncCmd, CONTENT_TYPE_JSON, RetCode);
+
+        RetFormat = "%s={\"RetCode\":\"%d\"}";
+
+        fprintf(stdout, RetFormat, Cmd, RetCode);
+
         GMI_DaemonUnInit(&DaemonData);
         return GMI_SUCCESS;
     } while(0);
-    
+
     RetFormat = "cgiFncCmd=%s&cgiContentType=%s&Content={\"RetCode\":\"%d\"}";
     fprintf(stdout, RetFormat, FncCmd, CONTENT_TYPE_JSON, RetCode);
     GMI_DaemonUnInit(&DaemonData);
-    
+
     return GMI_FAIL;
 }
 
@@ -3266,18 +3273,18 @@ GMI_RESULT CgiFactoryDefault(const char_t *FncCmd)
             RetCode = RETCODE_ERROR;
             break;
         }
-	Result = FactorySimpleDefaultAllLocal(atoi(SessionId), atoi(AuthValue));
-	if (FAILED(Result))
-	{
-		RetCode = RETCODE_ERROR;
-		break;
-	}
+        Result = FactorySimpleDefaultAllLocal(atoi(SessionId), atoi(AuthValue));
+        if (FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
 
         RetFormat = "%s={\"RetCode\":\"%d\"}";
         fprintf(stdout, RetFormat, Cmd, RetCode);
-        return GMI_SUCCESS;  
+        return GMI_SUCCESS;
     } while(0);
-    
+
     RetFormat = "%s={\"RetCode\":\"%d\"}";
     fprintf(stdout, RetFormat, Cmd, RetCode);
     return GMI_FAIL;
@@ -3306,15 +3313,15 @@ GMI_RESULT CgiFactoryDefaultAll(const char_t *FncCmd)
         Result = FactoryDefaultAllLocal(atoi(SessionId), atoi(AuthValue));
         if (FAILED(Result))
         {
-         	RetCode = RETCODE_ERROR;
-         	break;
+            RetCode = RETCODE_ERROR;
+            break;
         }
 
         RetFormat = "%s={\"RetCode\":\"%d\"}";
         fprintf(stdout, RetFormat, Cmd, RetCode);
-        return GMI_SUCCESS;  
+        return GMI_SUCCESS;
     } while(0);
-    
+
     RetFormat = "%s={\"RetCode\":\"%d\"}";
     fprintf(stdout, RetFormat, Cmd, RetCode);
     return GMI_FAIL;
@@ -3335,7 +3342,7 @@ GMI_RESULT CgiSysSearchPtzPresetInfo(const char_t *FncCmd)
     sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
 
     do
-   {
+    {
         if (NULL == SessionId || NULL == AuthValue || NULL == PresetIndex)
         {
             RetCode = RETCODE_ERROR;
@@ -3343,21 +3350,21 @@ GMI_RESULT CgiSysSearchPtzPresetInfo(const char_t *FncCmd)
         }
 
         boolean_t Setted = false;
-	char_t PresetName[256];
+        char_t PresetName[256];
         memset(PresetName, 0, sizeof(PresetName));
         Result = SysSearchPtzPresetInfo(atoi(SessionId), atoi(AuthValue), atoi(PresetIndex), &Setted, PresetName);
         if (FAILED(Result))
         {
-        	RetCode = RETCODE_ERROR;
-        	break;
+            RetCode = RETCODE_ERROR;
+            break;
         }
-        	
-    	RetFormat = "%s={\"RetCode\":\"%d\",\"PresetIndex\":\"%d\",\"Setted\":\"%u\",\"PresetName\":\"%s\"}";
 
-    	fprintf(stdout, RetFormat, Cmd, RetCode, atoi(PresetIndex), Setted, PresetName);
-    	return GMI_SUCCESS;  
+        RetFormat = "%s={\"RetCode\":\"%d\",\"PresetIndex\":\"%d\",\"Setted\":\"%u\",\"PresetName\":\"%s\"}";
 
-    }while(0);
+        fprintf(stdout, RetFormat, Cmd, RetCode, atoi(PresetIndex), Setted, PresetName);
+        return GMI_SUCCESS;
+
+    } while(0);
 
     RetFormat = "%s={\"RetCode\":\"%d\"}";
     fprintf(stdout, RetFormat, Cmd, RetCode);
@@ -3367,44 +3374,538 @@ GMI_RESULT CgiSysSearchPtzPresetInfo(const char_t *FncCmd)
 
 GMI_RESULT CgiSysGetDeviceStartedTime(const char_t *FncCmd)
 {
-	 char_t *SessionId = WEB_GET_VAR("SessionId");
-	 const char_t *AuthValue = WEB_GET_VAR("AuthValue");
-	 const char_t *RetFormat;
-	 char_t  Cmd[CMD_BUFFER_LENTH];
-	 int32_t RetCode = RETCODE_OK;
-	 GMI_RESULT Result = GMI_FAIL;
-	
-	 sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
-	
-	 do
-	{
-		 if (NULL == SessionId || NULL == AuthValue)
-		 {
-			 RetCode = RETCODE_ERROR;
-			 break;
-		 }
-	
-		 
-		 SysPkgSysTime DeviceStartedTimePtr;
-		 memset(&DeviceStartedTimePtr, 0, sizeof(SysPkgSysTime));
-		 Result = SysGetDeviceStartedTime(&DeviceStartedTimePtr);
-		 if (FAILED(Result))
-		 {
-			 RetCode = RETCODE_ERROR;
-			 break;
-		 }
-			 
-		 RetFormat = "%s={\"RetCode\":\"%d\",\"Year\":\"%d\",\"Month\":\"%d\",\"Day\":\"%d\",\"Hour\":\"%d\",\"Minute\":\"%d\",\"Second\":\"%d\"}";
-	
-		 fprintf(stdout, RetFormat, Cmd, RetCode, DeviceStartedTimePtr.s_Year, DeviceStartedTimePtr.s_Month, DeviceStartedTimePtr.s_Day, DeviceStartedTimePtr.s_Hour, DeviceStartedTimePtr.s_Minute, DeviceStartedTimePtr.s_Second);
-		 return GMI_SUCCESS;  
-	
-	 }while(0);
-	
-	 RetFormat = "%s={\"RetCode\":\"%d\"}";
-	 fprintf(stdout, RetFormat, Cmd, RetCode);
-	 return GMI_FAIL;
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+
+        SysPkgSysTime DeviceStartedTimePtr;
+        memset(&DeviceStartedTimePtr, 0, sizeof(SysPkgSysTime));
+        Result = SysGetDeviceStartedTime(&DeviceStartedTimePtr);
+        if (FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        RetFormat = "%s={\"RetCode\":\"%d\",\"Year\":\"%d\",\"Month\":\"%d\",\"Day\":\"%d\",\"Hour\":\"%d\",\"Minute\":\"%d\",\"Second\":\"%d\"}";
+
+        fprintf(stdout, RetFormat, Cmd, RetCode, DeviceStartedTimePtr.s_Year, DeviceStartedTimePtr.s_Month, DeviceStartedTimePtr.s_Day, DeviceStartedTimePtr.s_Hour, DeviceStartedTimePtr.s_Minute, DeviceStartedTimePtr.s_Second);
+        return GMI_SUCCESS;
+
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
 
 }
 
 
+
+GMI_RESULT CgiConfigToolGetDeviceInfo(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        SysPkgDeviceInfo SysDeviceInfo;
+        memset(&SysDeviceInfo, 0, sizeof(SysPkgDeviceInfo));
+        //Call get System DeviceInfo api
+        Result = SysGetDeviceInfo(atoi(SessionId), atoi(AuthValue), &SysDeviceInfo);
+        if (FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        SysPkgIpInfo SysIpInfo;
+        memset(&SysIpInfo, 0,sizeof(SysPkgIpInfo));
+        Result = SysGetDeviceIP(atoi(SessionId), atoi(AuthValue), &SysIpInfo);
+        if (FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        RetFormat = "%s={\"RetCode\":\"%d\",\"DeviceFwVer\":\"%s\",\"DeviceSerialNum\":\"%s\",\"DeviceHwVer\":\"%s\",\"HwAddress\":\"%s\"}";
+        fprintf(stdout, RetFormat, Cmd, RetCode, SysDeviceInfo.s_DeviceFwVer, SysDeviceInfo.s_DeviceSerialNum, SysDeviceInfo.s_DeviceHwVer, SysIpInfo.s_HwAddress);
+        return GMI_SUCCESS;
+
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+}
+
+GMI_RESULT CgiConfigToolSetDeviceInfo(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *DeviceSerialNum = WEB_GET_VAR("DeviceSerialNum");
+    const char_t *DeviceHwVer = WEB_GET_VAR("DeviceHwVer");
+//    const char_t *HwAddress = WEB_GET_VAR("HwAddress");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        SysPkgDeviceInfo SysDeviceInfo;
+        memset(&SysDeviceInfo, 0, sizeof(SysPkgDeviceInfo));
+        //Call get System DeviceInfo api
+        Result = SysGetDeviceInfo(atoi(SessionId), atoi(AuthValue), &SysDeviceInfo);
+        if (FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        if (NULL != DeviceSerialNum)
+            strcpy(SysDeviceInfo.s_DeviceSerialNum, DeviceSerialNum);
+        if (NULL != DeviceHwVer)
+            strcpy(SysDeviceInfo.s_DeviceHwVer, DeviceHwVer);
+
+        Result = SysSetDeviceInfo(atoi(SessionId), atoi(AuthValue), &SysDeviceInfo);
+        if (FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        RetFormat = "%s={\"RetCode\":\"%d\"}";
+        fprintf(stdout, RetFormat, Cmd, RetCode);
+        return GMI_SUCCESS;
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+}
+
+GMI_RESULT CgiConfigToolSetIrCutStatus(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+//    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+
+        RetFormat = "%s={\"RetCode\":\"%d\"}";
+        fprintf(stdout, RetFormat, Cmd, RetCode);
+        return GMI_SUCCESS;
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+}
+
+GMI_RESULT CgiConfigToolGetRtcTime(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+        SysPkgDateTimeType  SysDateTimeType;
+        memset(&SysDateTimeType, 0, sizeof(SysPkgDateTimeType));
+
+        SysPkgSysTime SysSysTime;
+        memset(&SysSysTime, 0, sizeof(SysPkgSysTime));
+
+        SysPkgTimeZone SysTimeZone;
+        memset(&SysTimeZone, 0, sizeof(SysPkgTimeZone));
+
+        SysPkgNtpServerInfo SysNtpServerInfo;
+        memset(&SysNtpServerInfo, 0, sizeof(SysPkgNtpServerInfo));
+
+        Result = SysGetTime(atoi(SessionId), atoi(AuthValue), &SysDateTimeType, &SysSysTime, &SysTimeZone, &SysNtpServerInfo);
+        if (FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        RetFormat = "%s={\"RetCode\":\"%d\",\"Hour\":\"%d\",\"Minute\":\"%d\",\"Second\":\"%d\"}";
+        fprintf(stdout, RetFormat, Cmd, RetCode, SysSysTime.s_Hour, SysSysTime.s_Minute, SysSysTime.s_Second);
+        return GMI_SUCCESS;
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+}
+
+GMI_RESULT CgiConfigToolTestWatchdog(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        Result = GMI_ConfigToolWatchDogTest(atoi(SessionId), atoi(AuthValue));
+        if (FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        RetFormat = "%s={\"RetCode\":\"%d\"}";
+        fprintf(stdout, RetFormat, Cmd, RetCode);
+        return GMI_SUCCESS;
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+}
+
+GMI_RESULT CgiConfigToolOpenDcIris(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        Result = GMI_ConfigToolOpenDcIris(atoi(SessionId), atoi(AuthValue));
+        if(FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        RetFormat = "%s={\"RetCode\":\"%d\"}";
+        fprintf(stdout, RetFormat, Cmd, RetCode);
+        return GMI_SUCCESS;
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+}
+
+GMI_RESULT CgiConfigToolCloseDcIris(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t	Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        Result = GMI_ConfigToolCloseDcIris(atoi(SessionId), atoi(AuthValue));
+        if(FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        RetFormat = "%s={\"RetCode\":\"%d\"}";
+        fprintf(stdout, RetFormat, Cmd, RetCode);
+        return GMI_SUCCESS;
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+}
+
+
+GMI_RESULT CgiConfigToolTestAFConfigFile(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        int32_t FileFlags = -1;
+        Result = GMI_ConfigToolAfConfigDetect(atoi(SessionId), atoi(AuthValue), &FileFlags);
+        if (FAILED(Result))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        RetFormat = "%s={\"RetCode\":\"%d\",\"FileFlags\":\"%d\"}";
+        fprintf(stdout, RetFormat, Cmd, RetCode, FileFlags);
+        return GMI_SUCCESS;
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+}
+
+
+GMI_RESULT CgiConfigToolGetMac(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t	Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+    
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+    
+    do
+    {
+    	if (NULL == SessionId || NULL == AuthValue)
+    	{
+    		RetCode = RETCODE_ERROR;
+    		break;
+    	}
+    
+	SysPkgIpInfo SysIpInfo;
+	memset(&SysIpInfo, 0,sizeof(SysPkgIpInfo));
+	Result = SysGetDeviceIP(atoi(SessionId), atoi(AuthValue), &SysIpInfo);
+	if (FAILED(Result))
+	{
+		RetCode = RETCODE_ERROR;
+		break;
+	}
+    
+    	RetFormat = "%s={\"RetCode\":\"%d\",\"HwAddress\":\"%s\"}";
+    	fprintf(stdout, RetFormat, Cmd, RetCode,SysIpInfo.s_HwAddress);
+    	return GMI_SUCCESS;
+    } while(0);
+    
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+}
+
+GMI_RESULT CgiConfigToolSetMac(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *HwAddress = WEB_GET_VAR("HwAddress");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue || NULL==HwAddress)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+	if (NULL != HwAddress)
+        {		
+             Result = GMI_SetSystemNetworkMac(HwAddress);
+             if (FAILED(Result))
+             {
+                 RetCode = RETCODE_ERROR;
+                 break;
+             }
+         }
+
+
+	RetFormat = "%s={\"RetCode\":\"%d\"}";
+	
+	fprintf(stdout, RetFormat, Cmd, RetCode);
+	return GMI_SUCCESS;
+
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+}
+
+
+GMI_RESULT CgiConfigToolIrCutOpen(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+	Result =  GMI_ConfigToolIrCultOpen(atoi(SessionId), atoi(AuthValue));
+	if (FAILED(Result))
+	{
+		RetCode = RETCODE_ERROR;
+		break;
+	}
+	
+	RetFormat = "%s={\"RetCode\":\"%d\"}";
+	
+	fprintf(stdout, RetFormat, Cmd, RetCode);
+	return GMI_SUCCESS;
+
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+
+}
+
+GMI_RESULT CgiConfigToolIrCutClose(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+	Result =  GMI_ConfigToolIrCultClose(atoi(SessionId), atoi(AuthValue));
+	if (FAILED(Result))
+	{
+		RetCode = RETCODE_ERROR;
+		break;
+	}
+	
+	RetFormat = "%s={\"RetCode\":\"%d\"}";
+	
+	fprintf(stdout, RetFormat, Cmd, RetCode);
+	return GMI_SUCCESS;
+
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+}

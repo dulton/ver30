@@ -119,5 +119,18 @@ GMI_RESULT CgiSysSearchPtzPresetInfo(const char_t *FncCmd);
 
 GMI_RESULT CgiSysGetDeviceStartedTime(const char_t *FncCmd);
 
+//manufacture config tool api
+GMI_RESULT CgiConfigToolGetDeviceInfo(const char_t *FncCmd);
+GMI_RESULT CgiConfigToolSetDeviceInfo(const char_t *FncCmd);
+GMI_RESULT CgiConfigToolSetIrCutStatus(const char_t *FncCmd);
+GMI_RESULT CgiConfigToolGetRtcTime(const char_t *FncCmd);
+GMI_RESULT CgiConfigToolTestWatchdog(const char_t *FncCmd);
+GMI_RESULT CgiConfigToolOpenDcIris(const char_t *FncCmd);
+GMI_RESULT CgiConfigToolCloseDcIris(const char_t *FncCmd);
+GMI_RESULT CgiConfigToolGetMac(const char_t *FncCmd);
+GMI_RESULT CgiConfigToolSetMac(const char_t *FncCmd);
+GMI_RESULT CgiConfigToolTestAFConfigFile(const char_t *FncCmd);
+GMI_RESULT CgiConfigToolIrCutOpen(const char_t *FncCmd);
+GMI_RESULT CgiConfigToolIrCutClose(const char_t *FncCmd);
 
 #endif

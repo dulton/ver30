@@ -3,7 +3,7 @@
 #include <time.h>
 #include "log.h"
 #include "system_service_manager.h"
-#include "capability_operation.h"
+#include "factory_setting_operation.h"
 #include "daemon.h"
 #include "ipc_fw_v3.x_setting.h"
 #include "ipc_fw_v3.x_resource.h"
@@ -1473,8 +1473,7 @@ GMI_RESULT SystemServiceManager::PTZ_Deinitial()
             DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "CloseAutoFocusDevice fail, Result = 0x%lx\n", Result);
         }
 
-        m_AutoFocusHandle = NULL;
-        m_PtzControlPtr	= NULL;
+        m_AutoFocusHandle = NULL;       
 
         Result = m_PtzControlPtr->Deinitialize();
         if (FAILED(Result))
@@ -2655,24 +2654,24 @@ GMI_RESULT SystemServiceManager::SvrSetVideoEncStreamCombine(SysPkgEncStreamComb
             }
         }
 
-        //create users video codec
-        int32_t Id;
-        for (Id = 0; Id < ToSet_SysEncStreamCombine.s_EnableStreamNum; Id++)
-        {
-            EncParam[Id].s_Rotate = m_VideoEncParamPtr.GetPtr()->s_Rotate;//set combine, rotate should keep original.
-            Result = m_StreamCenterClientPtr->Create(0, Id, MEDIA_VIDEO, EncParam[Id].s_EncodeType, true, &EncParam[Id], sizeof(VideoEncodeParam), &((m_VideoCodecHandle.GetPtr())[Id]));
-            if (FAILED(Result))
-            {
-                while (Id--)
-                {
-                    m_StreamCenterClientPtr->Destroy((m_VideoCodecHandle.GetPtr())[Id]);
-                }
-                pthread_rwlock_unlock(&m_Lock);
-                SYS_ERROR("Create codec%d fail, Result = 0x%lx\n", Id, Result);
-                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Create codec%d fail, Result = 0x%lx\n", Id, Result);
-                return Result;
-            }
-        }
+		//create users video codec
+		int32_t Id;
+		for (Id = 0; Id < ToSet_SysEncStreamCombine.s_EnableStreamNum; Id++)
+		{			
+			EncParam[Id].s_Rotate = (m_VideoEncParamPtr.GetPtr())[Id].s_Rotate;//set combine, rotate should keep original.
+		    Result = m_StreamCenterClientPtr->Create(0, Id, MEDIA_VIDEO, EncParam[Id].s_EncodeType, true, &EncParam[Id], sizeof(VideoEncodeParam), &((m_VideoCodecHandle.GetPtr())[Id]));
+	    	if (FAILED(Result))
+		    {
+		    	while (Id--)
+		    	{
+		    		m_StreamCenterClientPtr->Destroy((m_VideoCodecHandle.GetPtr())[Id]);
+		    	}
+		    	pthread_rwlock_unlock(&m_Lock);
+		        SYS_ERROR("Create codec%d fail, Result = 0x%lx\n", Id, Result);
+		        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Create codec%d fail, Result = 0x%lx\n", Id, Result);
+		        return Result;
+		    }
+		}
 
         for (Id = 0; Id < ToSet_SysEncStreamCombine.s_EnableStreamNum; Id++)
         {
@@ -4037,15 +4036,7 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
             int32_t ZoomPos = (m_PresetsInfo_InnerPtr.GetPtr())[Id].s_ZoomPosition;
 
             if ((m_PresetsInfo_InnerPtr.GetPtr())[Id].s_Setted)
-            {
-                Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, true);
-                if (FAILED(Result))
-                {
-                    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    return Result;
-                }
-
+            {        
                 Result = m_PtzControlPtr->Control(PTZ_CONTINUE_CONTROL_MODE, &PT_CtlCmd);
                 if (FAILED(Result))
                 {
@@ -4060,15 +4051,7 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
                     SYS_ERROR("SetZoomPosition fail, Result = 0x%lx\n", Result);
                     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetZoomPosition fail, Result = 0x%lx\n", Result);
                     return Result;
-                }
-
-                Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, false);
-                if (FAILED(Result))
-                {
-                    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    return Result;
-                }
+                }               
             }
         }
         else if (SYS_PTZCMD_CLEARPRESET == PtzCtrlTmp.s_PtzCmd)
@@ -4441,7 +4424,7 @@ GMI_RESULT SystemServiceManager::GetVersion(char_t FwVer [64])
         Compiles = 1;
     }
 
-    sprintf(FwVer, "3.0.00%02d.%04d%02d%02d%03d", Milestone, Year, Month, Day, Compiles);
+    sprintf(FwVer, "V3.0.00%02d.%04d%02d%02d%03d", Milestone, Year, Month, Day, Compiles);
 
     return GMI_SUCCESS;
 }
@@ -4881,7 +4864,7 @@ GMI_RESULT SystemServiceManager::SvrNetWriteIpInfo(SysPkgIpInfo *SysPkgIpInfoPtr
     IpInfoTmp.s_Dns2 = inet_addr(Dns2);
     IpInfoTmp.s_Dns3 = inet_addr(Dns3);
 
-    pthread_rwlock_rdlock(&m_Lock );
+    pthread_rwlock_wrlock(&m_Lock );
     Result = NetWriteIP(&IpInfoTmp);
     if (FAILED(Result))
     {
@@ -4890,15 +4873,15 @@ GMI_RESULT SystemServiceManager::SvrNetWriteIpInfo(SysPkgIpInfo *SysPkgIpInfoPtr
     }
 
     SYS_INFO("%s:HwAddress %s\n", __func__, SysPkgIpInfoPtr->s_HwAddress);
-    if (0 != strlen(SysPkgIpInfoPtr->s_HwAddress))
-    {
-        Result = NetWriteMac(0, SysPkgIpInfoPtr->s_HwAddress);
-        if (FAILED(Result))
-        {
-            pthread_rwlock_unlock( &m_Lock );
-            return Result;
-        }
-    }
+    //if (0 != strlen(SysPkgIpInfoPtr->s_HwAddress))
+    //{
+    //    Result = NetWriteMac(0, SysPkgIpInfoPtr->s_HwAddress);
+    //    if (FAILED(Result))
+    //    {
+    //        pthread_rwlock_unlock( &m_Lock );
+    //        return Result;
+    //    }
+    //}
     pthread_rwlock_unlock(&m_Lock);
 
     SYS_INFO("%s normal out..........\n", __func__);
@@ -4986,6 +4969,14 @@ GMI_RESULT SystemServiceManager::SvrGetDevinfo(SysPkgDeviceInfo *SysDeviceInfoPt
         pthread_rwlock_unlock(&m_Lock);
         return Result;
     }
+    //sn set to hostname
+    if (0 != strlen(SysDeviceInfoPtr->s_DeviceSerialNum))
+    {
+        char_t CmdBuff[128];
+        memset(CmdBuff, 0, sizeof(CmdBuff));
+        sprintf(CmdBuff, "hostname %s", SysDeviceInfoPtr->s_DeviceSerialNum);
+        system(CmdBuff);
+    }
     pthread_rwlock_unlock(&m_Lock);
 
     SYS_INFO("%s normal out..........\n", __func__);
@@ -5009,16 +5000,7 @@ GMI_RESULT SystemServiceManager::SvrSetDeviceInfo(SysPkgDeviceInfo *SysDeviceInf
     {
         pthread_rwlock_unlock(&m_Lock);
         return Result;
-    }
-
-    //sn set to hostname
-    if (0 != strlen(SysDeviceInfoPtr->s_DeviceSerialNum))
-    {
-        char_t CmdBuff[128];
-        memset(CmdBuff, 0, sizeof(CmdBuff));
-        sprintf(CmdBuff, "hostname %s", SysDeviceInfoPtr->s_DeviceSerialNum);
-        system(CmdBuff);
-    }
+    }   
     pthread_rwlock_unlock(&m_Lock);
     SYS_INFO("%s normal out..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s normal out..........\n", __func__);
@@ -5493,8 +5475,8 @@ GMI_RESULT SystemServiceManager::GetWorkState(int32_t WorkStateBufferLength, cha
 
 GMI_RESULT SystemServiceManager::ExcuteImportConfigFile(SysPkgConfigFileInfo *SysConfigFilePtr)
 {
-    CapabilityOperation CapOperation;
+    FactorySettingOperation FactoryOperation;
 
-    return CapOperation.ExcuteImportFile(SysConfigFilePtr);
+    return FactoryOperation.ExcuteImportFile(SysConfigFilePtr);
 }
 

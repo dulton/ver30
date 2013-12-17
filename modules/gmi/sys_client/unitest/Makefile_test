@@ -37,7 +37,7 @@ GMI_CFLAGS              = -Wall -O3
 GMI_LFLAGS              = 
 
 # Set related modules
-GMI_RELATED_MODULES     = pthread osal rudp rt auth_center des daemon_heartbeat
+GMI_RELATED_MODULES     = pthread osal rudp rt auth_center des daemon_heartbeat gmi_brdwrapper
 
 # Set output directory for this module
 GMI_MODULE_OUTPUT_DIR   = $(GMI_PLATFORM_OUTPUT_DIR)/$(subst $(GMI_TOPDIR),,$(shell pwd))
@@ -45,7 +45,8 @@ GMI_MODULE_OUTPUT_DIR   = $(GMI_PLATFORM_OUTPUT_DIR)/$(subst $(GMI_TOPDIR),,$(sh
 # Set header file path for this module
 GMI_MODULE_INCLUDE_DIR  = ../include
 GMI_MODULE_INCLUDE_DIR += ../../../../application
-GMI_MODULE_INCLUDE_DIR += ../../../../prebuilt/include/daemon_heartbeat/
+GMI_MODULE_INCLUDE_DIR += ../../../../prebuilt/include/daemon_heartbeat
+GMI_MODULE_INCLUDE_DIR += ../../../../prebuilt/include/gmi_brdwrapper/
 
 # Include rules.mk
 include $(GMI_TOPDIR)/build/rules.mk

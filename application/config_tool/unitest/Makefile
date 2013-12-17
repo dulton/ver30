@@ -35,7 +35,7 @@ GMI_CFLAGS              = -Wall -O3
 GMI_LFLAGS              =
 
 # Set related modules
-GMI_RELATED_MODULES     = osal pcap pcap_session tool_protocol tinyxml
+GMI_RELATED_MODULES     = osal pcap pcap_session tool_protocol tinyxml rt
 
 # Set include directory
 GMI_INCLUDE_DIR         = ../source/common

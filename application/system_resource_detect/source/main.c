@@ -11,10 +11,11 @@
 #define NETWORK_DOWN      0
 #define NETWORK_UP            1
 #define GMI_NETWORK_RX_PACKETS_CMD "ifconfig eth0 | grep \"RX packets:\" | awk '{print $2}' | tr -d 'packets:'"
+#define GMI_NETWORK_TX_PACKETS_CMD "ifconfig eth0 | grep \"TX packets:\" | awk '{print $2}' | tr -d 'packets:'"
 
 int machine_init(struct statics * statics);
 void get_system_info(struct system_info *info);
-GMI_RESULT GMI_GetNetWorkRxPackets(const char_t *Cmd, char_t *Buf, int32_t Length)
+GMI_RESULT GMI_GetNetWorkPackets(const char_t *Cmd, char_t *Buf, int32_t Length)
 {
     if(NULL == Cmd)
     {
@@ -50,10 +51,14 @@ int32_t main(void)
     int32_t IdleCpu = 0;
     int32_t TmpLen=0;
     int32_t RxLength=0;
-    GMI_RESULT  Result = GMI_FAIL;
+    int32_t TxLength=0;
     char_t RxBuffer[8];
+    char_t TxBuffer[8];
     uint8_t Link = 0;
     uint8_t EthId = 0;
+    uint8_t WriteId = 10;
+    GMI_RESULT  Result = GMI_FAIL;
+    
 
     for(;;)
     {
@@ -88,31 +93,51 @@ int32_t main(void)
             {
                 GMI_DeBugPrint("System NetWork Status Is Down");
             }
-            else if ( NETWORK_UP == Link )
-            {
-                memset(RxBuffer, 0 ,sizeof(RxBuffer));
-                Result = GMI_GetNetWorkRxPackets(GMI_NETWORK_RX_PACKETS_CMD, RxBuffer, sizeof(RxBuffer));
-                if (SUCCEEDED(Result))
-                {
-                    TmpLen = atoi(RxBuffer) - RxLength;
-                    RxLength = atoi(RxBuffer);
-                    if (0 == TmpLen)
-                    {
-                        GMI_DeBugPrint("System NetWork Status Is UP ,But recieve packets number is 0");
-                    }
-                }
-                else
-                {
-                    GMI_DeBugPrint("System  GetNetWorkRxPackets Fail");
-                }
-            }
         }
         else
         {
             GMI_DeBugPrint("System  GetEthLinkStat Fail");
         }
 
+        memset(RxBuffer, 0 ,sizeof(RxBuffer));
+        Result = GMI_GetNetWorkPackets(GMI_NETWORK_RX_PACKETS_CMD, RxBuffer, sizeof(RxBuffer));
+        if (SUCCEEDED(Result))
+        {
+        	TmpLen = atoi(RxBuffer) - RxLength;
+        	RxLength = atoi(RxBuffer);
+        	if (TmpLen < 10)
+        	{
+        		GMI_DeBugPrint("System NetWork Recieve Packets Number is 0");
+        	}
+        }
+        else
+        {
+        	GMI_DeBugPrint("System	GMI_GetNetWorkPackets Fail");
+        }
+
+        memset(TxBuffer, 0 ,sizeof(TxBuffer));
+        Result = GMI_GetNetWorkPackets(GMI_NETWORK_TX_PACKETS_CMD, TxBuffer, sizeof(TxBuffer));
+        if (SUCCEEDED(Result))
+        {
+        	TmpLen = atoi(TxBuffer) - TxLength;
+        	TxLength = atoi(TxBuffer);
+        	if (TmpLen == 0)
+        	{
+                        if(WriteId == 0)
+                        {
+        		      GMI_DeBugPrint("System NetWork Send Packets Number is 0");
+			      WriteId = 5;
+                        }
+		        WriteId--;
+        	}
+        }
+        else
+        {
+        	GMI_DeBugPrint("System	GMI_GetNetWorkPackets Fail");
+        }
+
         sleep(2);
     }
+
     return 0;
 }

@@ -398,10 +398,10 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__SetPreset(struct soap *soap_ptr, struct _tptz_
                     memset(BufferTmp, 0, sizeof(BufferTmp));
                 }
 
-				//support number of PresetToken 
-				if(Id >= MAX_PTZ_PRESET_NUM)
-				{
-					CurPos = tptz__SetPreset->PresetToken;
+                //support number of PresetToken
+                if(Id >= MAX_PTZ_PRESET_NUM)
+                {
+                    CurPos = tptz__SetPreset->PresetToken;
                     for(i = 0; i < strlen(tptz__SetPreset->PresetToken); i++)
                     {
                         if((*CurPos >= '0') && (*CurPos <= '9'))
@@ -411,7 +411,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__SetPreset(struct soap *soap_ptr, struct _tptz_
                         }
                         CurPos++;
                     }
-				}
+                }
             }
             else if (NULL != tptz__SetPreset->PresetName)
             {
@@ -451,15 +451,15 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__SetPreset(struct soap *soap_ptr, struct _tptz_
             }
         }
 
-		//add response
-		if(NULL != tptz__SetPreset->PresetToken)
-		{
-			tptz__SetPresetResponse->PresetToken = soap_strdup( soap_ptr, tptz__SetPreset->PresetToken);
-		}
-		else
-		{
-			tptz__SetPresetResponse->PresetToken = soap_strdup( soap_ptr, tptz__SetPreset->PresetName);
-		}
+        //add response
+        if(NULL != tptz__SetPreset->PresetToken)
+        {
+            tptz__SetPresetResponse->PresetToken = soap_strdup( soap_ptr, tptz__SetPreset->PresetToken);
+        }
+        else
+        {
+            tptz__SetPresetResponse->PresetToken = soap_strdup( soap_ptr, tptz__SetPreset->PresetName);
+        }
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
         return SOAP_OK;
     }
@@ -571,8 +571,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__GotoPreset(struct soap *soap_ptr, struct _tptz
     char_t     BufferTmp[INFO_LENGTH] = {0};
     GMI_RESULT Result                 = GMI_SUCCESS;
     SysPkgPtzCtrl PtzCtrlCmd          = {0};
-	char_t		  *CurPos = NULL;
-	uint16_t	   i = 0;
+    char_t		  *CurPos = NULL;
+    uint16_t	   i = 0;
 
     do
     {
@@ -608,20 +608,20 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__GotoPreset(struct soap *soap_ptr, struct _tptz
                     memset(BufferTmp, 0, sizeof(BufferTmp));
                 }
 
-				//support xiongmai and dahua NVR	
-				if(Id >=  MAX_PTZ_PRESET_NUM)
-				{
-					CurPos = tptz__GotoPreset->PresetToken;
-					for(i = 0; i < strlen(tptz__GotoPreset->PresetToken); i++)
-					{
-						if((*CurPos >= '0') && (*CurPos <= '9'))
-						{
-							Preset = atoi(CurPos);
-							break;
-						}
-						CurPos++;
-					}
-				}
+                //support xiongmai and dahua NVR
+                if(Id >=  MAX_PTZ_PRESET_NUM)
+                {
+                    CurPos = tptz__GotoPreset->PresetToken;
+                    for(i = 0; i < strlen(tptz__GotoPreset->PresetToken); i++)
+                    {
+                        if((*CurPos >= '0') && (*CurPos <= '9'))
+                        {
+                            Preset = atoi(CurPos);
+                            break;
+                        }
+                        CurPos++;
+                    }
+                }
             }
 
             if (Preset > 0
@@ -1317,7 +1317,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__ContinuousMove(struct soap *soap_ptr, struct _
     uint32_t      ZoomXRange = 255;
     SysPkgPtzCtrl PtzCtrlCmd = {0};
 
-	//printf("%s %d\n", __func__, __LINE__);
+    //printf("%s %d\n", __func__, __LINE__);
     do
     {
         //user auth
@@ -1440,7 +1440,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__ContinuousMove(struct soap *soap_ptr, struct _
                 }
             }
         }
-		
+
         //DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
         return SOAP_OK;
     }
@@ -1577,7 +1577,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__Stop(struct soap *soap_ptr, struct _tptz__Stop
         }
 
         //DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
-		//ONVIF_INFO("%s out........\n", __func__);
+        //ONVIF_INFO("%s out........\n", __func__);
         return SOAP_OK;
     }
     while (0);

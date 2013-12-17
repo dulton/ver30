@@ -146,5 +146,19 @@ GMI_RESULT SysSetHostName(char_t HostName[128]);
 GMI_RESULT FactorySimpleDefaultAllLocal(uint16_t SessionId, uint32_t AuthValue);
 GMI_RESULT FactoryDefaultAllLocal(uint16_t SessionId, uint32_t AuthValue);
 
+// Local set System Mac
+GMI_RESULT GMI_ConfigToolSetMac(uint16_t SessionId, uint32_t AuthValue,char_t MacAddrs[128]); 
+
+// Detect systm Af config file is exists
+//if FileFlags is 1 ,config file exists. else if FileFlags is 0 ,config file not exists
+GMI_RESULT GMI_ConfigToolAfConfigDetect(uint16_t SessionId, uint32_t AuthValue,int32_t *FileFlags);
+
+//Use 
+GMI_RESULT GMI_ConfigToolWatchDogTest(uint16_t SessionId, uint32_t AuthValue);
+
+GMI_RESULT GMI_ConfigToolOpenDcIris(uint16_t SessionId, uint32_t AuthValue);
+
+GMI_RESULT GMI_ConfigToolCloseDcIris(uint16_t SessionId, uint32_t AuthValue);
+
 #endif
 

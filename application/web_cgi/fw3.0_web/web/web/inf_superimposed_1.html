@@ -247,7 +247,41 @@ html,body{
 			  $("#cvbsosd").css("display","none");
 		 }
 	  //根据码流数填充页面元素
-		   getMaxStreamNum(false,parent.id,parent.Authvalue,3);
+		   
+			//获取设备能力集码流数
+			function getStreamNumInfo()
+			{
+					GetAndSet("GetCapabilities","xml","{SessionId:"+parent.id+",AuthValue:}"+parent.Authvalue, sucess_getStreamNumNLJ);	
+			}
+			if(parent.StreamNum_NLJ != 0)
+			{
+				getMaxStreamNum(false,parent.id,parent.Authvalue,3);
+			}
+			else
+			{
+				//获取能力集
+				getStreamNumInfo();	
+			}
+			
+			function sucess_getStreamNumNLJ(data)
+			{
+                var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode!="0")
+					{
+						alert("获取设备能力集失败，获取码流数失败！");
+						delete PackDate;
+						return;
+					}
+					parent.StreamNum_NLJ = PackDate.Content.XmlBuf.capabilities.device.media.maxstreamnum;
+					parent.StreamNum_NLJ = parseInt(parent.StreamNum_NLJ,10);
+					
+					//再去获取最大码流和设置界面
+					getMaxStreamNum(false,parent.id,parent.Authvalue,3);
+				}
+				delete PackDate;
+			}
 		   //SetStreamNum_NLJ(parent.StreamNum_NLJ);
 				//getMaxStreams();
 				

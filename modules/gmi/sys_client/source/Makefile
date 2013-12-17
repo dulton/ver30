@@ -36,13 +36,14 @@ GMI_LFLAGS              =
 #GMI_LFLAGS             = -g
 
 # Set related modules
-GMI_RELATED_MODULES     = pthread auth_center des osal rudp daemon_heartbeat 
+GMI_RELATED_MODULES     = pthread auth_center des osal rudp daemon_heartbeat gmi_brdwrapper 
 
 # Set header file path for this module
 GMI_MODULE_INCLUDE_DIR  = ../include
 # Set other header file path
 GMI_INCLUDE_DIR         = ../../../../application
-GMI_INCLUDE_DIR        += ../../../../prebuilt/include/daemon_heartbeat/
+GMI_INCLUDE_DIR        += ../../../../prebuilt/include/daemon_heartbeat
+GMI_INCLUDE_DIR	       += ../../../../prebuilt/include/gmi_brdwrapper/
 # Include rules.mk
 include $(GMI_TOPDIR)/build/rules.mk
 

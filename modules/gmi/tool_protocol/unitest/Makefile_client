@@ -37,7 +37,7 @@ GMI_CFLAGS              = -Wall -O3
 GMI_LFLAGS              = 
 
 # Set related modules
-GMI_RELATED_MODULES     = osal pcap pcap_session
+GMI_RELATED_MODULES     = osal pcap pcap_session rt
 
 # Set header file path for this module
 GMI_MODULE_INCLUDE_DIR  = ../include

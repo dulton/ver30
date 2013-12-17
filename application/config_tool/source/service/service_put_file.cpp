@@ -2,7 +2,7 @@
 #include "service_dispatch.h"
 #include "configure_service.h"
 #include "application.h"
-#include "heart_beat.h"
+#include "daemon_service.h"
 
 #define TEMP_FILE_PATH   "/tmp/config_tool_put_file.temp"
 
@@ -171,7 +171,7 @@ void_t ServicePutFile::OnSent(GtpTransHandle Handle, GMI_RESULT Errno)
                 Application::GetSingleton().Stop();
 
                 // Reboot system
-                HeartBeat::GetInstance().RebootSystem();
+                DaemonService::GetInstance().RebootSystem();
             }
 
             GtpDestroyTransHandle(Handle);

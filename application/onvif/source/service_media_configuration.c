@@ -377,15 +377,14 @@ SOAP_FMAC5 int SOAP_FMAC6 __trt__GetVideoSources(struct soap *soap_ptr, struct _
         trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->ColorSaturation[0]           = (float)SysImaging.s_Saturation;
         trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->Contrast                     = (float*)soap_malloc_zero(soap, sizeof(float));
         trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->Contrast[0]                  = (float)SysImaging.s_Contrast;
-        trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->IrCutFilter                  = (enum tt__IrCutFilterMode*)soap_malloc_zero(soap, sizeof(int));
-        *trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->IrCutFilter                 = VideoSourcePtr[0].s_Imaging.s_IrCutFilter;
+        trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->IrCutFilter                  = NULL;
         trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->Sharpness                    = (float*)soap_malloc_zero(soap, sizeof(float));
         trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->Sharpness[0]                 = (float)SysImaging.s_Sharpness;
         trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->BacklightCompensation        = (struct tt__BacklightCompensation*)soap_malloc_zero(soap, sizeof(struct tt__BacklightCompensation));
 
         trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->BacklightCompensation->Mode  = \
                 (SysAdvancedImaging.s_BackLightCompFlag == 1)? tt__BacklightCompensationMode__ON : tt__BacklightCompensationMode__OFF;
-        trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->BacklightCompensation->Level = VideoSourcePtr[0].s_Imaging.s_BacklightCompensation.Level;
+        trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->BacklightCompensation->Level = 0;
         trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->Exposure                     = (struct tt__Exposure*)soap_malloc_zero(soap, sizeof(struct tt__Exposure));
         trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->Exposure->Mode               = tt__ExposureMode__AUTO;
         trt__GetVideoSourcesResponse->VideoSources[Id].Imaging->Exposure->MaxExposureTime    = (float)SysImaging.s_Exposure.s_ShutterMax;
@@ -2165,4 +2164,470 @@ SOAP_FMAC5 int SOAP_FMAC6 __trt__GetGuaranteedNumberOfVideoEncoderInstances(stru
     return SOAP_OK;
 }
 
+
+SOAP_FMAC5 int SOAP_FMAC6 __timg__GetServiceCapabilities(struct soap* soap_ptr, struct _timg__GetServiceCapabilities *timg__GetServiceCapabilities, struct _timg__GetServiceCapabilitiesResponse *timg__GetServiceCapabilitiesResponse)
+{
+	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
+    ONVIF_INFO("%s In.........\n", __func__);
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out, Not Implement.........\n", __func__);
+    ONVIF_INFO("%s normal out.........\n", __func__);
+    return SOAP_OK;	
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 __timg__GetImagingSettings(struct soap* soap_ptr, struct _timg__GetImagingSettings *timg__GetImagingSettings, struct _timg__GetImagingSettingsResponse *timg__GetImagingSettingsResponse)
+{
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
+    ONVIF_INFO("%s In.........\n", __func__);
+    uint16_t   SessionId = 0;
+    uint32_t   AuthValue = 0;
+    boolean_t             TokenExist = false;
+	Profile              *ProfilePtr = NULL;
+	SysPkgImaging         SysImaging = {0};
+    SysPkgAdvancedImaging SysAdvancedImaging = {0};
+    SysPkgWhiteBalance    SysWhiteBalance = {0};
+
+	do
+	{
+		ProfilePtr = l_Profile;
+	    for (uint32_t i = 0; i < sizeof(l_Profile)/sizeof(l_Profile[0]); i++)
+	    {
+	    	if (0 == strcmp(timg__GetImagingSettings->VideoSourceToken, ProfilePtr[i].s_VideoSourceConfiguration.s_SourceToken))
+	    	{
+	    		TokenExist = true;
+	    	}
+	    }
+		if (!TokenExist)
+		{
+			ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:NoProfile", NULL);
+			break;
+		}
+		
+		memset(&SysImaging, 0, sizeof(SysPkgImaging));
+		GMI_RESULT Result = SysGetImaging(SessionId, AuthValue, &SysImaging);
+		if (FAILED(Result))
+		{
+			ONVIF_ERROR("SysGetImaging fail, Result = 0x%lx\n", Result);
+			DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SysGetImaging fail, Result = 0x%lx\n", Result);
+			break;
+		}
+		ONVIF_INFO("Brightness = %d\n", SysImaging.s_Brightness);
+		ONVIF_INFO("Contrast   = %d\n", SysImaging.s_Contrast);
+		ONVIF_INFO("Hue 	   = %d\n", SysImaging.s_Hue);
+		ONVIF_INFO("Saturation = %d\n", SysImaging.s_Saturation);
+		ONVIF_INFO("Sharpness  = %d\n", SysImaging.s_Sharpness);
+		ONVIF_INFO("ExposureMode	 = %d\n", SysImaging.s_Exposure.s_ExposureMode);
+		ONVIF_INFO("ExposureValueMax = %d\n", SysImaging.s_Exposure.s_ShutterMax);
+		ONVIF_INFO("ExposureValueMin = %d\n", SysImaging.s_Exposure.s_ShutterMin);
+		ONVIF_INFO("GainMax 		 = %d\n", SysImaging.s_Exposure.s_GainMax);
+
+		memset(&SysAdvancedImaging, 0, sizeof(SysPkgAdvancedImaging));
+		Result = SysGetAdvancedImaging(SessionId, AuthValue, &SysAdvancedImaging);
+		if (FAILED(Result))
+		{
+			ONVIF_ERROR("SysGetAdvancedImaging fail, Result = 0x%lx\n", Result);
+			DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SysGetAdvancedImaging fail, Result = 0x%lx\n", Result);
+			break;
+		}
+		ONVIF_INFO("MeteringMode		= %d\n", SysAdvancedImaging.s_MeteringMode);
+		ONVIF_INFO("BackLightCompFlag	= %d\n", SysAdvancedImaging.s_BackLightCompFlag);
+		ONVIF_INFO("DcIrisFlag			= %d\n", SysAdvancedImaging.s_DcIrisFlag);
+		ONVIF_INFO("LocalExposure		= %d\n", SysAdvancedImaging.s_LocalExposure);
+		ONVIF_INFO("MctfStrength		= %d\n", SysAdvancedImaging.s_MctfStrength);
+		ONVIF_INFO("DcIrisDuty			= %d\n", SysAdvancedImaging.s_DcIrisDuty);
+		ONVIF_INFO("AeTargetRatio		= %d\n", SysAdvancedImaging.s_AeTargetRatio);
+
+		memset(&SysWhiteBalance, 0, sizeof(SysPkgWhiteBalance));
+		Result = SysGetWhiteBalance(SessionId, AuthValue, &SysWhiteBalance);
+		if (FAILED(Result))
+		{
+			DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SysGetWhiteBalance fail, Result = 0x%lx\n", Result);
+			break;
+		}
+		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "SysWhiteBalance.s_Mode  = %d\n", SysWhiteBalance.s_Mode);
+		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "SysWhiteBalance.s_BGain = %d\n", SysWhiteBalance.s_BGain);
+		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "SysWhiteBalance.s_RGain = %d\n", SysWhiteBalance.s_RGain);
+
+		timg__GetImagingSettingsResponse->ImagingSettings = (struct tt__ImagingSettings20 *)soap_malloc_zero(soap_ptr, sizeof(struct tt__ImagingSettings20));		
+		timg__GetImagingSettingsResponse->ImagingSettings->Brightness = (float_t *)soap_malloc_zero(soap_ptr, sizeof(float_t));
+		*timg__GetImagingSettingsResponse->ImagingSettings->Brightness = SysImaging.s_Brightness;
+		timg__GetImagingSettingsResponse->ImagingSettings->ColorSaturation = (float *)soap_malloc_zero(soap_ptr, sizeof(float));
+		*timg__GetImagingSettingsResponse->ImagingSettings->ColorSaturation = SysImaging.s_Saturation;
+		timg__GetImagingSettingsResponse->ImagingSettings->Contrast = (float *)soap_malloc_zero(soap_ptr, sizeof(float));
+		*timg__GetImagingSettingsResponse->ImagingSettings->Contrast = SysImaging.s_Contrast;
+		timg__GetImagingSettingsResponse->ImagingSettings->IrCutFilter = NULL;	
+		timg__GetImagingSettingsResponse->ImagingSettings->Sharpness = (float *)soap_malloc_zero(soap_ptr, sizeof(float));
+		*timg__GetImagingSettingsResponse->ImagingSettings->Sharpness = SysImaging.s_Sharpness;
+		timg__GetImagingSettingsResponse->ImagingSettings->BacklightCompensation = (struct tt__BacklightCompensation20 *)soap_malloc_zero(soap_ptr, sizeof(struct tt__BacklightCompensation20));
+		timg__GetImagingSettingsResponse->ImagingSettings->BacklightCompensation->Mode = (SysAdvancedImaging.s_BackLightCompFlag == 0 ? tt__BacklightCompensationMode__OFF : tt__BacklightCompensationMode__ON);
+		timg__GetImagingSettingsResponse->ImagingSettings->BacklightCompensation->Level = NULL;		
+		timg__GetImagingSettingsResponse->ImagingSettings->Exposure = NULL;	
+		timg__GetImagingSettingsResponse->ImagingSettings->Focus = NULL;		
+		timg__GetImagingSettingsResponse->ImagingSettings->WideDynamicRange = (struct tt__WideDynamicRange20 *)soap_malloc_zero(soap_ptr, sizeof(struct tt__WideDynamicRange20));
+		timg__GetImagingSettingsResponse->ImagingSettings->WideDynamicRange->Mode = (SysAdvancedImaging.s_LocalExposure == 0) ?  tt__WideDynamicMode__OFF : tt__WideDynamicMode__ON; 
+		timg__GetImagingSettingsResponse->ImagingSettings->WideDynamicRange->Level = (float*)soap_malloc_zero(soap_ptr, sizeof(float));
+		*timg__GetImagingSettingsResponse->ImagingSettings->WideDynamicRange->Level = (float)SysAdvancedImaging.s_LocalExposure;
+		timg__GetImagingSettingsResponse->ImagingSettings->WhiteBalance = (struct tt__WhiteBalance20 *)soap_malloc_zero(soap_ptr, sizeof(struct tt__WhiteBalance20));
+		timg__GetImagingSettingsResponse->ImagingSettings->WhiteBalance->Mode = (SysWhiteBalance.s_Mode == 0) ? tt__WhiteBalanceMode__AUTO : tt__WhiteBalanceMode__MANUAL;	
+		timg__GetImagingSettingsResponse->ImagingSettings->WhiteBalance->Extension = NULL;
+		timg__GetImagingSettingsResponse->ImagingSettings->WhiteBalance->CrGain = (float *) soap_malloc_zero(soap_ptr, sizeof(float));
+		*timg__GetImagingSettingsResponse->ImagingSettings->WhiteBalance->CrGain = SysWhiteBalance.s_RGain;
+		timg__GetImagingSettingsResponse->ImagingSettings->WhiteBalance->CbGain = (float *) soap_malloc_zero(soap_ptr, sizeof(float));
+		*timg__GetImagingSettingsResponse->ImagingSettings->WhiteBalance->CbGain = SysWhiteBalance.s_BGain;	
+		timg__GetImagingSettingsResponse->ImagingSettings->Extension = NULL;
+
+		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
+		ONVIF_INFO("%s normal out.........\n", __func__);
+		return SOAP_OK;
+	}
+	while (0);
+
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s abnormal out.........\n", __func__);
+    ONVIF_INFO("%s normal out.........\n", __func__);
+    return SOAP_SVR_FAULT;   
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 __timg__SetImagingSettings(struct soap* soap_ptr, struct _timg__SetImagingSettings *timg__SetImagingSettings, struct _timg__SetImagingSettingsResponse *timg__SetImagingSettingsResponse)
+{
+	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
+    ONVIF_INFO("%s In.........\n", __func__);
+    uint16_t   SessionId = 0;
+    uint32_t   AuthValue = 0;
+    boolean_t  TokenExist = false;
+    Profile   *ProfilePtr = NULL;
+    SysPkgImaging         SysImaging = {0};
+    SysPkgAdvancedImaging SysAdvancedImaging = {0};
+    SysPkgWhiteBalance    SysWhiteBalance = {0};
+    
+	do
+	{
+		ProfilePtr = l_Profile;
+	    for (uint32_t i = 0; i < sizeof(l_Profile)/sizeof(l_Profile[0]); i++)
+	    {
+	    	if (0 == strcmp(timg__SetImagingSettings->VideoSourceToken, ProfilePtr[i].s_VideoSourceConfiguration.s_SourceToken))
+	    	{
+	    		TokenExist = true;
+	    	}
+	    }
+		if (!TokenExist)
+		{
+			ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:NoProfile", NULL);
+			break;
+		}
+
+        memset(&SysImaging, 0, sizeof(SysPkgImaging));
+        GMI_RESULT Result = SysGetImaging(SessionId, AuthValue, &SysImaging);
+        if (FAILED(Result))
+        {
+            ONVIF_ERROR("SysGetImaging fail, Result = 0x%lx\n", Result);
+            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SysGetImaging fail, Result = 0x%lx\n", Result);
+            break;
+        }
+        ONVIF_INFO("Brightness = %d\n", SysImaging.s_Brightness);
+        ONVIF_INFO("Contrast   = %d\n", SysImaging.s_Contrast);
+        ONVIF_INFO("Hue        = %d\n", SysImaging.s_Hue);
+        ONVIF_INFO("Saturation = %d\n", SysImaging.s_Saturation);
+        ONVIF_INFO("Sharpness  = %d\n", SysImaging.s_Sharpness);
+        ONVIF_INFO("ExposureMode     = %d\n", SysImaging.s_Exposure.s_ExposureMode);
+        ONVIF_INFO("ExposureValueMax = %d\n", SysImaging.s_Exposure.s_ShutterMax);
+        ONVIF_INFO("ExposureValueMin = %d\n", SysImaging.s_Exposure.s_ShutterMin);
+        ONVIF_INFO("GainMax          = %d\n", SysImaging.s_Exposure.s_GainMax);
+
+        memset(&SysAdvancedImaging, 0, sizeof(SysPkgAdvancedImaging));
+        Result = SysGetAdvancedImaging(SessionId, AuthValue, &SysAdvancedImaging);
+        if (FAILED(Result))
+        {
+            ONVIF_ERROR("SysGetAdvancedImaging fail, Result = 0x%lx\n", Result);
+            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SysGetAdvancedImaging fail, Result = 0x%lx\n", Result);
+            break;
+        }
+        ONVIF_INFO("MeteringMode        = %d\n", SysAdvancedImaging.s_MeteringMode);
+        ONVIF_INFO("BackLightCompFlag   = %d\n", SysAdvancedImaging.s_BackLightCompFlag);
+        ONVIF_INFO("DcIrisFlag          = %d\n", SysAdvancedImaging.s_DcIrisFlag);
+        ONVIF_INFO("LocalExposure       = %d\n", SysAdvancedImaging.s_LocalExposure);
+        ONVIF_INFO("MctfStrength        = %d\n", SysAdvancedImaging.s_MctfStrength);
+        ONVIF_INFO("DcIrisDuty          = %d\n", SysAdvancedImaging.s_DcIrisDuty);
+        ONVIF_INFO("AeTargetRatio       = %d\n", SysAdvancedImaging.s_AeTargetRatio);
+
+        memset(&SysWhiteBalance, 0, sizeof(SysPkgWhiteBalance));
+        Result = SysGetWhiteBalance(SessionId, AuthValue, &SysWhiteBalance);
+        if (FAILED(Result))
+        {
+            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SysGetWhiteBalance fail, Result = 0x%lx\n", Result);
+            break;
+        }
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "SysWhiteBalance.s_Mode  = %d\n", SysWhiteBalance.s_Mode);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "SysWhiteBalance.s_BGain = %d\n", SysWhiteBalance.s_BGain);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "SysWhiteBalance.s_RGain = %d\n", SysWhiteBalance.s_RGain);
+
+		if (NULL != timg__SetImagingSettings->ImagingSettings->Brightness)
+		{
+			SysImaging.s_Brightness = *timg__SetImagingSettings->ImagingSettings->Brightness;			
+		}
+
+		if (NULL != timg__SetImagingSettings->ImagingSettings->ColorSaturation)
+		{
+			SysImaging.s_Saturation = *timg__SetImagingSettings->ImagingSettings->ColorSaturation;
+		}
+
+		if (NULL != timg__SetImagingSettings->ImagingSettings->Contrast)
+		{
+			SysImaging.s_Contrast = *timg__SetImagingSettings->ImagingSettings->Contrast;
+		}
+
+		if (NULL != timg__SetImagingSettings->ImagingSettings->Sharpness)
+		{
+			SysImaging.s_Sharpness = *timg__SetImagingSettings->ImagingSettings->Sharpness;
+		}
+
+		if (NULL != timg__SetImagingSettings->ImagingSettings->BacklightCompensation)
+		{
+			SysAdvancedImaging.s_BackLightCompFlag = timg__SetImagingSettings->ImagingSettings->BacklightCompensation->Mode;
+		}
+
+		if (NULL != timg__SetImagingSettings->ImagingSettings->Exposure)
+		{			
+		}
+
+		if (NULL != timg__SetImagingSettings->ImagingSettings->Focus)
+		{
+			
+		}
+		
+		if (NULL != timg__SetImagingSettings->ImagingSettings->IrCutFilter)
+		{
+		}
+
+		if (NULL != timg__SetImagingSettings->ImagingSettings->WideDynamicRange)
+		{
+            if (tt__WideDynamicMode__OFF == timg__SetImagingSettings->ImagingSettings->WideDynamicRange->Mode)
+            {
+                SysAdvancedImaging.s_LocalExposure = 0;
+            }
+            else
+            {
+               if (NULL != timg__SetImagingSettings->ImagingSettings->WideDynamicRange->Level)
+               {
+                   SysAdvancedImaging.s_LocalExposure = *timg__SetImagingSettings->ImagingSettings->WideDynamicRange->Level;    
+               }                    
+            }
+		}
+
+		if (NULL != timg__SetImagingSettings->ImagingSettings->WhiteBalance)
+		{
+            if (tt__WhiteBalanceMode__AUTO == timg__SetImagingSettings->ImagingSettings->WhiteBalance->Mode)
+            {
+                SysWhiteBalance.s_Mode = 0; //auto
+            }
+            else
+            {
+                SysWhiteBalance.s_Mode = 10;//custom
+            }
+
+            if (NULL != timg__SetImagingSettings->ImagingSettings->WhiteBalance->CrGain)
+            {
+                SysWhiteBalance.s_RGain = *timg__SetImagingSettings->ImagingSettings->WhiteBalance->CrGain;
+            }
+
+            if (NULL != timg__SetImagingSettings->ImagingSettings->WhiteBalance->CbGain)
+            {
+                SysWhiteBalance.s_BGain = *timg__SetImagingSettings->ImagingSettings->WhiteBalance->CbGain;
+            }
+		}		
+
+		if (SysImaging.s_Brightness < 0 
+		    || SysImaging.s_Brightness > 255
+		    || SysImaging.s_Contrast < 0 
+		    || SysImaging.s_Contrast > 255
+		    || SysImaging.s_Saturation < 0
+		    || SysImaging.s_Saturation > 255
+		    || SysImaging.s_Sharpness < 0
+		    || SysImaging.s_Sharpness > 255)
+		{
+			ONVIF_Fault(soap_ptr, "ter:Action", "ter:ValueExceeded", NULL);
+			ONVIF_ERROR("imaging brightness, contrast, saturation, sharpness Exceeded\n");
+			break;
+		}
+
+		if (SysAdvancedImaging.s_BackLightCompFlag != 0
+		    && SysAdvancedImaging.s_BackLightCompFlag != 1)
+		{
+			ONVIF_Fault(soap_ptr, "ter:Action", "ter:ValueExceeded", NULL);
+			ONVIF_ERROR("SysAdvancedImaging BackLightCompFlag Exceeded\n");
+			break;
+		}
+
+		if (SysAdvancedImaging.s_LocalExposure < 0
+		   || SysAdvancedImaging.s_LocalExposure > 5)
+		{
+			ONVIF_Fault(soap_ptr, "ter:Action", "ter:ValueExceeded", NULL);
+			ONVIF_ERROR("s_LocalExposure Exceeded\n");
+			break;
+		}		
+
+		if (SysWhiteBalance.s_Mode < 0 
+		   || SysWhiteBalance.s_Mode > 10)
+		{
+			ONVIF_Fault(soap_ptr, "ter:Action", "ter:ValueExceeded", NULL);
+			ONVIF_ERROR("SysWhiteBalance.s_Mode Exceeded\n");
+			break;
+		}
+
+		if (SysWhiteBalance.s_RGain < 0 
+		   || SysWhiteBalance.s_RGain > 1023
+		   || SysWhiteBalance.s_BGain < 0 
+		   || SysWhiteBalance.s_BGain > 1023)
+		{
+			ONVIF_Fault(soap_ptr, "ter:Action", "ter:ValueExceeded", NULL);
+			ONVIF_ERROR("SysWhiteBalance.s_BGain SysWhiteBalance.s_RGain Exceeded\n");
+			break;
+		}
+		
+        Result = SysSetImaging(SessionId, AuthValue, &SysImaging);
+        if (FAILED(Result))
+        {
+        	ONVIF_ERROR("sys set image setting fail, Result = 0x%lx\n", Result);
+        	break;
+        }
+
+        Result = SysSetAdvancedImaging(SessionId, AuthValue, &SysAdvancedImaging);
+        if (FAILED(Result))
+        {
+        	ONVIF_ERROR("sys set advanced image setting fail, Result = 0x%lx\n", Result);
+        	break;
+        }
+
+        Result = SysSetWhiteBalance(SessionId, AuthValue, &SysWhiteBalance);
+        if (FAILED(Result))
+        {
+        	ONVIF_ERROR("sys set white balance fail, Result = 0x%lx\n", Result);
+        	break;
+        }
+        
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
+    	ONVIF_INFO("%s Out.........\n", __func__);
+		return SOAP_OK;
+	}
+	while (0);
+	
+	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
+	ONVIF_INFO("%s Abnormal Out.........\n", __func__);
+	return SOAP_SVR_FAULT;
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 __timg__GetOptions(struct soap* soap_ptr, struct _timg__GetOptions *timg__GetOptions, struct _timg__GetOptionsResponse *timg__GetOptionsResponse)
+{
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
+    ONVIF_INFO("%s In.........\n", __func__);  
+    boolean_t             TokenExist = false;
+	Profile              *ProfilePtr = NULL;
+	
+    do
+	{
+		ProfilePtr = l_Profile;
+	    for (uint32_t i = 0; i < sizeof(l_Profile)/sizeof(l_Profile[0]); i++)
+	    {
+	    	if (0 == strcmp(timg__GetOptions->VideoSourceToken, ProfilePtr[i].s_VideoSourceConfiguration.s_SourceToken))
+	    	{
+	    		TokenExist = true;
+	    	}
+	    }
+		if (!TokenExist)
+		{
+			ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:NoProfile", NULL);
+			break;
+		}	
+		
+		timg__GetOptionsResponse->ImagingOptions =  (struct tt__ImagingOptions20 *)soap_malloc_zero(soap_ptr, sizeof(struct tt__ImagingOptions20));
+		timg__GetOptionsResponse->ImagingOptions->BacklightCompensation = (struct tt__BacklightCompensationOptions20 *)soap_malloc(soap_ptr, sizeof(struct tt__BacklightCompensationOptions20));
+		timg__GetOptionsResponse->ImagingOptions->BacklightCompensation->__sizeMode = 2;
+		timg__GetOptionsResponse->ImagingOptions->BacklightCompensation->Mode = (enum tt__BacklightCompensationMode *) soap_malloc_zero(soap_ptr, sizeof(int)*timg__GetOptionsResponse->ImagingOptions->BacklightCompensation->__sizeMode);
+		timg__GetOptionsResponse->ImagingOptions->BacklightCompensation->Mode[0] = tt__BacklightCompensationMode__OFF;
+		timg__GetOptionsResponse->ImagingOptions->BacklightCompensation->Mode[1] = tt__BacklightCompensationMode__ON;
+		timg__GetOptionsResponse->ImagingOptions->BacklightCompensation->Level = NULL;
+		timg__GetOptionsResponse->ImagingOptions->Brightness = (struct tt__FloatRange *)soap_malloc_zero(soap_ptr, sizeof(struct tt__FloatRange));
+		timg__GetOptionsResponse->ImagingOptions->ColorSaturation = (struct tt__FloatRange *)soap_malloc_zero(soap_ptr, sizeof(struct tt__FloatRange));
+		timg__GetOptionsResponse->ImagingOptions->Contrast = (struct tt__FloatRange *)soap_malloc_zero(soap_ptr, sizeof(struct tt__FloatRange));
+		timg__GetOptionsResponse->ImagingOptions->Brightness->Min = 0;
+		timg__GetOptionsResponse->ImagingOptions->Brightness->Max = 255;
+		timg__GetOptionsResponse->ImagingOptions->Contrast->Min = 0;
+		timg__GetOptionsResponse->ImagingOptions->Contrast->Max = 255;
+		timg__GetOptionsResponse->ImagingOptions->Sharpness = (struct tt__FloatRange *)soap_malloc_zero(soap_ptr, sizeof(struct tt__FloatRange));
+		timg__GetOptionsResponse->ImagingOptions->Sharpness->Min = 0;
+		timg__GetOptionsResponse->ImagingOptions->Sharpness->Max = 225;
+		timg__GetOptionsResponse->ImagingOptions->ColorSaturation->Min = 0;
+		timg__GetOptionsResponse->ImagingOptions->ColorSaturation->Max = 255;
+		timg__GetOptionsResponse->ImagingOptions->__sizeIrCutFilterModes = 0;
+		timg__GetOptionsResponse->ImagingOptions->IrCutFilterModes = NULL;
+		timg__GetOptionsResponse->ImagingOptions->Exposure = NULL;		
+		timg__GetOptionsResponse->ImagingOptions->Focus = NULL;
+		timg__GetOptionsResponse->ImagingOptions->WideDynamicRange = (struct tt__WideDynamicRangeOptions20*)soap_malloc_zero(soap_ptr, sizeof(struct tt__WideDynamicRangeOptions20));
+		timg__GetOptionsResponse->ImagingOptions->WideDynamicRange->__sizeMode = 2;
+		timg__GetOptionsResponse->ImagingOptions->WideDynamicRange->Mode = (enum tt__WideDynamicMode *)soap_malloc_zero(soap_ptr, sizeof(int)*timg__GetOptionsResponse->ImagingOptions->WideDynamicRange->__sizeMode);
+		timg__GetOptionsResponse->ImagingOptions->WideDynamicRange->Mode[0] = tt__WideDynamicMode__OFF;
+		timg__GetOptionsResponse->ImagingOptions->WideDynamicRange->Mode[1] = tt__WideDynamicMode__ON;
+		timg__GetOptionsResponse->ImagingOptions->WideDynamicRange->Level = (struct tt__FloatRange*)soap_malloc_zero(soap_ptr, sizeof(struct tt__FloatRange));
+		timg__GetOptionsResponse->ImagingOptions->WideDynamicRange->Level->Min = 0;
+		timg__GetOptionsResponse->ImagingOptions->WideDynamicRange->Level->Max = 5;
+		timg__GetOptionsResponse->ImagingOptions->WhiteBalance = (struct tt__WhiteBalanceOptions20*)soap_malloc_zero(soap_ptr, sizeof(struct tt__WhiteBalanceOptions20));
+		timg__GetOptionsResponse->ImagingOptions->WhiteBalance->__sizeMode = 2;
+		timg__GetOptionsResponse->ImagingOptions->WhiteBalance->Mode = (enum tt__WhiteBalanceMode*)soap_malloc_zero(soap_ptr, sizeof(int)*timg__GetOptionsResponse->ImagingOptions->WhiteBalance->__sizeMode );
+		timg__GetOptionsResponse->ImagingOptions->WhiteBalance->Mode[0] = tt__WhiteBalanceMode__AUTO;
+		timg__GetOptionsResponse->ImagingOptions->WhiteBalance->Mode[1] = tt__WhiteBalanceMode__MANUAL;
+		timg__GetOptionsResponse->ImagingOptions->WhiteBalance->YrGain = (struct tt__FloatRange*)soap_malloc_zero(soap_ptr, sizeof(struct tt__FloatRange));
+		timg__GetOptionsResponse->ImagingOptions->WhiteBalance->YrGain->Min = 0;
+		timg__GetOptionsResponse->ImagingOptions->WhiteBalance->YrGain->Max = 1023;
+		timg__GetOptionsResponse->ImagingOptions->WhiteBalance->YbGain = (struct tt__FloatRange*)soap_malloc_zero(soap_ptr, sizeof(struct tt__FloatRange));
+		timg__GetOptionsResponse->ImagingOptions->WhiteBalance->YbGain->Min = 0;
+		timg__GetOptionsResponse->ImagingOptions->WhiteBalance->YbGain->Max = 1023;
+		timg__GetOptionsResponse->ImagingOptions->Extension = NULL;
+
+		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out, Not Implement.........\n", __func__);
+		ONVIF_INFO("%s normal out.........\n", __func__);
+		return SOAP_OK;
+	}
+	while (0);
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s abnormal out.........\n", __func__);
+    ONVIF_INFO("%s abnormal out.........\n", __func__);
+    return SOAP_SVR_FAULT;
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 __timg__Move(struct soap* soap_ptr, struct _timg__Move *timg__Move, struct _timg__MoveResponse *timg__MoveResponse)
+{
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
+    ONVIF_INFO("%s In.........\n", __func__);
+    ONVIF_Fault(soap_ptr,"ter:ActionNotSupported", "ter:NoImagingForSource", NULL); 
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out, Not Implement.........\n", __func__);
+    ONVIF_INFO("%s normal out.........\n", __func__);
+    return SOAP_SVR_FAULT;
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 __timg__Stop(struct soap* soap_ptr, struct _timg__Stop *timg__Stop, struct _timg__StopResponse *timg__StopResponse)
+{
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
+    ONVIF_INFO("%s In.........\n", __func__);
+    ONVIF_Fault(soap_ptr,"ter:ActionNotSupported", "ter:NoImagingForSource", NULL); 
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out, Not Implement.........\n", __func__);
+    ONVIF_INFO("%s normal out.........\n", __func__);
+    return SOAP_SVR_FAULT;
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 __timg__GetStatus(struct soap* soap_ptr, struct _timg__GetStatus *timg__GetStatus, struct _timg__GetStatusResponse *timg__GetStatusResponse)
+{
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
+    ONVIF_INFO("%s In.........\n", __func__);
+    ONVIF_Fault(soap_ptr,"ter:ActionNotSupported", "ter:NoImagingForSource", NULL); 
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out, Not Implement.........\n", __func__);
+    ONVIF_INFO("%s normal out.........\n", __func__);
+    return SOAP_SVR_FAULT;
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 __timg__GetMoveOptions(struct soap* soap_ptr, struct _timg__GetMoveOptions *timg__GetMoveOptions, struct _timg__GetMoveOptionsResponse *timg__GetMoveOptionsResponse)
+{
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
+    ONVIF_INFO("%s In.........\n", __func__);
+    ONVIF_Fault(soap_ptr,"ter:ActionNotSupported", "ter:NoImagingForSource", NULL); 
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out, Not Implement.........\n", __func__);
+    ONVIF_INFO("%s normal out.........\n", __func__);
+    return SOAP_SVR_FAULT;
+}
 
