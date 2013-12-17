@@ -16,10 +16,10 @@ public:
     GMI_RESULT Initialize( const void_t *Parameter, size_t ParameterLength );
     GMI_RESULT Deinitialize();
 
-    GMI_RESULT RegisterEventDetector( SafePtr<EventDetector>& Detector );
+    GMI_RESULT RegisterEventDetector( ReferrencePtr<EventDetector> Detector, const void_t *Parameter, size_t ParameterLength );
     GMI_RESULT UnregisterEventDetector( uint32_t DectectorId );
 
-    GMI_RESULT RegisterEventProcessor( SafePtr<EventProcessor>& Processor );
+    GMI_RESULT RegisterEventProcessor( ReferrencePtr<EventProcessor> Processor, const void_t *Parameter, size_t ParameterLength );
     GMI_RESULT UnregisterEventProcessor( uint32_t ProcessorId );
 
     GMI_RESULT Start();

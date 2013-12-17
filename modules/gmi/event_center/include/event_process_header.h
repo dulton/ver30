@@ -18,4 +18,6 @@ enum EventDetectorType
     e_EventDetectorType_Passive,
 };
 
+typedef void_t (*EventCallback)( void_t *UserData, uint32_t EventId, void_t *Parameter, size_t ParamLength );
+
 #endif//EVENT_PROCESS_HEADER

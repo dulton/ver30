@@ -48,9 +48,9 @@ GMI_RESULT EventProcessCenter::Deinitialize()
     return Result;
 }
 
-GMI_RESULT EventProcessCenter::RegisterEventProcessor( SafePtr<EventProcessor>& Processor )
+GMI_RESULT EventProcessCenter::RegisterEventProcessor( ReferrencePtr<EventProcessor>& Processor, const void_t *Parameter, size_t ParameterLength )
 {
-    std::vector< SafePtr<EventProcessor> >::iterator ProcessorIt = m_EventProcessors.begin(), ProcessorEnd = m_EventProcessors.end();
+    std::vector< ReferrencePtr<EventProcessor> >::iterator ProcessorIt = m_EventProcessors.begin(), ProcessorEnd = m_EventProcessors.end();
     for ( ; ProcessorIt != ProcessorEnd; ++ProcessorIt )
     {
         if ( Processor->GetId() == (*ProcessorIt)->GetId() )
@@ -59,14 +59,14 @@ GMI_RESULT EventProcessCenter::RegisterEventProcessor( SafePtr<EventProcessor>& 
         }
     }
 
-    Processor->Start( NULL, 0 );
+    Processor->Start( Parameter, ParameterLength );
     m_EventProcessors.push_back( Processor );
     return GMI_SUCCESS;
 }
 
 GMI_RESULT EventProcessCenter::UnregisterEventProcessor( uint32_t ProcessorId )
 {
-    std::vector< SafePtr<EventProcessor> >::iterator ProcessorIt = m_EventProcessors.begin(), ProcessorEnd = m_EventProcessors.end();
+    std::vector< ReferrencePtr<EventProcessor> >::iterator ProcessorIt = m_EventProcessors.begin(), ProcessorEnd = m_EventProcessors.end();
     for ( ; ProcessorIt != ProcessorEnd; ++ProcessorIt )
     {
         if ( ProcessorId == (*ProcessorIt)->GetId() )
@@ -80,24 +80,6 @@ GMI_RESULT EventProcessCenter::UnregisterEventProcessor( uint32_t ProcessorId )
     return GMI_INVALID_PARAMETER;
 }
 
-GMI_RESULT EventProcessCenter::Notify( uint32_t EventId, void_t *Parameter, size_t ParameterLength )
-{
-    GMI_RESULT Result = m_OperationLock.Lock( TIMEOUT_INFINITE );
-    if ( FAILED( Result ) )
-    {
-        return Result;
-    }
-
-    std::vector< SafePtr<EventProcessor> >::iterator ProcessorIt = m_EventProcessors.begin(), ProcessorEnd = m_EventProcessors.end();
-    for ( ; ProcessorIt != ProcessorEnd; ++ProcessorIt )
-    {
-        (*ProcessorIt)->Notify( EventId, Parameter, ParameterLength );
-    }
-
-    m_OperationLock.Unlock();
-    return Result;
-}
-
 GMI_RESULT EventProcessCenter::Lock()
 {
     return m_InstanceLock.Lock( TIMEOUT_INFINITE );
@@ -106,4 +88,22 @@ GMI_RESULT EventProcessCenter::Lock()
 GMI_RESULT EventProcessCenter::Unlock()
 {
     return m_InstanceLock.Unlock();
+}
+
+GMI_RESULT EventProcessCenter::Notify( uint32_t EventId, void_t *Parameter, size_t ParameterLength )
+{
+    GMI_RESULT Result = m_OperationLock.Lock( TIMEOUT_INFINITE );
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+
+    std::vector< ReferrencePtr<EventProcessor> >::iterator ProcessorIt = m_EventProcessors.begin(), ProcessorEnd = m_EventProcessors.end();
+    for ( ; ProcessorIt != ProcessorEnd; ++ProcessorIt )
+    {
+        (*ProcessorIt)->Notify( EventId, Parameter, ParameterLength );
+    }
+
+    m_OperationLock.Unlock();
+    return Result;
 }

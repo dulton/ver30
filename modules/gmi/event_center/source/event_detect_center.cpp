@@ -11,7 +11,7 @@ EventDetectCenter::~EventDetectCenter(void)
 {
 }
 
-GMI_RESULT EventDetectCenter::Initialize( ReferrencePtr<EventProcessCenter, DefaultObjectDeleter, MultipleThreadModel>& ProcessCenter, const void_t *Parameter, size_t ParameterLength )
+GMI_RESULT EventDetectCenter::Initialize( ReferrencePtr<EventProcessor, DefaultObjectDeleter, MultipleThreadModel> ProcessCenter, const void_t *Parameter, size_t ParameterLength )
 {
     m_ProcessCenter = ProcessCenter;
     return GMI_SUCCESS;
@@ -22,9 +22,9 @@ GMI_RESULT EventDetectCenter::Deinitialize()
     return GMI_SUCCESS;
 }
 
-GMI_RESULT EventDetectCenter::RegisterEventDetector( SafePtr<EventDetector>& Detector )
+GMI_RESULT EventDetectCenter::RegisterEventDetector( ReferrencePtr<EventDetector>& Detector, const void_t *Parameter, size_t ParameterLength )
 {
-    std::vector< SafePtr<EventDetector> >::iterator DetectorIt = m_EventDetectors.begin(), DetectorEnd = m_EventDetectors.end();
+    std::vector< ReferrencePtr<EventDetector> >::iterator DetectorIt = m_EventDetectors.begin(), DetectorEnd = m_EventDetectors.end();
     for ( ; DetectorIt != DetectorEnd; ++DetectorIt )
     {
         if ( Detector->GetId() == (*DetectorIt)->GetId() )
@@ -33,27 +33,30 @@ GMI_RESULT EventDetectCenter::RegisterEventDetector( SafePtr<EventDetector>& Det
         }
     }
 
+    GMI_RESULT Result = GMI_SUCCESS;
     if ( e_EventDetectorType_Passive == Detector->GetType() )
     {
-        Detector->Start( m_ProcessCenter, NULL, 0 );
+        Detector->SetEventProcessor( m_ProcessCenter );
+        Result = Detector->Start( Parameter, ParameterLength );
     }
     m_EventDetectors.push_back( Detector );
-    return GMI_SUCCESS;
+    return Result;
 }
 
 GMI_RESULT EventDetectCenter::UnregisterEventDetector( uint32_t DectectorId )
 {
-    std::vector< SafePtr<EventDetector> >::iterator DetectorIt = m_EventDetectors.begin(), DetectorEnd = m_EventDetectors.end();
+    std::vector< ReferrencePtr<EventDetector> >::iterator DetectorIt = m_EventDetectors.begin(), DetectorEnd = m_EventDetectors.end();
     for ( ; DetectorIt != DetectorEnd; ++DetectorIt )
     {
         if ( DectectorId == (*DetectorIt)->GetId() )
         {
+            GMI_RESULT Result = GMI_SUCCESS;
             if ( e_EventDetectorType_Passive == (*DetectorIt)->GetType() )
             {
-                (*DetectorIt)->Stop();
+                Result = (*DetectorIt)->Stop();
             }
             m_EventDetectors.erase( DetectorIt );
-            return GMI_SUCCESS;
+            return Result;
         }
     }
 
@@ -62,10 +65,10 @@ GMI_RESULT EventDetectCenter::UnregisterEventDetector( uint32_t DectectorId )
 
 GMI_RESULT EventDetectCenter::Start()
 {
-    return GMI_NOT_IMPLEMENT;
+    return GMI_SUCCESS;
 }
 
 GMI_RESULT EventDetectCenter::Stop()
 {
-    return GMI_NOT_IMPLEMENT;
+    return GMI_SUCCESS;
 }

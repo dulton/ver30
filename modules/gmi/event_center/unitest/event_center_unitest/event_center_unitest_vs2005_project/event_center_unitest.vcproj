@@ -40,12 +40,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\..\prebuilt\include\osal\"
+				AdditionalIncludeDirectories="..\..\..\include;..\..\..\..\..\..\prebuilt\include\command_pipeline;..\..\..\..\..\..\prebuilt\include\osal\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -61,6 +61,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="..\..\..\library\event_center_vs2005_d.lib ..\..\..\..\..\..\prebuilt\win7\library\command_pipeline_vs2005_d.lib ..\..\..\..\..\..\prebuilt\win7\library\log_utils_vs2005_d.lib ..\..\..\..\..\..\prebuilt\win7\library\osal_vs2005_d.lib ws2_32.lib"
+				OutputFile="../binary/$(ProjectName)_d.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -116,10 +118,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\prebuilt\include\osal\"
+				AdditionalIncludeDirectories="..\..\..\include;..\..\..\..\..\..\prebuilt\include\command_pipeline;..\..\..\..\..\..\prebuilt\include\osal\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -135,6 +137,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="..\..\..\library\event_center_vs2005.lib ..\..\..\..\..\..\prebuilt\win7\library\command_pipeline_vs2005.lib ..\..\..\..\..\..\prebuilt\win7\library\log_utils_vs2005.lib ..\..\..\..\..\..\prebuilt\win7\library\osal_vs2005.lib ws2_32.lib"
+				OutputFile="../binary/$(ProjectName).exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -171,19 +175,36 @@
 	<References>
 	</References>
 	<Files>
-		<File
-			RelativePath=".\event_center_unitest.cpp"
+		<Filter
+			Name="class"
 			>
-		</File>
+			<File
+				RelativePath="..\source\simple_event_processor.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\source\simple_event_processor.h"
+				>
+			</File>
+			<File
+				RelativePath="..\source\simulated_event_detector.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\source\simulated_event_detector.h"
+				>
+			</File>
+		</Filter>
 		<File
-			RelativePath=".\stdafx.cpp"
+			RelativePath="..\source\event_center_unitest.cpp"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
 				>
 				<Tool
 					Name="VCCLCompilerTool"
-					UsePrecompiledHeader="1"
+					ObjectFile="$(IntDir)\$(InputName)1.obj"
+					XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -191,12 +212,35 @@
 				>
 				<Tool
 					Name="VCCLCompilerTool"
-					UsePrecompiledHeader="1"
+					ObjectFile="$(IntDir)\$(InputName)1.obj"
+					XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 				/>
 			</FileConfiguration>
 		</File>
 		<File
-			RelativePath=".\stdafx.h"
+			RelativePath="..\source\stdafx.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					ObjectFile="$(IntDir)\$(InputName)1.obj"
+					XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					ObjectFile="$(IntDir)\$(InputName)1.obj"
+					XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\source\stdafx.h"
 			>
 		</File>
 	</Files>
