@@ -813,7 +813,7 @@ typedef struct tagLogInfoInt
 
 
 //alarm info
-typedef struct tagAlarmInfo
+typedef struct tagAlarmInfor
 {
     uint64_t s_WaringId;
     int32_t  s_WaringType;
@@ -826,7 +826,7 @@ typedef struct tagAlarmInfo
     {
         uint32_t s_IoNum;
     }s_ExtraInfo;
-}SysPkgAlarmInfo;
+}SysPkgAlarmInfor;
 
 
 //log major type and minor type

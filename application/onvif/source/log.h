@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/time.h>
-#include "log_client.h"
+#include "share_memory_log_client.h"
 
 //debug switch
 #define DEBUG_ONVIF

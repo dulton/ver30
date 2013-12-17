@@ -2,7 +2,7 @@
 #include "ipc_fw_v3.x_setting.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "log.h"
-#include "log_client.h"
+#include "share_memory_log_client.h"
 
 #ifdef DEBUG_ONVIF
 int        g_LogCount = 0;
@@ -12,26 +12,7 @@ struct tm *pTime;
 char_t     g_Buffer[1024];
 #endif
 
-LogClient  g_Client;
-
-GMI_RESULT GetOnvifServerLogConfig(uint32_t *ModuleId, char_t *ModuleName, char_t *ModulePipeName, long_t *ModulePipeMutexId, char_t *PeerPipeName, long_t *PeerPipeMutexId, char_t *ServerPipeName, long_t *ServerPipeMutexId )
-{
-    *ModuleId = GMI_LOG_MODULE_ONVIF_ID;
-
-    strcpy(ModuleName, GMI_LOG_MODULE_ONVIF_NAME);
-
-    strcpy(ModulePipeName, LOG_ONVIF_DEFAULT_CLIENT_PIPE_NAME);
-    *ModulePipeMutexId = LOG_ONVIF_DEFAULT_CLIENT_PIPE_MUTEX_ID;
-
-    strcpy(PeerPipeName, LOG_ONVIF_DEFAULT_PEER_PIPE_NAME);
-    *PeerPipeMutexId = LOG_ONVIF_DEFAULT_PEER_PIPE_MUTEX_ID;
-
-    strcpy(ServerPipeName, LOG_SERVER_DEFAULT_PIPE_NAME);
-    *ServerPipeMutexId = LOG_SERVER_DEFAULT_PIPE_MUTEX_ID;
-
-    return GMI_SUCCESS;
-}
-
+// LogClient  g_Client;
 
 int LogInitial()
 {

@@ -3,7 +3,7 @@
 #include "ipc_fw_v3.x_resource.h"
 #include "ipc_fw_v3.x_setting.h"
 #include "log.h"
-#include "log_client.h"
+#include "share_memory_log_client.h"
 
 
 #ifdef DEBUG_SYS_SERVER
@@ -16,7 +16,7 @@ struct tm *pTime;
 char_t     g_Buffer[1024];
 #endif
 
-LogClient  g_Client;
+//LogClient  g_Client;
 
 GMI_RESULT GetMediaCenterServerLogConfig( uint32_t *ModuleId, char_t *ModuleName, char_t *ModulePipeName, long_t *ModulePipeMutexId, char_t *PeerPipeName, long_t *PeerPipeMutexId, char_t *ServerPipeName, long_t *ServerPipeMutexId )
 {
@@ -54,14 +54,14 @@ GMI_RESULT GetMediaCenterServerLogConfig( uint32_t *ModuleId, char_t *ModuleName
         return Result;
     }
 #else
-    strcpy( ModulePipeName, LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_NAME );
-    *ModulePipeMutexId = LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID;
+    // strcpy( ModulePipeName, LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_NAME );
+    // *ModulePipeMutexId = LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID;
 
-    strcpy( PeerPipeName, LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_NAME );
-    *PeerPipeMutexId = LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID;
+    // strcpy( PeerPipeName, LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_NAME );
+    // *PeerPipeMutexId = LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID;
 
-    strcpy( ServerPipeName, LOG_SERVER_DEFAULT_PIPE_NAME);
-    *ServerPipeMutexId = LOG_SERVER_DEFAULT_PIPE_MUTEX_ID;
+    // strcpy( ServerPipeName, LOG_SERVER_DEFAULT_PIPE_NAME);
+    // *ServerPipeMutexId = LOG_SERVER_DEFAULT_PIPE_MUTEX_ID;
 #endif
 
 #elif defined( _WIN32 )
