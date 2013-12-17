@@ -76,6 +76,12 @@ GMI_RESULT GMI_StorageDeviceInit(StorageInitIn *StorageInitParamPtr)
 				RetVal = GMI_FAIL;
 				break;
 			}
+
+			if(LOCAL_RET_OK != CreateDbProcessThread())
+			{
+				RetVal = GMI_FAIL;
+				break;
+			}
 			
 		}
 	}while(0);
@@ -92,11 +98,13 @@ GMI_RESULT GMI_StorageDeviceUninit(StorageUninitIn *StorageUninitParamPtr)
 		return GMI_INVALID_PARAMETER;
 	}
 
+	printf("test11122\n");
 	if(LOCAL_RET_OK != VidRecordUninit())
 	{
 		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "VidRecordUninit error.\n");
 		return GMI_SYSTEM_ERROR;	
 	}
+	printf("test3333\n");
 
 	return RetVal;
 }

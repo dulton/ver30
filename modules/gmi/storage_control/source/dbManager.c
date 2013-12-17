@@ -180,7 +180,7 @@ void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *
 	int ret = -1;
 	int i = 0, j = 0;
 
-	if((NULL == param)  || (NULL == dbFd) || (0 <= queryResultNum))
+	if((NULL == param)  || (NULL == dbFd) || (0 >= queryResultNum))
 	{
 		PRT_ERR(("queryDbRecord param NULL.\n"));
 		return;

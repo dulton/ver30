@@ -10,7 +10,7 @@ pthread_mutex_t			g_LockHDPart;				/*全局硬盘操作锁*/
 sqlite3					*g_DbFd = NULL;				/*数据库文件描述符*/
 int32_t				    g_DbStartBackup = FALSE;	/*是否开始备份操作*/
 int32_t				    g_DbBackupCount = 0;	    /*备份成功的计数操作*/
-boolean_t               g_RecScheduleMsg = -1;
+int32_t                 g_RecScheduleMsg = -1;
 int32_t                 g_IsRecordStart[MAX_ENCODER_NUM]; /*各通道是否开启录像标识*/
 RecordInfoManage  		g_VidRecConfig[MAX_ENCODER_NUM];
 RecParamCfg             g_RecParamConfig;
@@ -23,11 +23,17 @@ static int32_t l_DbProcessThreadcreated = 0;
 static int32_t l_IsStartDbProcessTask = 0;
 int32_t l_IsStartDataRecTask[4] = {0};
 
+static int32_t l_ChannelNum = 0;
+int32_t l_StreamNum = 0;
+
+
+static int32_t l_MaxSizePerFile = 0;
 
 #define		PRT_ERR(x)	printf x
 #define		PRT_TEST(x)	printf x
 
 #define     FOREVER    while(1)
+
 
 static int32_t UmountHdisk(char_t *InDstPathName)
 {
@@ -109,7 +115,6 @@ int32_t	VidAudDataToBuf(uint32_t Channel, char_t *PBuffer, int32_t Size, int32_t
 	    RecMsg.s_Time    = time(NULL);		
 	} 
 	msgsnd(PVidRecMan->s_RecordMsgId, &RecMsg, MsgLen, IPC_NOWAIT);
-	
 	return LOCAL_RET_OK;
 }
 
@@ -196,7 +201,7 @@ static int32_t IsNeedNewDatabase()
 	close(Fd);
 
 	/*需要新建数据库文件*/
-	if(1 <= (Result0+Result1))
+	if(2 == (Result0+Result1))
 	{
 		return LOCAL_RET_OK;
 	}
@@ -241,6 +246,14 @@ static int32_t GetDiskSpace(int32_t *TotalSpace, int32_t *FreeSpace)
 	return RetVal;	
 }
 
+static void_t InitHdPart()
+{
+	g_DbFd = NULL;
+	memset(&g_HdPart, 0, sizeof(g_HdPart));
+	
+}
+
+
 /*录像相关内容初始化*/
 int32_t VidRecordInit()
 {
@@ -264,10 +277,13 @@ int32_t VidRecordInit()
 		 	return LOCAL_RET_ERR;
 		 }
 		 memset(&(g_SegFileInfo[Tmp]), 0, sizeof(SegFileInfo));
+		 g_IsRecordStart[Tmp] = FALSE;
 	 }
 
 	memset(&g_RecRefenceParam, 0, sizeof(g_RecRefenceParam));
-	
+	memset(&g_RecParamConfig, 0, sizeof(g_RecParamConfig));
+	/*初始化全局变量*/
+	InitHdPart();
 	return LOCAL_RET_OK;
 }
 
@@ -276,18 +292,39 @@ int32_t VidRecordUninit()
 {
 	int32_t            Tmp     = 0;
 	RecordInfoManage  *PChannel = NULL;
+	RecordMsgType      RecordMsg;
+	int32_t            RecMsgLen  = sizeof(RecordMsgType) - sizeof(long_t);
 
+	
 	for(Tmp = 0; Tmp < MAX_ENCODER_NUM; ++Tmp) 
-	{
-		if(PChannel->s_RecordBuffer.s_Buffer != NULL)
+	{	
+		PChannel = &(g_VidRecConfig[Tmp]);
+		if(NULL != PChannel)
 		{
-		 	free(PChannel->s_RecordBuffer.s_Buffer);
-		 	PChannel->s_RecordBuffer.s_Buffer = NULL;
+			if ((g_RecParamConfig.s_IsEnableRecord == FALSE) && (g_IsRecordStart[0] == TRUE))
+			{
+				memset(&RecordMsg, 0, sizeof(RecordMsgType));
+				RecordMsg.s_MsgType        = MSG_TYPE_REC;
+				RecordMsg.s_CmdType       = CMD_TYPE_STOP_REC;
+				msgsnd(PChannel->s_RecordMsgId, &RecordMsg, RecMsgLen, 0);
+				g_IsRecordStart[0]    = FALSE;
+			}
+			usleep(200000);
+		
+			if(PChannel->s_RecordMsgId > 0)
+			{
+				msgctl(PChannel->s_RecordMsgId, IPC_RMID, 0);
+				PChannel->s_RecordMsgId = -1;
+			}
+			if(PChannel->s_RecordBuffer.s_Buffer != NULL)
+			{
+			 	free(PChannel->s_RecordBuffer.s_Buffer);
+			 	PChannel->s_RecordBuffer.s_Buffer = NULL;
+			}
 		}
-		if(PChannel->s_RecordMsgId > 0)
+		else
 		{
-			msgctl(PChannel->s_RecordMsgId, IPC_RMID, 0);
-			PChannel->s_RecordMsgId = -1;
+			PRT_TEST(("VidRecordUninit PChannel NULL\n"));
 		}
 		 memset(&(g_SegFileInfo[Tmp]), 0, sizeof(SegFileInfo));
 	}
@@ -297,21 +334,17 @@ int32_t VidRecordUninit()
 		msgctl(g_RecScheduleMsg, IPC_RMID, 0);
 		g_RecScheduleMsg = -1;
 	}
-	
-	memset(&g_RecRefenceParam, 0, sizeof(g_RecRefenceParam));
+
 	l_DbProcessThreadcreated = 0;
 	l_RecProcessThreadcreated = 0;
 	l_IsStartDbProcessTask = 0;
+	l_IsStartDataRecTask[0] = 0;
+	memset(&g_RecRefenceParam, 0, sizeof(g_RecRefenceParam));
+	sleep(2);
+		
 	return LOCAL_RET_OK;
 }
 
-
-static void_t InitHdPart()
-{
-	g_DbFd = NULL;
-	memset(&g_HdPart, 0, sizeof(g_HdPart));
-	
-}
 
 static int32_t CreateDataReceivedThread(int32_t ChanId, int32_t StreamId)
 {
@@ -324,14 +357,13 @@ static int32_t CreateDataReceivedThread(int32_t ChanId, int32_t StreamId)
 		return LOCAL_RET_ERR;
 	}
 
-	l_IsStartDataRecTask[StreamId] = 1;
 	if(1 == l_IsStartDataRecTask[StreamId])
 	{
         DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "DataReceived has created.");
 		return LOCAL_RET_OK;
 	}
-
-    RetVal = pthread_create(&DataRecTid, NULL, RecordDataReceiveTask, &StreamId);
+	l_StreamNum = StreamId;
+    RetVal = pthread_create(&DataRecTid, NULL, RecordDataReceiveTask, &l_StreamNum);
     if (0 != RetVal)
     {
         DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordDataReceiveTask thread create error.");
@@ -405,9 +437,6 @@ int32_t InitPartion(int32_t FileSize)
 	sync();
 	sleep(1);
 	#endif
-
-	/*初始化全局变量*/
-	InitHdPart();
 
 	memset(&PartInfo, 0, sizeof(PartInfo));
 	PartInfo.s_FId = 0;
@@ -644,6 +673,7 @@ int32_t InitPartion(int32_t FileSize)
 	QueryResult = NULL;
 	RetVal = LOCAL_RET_OK;
 	CreateDataReceivedThread(0,0);
+	l_MaxSizePerFile = FileSize;
 errExit:
 	if(NULL != QueryResult)
 	{
@@ -674,6 +704,7 @@ int32_t Sdformat(int32_t FileSize)
 	CREATE_LOCK(&g_LockHDPart);
     LOCK(&g_LockHDPart);
     InitHdPart();
+	VidRecordUninit();
 	UNLOCK(&g_LockHDPart);
 
 	/*判断有无目标文件夹,否则创建目标文件夹*/
@@ -834,7 +865,8 @@ int32_t Sdformat(int32_t FileSize)
 	UNLOCK(&g_LockHDPart);
 	PRT_TEST(("format hdisk successful\n"));
 	InitPartion(FileSize);				//格式化后重新初始化，不需要重启
-
+	CreateRecProcessThread(0);
+	CreateDbProcessThread();
 errExit:	
 	PRT_TEST(("Sdformat end ......\n"));
 	return Result;
@@ -875,6 +907,7 @@ static void *RecordScheduleProcessTask(void *InParam)
 		g_IsRecordStart[i] = FALSE;
 	}
 	
+	printf("RecordScheduleProcessTask start...\n");
 	FOREVER 
 	{
 		if(g_RecScheduleMsg < 0)
@@ -903,32 +936,37 @@ static void *RecordScheduleProcessTask(void *InParam)
 					break;
 		    }
 		}
-		
 		for (ChanIdx = 0; ChanIdx < MAX_ENCODER_NUM; ChanIdx++)
 		{
 			PChan = &(g_VidRecConfig[ChanIdx]);
 			if(IsFindTimeSeg == TRUE)
 			{
-				if(g_RecParamConfig.s_AllDayRecParam[CurrDay].s_IsAllDayRecord == FALSE)
+				if(g_RecParamConfig.s_AllDayRecParam[CurrDay].s_IsAllDayRecord == FLAG_ALLDAY_REC_CLOSE)
 				{
+					
 					for (i = 0; i < 4; i++) 
 					{
+				        PRecordParam = &(g_RecParamConfig.s_RecordParam[CurrDay][i]);
 						if ((PRecordParam->s_RecordTimeSeg.s_StopTime > PRecordParam->s_RecordTimeSeg.s_StartTime)
 							&& (Curhm >= PRecordParam->s_RecordTimeSeg.s_StartTime)
 							&& (Curhm < PRecordParam->s_RecordTimeSeg.s_StopTime)) 
 						{
 							TempTm.tm_year = CurrTm.tm_year;
 							TempTm.tm_mon  = CurrTm.tm_mon;
-							TempTm.tm_mday = CurrTm.tm_mday;	
+							TempTm.tm_mday = CurrTm.tm_mday;
+							
 							if (PRecordParam->s_RecordTimeSeg.s_StopTime == (24<<16)) 
 							{
+								
 								TempTm.tm_hour = 23;
 								TempTm.tm_min  = 59;
 								TempTm.tm_sec  = 59;
 								RecStopTime[ChanIdx] = mktime(&TempTm) + 1;
+								
 							}
 							else 
 							{
+								
 								TempTm.tm_hour = (PRecordParam->s_RecordTimeSeg.s_StopTime >>16) & 0xffff;
 								TempTm.tm_min  = PRecordParam->s_RecordTimeSeg.s_StopTime & 0xffff;
 								TempTm.tm_sec  = 0;
@@ -939,6 +977,7 @@ static void *RecordScheduleProcessTask(void *InParam)
 				}
 				else
 				{
+					
 					TempTm.tm_year = CurrTm.tm_year;
 					TempTm.tm_mon  = CurrTm.tm_mon;
 					TempTm.tm_mday = CurrTm.tm_mday;
@@ -948,12 +987,12 @@ static void *RecordScheduleProcessTask(void *InParam)
 					RecStopTime[ChanIdx] = mktime(&TempTm) + 1;
 				}
 			}
-			
  			/*如果录像已经启动，判断停止录像的条件成不成立*/
 		    if (TRUE == g_IsRecordStart[ChanIdx]) 
 			{
 				 if (CurrTime >= RecStopTime[ChanIdx])
 				 {
+				    memset(&RecordMsg, 0, sizeof(RecordMsgType));
 		            RecordMsg.s_MsgType  = MSG_TYPE_REC;
 					RecordMsg.s_CmdType = CMD_TYPE_STOP_REC;
 					msgsnd(PChan->s_RecordMsgId, &RecordMsg, RecMsgLen, 0);
@@ -1021,7 +1060,7 @@ static void *RecordScheduleProcessTask(void *InParam)
 				    IsRecord = FALSE;
 				}
 
-				if (IsRecord == TRUE)
+				if ((IsRecord == TRUE) && (g_IsRecordStart[ChanIdx] == FALSE))
 				{
 				    memset(&RecordMsg, 0, sizeof(RecordMsgType));
 					RecordMsg.s_MsgType     = MSG_TYPE_REC;
@@ -1033,13 +1072,16 @@ static void *RecordScheduleProcessTask(void *InParam)
 				}
 			} 
 
+			PRT_TEST(("g_RecParamConfig.s_IsEnableRecord=%d, g_IsRecordStart[%d]=%d\n", 
+				g_RecParamConfig.s_IsEnableRecord, ChanIdx, g_IsRecordStart[ChanIdx]));
+
 			if ((g_RecParamConfig.s_IsEnableRecord == FALSE) && (g_IsRecordStart[ChanIdx] == TRUE))
 			{
 				memset(&RecordMsg, 0, sizeof(RecordMsgType));
 				RecordMsg.s_MsgType        = MSG_TYPE_REC;
 				RecordMsg.s_CmdType       = CMD_TYPE_STOP_REC;
 				msgsnd(PChan->s_RecordMsgId, &RecordMsg, RecMsgLen, 0);
-				g_IsRecordStart[ChanIdx]    = FALSE;
+				g_IsRecordStart[ChanIdx]    = FALSE;	
 			}
 		}
 		sleep(1);
@@ -1047,6 +1089,8 @@ static void *RecordScheduleProcessTask(void *InParam)
 
 ErrExit:
 	pthread_exit(NULL);
+	
+	printf("RecordScheduleProcessTask stop...\n");
 }
 
 /*刷新录像BUF里的I帧信息*/
@@ -1172,7 +1216,14 @@ static int32_t hdPart_Service(int32_t CmdType, SegmentIdxRecord * SegParam)
 		case ADD_TABLE_DB:
 			PRT_TEST(("****ADD_TABLE_DB***\n"));
 			LOCK(&g_LockHDPart);
-			addDbRecord(g_DbFd, RECORD_ADD_SEG, (char_t *)SegParam);
+			if(LOCAL_RET_OK != addDbRecord(g_DbFd, RECORD_ADD_SEG, (char_t *)SegParam))
+			{
+				g_HdPart.s_LastRecordNo = g_HdPart.s_SegRecNo;
+				g_HdPart.s_SegRecNo = g_HdPart.s_LastRecordNo+1;
+				SegParam->s_SId = g_HdPart.s_SegRecNo;
+				addDbRecord(g_DbFd, RECORD_ADD_SEG, (char_t *)SegParam);
+				PRT_ERR(("Last stop record abnormal\n"));
+			}
 			UNLOCK(&g_LockHDPart);
 			break;
 			
@@ -1362,7 +1413,7 @@ static int32_t FindNewFile()
 
 	memset(&SegParam, 0, sizeof(SegmentIdxRecord));
 	SegParam.s_SId = g_HdPart.s_SegRecNo;
-	PRT_TEST(("segParam.m_sId=%d\n", SegParam.s_SId));
+	PRT_TEST(("segParam.s_SId=%d\n", SegParam.s_SId));
 	if (hdPart_Service(GET_WRITABLE_FILE, &SegParam) == LOCAL_RET_ERR) {
 		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "can not find a writeable file. errno = %d\n", errno);
 		return LOCAL_RET_ERR;
@@ -1415,23 +1466,23 @@ static void *RecordStreamProcessTask(void *InParam)
 	time_t	  CurrTime 	= 0;
 	time_t	  LastTime 	= 0;
 	char_t	  *PRecBufBase;
-	int32_t *TmpChan = (int32_t*)InParam;
-	int32_t Chan =*TmpChan;
+	int32_t Chan = *(int32_t*)InParam;
 	RecordMsgType      RecMsg;
 	RecordInfoManage   *PChan;
 	SegmentIdxRecord   CurSegRec;
 	IFrameInfo         *PIFrames;
 	int32_t 		   UpdateTimes = 0;
-	
+	printf("Task test %d 00 \n", Chan);
 	PChan				  = &(g_VidRecConfig[Chan]);
 	PIFrames			  = PChan->s_IFrames;
 	PChan->s_RecordStart  = FALSE;	
 	PRecBufBase 		  = PChan->s_RecordBuffer.s_Buffer;	
 	RecBufLen 		      = PChan->s_RecordBuffer.s_Size;
+	printf("Task test 11 \n");
 	pthread_detach(pthread_self());
-
+	printf("RecordStreamProcessTask start...\n");
 	memset(&CurSegRec, 0, sizeof(CurSegRec));
-	while(1)
+	FOREVER
 	{
 		if(PChan->s_RecordMsgId < 0)
 		{	
@@ -1945,7 +1996,11 @@ static void *RecordStreamProcessTask(void *InParam)
 					LastTime = CurrTime;
 
 					/*达到单个录像文件上限值时，结束当前的录像记录，重新增加片段录像记录*/
-					if(CurSegRec.s_RecSegLen*MIN_SEG_REC_LEN >= MAX_LEN_RECORD)
+					if(l_MaxSizePerFile <= 0)
+					{
+						l_MaxSizePerFile = MAX_LEN_RECORD;
+					}
+					if(CurSegRec.s_RecSegLen*MIN_SEG_REC_LEN >= l_MaxSizePerFile)
 					{
 						PRT_TEST(("new record segment.\n"));
 						hdPart_Service(FINALIZE_FILE, &CurSegRec);
@@ -2004,6 +2059,8 @@ static void *RecordStreamProcessTask(void *InParam)
 		
 	}
 	pthread_exit(NULL);
+	
+	printf("RecordStreamProcessTask stop...\n");
 }
 
 
@@ -2017,21 +2074,22 @@ int32_t CreateRecProcessThread(int32_t Chan)
         DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordProcess thread has created.");
 		return LOCAL_RET_OK;
 	}
-	
     RetVal = pthread_create(&ScheduleTid, NULL, RecordScheduleProcessTask, NULL);
     if (0 != RetVal)
     {
         DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordScheduleProcess thread create error.");
         return LOCAL_RET_ERR;
     }
-	
-    RetVal = pthread_create(&ScheduleTid, NULL, RecordStreamProcessTask, (void *)(&Chan));
+	printf("123\n");
+	l_ChannelNum = Chan;
+    RetVal = pthread_create(&StreamTId, NULL, RecordStreamProcessTask, &l_ChannelNum);
     if (0 != RetVal)
     {
         DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordStreamProcess thread create error.");
         return LOCAL_RET_ERR;
     }
 	l_RecProcessThreadcreated = 1;
+	printf("345\n");
 
     return LOCAL_RET_OK;
 }
@@ -2042,6 +2100,8 @@ static void *RecordDbBackupTask(void *InParam)
 {
 	int32_t CycleNum = 60;
 	pthread_detach(pthread_self());
+	
+	printf("RecordDbBackupTask start...\n");
 	while(1)
 	{
 		g_DbStartBackup = TRUE;
@@ -2057,13 +2117,16 @@ static void *RecordDbBackupTask(void *InParam)
 			if(0 == l_IsStartDbProcessTask)
 			{	
 				DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordDbBackupTask exit.\n");							
-				break;
+				goto ErrExit;
 			}
 			sleep(1);
 		}
 		CycleNum = 60;
 	}
+ErrExit:
 	pthread_exit(NULL);
+	
+	printf("RecordDbBackupTask stop...\n");
 }
 
 /*异常处理线程*/
@@ -2074,6 +2137,7 @@ static void *ExceptionProcTask(void *InParam)
 	int32_t CycleNum = 6;
 	
 	pthread_detach(pthread_self());
+	printf("ExceptionProcTask start...\n");
 	while(1)
 	{
 		/*通过定时备份时的异常，检测磁盘异常*/
@@ -2107,13 +2171,16 @@ static void *ExceptionProcTask(void *InParam)
 			if(0 == l_IsStartDbProcessTask)
 			{	
 				DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "ExceptionProcTask exit.\n");							
-				break;
+				goto ErrExit;
 			}
 			sleep(1);
 		}
 		CycleNum = 6;
 	}
+ErrExit:
 	pthread_exit(NULL);
+	
+	printf("ExceptionProcTask stop...\n");
 }
 
 int32_t CreateDbProcessThread(void)
@@ -2216,7 +2283,7 @@ int32_t SetRecConfigParam(RecordParamConfigIn *InParam)
 	memcpy(&g_RecRefenceParam, InParam, sizeof(g_RecRefenceParam));
 	g_RecParamConfig.s_PreRecordTime = g_RecRefenceParam.s_PreRecordTime;
 	g_RecParamConfig.s_RecDelayTime = g_RecRefenceParam.s_DelayRecordTime;
-	g_RecParamConfig.s_IsCyclicRecord = g_RecRefenceParam.s_IsCirculerRec;
+	g_RecParamConfig.s_IsCyclicRecord = ((g_RecRefenceParam.s_IsCirculerRec==1)?FALSE:TRUE);
 
 	return LOCAL_RET_OK;
 }
@@ -2232,13 +2299,14 @@ int32_t SetRecScheduleConfig(RecordScheduleConfigIn *InParam)
 	}
 
 	g_RecParamConfig.s_IsEnableRecord = InParam->s_Enable;
+	PRT_TEST(("g_RecParamConfig.s_IsEnableRecord=%d\n", g_RecParamConfig.s_IsEnableRecord));
 	for(i=0; i<7; i++)
 	{
 		for(j=0; j<4; j++)
 		{
 			g_RecParamConfig.s_RecordParam[i][j].s_RecordTimeSeg.s_StartTime = InParam->s_RecStartTime[i][j];
 			g_RecParamConfig.s_RecordParam[i][j].s_RecordTimeSeg.s_StopTime = InParam->s_RecEndTime[i][j];
-			if((0 == InParam->s_RecStartTime[i][j]) && ((24<<16) == InParam->s_RecStartTime[i][j]))
+			if((0 == InParam->s_RecStartTime[i][j]) && ((24<<16) == InParam->s_RecEndTime[i][j]))
 			{
 				g_RecParamConfig.s_AllDayRecParam[i].s_IsAllDayRecord = FLAG_ALLDAY_REC_OPEN;
 				break;

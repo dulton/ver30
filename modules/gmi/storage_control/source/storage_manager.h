@@ -29,14 +29,14 @@ extern "C"
 #define  FLAG_ALLDAY_REC_CLOSE  0
 #define  FLAG_ALLDAY_REC_OPEN   1
 
-#define  SRC_PATH_NAME_SD		"/dev/mmcblk0"
+#define  SRC_PATH_NAME_SD		"/dev/mmcblk0p1"
 #define  DST_PATH_NAME_SD		"/mnt/sd1"
 
 #define  DB_FILE_NAME			"videoRecord.db"	/*录像文件数据库*/
 #define  AV_FILE_NAME			".mp4"
 #define  VIDEO_TABLE_NAME		"recordVideoTable"		/*录像片段记录表*/
 #define  FILE_TABLE_NAME		"recordFileTable"		/*录像文件信息记录表*/
-#define  DB_FILE_BAK_NAME		"bakVideoRecord.db"	/*备份录像文件数据库*/
+#define  DB_FILE_BAK_NAME		"bakvideoRecord.db"	/*备份录像文件数据库*/
 
 #define  DOS_O_CONTIG_CHK		0
 #define  HD_BLOCK_SIZE     		512
@@ -55,7 +55,7 @@ extern "C"
 #define  SECONDS_PER_DAY   		86400		//(24*60*60)
 #define  STREAM_FILE_LEN   		(256<<20) 	//256MB      	/*预分配文件的大小*/
 
-#define  MAX_LEN_RECORD			(32<<20)				/*单个录像文件最大字节数*/
+#define  MAX_LEN_RECORD			STREAM_FILE_LEN				/*单个录像文件最大字节数*/
 
 #define  MIN_SEG_REC_LEN   		(512<<10) 	//512KB
 #define  MAX_SEG_PER_FILE  		(STREAM_FILE_LEN/MIN_SEG_REC_LEN)
@@ -313,6 +313,10 @@ int32_t InitPartion(int32_t FileSize);
 
 /*创建录像处理线程*/
 int32_t CreateRecProcessThread(int32_t Chan);
+
+/*创建索引备份和磁盘检测线程*/
+int32_t CreateDbProcessThread(void);
+
 
 /*获取磁盘状态*/
 int32_t GetSDStatus(StorageStatusQueryResOut **QueryResPtr, 

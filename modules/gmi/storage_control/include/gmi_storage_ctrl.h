@@ -168,7 +168,7 @@ typedef struct tagRecordFileQueryRes
 }RecordFileQueryResOut;
 
 //录像下载和回放查询输入参数
-typedef struct tagTimeInfo
+typedef struct tagReplayInfo
 {
     uint32_t  s_RecReplayStartTime;    //录像回放起始时间点，UTC时间，单位：秒，
                                        //当录像查询类型为回放时用

@@ -7,6 +7,8 @@
 #include "storage_manager.h"
 
 extern int32_t l_IsStartDataRecTask[4];
+extern int32_t l_StreamNum;
+
 int32_t GetClientStartPort()
 {
 	return GMI_STREAMING_MEDIA_GB28181_ENCODE_VIDEO1;
@@ -47,6 +49,7 @@ void *RecordDataReceiveTask(void *InParam)
 	ClientPort = GetClientStartPort();
 	ServerPort = GetServerPort();
 	StreamId = *(int32_t*)InParam;
+	printf("StreamId=%d\n", StreamId);
 	if((StreamId < 0) || (StreamId > 1))
 	{
 		StreamId = 0;
@@ -55,15 +58,19 @@ void *RecordDataReceiveTask(void *InParam)
 	RetVal = DataClient.Initialize(ClientPort, GB_28181_STREAM_APPLICATION_ID);
 	if(RetVal != GMI_SUCCESS)
     {
+    	printf("Initialize error[0x%x]\n", RetVal);
         goto ErrExit;
     }
 	RetVal = DataClient.Register(ServerPort,MEDIA_VIDEO_H264,StreamId,true,NULL,NULL);
 	if(RetVal != GMI_SUCCESS)
     {
+    	
+    	printf("Register error[0x%x]\n", RetVal);
     	DataClient.Deinitialize();
         goto ErrExit;
     }
 
+	printf("RecordDataReceiveTask start...\n");
 	while(1 == l_IsStartDataRecTask[StreamId])
 	{
 		BufLen = BufSize;
@@ -84,5 +91,7 @@ void *RecordDataReceiveTask(void *InParam)
 	DataClient.Unregister();
 	DataClient.Deinitialize();
 ErrExit:
+	
+	printf("RecordDataReceiveTask stop...\n");
 	l_IsStartDataRecTask[StreamId] = 0;
 }
