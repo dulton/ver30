@@ -16,6 +16,7 @@ RecordInfoManage  		g_VidRecConfig[MAX_ENCODER_NUM];
 RecParamCfg             g_RecParamConfig;
 uint32_t                g_SegFileInfo[MAX_ENCODER_NUM];   /*逻辑文件的文件信息*/
 RecordParamConfigIn     g_RecRefenceParam;
+RecordCtrlIn            g_RecDataInfo;
 
 
 static int32_t l_RecProcessThreadcreated = 0;
@@ -282,6 +283,7 @@ int32_t VidRecordInit()
 
 	memset(&g_RecRefenceParam, 0, sizeof(g_RecRefenceParam));
 	memset(&g_RecParamConfig, 0, sizeof(g_RecParamConfig));
+	memset(&g_RecDataInfo, 0, sizeof(g_RecDataInfo));
 	/*初始化全局变量*/
 	InitHdPart();
 	return LOCAL_RET_OK;
@@ -340,6 +342,7 @@ int32_t VidRecordUninit()
 	l_IsStartDbProcessTask = 0;
 	l_IsStartDataRecTask[0] = 0;
 	memset(&g_RecRefenceParam, 0, sizeof(g_RecRefenceParam));
+	memset(&g_RecDataInfo, 0, sizeof(g_RecDataInfo));
 	sleep(2);
 		
 	return LOCAL_RET_OK;
@@ -2339,6 +2342,8 @@ int32_t  RecordCtrlNotify(RecordCtrlIn *InParam)
 		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam error.\n");
 		return LOCAL_RET_ERR;
 	}
+
+	memcpy(&g_RecDataInfo, InParam, sizeof(RecordCtrlIn));
 
 	Chan = InParam->s_RecTrigChan;
 	TmpInfo = (InParam->s_AudioFrame) & 0xFF;

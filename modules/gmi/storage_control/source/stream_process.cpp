@@ -2,12 +2,19 @@
 #include <ipc_fw_v3.x_resource.h>
 #include <ipc_media_data_client.h>
 #include <ipc_media_data_dispatch.h>
+#include "PSMuxlib.h"
+#include "Putbits.h"
 
 #include "gmi_media_ctrl.h"
 #include "storage_manager.h"
 
 extern int32_t l_IsStartDataRecTask[4];
 extern int32_t l_StreamNum;
+extern RecordCtrlIn g_RecDataInfo;
+
+#define  VFREQ_PER_SECOND(sec)  ( (unsigned long long)(((unsigned long long)sec)*10000000))
+#define  VFREQ_PER_USECOND(usec)  ((unsigned long long)(((unsigned long long)usec)*10))
+
 
 int32_t GetClientStartPort()
 {
@@ -27,7 +34,8 @@ void *RecordDataReceiveTask(void *InParam)
 	int32_t StreamId;
 	GMI_RESULT RetVal;
 	uint32_t BufSize = 1<<20;
-	char *PBuf = NULL;
+	uint8_t *PBuf = NULL;
+	uint8_t *PResBuf = NULL;
 	struct timeval TmVal;
 	int32_t BufLen = 0;
 	int32_t ExtInfoSize = 100;
@@ -35,8 +43,20 @@ void *RecordDataReceiveTask(void *InParam)
 	ExtMediaEncInfo *PExtInfo = NULL;
 	char_t *PExtData = NULL;
 	int32_t FrameType;
+	#if 1
+	PSmux_handle PSMuxHandle = NULL;
+	PSmux_init_param InitParam;
+	PSmux_input_info ESInInfo;
+	PSmux_out_info PSMuxOutInfo;
+	int32_t BNewESInfo;
+	#endif
 
-	if(NULL == (PBuf = (char_t *)malloc(BufSize)))
+	if(NULL == (PBuf = (uint8_t *)malloc(BufSize)))
+	{
+		goto ErrExit;
+	}
+
+	if(NULL == (PResBuf = (uint8_t *)malloc(BufSize)))
 	{
 		goto ErrExit;
 	}
@@ -69,8 +89,17 @@ void *RecordDataReceiveTask(void *InParam)
     	DataClient.Deinitialize();
         goto ErrExit;
     }
+	#if 1
+	InitParam.StreamMode = MPEG2MUX_VIDEO_STREAM;
+	InitParam.s_VideoStreamType = STREAM_TYPE_H264;
+	InitParam.s_MaxPacketlength = 500*1024;
+	InitParam.MuxRate = 0;
+	InitParam.ES_Init_param.Video_init_param.FrameRate = 25; 
+	PSMuxInit(&PSMuxHandle, &InitParam);
+	#endif
 
 	printf("RecordDataReceiveTask start...\n");
+	
 	while(1 == l_IsStartDataRecTask[StreamId])
 	{
 		BufLen = BufSize;
@@ -85,11 +114,30 @@ void *RecordDataReceiveTask(void *InParam)
 			 {
 			 	FrameType = FRAME_TYPE_I;
 			 }
-			 VidAudDataToBuf(0,PBuf, BufLen, FrameType);
+			 ESInInfo.bVideo = 1;
+			 ESInInfo.s_ESInBuffer = PBuf;
+			 ESInInfo.s_ESInLen = BufLen;
+			 
+			 ESInInfo.s_Pts = VFREQ_PER_SECOND( TmVal.tv_sec) + VFREQ_PER_USECOND(TmVal.tv_usec );//
+			 
+			 PSMuxOutInfo.s_PSOutBuffer = PResBuf;
+			 PSMuxOutInfo.s_PSOutBufferSize = BufSize;
+			 PSMuxOutInfo.s_PSOutLen = 0;
+			 BNewESInfo = 1;
+			 PSMuxProcess(PSMuxHandle,  &ESInInfo,  &PSMuxOutInfo, BNewESInfo);
+			 if(PSMuxOutInfo.s_PSOutLen > 0)
+			 {
+			 	VidAudDataToBuf(0,(char_t*)(PSMuxOutInfo.s_PSOutBuffer), PSMuxOutInfo.s_PSOutLen, FrameType);
+			 }
 		}
 	}
 	DataClient.Unregister();
 	DataClient.Deinitialize();
+	if(NULL != PSMuxHandle)
+	{
+		PSMuxRelease(PSMuxHandle);
+		PSMuxHandle = NULL;
+	}
 ErrExit:
 	
 	printf("RecordDataReceiveTask stop...\n");
