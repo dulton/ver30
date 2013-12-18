@@ -784,9 +784,9 @@ typedef struct tagLogInfoSearch
 	int32_t  s_SelectMode; //all--0, type--1, time--2, type&time--3
 	int32_t  s_MajorType; //all type--0
 	int32_t  s_MinorType; //all type --0
-	char_t   s_StartTime[32];
-	char_t   s_StopTime[32];
-    int32_t  s_Offset; 
+	char_t   s_StartTime[32];//"yyyy-mm-dd hh:mm:ss"
+	char_t   s_StopTime[32];//"yyyy-mm-dd hh:mm:ss"
+    int32_t  s_Offset; //first, offset is 0
     int32_t  s_MaxNum; //show count one page
 }SysPkgLogInfoSearch;
 

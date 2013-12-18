@@ -50,6 +50,7 @@
 #define GMI_ADMIN_USER_NAME1_PASSWD                "admin"
 #define GMI_ADMIN_USER_NAME2                       "inc"
 #define GMI_ADMIN_USER_NAME2_PASSWD                "inc"
+#define GMI_ADMIN_AUTH_VALUE                       0x1ff 
 
 
 //netconfig file

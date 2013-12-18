@@ -257,6 +257,18 @@ GMI_RESULT SystemServiceManager::MiscInitial()
         return GMI_FAIL;
     }
 
+	//user log
+	Result = UserLogQuery::Initialize();
+	if (FAILED(Result))
+	{
+		m_BoardManagerPtr = NULL;
+        m_UserManagerPtr->Deinitialize();
+        m_UserManagerPtr = NULL;
+        SYS_ERROR("UserLogQuery fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "UserLogQuery fail, Result = 0x%lx\n", Result);
+		return GMI_FAIL;
+	}
+	
     SYS_INFO("##%s normal out..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "##%s normal out..........\n", __func__);
     return GMI_SUCCESS;
@@ -267,8 +279,14 @@ GMI_RESULT SystemServiceManager::MiscDeinitial()
 {
     SYS_INFO("%s in..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s in..........\n", __func__);
-
-    GMI_RESULT Result = m_BoardManagerPtr->Deinitialize();
+	GMI_RESULT Result = UserLogQuery::Deinitialize();
+	if (FAILED(Result))
+	{
+		SYS_ERROR("UserLogQuery::Deinitialize() fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+	
+    Result = m_BoardManagerPtr->Deinitialize();
     if (FAILED(Result))
     {
         SYS_ERROR("m_BoardManagerPtr Deinitialize fail, Result = 0x%lx\n", Result);

@@ -10,13 +10,14 @@
 #include "user_manager.h"
 #include "sdk_stream_control.h"
 #include "rtsp_stream_control.h"
+#include "user_log_query.h"
 #include "gmi_media_ctrl.h"
 #include "gmi_system_headers.h"
 
 #define FACTORY_DEFAULT_REBOOT_DELAY_TIMES  (5)
 #define REBOOT_DELAY_TIMES                  (10)
 
-class SystemServiceManager
+class SystemServiceManager :public UserLogQuery
 {
 public:
     SystemServiceManager();

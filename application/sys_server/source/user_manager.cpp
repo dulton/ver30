@@ -50,7 +50,9 @@ GMI_RESULT UserManager::AddDefaultAdminstrator(const char_t *UserName, const cha
         SYS_INFO("database default is null, no user '%s'\n", UserName);
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "database default is null, no user '%s'\n", UserName);
         memcpy(UserInfo.s_UserPass, Password, sizeof(UserInfo.s_UserPass));
-        UserInfo.s_UserFlag = 1;
+        UserInfo.s_UserFlag  = 1;
+        UserInfo.s_UserLevel = GMI_ADMIN_AUTH_VALUE;
+        SYS_INFO("%s %d 0x%x\n", UserInfo.s_UserName, UserInfo.s_UserFlag, UserInfo.s_UserLevel);
         Result = UserOperator::SetUser(&UserInfo);
         if (FAILED(Result))
         {

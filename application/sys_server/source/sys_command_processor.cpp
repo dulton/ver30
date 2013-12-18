@@ -44,6 +44,7 @@
 #include "sys_excute_import_config_file.h"
 #include "sys_process_not_support_cmd.h"
 #include "sys_search_preset_cmd.h"
+#include "sys_get_log_info_cmd.h"
 #include "log.h"
 #include "server_command_pipeline_manager.h"
 #include "gmi_system_headers.h"
@@ -1116,6 +1117,26 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
         return Result;
     }
     Result = m_CommandPipeline->RegisterCommandExecutor(SearchPresetCommandExecutor);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+
+    SafePtr<SysGetLogInfoCommandExecutor> GetLogInfoCommandExecutor(BaseMemoryManager::Instance().New<SysGetLogInfoCommandExecutor>());
+    if (NULL == GetLogInfoCommandExecutor.GetPtr())
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SearchPresetCommandExecutor new fail\n");
+        return GMI_OUT_OF_MEMORY;
+    }
+    Result = GetLogInfoCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
+    if (FAILED(Result))
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetParameter fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+    Result = m_CommandPipeline->RegisterCommandExecutor(GetLogInfoCommandExecutor);
     if (FAILED(Result))
     {
         SYS_ERROR("RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
