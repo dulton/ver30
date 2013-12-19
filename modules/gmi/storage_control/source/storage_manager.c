@@ -2447,7 +2447,7 @@ static void MakeRecFileName(int32_t RecType,  SegmentIdxRecord *PQueryResult, in
 		|| (NULL == RecordFileQueryResPtr)
 		|| (NULL == *RecordFileQueryResPtr)
 		|| (NUM_RECORD_MAX < QueryResultSize)
-		|| (NUM_RECORD_MAX > QueryResArraySize))
+		|| (NUM_RECORD_MAX < QueryResArraySize))
 	{
 		PRT_ERR(("mkRecFileName param error.\n"));
 		return;
@@ -2458,8 +2458,8 @@ static void MakeRecFileName(int32_t RecType,  SegmentIdxRecord *PQueryResult, in
 		memset(StrFileName, 0, sizeof(StrFileName));
 		StrLen = sprintf(StrFileName, "record_%02d_%04d_%04d_%d_%d", PQueryResult[i].s_RecEncodeNo, PQueryResult[i].s_RecFileNo,
 			    PQueryResult[i].s_RecSegNo, PQueryResult[i].s_StartTime, PQueryResult[i].s_EndTime);
-		(*RecordFileQueryResPtr)[i].s_RecTrigMode = RecType;
-		memcpy((*RecordFileQueryResPtr)[i].s_RecFileName, StrFileName, MIN(StrLen, MAX_LEN_FILE_REC));
+		RecordFileQueryResPtr[i]->s_RecTrigMode = RecType;
+		memcpy(RecordFileQueryResPtr[i]->s_RecFileName, StrFileName, MIN(StrLen, MAX_LEN_FILE_REC));
 		/*片段录像的最后一个片段簇的实际使用的大小决定录像长度计算方式*/
 		if((PQueryResult[i].s_RecLastSegLen <= 0) || (PQueryResult[i].s_RecLastSegLen >= MIN_SEG_REC_LEN))
 		{
@@ -2476,9 +2476,9 @@ static void MakeRecFileName(int32_t RecType,  SegmentIdxRecord *PQueryResult, in
 				RecordSize = PQueryResult[i].s_RecLastSegLen;
 			}
 		}
-		(*RecordFileQueryResPtr)[i].s_RecFileSize = RecordSize;
-		(*RecordFileQueryResPtr)[i].s_RecFileTime[0] = PQueryResult[i].s_StartTime;
-		(*RecordFileQueryResPtr)[i].s_RecFileTime[1] = PQueryResult[i].s_EndTime;
+		RecordFileQueryResPtr[i]->s_RecFileSize = RecordSize;
+		RecordFileQueryResPtr[i]->s_RecFileTime[0] = PQueryResult[i].s_StartTime;
+		RecordFileQueryResPtr[i]->s_RecFileTime[1] = PQueryResult[i].s_EndTime;
 		if(i == QueryResArraySize-1)
 		{
 			break;
@@ -2494,6 +2494,7 @@ static int SearchRecordFiles(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *Cu
                                  uint32_t  *QueryResTotalNum, uint32_t  *QueryResCurNum)
 {
 
+	printf("111111\n");
 	if((RecordFileQueryPtr->s_Channel >=  MAX_ENCODER_NUM)
 		|| (RecordFileQueryPtr->s_RecQueryTime[0] >=  RecordFileQueryPtr->s_RecQueryTime[1])
 		|| (RecordFileQueryPtr->s_RecQueryType > TYPE_REC_QUERY_ALL))
@@ -2501,6 +2502,7 @@ static int SearchRecordFiles(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *Cu
 		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
 		return LOCAL_RET_ERR;
 	}
+	printf("2222\n");
 
 	int32_t RetResult = LOCAL_RET_OK;
 	SegmentIdxRecord SegParam;
@@ -2651,6 +2653,7 @@ int32_t QueryRecordFile(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQuer
 		return LOCAL_RET_ERR;
 	}
 
+	printf("RecordFileQueryPtr->s_RecQueryType = %d\n", RecordFileQueryPtr->s_RecQueryType);
 	switch(RecordFileQueryPtr->s_RecQueryType)
 	{
 		case TYPE_REC_QUERY_TRIG:

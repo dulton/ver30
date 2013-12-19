@@ -219,16 +219,19 @@ GMI_RESULT GMI_RecordFileQuery(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *
 	                                 RecordFileQueryResOut **RecordFileQueryResPtr, uint32_t QueryResArraySize,
 	                                 uint32_t  *QueryResTotalNum, uint32_t  *QueryResCurNum)
 {
+	printf("GMI_RecordFileQuery in\n");
 	if((NULL == RecordFileQueryPtr)
 		|| (NULL == RecordFileQueryResPtr)
 		|| (NULL == *RecordFileQueryResPtr)
-		|| (MAX_NUM_QUERY_RECORD > QueryResArraySize)
+		|| (MAX_NUM_QUERY_RECORD < QueryResArraySize)
 		|| (NULL == QueryResTotalNum)
 		|| (NULL == QueryResCurNum))
 	{
+		printf("GMI_RecordFileQuery in222\n");
 		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
 		return GMI_INVALID_PARAMETER;
 	}
+	printf("GMI_RecordFileQuery in111\n");
 
 	if(LOCAL_RET_OK != QueryRecordFile(RecordFileQueryPtr, CurQueryPosNo, 
 	                                 RecordFileQueryResPtr, QueryResArraySize,

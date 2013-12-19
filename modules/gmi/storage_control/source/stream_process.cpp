@@ -108,9 +108,7 @@ void *RecordDataReceiveTask(void *InParam)
 	{
 		BufLen = BufSize;
 		ExtDataLen = ExtInfoSize;
-		printf("start read data ...\n");
 		RetVal = DataClient.Read(PBuf, (size_t*)&BufLen, &TmVal, PExtData, (size_t*)&ExtDataLen);
-		printf("start read data OK...\n");
 		if(GMI_SUCCESS == RetVal)
 		{
 			PExtInfo = (ExtMediaEncInfo *)PExtData;
@@ -130,7 +128,6 @@ void *RecordDataReceiveTask(void *InParam)
 			 PSMuxOutInfo.s_PSOutLen = 0;
 			 
 			 PSMuxProcess(PSMuxHandle,  &ESInInfo,  &PSMuxOutInfo, BNewESInfo);
-			 printf("BufLen=%d, PSMuxOutInfo.s_PSOutLen=%d\n", BufLen, PSMuxOutInfo.s_PSOutLen);
 			 if(PSMuxOutInfo.s_PSOutLen > 0)
 			 {
 			 	if(1 != l_IsStartDataRecTask[StreamId])
