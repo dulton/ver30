@@ -38,6 +38,7 @@ SdkServerClient::SdkServerClient(int sock,SdkServerMgmt * pServerMgmt,int * pRun
     SDK_ASSERT(m_FragResp.size() == 0);
     m_pLoginComm = NULL;
     SDK_ASSERT(m_StreamIds.size() == 0);
+	SDK_ASSERT(m_OpenIds.size() == 0);
 
     /*default is from index of 0*/
     m_CurGetStreamIds = 0;
@@ -201,6 +202,12 @@ void SdkServerClient::__ClearStreamIds()
     return ;
 }
 
+void SdkServerClient::__ClearOpenIds()
+{
+	this->m_OpenIds.clear();
+	return ;
+}
+
 
 void SdkServerClient::__ClearRespVecs()
 {
@@ -245,6 +252,7 @@ do\
 	SDK_ASSERT(this->m_RespVec.size() == 0);\
 	SDK_ASSERT(this->m_FragResp.size() == 0);\
 	SDK_ASSERT(this->m_StreamIds.size() == 0);\
+	SDK_ASSERT(this->m_OpenIds.size() == 0);\
 	SDK_ASSERT(this->m_CurGetStreamIds == 0);\
 }while(0)
 
@@ -264,6 +272,7 @@ void SdkServerClient::Stop()
 
 
     this->__ClearStreamIds();
+	this->__ClearOpenIds();
 
     if(this->m_pLoginComm)
     {

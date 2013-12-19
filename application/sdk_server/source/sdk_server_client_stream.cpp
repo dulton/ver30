@@ -152,11 +152,12 @@ int SdkServerClient::__HandleStreamVideoOpen(sdk_client_comm_t*& pComm)
         return -EINVAL;
     }
 
-    if(this->m_StreamIds.size() > 0)
+    if(this->m_OpenIds.size() > 0)
     {
         ERROR_INFO("\n");
         return -EPERM;
     }
+    SDK_ASSERT(this->m_StreamIds.size() == 0);
     h16 = PROTO_TO_HOST16(pVreq->m_StreamMask);
     DEBUG_INFO("stream mask 0x%x datalen %d\n",h16,pComm->m_DataLen);
 
@@ -172,29 +173,29 @@ int SdkServerClient::__HandleStreamVideoOpen(sdk_client_comm_t*& pComm)
     {
         if(h16 & 0x1 && curstreamid < MAX_STREAM_IDS)
         {
-            this->m_StreamIds.push_back(curstreamid);
+            this->m_OpenIds.push_back(curstreamid);
         }
 
         h16 >>= 1;
         curstreamid += 1;
     }
 
-    if(this->m_StreamIds.size() == 0)
+    if(this->m_OpenIds.size() == 0)
     {
         ERROR_INFO("\n");
         return -ENODEV;
     }
 
-    for(i=0; i<this->m_StreamIds.size(); i++)
+    for(i=0; i<this->m_OpenIds.size(); i++)
     {
-        ret = this->m_pSvrMgmt->StartStreamId(this->m_StreamIds[i],this);
+        ret = this->m_pSvrMgmt->StartStreamId(this->m_OpenIds[i],this);
         if(ret >= 0)
         {
-            succstreamids.push_back(this->m_StreamIds[i]);
+            succstreamids.push_back(this->m_OpenIds[i]);
         }
         else
         {
-            ERROR_INFO("start stream %d ret %d\n",this->m_StreamIds[i],ret);
+            ERROR_INFO("start stream %d ret %d\n",this->m_OpenIds[i],ret);
         }
     }
 
@@ -203,7 +204,7 @@ int SdkServerClient::__HandleStreamVideoOpen(sdk_client_comm_t*& pComm)
     if(succstreamids.size() ==0)
     {
         /*we do not get any success so just close the socket and make return*/
-        this->m_StreamIds.clear();
+        this->m_OpenIds.clear();
         ERROR_INFO("\n");
         return -ENODEV;
     }
@@ -218,7 +219,6 @@ int SdkServerClient::__HandleStreamVideoOpen(sdk_client_comm_t*& pComm)
     }
     if(needaudiostream)
     {
-#if 1
         /*now we should open audio stream*/
         ret = this->m_pSvrMgmt->StartStreamId(AUDIO_STREAM_ID,this);
         if(ret < 0)
@@ -230,28 +230,21 @@ int SdkServerClient::__HandleStreamVideoOpen(sdk_client_comm_t*& pComm)
         {
             succstreamids.push_back(AUDIO_STREAM_ID);
         }
-#endif
     }
 
-    DEBUG_INFO("\n");
 
     ret = this->m_pSvrMgmt->QueryStreamStarted();
     if(ret == STREAM_STATE_RUNNING)
     {
-        DEBUG_INFO("\n");
         std::auto_ptr<sys_stream_info_t> pSysQueryStreamIds2(new sys_stream_info_t);
-        DEBUG_INFO("\n");
-        DEBUG_INFO("pSysQueryStreamIds2.get() 0x%p\n",pSysQueryStreamIds2.get());
         sys_stream_info_t* pSysQueryStreamIds = pSysQueryStreamIds2.get();
-        DEBUG_INFO("\n");
         ret = this->m_pSvrMgmt->GetStreamIdInfo(pSysQueryStreamIds);
         if(ret < 0)
         {
-            this->m_StreamIds.clear();
+            this->m_OpenIds.clear();
             ERROR_INFO("\n");
             return ret;
         }
-        DEBUG_INFO("\n");
 
         if(this->m_pLoginComm)
         {
@@ -744,8 +737,12 @@ int SdkServerClient::__PrepareSendStreamInfo(sys_stream_info_t * pStreamInfo,std
     uint32_t n32;
     int findsucc= -1;
     unsigned int i,j,k;
+	int curstreamid;
     int oldaudio=0,newaudio=0;
     int cpyidx=0;
+    struct iovec iov[4];
+    int iovlen = 4;
+    int begin;
 
     DEBUG_INFO("\n");
     if(pStreamInfo == NULL)
@@ -753,7 +750,7 @@ int SdkServerClient::__PrepareSendStreamInfo(sys_stream_info_t * pStreamInfo,std
         return -EINVAL;
     }
 
-    if(this->m_StreamIds.size() == 0)
+    if(this->m_OpenIds.size() == 0)
     {
         return -ENODEV;
     }
@@ -796,16 +793,16 @@ int SdkServerClient::__PrepareSendStreamInfo(sys_stream_info_t * pStreamInfo,std
     DEBUG_INFO("\n");
 
     cpyidx = 0;
-    for(i=0; i<this->m_StreamIds.size(); i++)
+    for(i=0; i<this->m_OpenIds.size(); i++)
     {
         for(j=0; j<pStreamInfo->m_Count; j++)
         {
-            if((this->m_StreamIds[i]) == pStreamInfo->m_VideoInfo[j].s_Flag)
+            if((this->m_OpenIds[i]) == pStreamInfo->m_VideoInfo[j].s_Flag)
             {
                 findsucc = -1;
                 for(k=0; k<succstreamids.size(); k++)
                 {
-                    if(succstreamids[k] == this->m_StreamIds[i])
+                    if(succstreamids[k] == this->m_OpenIds[i])
                     {
                         findsucc = k;
                         break;
@@ -864,7 +861,9 @@ next_cycle:
     else
     {
         /*if we have not any one ,so we should not send this packet*/
-        FreeComm(pComm);
+        ret = -ENODEV;
+        ERROR_INFO("copy video info zero\n");
+        goto fail;
     }
 
 
@@ -990,6 +989,68 @@ next_cycle:
     }
 
     DEBUG_INFO("\n");
+
+    /*now at last ,to check out whether the streamids is in the new succstreamids ,if in it and not*/
+    for(i=0; i<this->m_StreamIds.size() ; i++)
+    {
+        findsucc = -1;
+        for(j=0; j<succstreamids.size() ; j++)
+        {
+            if(this->m_StreamIds[i] == succstreamids[j])
+            {
+                findsucc = j;
+                break;
+            }
+        }
+
+        if(findsucc < 0)
+        {
+            /*if we have not opened it yet ,to test whether this is send over*/
+            iovlen = 4;
+            begin = 0;
+            ret = this->m_pSvrMgmt->GetStreamData(this->GetSocket(),this->m_StreamIds[i],iov,iovlen,begin);
+            if(ret < 0)
+            {
+                ERROR_INFO("[%d] Stream(%d) GetData Error(%d)\n",this->GetSocket(),this->m_StreamIds[i],ret);
+                goto fail;
+            }
+            else if(ret > 0 && begin == 0)
+            {
+                ERROR_INFO("[%d] Stream(%d) not opened ,but has data send\n",this->GetSocket(),this->m_StreamIds[i]);
+                ret = -EINVAL;
+                goto fail;
+            }
+        }
+    }
+
+    SDK_ASSERT(this->m_StreamIds.size() == 0 || this->m_CurGetStreamIds < this->m_StreamIds.size());
+    if(this->m_StreamIds.size() > 0)
+    {
+        /*now we should change for the curGetStreamIds*/
+        curstreamid = this->m_StreamIds[this->m_CurGetStreamIds];
+        findsucc = -1;
+        for(i=0; i<succstreamids.size(); i++)
+        {
+            if(succstreamids[i] == curstreamid)
+            {
+                findsucc = i;
+                break;
+            }
+        }
+
+        if(findsucc >= 0)
+        {
+            this->m_CurGetStreamIds = findsucc;
+        }
+        else
+        {
+            this->m_CurGetStreamIds = 0;
+        }
+    }
+    else
+    {
+        this->m_CurGetStreamIds = 0;
+    }
 
     this->m_StreamIds= succstreamids;
     return 0;
@@ -1163,11 +1224,11 @@ int SdkServerClient::ResumeStream(sys_stream_info_t * pStreamInfo)
 {
     int ret;
     sdk_client_state_t state;
-    unsigned int i;
+    unsigned int i,j;
+    int findidx=-1;
     std::vector<int> succstreamids;
     int isvideostream=0,needaudiostream=0;
     int findaudio=-1;
-    int audiofailed=0;
 
     /*now to change the state*/
     if(this->m_StreamStarted > 0)
@@ -1198,10 +1259,37 @@ int SdkServerClient::ResumeStream(sys_stream_info_t * pStreamInfo)
         }
     }
 
-    if(succstreamids.size() == 0 && state == sdk_client_stream_state)
+    /*now check for last time not opened*/
+    for(i=0; i<this->m_OpenIds.size() ; i++)
+    {
+        findidx = -1;
+        for(j=0; j<this->m_StreamIds.size(); j++)
+        {
+            if(this->m_OpenIds[i] == this->m_StreamIds[j])
+            {
+                findidx = j;
+                break;
+            }
+        }
+
+        if(findidx < 0)
+        {
+            /*now we should to start this streamids ,so we can test*/
+            ret = this->m_pSvrMgmt->StartStreamId(this->m_OpenIds[i],this);
+            if(ret >= 0)
+            {
+                succstreamids.push_back(this->m_OpenIds[i]);
+            }
+        }
+    }
+
+    /*we could not set for null */
+    if(succstreamids.size() == 0 && this->__GetState() == sdk_client_stream_state)
     {
         return -ENODEV;
     }
+
+
 
     /*now we should test if it is just audio stream no video stream*/
     isvideostream = 0;
@@ -1243,14 +1331,12 @@ int SdkServerClient::ResumeStream(sys_stream_info_t * pStreamInfo)
             if(ret < 0)
             {
                 ERROR_INFO("could not use audio open\n");
-                audiofailed= 1;
             }
             else
             {
                 succstreamids.push_back(AUDIO_STREAM_ID);
             }
         }
-
     }
     else
     {
@@ -1274,19 +1360,29 @@ int SdkServerClient::ResumeStream(sys_stream_info_t * pStreamInfo)
         {
             return ret;
         }
-
-        if(audiofailed)
-        {
-            /*we put the audio response here ,because this is for open video response send first*/
-            ret = this->__AudioFailedSend();
-            if(ret < 0)
-            {
-                return ret;
-            }
-        }
     }
     else
     {
+        /*now test for the audio is in the successstreamids*/
+        findidx = -1;
+        for(i=0; i<succstreamids.size() ; i++)
+        {
+            if(succstreamids[i] >= 0 && succstreamids[i] < MAX_STREAM_IDS)
+            {
+                ERROR_INFO("[%d].[%d] streamid (%d)\n",this->GetSocket(),i,succstreamids[i]);
+                return -EINVAL;
+            }
+            else if(succstreamids[i] == AUDIO_STREAM_ID)
+            {
+                findidx = i;
+            }
+        }
+
+        if(findidx < 0)
+        {
+            ERROR_INFO("[%d] no audio stream opened",this->GetSocket());
+
+        }
         /*this is to set audio dual seqid for it will */
         ret = this->__InsertAudioDualNotify(0,this->m_AudioDualSeqId);
         if(ret < 0)
@@ -1294,6 +1390,8 @@ int SdkServerClient::ResumeStream(sys_stream_info_t * pStreamInfo)
             return ret;
         }
         this->m_AudioDualSeqId = SDK_NOTIFY_SEQID;
+		/*only for the cur streamid == 0*/
+		this->m_CurGetStreamIds = 0;
 
     }
 
@@ -1642,6 +1740,14 @@ int SdkServerClient::__HandleStreamAudioDualOpen(sdk_client_comm_t * & pComm)
     start_talk_t *pStartTalk=&(pStartTalkReq->m_Talk);
     uint16_t n16;
     uint32_t n32;
+
+    if(this->m_OpenIds.size() > 0)
+    {
+        return -EINVAL;
+    }
+
+    SDK_ASSERT(this->m_StreamIds.size() == 0);
+    this->m_OpenIds.push_back(AUDIO_STREAM_ID);
 
     DEBUG_INFO("\n");
     /*now first to test if we should change for the audio decodec*/

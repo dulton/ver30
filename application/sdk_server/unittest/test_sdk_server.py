@@ -22,6 +22,7 @@ import xunit.extlib.nfsmap as nfsmap
 import re
 import time
 import random
+import tempfile
 
 
 class RemoteConnectError(exception.XUnitException):
@@ -1009,6 +1010,24 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 		if len(pids) != 0:
 			raise ProcessStillRunningError('process sdk_stream.py still running %s'%(repr(pids)))			
 		return
+
+	def __KillAudioDual(self):
+		stime = time.time()
+		etime = stime + 5
+		ctime = stime
+		pids = []
+		exfilters = ['/bin/sh']
+		while ctime < etime:
+			pids = self.FindPids(['sdk_audiodual.py'],['/bin/sh'])
+			if len(pids) == 0 :
+				break
+			self.KillPids(2,pids)
+			time.sleep(0.2)
+			ctime = time.time()
+		if len(pids) != 0:
+			raise ProcessStillRunningError('process sdk_audiodual.py still running %s'%(repr(pids)))			
+		return
+		
 	def test_C100StreamGet(self):
 		self.__KillStreams()
 		ssock,sesid = self.SdkStreamLoginIn()
@@ -1092,6 +1111,33 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 		cmd += ' %d '%(streamid)
 
 		return self.CallProcessStart(cmd)
+
+	def __RunAudioDual(self,audiooutfile,count=0):
+		utcfg = xunit.config.XUnitConfig()
+		host = utcfg.GetValue('.sdkserver','host','')
+		port = utcfg.GetValue('.sdkserver','port','30000')
+		username = utcfg.GetValue('.sdkserver','username',None)
+		password = utcfg.GetValue('.sdkserver','password',None)
+		port = int(port)
+		username = str(username)
+		password = str(password)
+		host = str(host)		
+		
+		filed = os.path.dirname(os.path.abspath(__file__))
+
+		cmd = 'python %s'%(filed)
+		cmd += os.sep
+		cmd += 'sdk_audiodual.py'
+		cmd += ' -H %s '%(host)
+		cmd += ' -p %d '%(port)
+		cmd += ' -u %s '%(username)
+		cmd += ' -P %s '%(password)
+		if count > 0:
+			cmd += ' -c %d '%(count)
+		cmd += '  --audioout %s '%(audiooutfile)
+
+		return self.CallProcessStart(cmd)
+		
 
 	def __RunSleepStream(self,streamid,slptime,slppercent,count=1000):
 		utcfg = xunit.config.XUnitConfig()
@@ -1814,6 +1860,107 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 		shellcmd = 'rm -f %s'%(messagefile)
 		self.TelnetExecCmd(shellcmd)		
 		return
+
+	def test_C111ChangeStreamTypeWithOpened(self):
+		self.__KillStreams()
+		# now first to get for the 
+		ssock,sesid = self.SdkVideoCfgLogin()
+		# now we should get the stream info
+		vinfos = ssock.GetVideoCfg()
+		gv = None
+		for v in vinfos:
+			if v.Flag() == 0:
+				gv = v
+				break
+		if gv is None:
+			raise InvalidParameterError('could not find stream 0 info')
+
+		oldstreamtype = gv.StreamType()
+
+		newstreamtype = oldstreamtype
+		if oldstreamtype != 2:
+			newstreamtype = 2
+			gv.StreamType(newstreamtype)
+			ssock.SetVideoCfg(gv)
+		ssock.CloseSocket()
+		ssock = None
+		audiodualpids = []
+		streampids = []
+		tmpaudiodualfile=None
+		tmpaudiodualfile=tempfile.mktemp()
+		with open(tmpaudiodualfile,'w+b') as f:
+			ibuf = '\xd3' * 1024 * 20
+			for i in xrange(20):
+				f.write(ibuf)
+		fssock = None
+		curstreamtype = 1
+		try:
+			streampids.append(self.__RunStream(0,0))
+			audiodualpids.append(self.__RunAudioDual(tmpaudiodualfile))
+
+			# now we should change the time
+			for i in xrange(20):
+				slptime = random.randint(1,3)
+				time.sleep(slptime)
+				sys.stdout.write('S%d'%(slptime))
+				sys.stdout.flush()
+				fssock,sesid = self.SdkVideoCfgLogin() 
+				vinfos = fssock.GetVideoCfg()
+				gv = None
+				curstreamtype = random.randint(1,2)
+				for v in vinfos:
+					if v.Flag() == 0:
+						gv = v
+						break
+				if gv is None:
+					raise InvalidParameterError('could not find stream 0 info')
+				gv.StreamType(curstreamtype)
+				sys.stdout.write('T%d'%(curstreamtype))
+				fssock.SetVideoCfg(gv)
+				fssock.CloseSocket()
+				fssock = None
+
+				# now test if the socket is closed
+				streampids,removepid,retval = self.WaitPidsReturn(streampids)
+				if len(streampids) == 0:
+					sys.stdout.write('V%d'%(retval))
+					# now to restart
+					streampids.append(self.__RunStream(0,0))
+					self.assertTrue(len(streampids) > 0)
+
+				audiodualpids,removepid,retval = self.WaitPidsReturn(audiodualpids)
+				if len(audiodualpids) == 0:
+					sys.stdout.write('A%d'%(retval))
+					audiodualpids.append(self.__RunAudioDual(tmpaudiodualfile))
+					self.assertTrue(len(audiodualpids) > 0)
+				sys.stdout.flush()
+				
+			
+		finally:
+			if fssock is not None:
+				fssock.CloseSocket()
+			fssock = None
+			ssock,sesid = self.SdkVideoCfgLogin()
+			# now we should get the stream info
+			vinfos = ssock.GetVideoCfg()
+			gv = None
+			for v in vinfos:
+				if v.Flag() == 0:
+					gv = v
+					break
+			if gv is None:
+				raise InvalidParameterError('could not find stream 0 info')
+			gv.StreamType(oldstreamtype)
+			ssock.SetVideoCfg(gv)
+			ssock.CloseSocket()
+			ssock = None
+			self.__KillAudioDual()
+			self.__KillStreams()
+			if tmpaudiodualfile is not None:
+				os.remove(tmpaudiodualfile)
+			tmpaudiodualfile=None
+		return
+			
 
 	def __prepare_leakout(self):
 		self.__backcmd = None

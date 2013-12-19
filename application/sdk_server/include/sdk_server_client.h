@@ -155,6 +155,7 @@ private:
 	static void WaitSysTimerCallBack(EV_P_ ev_timer *w, int revents,void* arg);
 
     void __ClearStreamIds();
+	void __ClearOpenIds();
 	void __ClearRespVecs();
 	void __ClearFragVecs();
 
@@ -241,6 +242,7 @@ private:
 
     /*streamids ,that is handled ,for stream used*/
     std::vector<int> m_StreamIds;
+	std::vector<int> m_OpenIds;
     unsigned int m_CurGetStreamIds;
 	uint64_t m_LastSendMills;
 	uint64_t m_StartSendMills;
