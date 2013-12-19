@@ -167,6 +167,16 @@ class SdkLoginUnit(xunit.case.XUnitCase):
 		ssock = xunit.extlib.sdksock.SdkTimeSock(host,port)
 		sesid = ssock.LoginUserPass(username,password)
 		return ssock,sesid
+
+	def SdkSessionHeartBeatLogin(self,sesid):
+		utcfg = xunit.config.XUnitConfig()
+		host = utcfg.GetValue('.sdkserver','host','')
+		port = utcfg.GetValue('.sdkserver','port','30000')
+		port = int(port)
+		host = str(host)		
+		ssock = xunit.extlib.sdksock.SdkSock(host,port)
+		sesid = ssock.LoginHeartBeat(sesid)
+		return ssock,sesid
 		
 
 	def FindPids(self,flts,unflts):
@@ -950,7 +960,35 @@ class BaseSdkLoginUnit(SdkLoginUnit):
 			self.__User30Info()
 		return
 		
+
+	def test_B8LoginHeartbeatovertime(self):
+		ssock,sesid = self.SdkStreamLoginIn()
+		ssock.CloseSocket()
+		ssock = None
+
+		# now to make heart beat login
+		ssock,newsesid = self.SdkSessionHeartBeatLogin(sesid)
+		for i in xrange(20):
+			time.sleep(1)
+			sys.stdout.write('.')
+			sys.stdout.flush()
+		# now it is timeout ,so we should make error
+		ok = 1
+		try:
+			ssock.LoginHeartBeatTimeout(sesid,1);
+		except xunit.extlib.sdksock.SdkSockRecvError as e:
+			ok =0
+		self.assertEqual(ok,0)
+
+		ssock.CloseSocket()
+		ssock = None
+
+		# now we should make sure that the reconnect is ok
+		ssock,sesid = self.SdkStreamLoginIn()
+		ssock.CloseSocket()
+		ssock = None
 		
+		return
 
 
 class BaseSdkStreamUnit(SdkLoginUnit):

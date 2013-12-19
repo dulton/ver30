@@ -564,6 +564,10 @@ try_again:
         return 0;
     }
     iovlen = MAX_IOV_LEN;
+    if(this->m_CurGetStreamIds >= this->m_StreamIds.size())
+    {
+        ERROR_INFO("curGetStreamIds (%d) >= size(%d)\n",this->m_CurGetStreamIds,this->m_StreamIds.size());
+    }
     SDK_ASSERT(this->m_CurGetStreamIds < this->m_StreamIds.size());
     curstreamid = this->m_StreamIds[this->m_CurGetStreamIds];
 
@@ -752,6 +756,11 @@ int SdkServerClient::__PrepareSendStreamInfo(sys_stream_info_t * pStreamInfo,std
     if(this->m_StreamIds.size() == 0)
     {
         return -ENODEV;
+    }
+
+    if(succstreamids.size() == 0)
+    {
+        return -EINVAL;
     }
 
     DEBUG_INFO("\n");

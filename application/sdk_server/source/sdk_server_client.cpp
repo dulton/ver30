@@ -430,6 +430,8 @@ int SdkServerClient::__WriteLogin2Io()
         this->__StopWriteTimer();
         /*we trust the connection ,so we do not set timerout*/
         DEBUG_INFO("\n");
+		/*we should stop read io ,as it will make heart beat for handling*/
+		this->__StopReadIo();
         ret = this->__StartReadIo();
         DEBUG_INFO("\n");
         if(ret < 0)
@@ -464,6 +466,8 @@ int SdkServerClient::__WriteLogin2Io()
     this->__StopReadTimer();
     /*we trust the connection ,so we do not set timerout*/
     //DEBUG_INFO("\n");
+	/*we should stop read io ,as it will make heart beat for handling*/
+	this->__StopReadIo();
     ret = this->__StartReadIo();
     //DEBUG_INFO("\n");
     if(ret < 0)
