@@ -95,6 +95,10 @@ int32_t	VidAudDataToBuf(uint32_t Channel, char_t *PBuffer, int32_t Size, int32_t
 	
 	WritePos = PRecordBuffer->s_WritePos;
     RecLen   = MEDIA_BUFFER_SIZE - PRecordBuffer->s_WritePos;
+	if(NULL == PRecordBuffer->s_Buffer)
+	{
+		return LOCAL_RET_ERR;
+	}
 	if (Size > RecLen)
 	{
 	    memcpy(PRecordBuffer->s_Buffer + PRecordBuffer->s_WritePos, PBuffer, RecLen);
@@ -297,7 +301,7 @@ int32_t VidRecordUninit()
 	RecordMsgType      RecordMsg;
 	int32_t            RecMsgLen  = sizeof(RecordMsgType) - sizeof(long_t);
 
-	
+	PRT_TEST(("VidRecordUninit start......\n"));
 	for(Tmp = 0; Tmp < MAX_ENCODER_NUM; ++Tmp) 
 	{	
 		PChannel = &(g_VidRecConfig[Tmp]);
@@ -328,7 +332,7 @@ int32_t VidRecordUninit()
 		{
 			PRT_TEST(("VidRecordUninit PChannel NULL\n"));
 		}
-		 memset(&(g_SegFileInfo[Tmp]), 0, sizeof(SegFileInfo));
+		 g_SegFileInfo[Tmp] = 0;
 	}
 
 	if(g_RecScheduleMsg > 0)
@@ -344,7 +348,7 @@ int32_t VidRecordUninit()
 	memset(&g_RecRefenceParam, 0, sizeof(g_RecRefenceParam));
 	memset(&g_RecDataInfo, 0, sizeof(g_RecDataInfo));
 	sleep(2);
-		
+	PRT_TEST(("VidRecordUninit end......\n"));		
 	return LOCAL_RET_OK;
 }
 
@@ -1112,6 +1116,8 @@ static void *RecordScheduleProcessTask(void *InParam)
 	}
 
 ErrExit:
+	
+	printf("RecordScheduleProcessTask stop00...\n");
 	pthread_exit(NULL);
 	
 	printf("RecordScheduleProcessTask stop...\n");
@@ -2082,6 +2088,8 @@ static void *RecordStreamProcessTask(void *InParam)
 		}
 		
 	}
+	
+	printf("RecordStreamProcessTask stop00...\n");
 	pthread_exit(NULL);
 	
 	printf("RecordStreamProcessTask stop...\n");
@@ -2148,8 +2156,9 @@ static void *RecordDbBackupTask(void *InParam)
 		CycleNum = 60;
 	}
 ErrExit:
-	pthread_exit(NULL);
 	
+	printf("RecordDbBackupTask stop000...\n");
+	pthread_exit(NULL);
 	printf("RecordDbBackupTask stop...\n");
 }
 
@@ -2202,6 +2211,8 @@ static void *ExceptionProcTask(void *InParam)
 		CycleNum = 6;
 	}
 ErrExit:
+	
+	printf("ExceptionProcTask stop000...\n");
 	pthread_exit(NULL);
 	
 	printf("ExceptionProcTask stop...\n");

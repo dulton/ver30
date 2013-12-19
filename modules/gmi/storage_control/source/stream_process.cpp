@@ -51,6 +51,8 @@ void *RecordDataReceiveTask(void *InParam)
 	int32_t BNewESInfo;
 	#endif
 	printf("malloc...\n");
+	
+	pthread_detach(pthread_self()); 
 
 	if(NULL == (PBuf = (uint8_t *)malloc(BufSize)))
 	{
@@ -131,6 +133,10 @@ void *RecordDataReceiveTask(void *InParam)
 			 printf("BufLen=%d, PSMuxOutInfo.s_PSOutLen=%d\n", BufLen, PSMuxOutInfo.s_PSOutLen);
 			 if(PSMuxOutInfo.s_PSOutLen > 0)
 			 {
+			 	if(1 != l_IsStartDataRecTask[StreamId])
+			 	{
+			 		break;
+			 	}
 			 	VidAudDataToBuf(0,(char_t*)(PSMuxOutInfo.s_PSOutBuffer), PSMuxOutInfo.s_PSOutLen, FrameType);
 			 }
 		}
@@ -144,6 +150,8 @@ void *RecordDataReceiveTask(void *InParam)
 	}
 ErrExit:
 	
+	printf("RecordDataReceiveTask stop00...\n");
+	pthread_exit(NULL);
 	printf("RecordDataReceiveTask stop...\n");
 	l_IsStartDataRecTask[StreamId] = 0;
 }
