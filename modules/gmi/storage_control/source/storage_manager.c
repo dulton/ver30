@@ -401,9 +401,13 @@ int32_t InitPartion(int32_t FileSize)
 	memset(&FileParam, 0, sizeof(FileParam));
 	/*先判断有无SD卡*/
     Fd = open(SRC_PATH_NAME_SD, O_RDONLY, 0);
-	if (Fd == -1) {
-	    PRT_ERR(("have no sdisk.\n"));
-		goto errExit;
+	if (Fd == -1)
+	{
+		if(-1 == (Fd = open(SRC_PATH_NAME_SD2, O_RDONLY, 0)))
+		{
+		    PRT_ERR(("have no sdisk.\n"));
+			goto errExit;
+		}
 	}
 	close(Fd);
 
@@ -433,7 +437,7 @@ int32_t InitPartion(int32_t FileSize)
 			goto errExit;
 		}
 	}
-	#else
+	//#else
 	memset(MkfsCmd, 0, sizeof(MkfsCmd));
 	sprintf(MkfsCmd, "/bin/mount -t vfat %s %s", SRC_PATH_NAME_SD, DST_PATH_NAME_SD);
     system(MkfsCmd);
@@ -710,6 +714,18 @@ int32_t Sdformat(int32_t FileSize)
 	VidRecordUninit();
 	UNLOCK(&g_LockHDPart);
 
+	/*先判断有无SD卡*/
+    Fd = open(SRC_PATH_NAME_SD, O_RDONLY, 0);
+	if (Fd == -1) 
+	{
+		if(-1 == (Fd = open(SRC_PATH_NAME_SD2, O_RDONLY, 0)))
+		{
+		    PRT_ERR(("have no sdisk.\n"));
+			goto errExit;
+		}
+	}
+	close(Fd);
+
 	/*判断有无目标文件夹,否则创建目标文件夹*/
 	if(opendir(DST_PATH_NAME_SD) == NULL)
 	{
@@ -736,7 +752,7 @@ int32_t Sdformat(int32_t FileSize)
 	{
 	    PRT_ERR(("UmountHdisk failed. errno = %s\n",strerror(errno)));
 	}
-	#else
+	//#else
 	memset(MkfsCmd, 0, sizeof(MkfsCmd));
 	sprintf(MkfsCmd, "/bin/umount %s", DST_PATH_NAME_SD);
     system(MkfsCmd);
@@ -764,7 +780,7 @@ int32_t Sdformat(int32_t FileSize)
 			goto errExit;
 		}
 	}
-	#else
+	//#else
 	memset(MkfsCmd, 0, sizeof(MkfsCmd));
 	sprintf(MkfsCmd, "/bin/mount -t vfat %s %s", SRC_PATH_NAME_SD, DST_PATH_NAME_SD);
     system(MkfsCmd);
@@ -867,9 +883,14 @@ int32_t Sdformat(int32_t FileSize)
 	sleep(1);
 	UNLOCK(&g_LockHDPart);
 	PRT_TEST(("format hdisk successful\n"));
-	InitPartion(FileSize);				//格式化后重新初始化，不需要重启
-	CreateRecProcessThread(0);
-	CreateDbProcessThread();
+	if(LOCAL_RET_OK == VidRecordInit())
+	{
+		if(LOCAL_RET_OK == InitPartion(FileSize))				//格式化后重新初始化，不需要重启
+		{
+			CreateRecProcessThread(0);
+			CreateDbProcessThread();
+		}
+	}
 errExit:	
 	PRT_TEST(("Sdformat end ......\n"));
 	return Result;

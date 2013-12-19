@@ -30,7 +30,8 @@ extern "C"
 #define  FLAG_ALLDAY_REC_OPEN   1
 
 #define  SRC_PATH_NAME_SD		"/dev/mmcblk0p1"
-#define  DST_PATH_NAME_SD		"/mnt/sd1"
+#define  SRC_PATH_NAME_SD2		"/dev/mmcblk1p1"
+#define  DST_PATH_NAME_SD		"/mnt/mmcblk0p1"
 
 #define  DB_FILE_NAME			"videoRecord.db"	/*录像文件数据库*/
 #define  AV_FILE_NAME			".mp4"

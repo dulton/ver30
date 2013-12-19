@@ -50,6 +50,7 @@ void *RecordDataReceiveTask(void *InParam)
 	PSmux_out_info PSMuxOutInfo;
 	int32_t BNewESInfo;
 	#endif
+	printf("malloc...\n");
 
 	if(NULL == (PBuf = (uint8_t *)malloc(BufSize)))
 	{
@@ -92,9 +93,10 @@ void *RecordDataReceiveTask(void *InParam)
 	#if 1
 	InitParam.StreamMode = MPEG2MUX_VIDEO_STREAM;
 	InitParam.s_VideoStreamType = STREAM_TYPE_H264;
-	InitParam.s_MaxPacketlength = 500*1024;
+	InitParam.s_AudioStreamType = 0;
+	InitParam.s_MaxPacketlength = 5000;
 	InitParam.MuxRate = 0;
-	InitParam.ES_Init_param.Video_init_param.FrameRate = 25; 
+	//InitParam.ES_Init_param.Video_init_param.FrameRate = 25; 
 	PSMuxInit(&PSMuxHandle, &InitParam);
 	#endif
 
@@ -104,7 +106,9 @@ void *RecordDataReceiveTask(void *InParam)
 	{
 		BufLen = BufSize;
 		ExtDataLen = ExtInfoSize;
+		printf("start read data ...\n");
 		RetVal = DataClient.Read(PBuf, (size_t*)&BufLen, &TmVal, PExtData, (size_t*)&ExtDataLen);
+		printf("start read data OK...\n");
 		if(GMI_SUCCESS == RetVal)
 		{
 			PExtInfo = (ExtMediaEncInfo *)PExtData;
@@ -115,16 +119,16 @@ void *RecordDataReceiveTask(void *InParam)
 			 	FrameType = FRAME_TYPE_I;
 			 }
 			 ESInInfo.bVideo = 1;
+			 ESInInfo.s_Pts = VFREQ_PER_SECOND( TmVal.tv_sec) + VFREQ_PER_USECOND(TmVal.tv_usec );//
+			 BNewESInfo = 1;
 			 ESInInfo.s_ESInBuffer = PBuf;
 			 ESInInfo.s_ESInLen = BufLen;
-			 
-			 ESInInfo.s_Pts = VFREQ_PER_SECOND( TmVal.tv_sec) + VFREQ_PER_USECOND(TmVal.tv_usec );//
-			 
 			 PSMuxOutInfo.s_PSOutBuffer = PResBuf;
 			 PSMuxOutInfo.s_PSOutBufferSize = BufSize;
 			 PSMuxOutInfo.s_PSOutLen = 0;
-			 BNewESInfo = 1;
+			 
 			 PSMuxProcess(PSMuxHandle,  &ESInInfo,  &PSMuxOutInfo, BNewESInfo);
+			 printf("BufLen=%d, PSMuxOutInfo.s_PSOutLen=%d\n", BufLen, PSMuxOutInfo.s_PSOutLen);
 			 if(PSMuxOutInfo.s_PSOutLen > 0)
 			 {
 			 	VidAudDataToBuf(0,(char_t*)(PSMuxOutInfo.s_PSOutBuffer), PSMuxOutInfo.s_PSOutLen, FrameType);
