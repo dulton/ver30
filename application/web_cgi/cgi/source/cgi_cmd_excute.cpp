@@ -3238,10 +3238,6 @@ GMI_RESULT CgiSystemRebootCmd(const char_t *FncCmd)
 
         RetFormat = "%s={\"RetCode\":\"%d\"}";
 
-  //      fprintf(stdout, RetFormat, FncCmd, CONTENT_TYPE_JSON, RetCode);
-
-        RetFormat = "%s={\"RetCode\":\"%d\"}";
-
         fprintf(stdout, RetFormat, Cmd, RetCode);
 
         GMI_DaemonUnInit(&DaemonData);
@@ -3909,3 +3905,104 @@ GMI_RESULT CgiConfigToolIrCutClose(const char_t *FncCmd)
     fprintf(stdout, RetFormat, Cmd, RetCode);
     return GMI_FAIL;
 }
+
+GMI_RESULT CgiSysGetLogInfo(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *SelectMode = WEB_GET_VAR("SelectMode");
+    const char_t *MajorType = WEB_GET_VAR("MajorType");
+    const char_t *MinorType = WEB_GET_VAR("MinorType");
+    const char_t *StartTime = WEB_GET_VAR("StartTime");
+    const char_t *StopTime = WEB_GET_VAR("StopTime");
+    const char_t *Offset = WEB_GET_VAR("Offset");
+    const char_t *MaxNum = WEB_GET_VAR("MaxNum");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+    
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+    
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue           \
+            || NULL == SelectMode ||NULL == MajorType    \
+            || NULL == MinorType || NULL == StartTime      \
+            || NULL == StopTime || NULL == Offset              \
+            || NULL == MaxNum)
+        {
+	     CGI_ERROR("CgiSysGetLogInfo start[%d] \n",__LINE__);
+             RetCode = RETCODE_ERROR;
+             break;
+        }
+        
+        char_t *Buffer = NULL;
+        Buffer = (char_t*)malloc(atoi(MaxNum) * sizeof(SysPkgShowCfg));
+        if(NULL == Buffer)
+        {
+            RetCode = RETCODE_ERROR;
+            Buffer = NULL;
+	    CGI_ERROR("CgiSysGetLogInfo start[%d] \n",__LINE__);
+            break;
+        }
+
+        memset(Buffer, 0, atoi(MaxNum)*sizeof(SysPkgShowCfg));
+        SysPkgLogInfo *SysLogInfo;
+        SysLogInfo = (SysPkgLogInfo *)Buffer;
+
+        SysPkgLogInfoSearch SysLogInfoSearch;
+        SysPkgLogInfoInt SysLogInfoInt;
+        memset(&SysLogInfoSearch, 0, sizeof(SysPkgLogInfoSearch));
+        memset(&SysLogInfoInt, 0, sizeof(SysPkgLogInfoInt));	
+
+	SysLogInfoSearch.s_SelectMode = atoi(SelectMode);
+	SysLogInfoSearch.s_MajorType = atoi(MajorType);
+        SysLogInfoSearch.s_MinorType = atoi(MinorType);
+        strcpy(SysLogInfoSearch.s_StartTime, StartTime);
+        strcpy(SysLogInfoSearch.s_StopTime, StopTime);
+	SysLogInfoSearch.s_Offset = atoi(Offset);
+        SysLogInfoSearch.s_MaxNum = atoi(MaxNum);
+
+        Result = SysGetLogInfo(atoi(SessionId), atoi(AuthValue), &SysLogInfoSearch, &SysLogInfoInt, SysLogInfo);
+        if (FAILED(Result))
+        {
+             RetCode = RETCODE_ERROR;
+             if(NULL != Buffer)
+             {
+            	 free(Buffer);
+            	 Buffer = NULL;
+             }
+             break;
+        }
+
+        RetFormat = "%s={\"RetCode\":\"%d\",\"Total\":\"%d\",\"Count\":\"%d\"%s}";
+
+        int32_t Length = 0, i = 0;
+        char_t TmpBuf[16384];
+        memset(TmpBuf, 0, 16384);
+        for (i=0; i < SysLogInfoInt.s_Count; i++)
+        {
+            Length += sprintf(TmpBuf+Length,",\"LogId%d\":\"%llu\",\"MajorType%d\":\"%d\",\"MinorType%d\":\"%d\""
+                             ",\"LogTime%d\":\"%s\",\"UserName%d\":\"%s\",\"RemoteHostIp%d\":\"%s \",\"LogData%d\":\"%s\""
+                             ,i , SysLogInfo[i].s_LogId, i , SysLogInfo[i].s_MajorType, i ,SysLogInfo[i].s_MinorType ,i , SysLogInfo[i].s_LogTime               \
+                             ,i , SysLogInfo[i].s_UserName, i, SysLogInfo[i].s_RemoteHostIp,i , SysLogInfo[i].s_LogData);
+        }
+
+        fprintf(stdout, RetFormat, Cmd, RetCode, SysLogInfoInt.s_Total, SysLogInfoInt.s_Count ,TmpBuf);
+
+        if(NULL != Buffer)
+        {
+            free(Buffer);
+            Buffer = NULL;
+        }
+
+        return GMI_SUCCESS;      
+    }while(0);
+    
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+}
+
