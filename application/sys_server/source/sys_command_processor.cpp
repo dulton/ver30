@@ -46,6 +46,7 @@
 #include "sys_search_preset_cmd.h"
 #include "sys_get_log_info_cmd.h"
 #include "sys_ptz_3dctrl_cmd.h"
+#include "sys_stop_3a_cmd.h"
 #include "log.h"
 #include "server_command_pipeline_manager.h"
 #include "gmi_system_headers.h"
@@ -303,7 +304,8 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s in..........\n", __func__);
     GMI_RESULT Result = GMI_SUCCESS;
 
-    SafePtr<SysPtzCtrlCommandExecutor> PtzCtrlCommandExecutor( BaseMemoryManager::Instance().New<SysPtzCtrlCommandExecutor>() );
+#if 1
+    SafePtr<SysPtzCtrlCommandExecutor> PtzCtrlCommandExecutor( BaseMemoryManager::Instance().New<SysPtzCtrlCommandExecutor>());
     if (NULL == PtzCtrlCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PtzCtrlCommandExecutor new fail\n");
@@ -325,10 +327,10 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     }
 
     SafePtr<SysPtz3DCtrlCommandExecutor> Ptz3DCtrlCommandExecutor( BaseMemoryManager::Instance().New<SysPtz3DCtrlCommandExecutor>() );
-    if (NULL == PtzCtrlCommandExecutor.GetPtr())
+    if (NULL == Ptz3DCtrlCommandExecutor.GetPtr())
     {
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PtzCtrlCommandExecutor new fail\n");
-        SYS_ERROR("PtzCtrlCommandExecutor new fail\n");
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Ptz3DCtrlCommandExecutor new fail\n");
+        SYS_ERROR("Ptz3DCtrlCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = Ptz3DCtrlCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -344,6 +346,7 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
         return Result;
     }
+    #endif
 
     SafePtr<SysGetSysCfgCommandExecutor> GetSysCfgCommandExecutor( BaseMemoryManager::Instance().New<SysGetSysCfgCommandExecutor>() );
     if (NULL == GetSysCfgCommandExecutor.GetPtr())
@@ -1200,6 +1203,27 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
         return Result;
     }
     Result = m_CommandPipeline->RegisterCommandExecutor(GetLogInfoCommandExecutor);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+
+    SafePtr<SysStop3ACommandExecutor> Stop3ACommandExecutor(BaseMemoryManager::Instance().New<SysStop3ACommandExecutor>());
+    if (NULL == Stop3ACommandExecutor.GetPtr())
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SearchPresetCommandExecutor new fail\n");
+        SYS_ERROR("SearchPresetCommandExecutor new fail\n");
+        return GMI_OUT_OF_MEMORY;
+    }
+    Result = Stop3ACommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
+    if (FAILED(Result))
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetParameter fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+    Result = m_CommandPipeline->RegisterCommandExecutor(Stop3ACommandExecutor);
     if (FAILED(Result))
     {
         SYS_ERROR("RegisterCommandExecutor fail, Result = 0x%lx\n", Result);

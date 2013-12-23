@@ -913,31 +913,31 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
         return Result;
     }
 
-    // Result = StartStreamMonitor();
-    // if (FAILED(Result))
-    // {
+    Result = StartStreamMonitor();
+    if (FAILED(Result))
+    {
 
-        // SYS_ERROR("m_SdkStreamCtlPtr Initialize fail, Result = 0x%lx\n", Result);
-        // DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_SdkStreamCtlPtr Initialize fail, Result = 0x%lx\n", Result);
-        // m_SdkStreamCtlPtr->Deinitialize();
-        // m_SdkStreamCtlPtr = NULL;
-        // m_AudioEncParamPtr = NULL;
-        // while (--Id)
-        // {
-            // m_StreamCenterClientPtr->Stop((m_VideoCodecHandle.GetPtr())[Id]);
-        // }
+        SYS_ERROR("m_SdkStreamCtlPtr Initialize fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_SdkStreamCtlPtr Initialize fail, Result = 0x%lx\n", Result);
+        m_SdkStreamCtlPtr->Deinitialize();
+        m_SdkStreamCtlPtr = NULL;
+        m_AudioEncParamPtr = NULL;
+        while (--Id)
+        {
+            m_StreamCenterClientPtr->Stop((m_VideoCodecHandle.GetPtr())[Id]);
+        }
 
-        // m_VideoSourcePtr = NULL;
-        // m_StreamCenterClientPtr->CloseVideoInOutDevice(m_VideoInOutHandle);
-        // m_StreamCenterClientPtr->Deinitialize();
-        // m_StreamCenterClientPtr = NULL;
+        m_VideoSourcePtr = NULL;
+        m_StreamCenterClientPtr->CloseVideoInOutDevice(m_VideoInOutHandle);
+        m_StreamCenterClientPtr->Deinitialize();
+        m_StreamCenterClientPtr = NULL;
 
-        // m_VideoCodecHandle = NULL;
-        // m_VideoStreamTypePtr = NULL;
-        // m_VideoEncParamPtr = NULL;
-        // m_ConfigFileManagerPtr->Deinitialize();
-        // return Result;
-    // }
+        m_VideoCodecHandle = NULL;
+        m_VideoStreamTypePtr = NULL;
+        m_VideoEncParamPtr = NULL;
+        m_ConfigFileManagerPtr->Deinitialize();
+        return Result;
+    }
 
     SYS_INFO("##%s normal out..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "##%s normal out..........\n", __func__);
