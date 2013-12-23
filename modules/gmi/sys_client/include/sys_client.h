@@ -142,6 +142,9 @@ GMI_RESULT SysSetAudioEncCfg(uint16_t SessionId, uint32_t AuthValue, uint32_t Au
 GMI_RESULT SysGetHostName(char_t HostName[128]);
 GMI_RESULT SysSetHostName(char_t HostName[128]);
 
+//stop 3A
+GMI_RESULT SysStop3A(uint16_t SessionId, uint32_t AuthValue);
+
 //Local api factory simple default and factory all default
 GMI_RESULT FactorySimpleDefaultAllLocal(uint16_t SessionId, uint32_t AuthValue);
 GMI_RESULT FactoryDefaultAllLocal(uint16_t SessionId, uint32_t AuthValue);

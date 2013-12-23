@@ -1897,3 +1897,28 @@ GMI_RESULT SysGetLogInfo(uint16_t SessionId, uint32_t AuthValue, SysPkgLogInfoSe
     SysGetCmdAttrFree(RspAttrCnt, SysRspAttrPtr);
     return GMI_FAIL;
 }
+
+GMI_RESULT SysStop3A(uint16_t SessionId, uint32_t AuthValue)
+{
+	GMI_RESULT    Result = GMI_SUCCESS;
+    uint16_t      ReqAttrCnt = 1;
+    SysAttr       SysReqAttr = {0};
+	int32_t       Id = 0;
+
+	do
+	{
+		SysReqAttr.s_Type       = TYPE_INTVALUE;
+		SysReqAttr.s_Attr       = (void_t*)&Id;
+		SysReqAttr.s_AttrLength = sizeof(int32_t);
+		
+		Result = SysSetCmdExcute(SessionId, AuthValue, SYSCODE_STOP_3A_REQ, ReqAttrCnt, &SysReqAttr);
+		if ( FAILED(Result) )
+		{
+			break;
+		}
+		return GMI_SUCCESS;
+	}
+	while (0);
+	
+    return GMI_FAIL;
+}
