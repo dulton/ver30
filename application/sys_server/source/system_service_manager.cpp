@@ -913,31 +913,31 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
         return Result;
     }
 
-    Result = StartStreamMonitor();
-    if (FAILED(Result))
-    {
+    // Result = StartStreamMonitor();
+    // if (FAILED(Result))
+    // {
 
-        SYS_ERROR("m_SdkStreamCtlPtr Initialize fail, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_SdkStreamCtlPtr Initialize fail, Result = 0x%lx\n", Result);
-        m_SdkStreamCtlPtr->Deinitialize();
-        m_SdkStreamCtlPtr = NULL;
-        m_AudioEncParamPtr = NULL;
-        while (--Id)
-        {
-            m_StreamCenterClientPtr->Stop((m_VideoCodecHandle.GetPtr())[Id]);
-        }
+        // SYS_ERROR("m_SdkStreamCtlPtr Initialize fail, Result = 0x%lx\n", Result);
+        // DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_SdkStreamCtlPtr Initialize fail, Result = 0x%lx\n", Result);
+        // m_SdkStreamCtlPtr->Deinitialize();
+        // m_SdkStreamCtlPtr = NULL;
+        // m_AudioEncParamPtr = NULL;
+        // while (--Id)
+        // {
+            // m_StreamCenterClientPtr->Stop((m_VideoCodecHandle.GetPtr())[Id]);
+        // }
 
-        m_VideoSourcePtr = NULL;
-        m_StreamCenterClientPtr->CloseVideoInOutDevice(m_VideoInOutHandle);
-        m_StreamCenterClientPtr->Deinitialize();
-        m_StreamCenterClientPtr = NULL;
+        // m_VideoSourcePtr = NULL;
+        // m_StreamCenterClientPtr->CloseVideoInOutDevice(m_VideoInOutHandle);
+        // m_StreamCenterClientPtr->Deinitialize();
+        // m_StreamCenterClientPtr = NULL;
 
-        m_VideoCodecHandle = NULL;
-        m_VideoStreamTypePtr = NULL;
-        m_VideoEncParamPtr = NULL;
-        m_ConfigFileManagerPtr->Deinitialize();
-        return Result;
-    }
+        // m_VideoCodecHandle = NULL;
+        // m_VideoStreamTypePtr = NULL;
+        // m_VideoEncParamPtr = NULL;
+        // m_ConfigFileManagerPtr->Deinitialize();
+        // return Result;
+    // }
 
     SYS_INFO("##%s normal out..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "##%s normal out..........\n", __func__);
@@ -1227,6 +1227,85 @@ GMI_RESULT SystemServiceManager::MediaParamUnLoad(void)
     SYS_INFO("%s normal out..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s normal out..........\n", __func__);
     return GMI_SUCCESS;
+}
+
+
+GMI_RESULT SystemServiceManager::SvrStop3A(void)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+	
+	if (NULL != m_ZoomHandle)
+	{
+		Result = m_StreamCenterClientPtr->CloseZoomDevice(m_ZoomHandle);
+		if (FAILED(Result))
+		{
+			SYS_ERROR("CloseZoomDevice fail, Result = 0x%lx\n", Result);
+			return Result;
+		}		
+		else
+		{
+			SYS_ERROR("CloseZoomDevice OK\n");
+		}
+		
+		m_ZoomHandle = NULL;
+	}
+	else
+	{
+		SYS_INFO("CloseZoomDevice has done\n");
+	}
+
+	if (NULL != m_AutoFocusHandle)
+	{
+		Result = m_StreamCenterClientPtr->StopAutoFocusDevice(m_AutoFocusHandle);
+		if (FAILED(Result))
+		{
+			SYS_ERROR("StopAutoFocusDevice fail, Result = 0x%lx\n", Result);
+			return Result;
+		}
+		else
+		{
+			SYS_ERROR("StopAutoFocusDevice OK\n");
+		}
+
+		Result = m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);
+		if (FAILED(Result))
+		{
+			SYS_ERROR("CloseAutoFocusDevice fail, Result = 0x%lx\n", Result);
+			return Result;
+		}
+		else
+		{
+			SYS_ERROR("CloseAutoFocusDevice OK\n");
+		}
+
+		m_AutoFocusHandle = NULL; 
+	}
+	else
+	{
+		SYS_INFO("CloseAutoFocusDevice has done\n");
+	}
+
+	if (NULL != m_ImageHandle)
+	{
+		Result = m_StreamCenterClientPtr->CloseImageDevice(m_ImageHandle);
+		if (FAILED(Result))
+		{
+			SYS_ERROR("CloseImageDevice fail, Result = 0x%lx\n", Result);
+			DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "CloseImageDevice fail, Result = 0x%lx\n", Result);
+			return Result;
+		}
+		else
+		{
+			 SYS_ERROR("CloseImageDevice OK\n");
+			 m_ImageHandle = NULL;
+		}
+	}
+	else
+	{
+		SYS_INFO("CloseImageDevice has done\n");
+	}
+
+	return GMI_SUCCESS;
 }
 
 

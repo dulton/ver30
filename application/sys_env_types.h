@@ -128,6 +128,8 @@ extern "C" {
 #define SYSCODE_STOP_AUDIO_DECODE_RSP     2005
 #define SYSCODE_IMPORT_EXCUTE_REQ         2006
 #define SYSCODE_IMPORT_EXCUTE_RSP         2007
+#define SYSCODE_STOP_3A_REQ               2008
+#define SYSCODE_STOP_3A_RSP               2009
 #define SYSCODE_REPORT_CONFIG             2001
 
 
@@ -822,7 +824,7 @@ typedef struct tagAlarmInfor
     uint8_t  s_Time[36];
     uint8_t  s_DevId[64];
     uint8_t  s_Description[128];
-    union
+    union 
     {
         uint32_t s_IoNum;
     }s_ExtraInfo;
@@ -1258,11 +1260,11 @@ typedef struct tagPtzPresetSearch
 typedef struct tagPtz3Dctrl
 {
 	int32_t  s_PtzId;//default form 1
-	int32_t  s_PtzCmd; // 3D cmd
-	uint8_t  s_StartX; 
-	uint8_t  s_StartY;
-	uint8_t  s_EndX;
-	uint8_t  s_EndY;
+	int32_t  s_X;
+	int32_t  s_Y;
+	int32_t  s_Width;
+	int32_t  s_Height;
+	uint8_t  s_Reserved[4];
 }SysPkgPtz3Dctrl;
 
 

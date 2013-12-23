@@ -1,14 +1,14 @@
-#ifndef __SYS_PTZ_3DCTRL_CMD_H__
-#define __SYS_PTZ_3DCTRL_CMD_H__
+#ifndef __SYS_STOP_3A_CMD_H__
+#define __SYS_STOP_3A_CMD_H__
 
 #include "sys_base_command_executor.h"
 
 
-class SysPtz3DCtrlCommandExecutor : public SysBaseCommandExecutor
+class SysStop3ACommandExecutor : public SysBaseCommandExecutor
 {
 public:
-    SysPtz3DCtrlCommandExecutor(void);
-    virtual ~SysPtz3DCtrlCommandExecutor(void);
+    SysStop3ACommandExecutor(void);
+    virtual ~SysStop3ACommandExecutor(void);
 
     virtual GMI_RESULT	Create( ReferrencePtr<BasePacket>& Packet, SafePtr<BaseCommandExecutor>& CommandExecutor );
     virtual GMI_RESULT  Execute();
@@ -16,4 +16,8 @@ public:
 };
 
 #endif
+
+
+
+
 

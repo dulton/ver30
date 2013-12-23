@@ -1,21 +1,21 @@
-#include "sys_ptz_3dctrl_cmd.h"
+#include "sys_stop_3a_cmd.h"
 #include "system_packet.h"
 #include "sys_env_types.h"
 #include "log.h"
 
 
-SysPtz3DCtrlCommandExecutor::SysPtz3DCtrlCommandExecutor()
-    :  SysBaseCommandExecutor(SYSCODE_3DPTZ_CTL_REQ, CT_ShortTask)
+SysStop3ACommandExecutor::SysStop3ACommandExecutor()
+    :  SysBaseCommandExecutor(SYSCODE_STOP_3A_REQ, CT_ShortTask)
 {
 }
 
 
-SysPtz3DCtrlCommandExecutor::~SysPtz3DCtrlCommandExecutor()
+SysStop3ACommandExecutor::~SysStop3ACommandExecutor()
 {
 }
 
 
-GMI_RESULT  SysPtz3DCtrlCommandExecutor::Create( ReferrencePtr<BasePacket>& Packet, SafePtr<BaseCommandExecutor>& CommandExecutor )
+GMI_RESULT  SysStop3ACommandExecutor::Create( ReferrencePtr<BasePacket>& Packet, SafePtr<BaseCommandExecutor>& CommandExecutor )
 {
     SystemPacket *SysPacket = (SystemPacket*) Packet.GetPtr();
 
@@ -24,8 +24,8 @@ GMI_RESULT  SysPtz3DCtrlCommandExecutor::Create( ReferrencePtr<BasePacket>& Pack
         return GMI_FAIL;
     }
 
-    SafePtr<SysPtz3DCtrlCommandExecutor>Ptz3DCtrlCommandExecutor( BaseMemoryManager::Instance().New<SysPtz3DCtrlCommandExecutor>() );
-    if (NULL == Ptz3DCtrlCommandExecutor.GetPtr())
+    SafePtr<SysStop3ACommandExecutor>Stop3ACommandExecutor( BaseMemoryManager::Instance().New<SysStop3ACommandExecutor>() );
+    if (NULL == Stop3ACommandExecutor.GetPtr())
     {
         return GMI_OUT_OF_MEMORY;
     }
@@ -35,17 +35,17 @@ GMI_RESULT  SysPtz3DCtrlCommandExecutor::Create( ReferrencePtr<BasePacket>& Pack
         return GMI_FAIL;
     }
 
-    Ptz3DCtrlCommandExecutor->m_Session = Packet->GetSession();
-    Ptz3DCtrlCommandExecutor->m_Reply   = Packet->Clone();
-    Ptz3DCtrlCommandExecutor->SetParameter(m_SystemServiceManager, m_Argument, m_ArgumentSize);
+    Stop3ACommandExecutor->m_Session = Packet->GetSession();
+    Stop3ACommandExecutor->m_Reply   = Packet->Clone();
+    Stop3ACommandExecutor->SetParameter(m_SystemServiceManager, m_Argument, m_ArgumentSize);
 
-    CommandExecutor = Ptz3DCtrlCommandExecutor;
+    CommandExecutor = Stop3ACommandExecutor;
 
     return GMI_SUCCESS;
 }
 
 
-GMI_RESULT  SysPtz3DCtrlCommandExecutor::Execute()
+GMI_RESULT  SysStop3ACommandExecutor::Execute()
 {
     int32_t       MessageCode         = RETCODE_OK;
     GMI_RESULT    Result              = GMI_SUCCESS;
@@ -55,25 +55,19 @@ GMI_RESULT  SysPtz3DCtrlCommandExecutor::Execute()
 
 
     SysPkgAttrHdPtr->s_Type = NETWORK_TO_HOST_USHORT(SysPkgAttrHdPtr->s_Type);
-    if (SysPkgAttrHdPtr->s_Type == TYPE_3DCTLPTZ)
-    {
-        SysPkgPtz3Dctrl *SysPtz3Dctrl = (SysPkgPtz3Dctrl*)(PayloadBuff + sizeof(SysPkgAttrHeader));
-        SysPtz3Dctrl->s_PtzId    = NETWORK_TO_HOST_UINT(SysPtz3Dctrl->s_PtzId);        
-        SysPtz3Dctrl->s_X        = NETWORK_TO_HOST_UINT(SysPtz3Dctrl->s_X);
-        SysPtz3Dctrl->s_Y        = NETWORK_TO_HOST_UINT(SysPtz3Dctrl->s_Y);
-        SysPtz3Dctrl->s_Width    = NETWORK_TO_HOST_UINT(SysPtz3Dctrl->s_Width);
-        SysPtz3Dctrl->s_Height   = NETWORK_TO_HOST_UINT(SysPtz3Dctrl->s_Height);       
-        //Result = m_SystemServiceManager->SvrPtzControl(SysPtz3Dctrl);
-        //if (FAILED(Result))
-        //{
-        //    SYS_ERROR("SvrPtzControl fail, Result = 0x%lx\n", Result);
-        //    MessageCode = RETCODE_ERROR;
-        //}
+    if (SysPkgAttrHdPtr->s_Type != TYPE_INTVALUE)
+    {      
+        SYS_ERROR("SysPkgAttrHdPtr->s_Type %d incorrect\n", SysPkgAttrHdPtr->s_Type);
+        MessageCode = RETCODE_ERROR;
     }
     else
     {
-        SYS_ERROR("SysPkgAttrHdPtr->s_Type %d incorrect\n", SysPkgAttrHdPtr->s_Type);
-        MessageCode = RETCODE_ERROR;
+    	GMI_RESULT Result = m_SystemServiceManager->SvrStop3A();
+    	if (FAILED(Result))
+    	{
+    		SYS_ERROR("Stop 3A fail, Result = 0x%lx\n", Result);
+    		MessageCode = RETCODE_ERROR;
+    	}
     }
 
     // Reply
@@ -101,7 +95,7 @@ GMI_RESULT  SysPtz3DCtrlCommandExecutor::Execute()
                  Reply->GetPacketHeaderBuffer(),
                  CommandPacket->GetMessageTag(),
                  CommandPacket->GetVersion(),
-                 SYSCODE_3DPTZ_CTL_RSP,
+                 SYSCODE_STOP_3A_RSP,
                  1,
                  AppPacketSize,
                  CommandPacket->GetSessionId(),
@@ -149,7 +143,7 @@ GMI_RESULT  SysPtz3DCtrlCommandExecutor::Execute()
 }
 
 
-GMI_RESULT  SysPtz3DCtrlCommandExecutor::Reply()
+GMI_RESULT  SysStop3ACommandExecutor::Reply()
 {
     GMI_RESULT Result =  m_Reply->Submit(m_Session);
     if (FAILED(Result))
@@ -159,6 +153,7 @@ GMI_RESULT  SysPtz3DCtrlCommandExecutor::Reply()
 
     return GMI_SUCCESS;
 }
+
 
 
 

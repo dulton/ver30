@@ -24,6 +24,8 @@ public:
     ~SystemServiceManager();
     GMI_RESULT Initialize();
     GMI_RESULT Deinitialize();
+    //debug
+    GMI_RESULT SvrStop3A(void);
     //ptz
     GMI_RESULT SvrPtzControl(SysPkgPtzCtrl *PtzCtrl);
     GMI_RESULT SvrGetAutoFocus(SysPkgAutoFocus *SysAutoFocusPtr);
