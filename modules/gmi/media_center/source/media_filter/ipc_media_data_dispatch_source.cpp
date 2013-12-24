@@ -7,6 +7,7 @@
 #include "ipc_media_data_dispatch.h"
 #include "media_codec_parameter.h"
 #include "share_memory_log_client.h"
+#include "timer_task_queue.h"
 
 IpcMediaDataDispatchSource::IpcMediaDataDispatchSource(void)
     : m_MediaDataClient()

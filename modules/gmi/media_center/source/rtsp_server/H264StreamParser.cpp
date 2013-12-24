@@ -8,6 +8,7 @@
 #include "ipc_fw_v3.x_resource.h"
 #include "ipc_media_data_dispatch.h"
 #include "share_memory_log_client.h"
+#include "timer_task_queue.h"
 
 #define USR_DEFINED_ERROR			2
 
