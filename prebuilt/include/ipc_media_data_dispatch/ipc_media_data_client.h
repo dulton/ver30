@@ -32,13 +32,19 @@ public:
     // notify server of unregister
     GMI_RESULT Unregister  ();
     // read media data from server
-    GMI_RESULT Read        ( void_t *Frame, size_t *FrameLength, struct timeval *FrameTS, void_t *ExtraData, uint32_t *ExtraDataLength, uint32_t Timeout = 40/* ms unit */ );
+    GMI_RESULT Read        ( void_t *Frame, size_t *FrameLength, struct timeval *FrameTS, void_t *ExtraData, size_t *ExtraDataLength, uint32_t Timeout = 40/* ms unit */ );
+
+    // get share memory address of media frame, no data copy
+    GMI_RESULT GetFrame    ( const void_t **Frame, const size_t **FrameLength, const struct timeval **FrameTS, const void_t **ExtraData, const size_t **ExtraDataLength, uint32_t Timeout = 40 );
+    // release frame resource applied by GetFrame
+    GMI_RESULT ReleaseFrame();
+
     // write media data to server
-    GMI_RESULT Write       ( const void_t *Frame, size_t FrameLength, const struct timeval *FrameTS, const void_t *ExtraData, uint32_t ExtraDataLength );
+    GMI_RESULT Write       ( const void_t *Frame, size_t FrameLength, const struct timeval *FrameTS, const void_t *ExtraData, size_t ExtraDataLength );
 
 private:
-    GMI_RESULT _Read          ( void_t *Frame, uint32_t *FrameLength, struct timeval *FrameTS, void_t *ExtraData, uint32_t *ExtraDataLength, uint32_t Timeout );
-    GMI_RESULT _Read2         ( void_t *Frame, uint32_t *FrameLength, struct timeval *FrameTS, void_t *ExtraData, uint32_t *ExtraDataLength );
+    GMI_RESULT _Read          ( void_t *Frame, size_t *FrameLength, struct timeval *FrameTS, void_t *ExtraData, size_t *ExtraDataLength, uint32_t Timeout );
+    GMI_RESULT _Read2         ( void_t *Frame, size_t *FrameLength, struct timeval *FrameTS, void_t *ExtraData, size_t *ExtraDataLength );
     GMI_RESULT _WaitForNewData( uint32_t Timeout );
 
     GMI_RESULT WaitForReply   ( uint8_t MessageType, uint16_t MessageId, uint8_t *ReceiveBuffer, size_t *ReceiveBufferSize, long_t TryCount, boolean_t ConcernNewDataNotify );
@@ -55,7 +61,7 @@ private:
     uint32_t                                                                        m_ShareMemorySize;
     GMI_ShareMemory                                                                 m_ShareMemory;
     void_t                                                                          *m_MemoryPool;
-    boolean_t                                                                       m_LastCopySuccess;
+    boolean_t                                                                       m_LastGetFrame;
     void_t                                                                          *m_Block;
     size_t                                                                          m_BlockLength;
     void_t                                                                          *m_NextBlock;
