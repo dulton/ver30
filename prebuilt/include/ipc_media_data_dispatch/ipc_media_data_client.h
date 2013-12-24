@@ -1,22 +1,17 @@
 #pragma once
 
-#if !defined( IPC_MEDIA_DATA_RESEND_NUMBER )
-#define IPC_MEDIA_DATA_RESEND_NUMBER          64
-#endif
-
-#include "application_packet.h"
-#include "general_command_pipeline_manager.h"
-#include "gmi_system_headers.h"
 #include "udp_session.h"
 
-class IpcMediaDataNextDataCommandRequester;
-class IpcMediaDataReleaseDataCommandRequester;
 class IpcMediaDataUDPSession;
 
 #if !defined( MEDIA_DATA_CALLBAK_FUNCTION )
 #define MEDIA_DATA_CALLBAK_FUNCTION 1
 typedef void_t (*MEDIA_DATA_CALLBAK)( void_t *UserData, uint32_t MediaType, uint32_t MediaId, const void_t *Frame, size_t FrameLength, const struct timeval *FrameTS, const void_t *ExtraData, size_t ExtraDataLength );
 #endif//MEDIA_DATA_CALLBAK_FUNCTION
+
+#if !defined( IPC_MEDIA_DATA_RESEND_NUMBER )
+#define IPC_MEDIA_DATA_RESEND_NUMBER          64
+#endif
 
 class IPC_MediaDataClient
 {
@@ -35,7 +30,7 @@ public:
     GMI_RESULT Read        ( void_t *Frame, size_t *FrameLength, struct timeval *FrameTS, void_t *ExtraData, size_t *ExtraDataLength, uint32_t Timeout = 40/* ms unit */ );
 
     // get share memory address of media frame, no data copy
-    GMI_RESULT GetFrame    ( const void_t **Frame, const size_t **FrameLength, const struct timeval **FrameTS, const void_t **ExtraData, const size_t **ExtraDataLength, uint32_t Timeout = 40 );
+    GMI_RESULT GetFrame    ( const void_t **Frame, size_t *FrameLength, struct timeval *FrameTS, const void_t **ExtraData, size_t *ExtraDataLength, uint32_t Timeout = 40 );
     // release frame resource applied by GetFrame
     GMI_RESULT ReleaseFrame();
 

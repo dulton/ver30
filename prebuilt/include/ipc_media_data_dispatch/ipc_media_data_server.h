@@ -1,7 +1,6 @@
 #pragma once
 
 #include "application_packet.h"
-#include "gmi_system_headers.h"
 
 class IpcMediaDataUDPSession;
 
@@ -29,10 +28,6 @@ private:
     GMI_RESULT     OnRegisterReply     ( ReferrencePtr<IpcMediaDataUDPSession,DefaultObjectDeleter,MultipleThreadModel>& Session, uint16_t SequenceNumber, GMI_RESULT RegisterResult, long_t ShareMemoryKey, size_t ShareMemorySize );
     GMI_RESULT     OnUnregister        ( ReferrencePtr<IpcMediaDataUDPSession,DefaultObjectDeleter,MultipleThreadModel>& Session, uint16_t SequenceNumber, uint32_t ApplicationId );
     GMI_RESULT     OnUnregisterReply   ( ReferrencePtr<IpcMediaDataUDPSession,DefaultObjectDeleter,MultipleThreadModel>& Session, uint16_t SequenceNumber, GMI_RESULT UnregisterResult );
-    GMI_RESULT     OnNextBlock         ( ReferrencePtr<IpcMediaDataUDPSession,DefaultObjectDeleter,MultipleThreadModel>& Session, uint16_t SequenceNumber );
-    GMI_RESULT     OnNextBlockReply    ( ReferrencePtr<IpcMediaDataUDPSession,DefaultObjectDeleter,MultipleThreadModel>& Session, uint16_t SequenceNumber, GMI_RESULT NextResult, size_t Offset, size_t Length, uint32_t Flag );
-    GMI_RESULT     OnReleaseBlock      ( ReferrencePtr<IpcMediaDataUDPSession,DefaultObjectDeleter,MultipleThreadModel>& Session, uint16_t SequenceNumber );
-    GMI_RESULT     OnReleaseBlockReply ( ReferrencePtr<IpcMediaDataUDPSession,DefaultObjectDeleter,MultipleThreadModel>& Session, uint16_t SequenceNumber, GMI_RESULT ReleaseResult );
 
 private:
     ReferrencePtr<GMI_Socket>                                                                      m_ServerSocket;
