@@ -2602,10 +2602,10 @@ static int SearchRecordFiles(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *Cu
 					memcpy(&SegParam, QueryResult[i], sizeof(SegmentIdxRecord));
 					memcpy(&(PQueryResult[i]), &SegParam, sizeof(SegmentIdxRecord));
 				}	
-				StartQueryNo = PQueryResult[RealRecordNum-1].s_SId + 1;
+				StartQueryNo = PQueryResult[RealRecordNum-1].s_SId;
 			}
 			RecordTotalNum = RowRes;
-			MakeRecFileName(RecordFileQueryPtr->s_RecTrigMode, PQueryResult, RecordTotalNum, RecordFileQueryResPtr, QueryResArraySize);
+			MakeRecFileName(RecordFileQueryPtr->s_RecTrigMode, PQueryResult, RealRecordNum, RecordFileQueryResPtr, QueryResArraySize);
 			PRT_TEST(("select over,recordTotalNum = %d, RealRecordNum = %d\n", RecordTotalNum, RealRecordNum));
 			
 		}while(0);
@@ -2613,6 +2613,7 @@ static int SearchRecordFiles(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *Cu
 
 	*QueryResTotalNum = RecordTotalNum;
 	*QueryResCurNum = RealRecordNum;
+	*CurQueryPosNo = StartQueryNo;
 ErrExit:
 	if(NULL != PQueryResult)
 	{

@@ -6,6 +6,15 @@
 #define		PRT_ERR(x)	printf x
 #define		PRT_TEST(x)	printf x
 
+static int l_QueryResTotalNum = 0;
+
+/*查询符合条件的记录总条数*/
+int queryTotalCountCallBack(void *p, int argc, char **value, char **name)
+{
+	l_QueryResTotalNum++;	
+	return 0;
+}
+
 /*打开数据库文件*/
 int openDbFile(sqlite3 **dbFd)
 {
@@ -179,6 +188,9 @@ void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *
 	int nrow = 0, ncolumn = 0;
 	int ret = -1;
 	int i = 0, j = 0;
+	int count = 0;
+
+	l_QueryResTotalNum = 0;
 
 	if((NULL == param)  || (NULL == dbFd) || (0 >= queryResultNum))
 	{
@@ -260,9 +272,30 @@ void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *
 			return;
 	}
 
+	if(RECORD_QUERY_SEG == cmdType)
+	{
+		sprintf(tmpParam, "%s%s%s", "SELECT * FROM ", tmpStr1, tmpStr2);
+		sqlite3_exec(dbFd, tmpParam, queryTotalCountCallBack, NULL, NULL);
+		if(l_QueryResTotalNum > 0)
+		{
+			*rowResult = l_QueryResTotalNum;
+		}
+		else
+		{
+			*rowResult = 0;
+		}
+	}
+	
+	memset(tmpParam, 0, sizeof(tmpParam));
 	sprintf(tmpParam, "%s%s%s%s%d", "SELECT * FROM ", tmpStr1, tmpStr2, " LIMIT ", NUM_RECORD_MAX);	
 	while(1)
 	{
+		count++;
+		if(count > 2)
+		{
+			PRT_TEST(("database query error.\n"));
+		    break;
+		}
 		/*查询数据库是处于busy状态时，需要等待片刻再查询*/
 		if(SQLITE_OK != (ret = sqlite3_get_table( dbFd , tmpParam , &azResult , &nrow , &ncolumn , 0)))
 		{
@@ -346,7 +379,10 @@ void queryDbRecord(sqlite3 *dbFd, const int cmdType, const int querytype, char *
 		}
 	}
 	#endif
-	*rowResult = nrow;
+	if(RECORD_QUERY_FILE == cmdType)
+	{
+		*rowResult = nrow;
+	}
 	PRT_TEST(("nrow = %d, ncolum = %d\n", nrow,ncolumn));
 	if(SQLITE_OK != ret)
 	{
