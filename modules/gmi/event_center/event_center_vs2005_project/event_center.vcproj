@@ -189,6 +189,38 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="transaction"
+			>
+			<File
+				RelativePath="..\source\alarm_input.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\alarm_input.h"
+				>
+			</File>
+			<File
+				RelativePath="..\source\alarm_output.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\alarm_output.h"
+				>
+			</File>
+			<File
+				RelativePath="..\source\event_transaction_center.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\event_transaction_center.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\event_transaction_header.h"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

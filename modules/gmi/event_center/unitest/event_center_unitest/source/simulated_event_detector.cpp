@@ -3,7 +3,7 @@
 
 SimulatedEventDetector::SimulatedEventDetector(void)
     : EventDetector( e_EventDetectorType_Passive, 0 )
-    , m_FetchThread()
+    , m_DetectThread()
     , m_ThreadWorking( false )
     , m_ThreadExitFlag( false )
 {
@@ -24,17 +24,17 @@ GMI_RESULT SimulatedEventDetector::Start( const void_t *Parameter, size_t Parame
     m_ThreadWorking  = false;
     m_ThreadExitFlag = false;
 
-    Result = m_FetchThread.Create( NULL, 0, EventDetectThread, this );
+    Result = m_DetectThread.Create( NULL, 0, EventDetectThread, this );
     if ( FAILED( Result ) )
     {
         EventDetector::Stop();
         return Result;
     }
 
-    Result = m_FetchThread.Start();
+    Result = m_DetectThread.Start();
     if ( FAILED( Result ) )
     {
-        m_FetchThread.Destroy();
+        m_DetectThread.Destroy();
         EventDetector::Stop();
         return Result;
     }
@@ -46,7 +46,7 @@ GMI_RESULT SimulatedEventDetector::Stop()
 {
     m_ThreadExitFlag = true;
     while ( m_ThreadWorking ) GMI_Sleep( 10 );
-    m_FetchThread.Destroy();
+    m_DetectThread.Destroy();
 
     return EventDetector::Stop();
 }

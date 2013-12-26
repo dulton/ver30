@@ -19,7 +19,7 @@ private:
     void_t* DetectEntry();
 
 private:
-    GMI_Thread  m_FetchThread;
+    GMI_Thread  m_DetectThread;
     boolean_t   m_ThreadWorking;
     boolean_t   m_ThreadExitFlag;
 };
