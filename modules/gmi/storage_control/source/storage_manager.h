@@ -339,7 +339,7 @@ int32_t QueryRecordFile(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQuer
 
 /*录像文件下载或回放*/
 int32_t QueryDownReplayRecordFile(RecordDownReplayQueryIn *RecordDownReplayQueryPtr,
-       RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t QueryResArraySize);
+       RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t QueryResArraySize, uint32_t *QueryResRealNum);
 
 /*  将接收到的数据写入录像缓冲区*/
 int32_t	VidAudDataToBuf(uint32_t Channel, char_t *PBuffer, int32_t Size, int32_t FrameType);

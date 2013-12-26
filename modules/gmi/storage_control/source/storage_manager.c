@@ -2,7 +2,7 @@
 #include "storage_manager.h"
 #include "stream_process.h"
 
-#include "log_record.h"
+#include "log_record_storage.h"
 #include "dbManager.h"
 
 GlobalOperateInfo       g_HdPart;					/*全局录像文件信息*/
@@ -40,7 +40,7 @@ static int32_t UmountHdisk(char_t *InDstPathName)
 {
 	if(NULL == InDstPathName)
 	{
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");		
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");		
 		return LOCAL_RET_ERR;
 	}
 	#if 0
@@ -64,7 +64,7 @@ static int32_t MountHdisk(char_t *InSrcPathName, char_t *InDstPathName, char_t *
 		|| (NULL == InDstPathName)
 		|| (NULL == InType))
 	{
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");				
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");				
 		return LOCAL_RET_ERR;
 	}
 	#if 0
@@ -278,7 +278,7 @@ int32_t VidRecordInit()
 		 PChannel->s_RecordMsgId  = msgget(IPC_PRIVATE, IPC_CREAT | 0666);
 		 if(PChannel->s_RecordMsgId < 0)
 		 {
-			DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "msgget error.\n");				
+			DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "msgget error.\n");				
 		 	return LOCAL_RET_ERR;
 		 }
 		 memset(&(g_SegFileInfo[Tmp]), 0, sizeof(SegFileInfo));
@@ -366,14 +366,14 @@ static int32_t CreateDataReceivedThread(int32_t ChanId, int32_t StreamId)
 
 	if(1 == l_IsStartDataRecTask[StreamId])
 	{
-        DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "DataReceived has created.");
+        DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "DataReceived has created.");
 		return LOCAL_RET_OK;
 	}
 	l_StreamNum = StreamId;
     RetVal = pthread_create(&DataRecTid, NULL, RecordDataReceiveTask, &l_StreamNum);
     if (0 != RetVal)
     {
-        DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordDataReceiveTask thread create error.");
+        DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "RecordDataReceiveTask thread create error.");
 		l_IsStartDbProcessTask = 0;
         return LOCAL_RET_ERR;
     }
@@ -927,7 +927,7 @@ static void *RecordScheduleProcessTask(void *InParam)
     g_RecScheduleMsg = msgget(IPC_PRIVATE, IPC_CREAT | 0666);
 	if(-1 == g_RecScheduleMsg)
 	{
-	    DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "g_RecScheduleMsg msgget error.");
+	    DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "g_RecScheduleMsg msgget error.");
 	    goto ErrExit;
 	}
 	
@@ -940,7 +940,7 @@ static void *RecordScheduleProcessTask(void *InParam)
 	{
 		if(g_RecScheduleMsg < 0)
 		{	
-			DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordScheduleProcessTask exit.\n");							
+			DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "RecordScheduleProcessTask exit.\n");							
 			break;
 		}
 	    RetVal   = msgrcv(g_RecScheduleMsg, &RecTriggerMsg, TrigMsgLen, MSG_TYPE_TRIG_REC, IPC_NOWAIT);	    
@@ -954,7 +954,7 @@ static void *RecordScheduleProcessTask(void *InParam)
 			{
 				case REC_TRIG_ALARMIN:  /*报警输入联动录像*/
 				case REC_TRIG_MOTDETECT:  /*移动侦测联动录像，只能联动当前通道录像*/				
-					DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "no support type of trigger %d.", RecTriggerMsg.s_CmdType);		
+					DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "no support type of trigger %d.", RecTriggerMsg.s_CmdType);		
 					break;
 				default:
 					if(RecTriggerMsg.s_TriggerChans < MAX_ENCODER_NUM)
@@ -1187,12 +1187,12 @@ static int32_t writeFile(int32_t FdId, char_t *Data, int32_t DataLen)
 	int nLen = 0;
 	if((FdId < 0) || (NULL == Data))
 	{
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception,"writeFile param error.\n");		
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception,"writeFile param error.\n");		
 		return LOCAL_RET_ERR;
 	}
 	if(DataLen != (nLen = write(FdId, Data, DataLen)))
 	{
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception,"writeFile nLen %d dataLen %d error.\n", nLen, DataLen);
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception,"writeFile nLen %d dataLen %d error.\n", nLen, DataLen);
 		return LOCAL_RET_ERR;
 	}
 
@@ -1279,7 +1279,7 @@ static int32_t hdPart_Service(int32_t CmdType, SegmentIdxRecord * SegParam)
 				QueryResult[0] = (char *)malloc(sizeof(SegmentIdxRecord) + sizeof(char));
 				if(NULL == QueryResult[0])
 				{
-					DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception,"quertResult[0] malloc error, please reboot.\n");
+					DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception,"quertResult[0] malloc error, please reboot.\n");
 					UNLOCK(&g_LockHDPart);
 					free(QueryResult);
 					break;
@@ -1304,7 +1304,7 @@ static int32_t hdPart_Service(int32_t CmdType, SegmentIdxRecord * SegParam)
 							/*当出现查询最早记录无结果时，最早记录要往后顺移*/
 							if(0 == RowRes)
 							{
-								DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception,"###first record %d no exist.####\n", g_HdPart.s_FirstRecordNo);
+								DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception,"###first record %d no exist.####\n", g_HdPart.s_FirstRecordNo);
 								g_HdPart.s_FirstRecordNo++;
 								if(g_HdPart.s_FirstRecordNo >= g_HdPart.s_CurWriteSegNo)
 								{
@@ -1445,7 +1445,7 @@ static int32_t FindNewFile()
 	SegParam.s_SId = g_HdPart.s_SegRecNo;
 	PRT_TEST(("segParam.s_SId=%d\n", SegParam.s_SId));
 	if (hdPart_Service(GET_WRITABLE_FILE, &SegParam) == LOCAL_RET_ERR) {
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "can not find a writeable file. errno = %d\n", errno);
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "can not find a writeable file. errno = %d\n", errno);
 		return LOCAL_RET_ERR;
 	}
 	
@@ -1464,7 +1464,7 @@ static int32_t FindNewFile()
 		}
 		else 
 		{
-			DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "chan open file %s failed, retry = %d\n", StrFileName, Retry);
+			DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "chan open file %s failed, retry = %d\n", StrFileName, Retry);
 			usleep(100);
 			Retry++;
 		}
@@ -1516,7 +1516,7 @@ static void *RecordStreamProcessTask(void *InParam)
 	{
 		if(PChan->s_RecordMsgId < 0)
 		{	
-			DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordStreamProcessTask exit.\n");							
+			DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "RecordStreamProcessTask exit.\n");							
 			break;
 		}
 		memset(&RecMsg, 0, sizeof(RecordMsgType));
@@ -2103,25 +2103,24 @@ int32_t CreateRecProcessThread(int32_t Chan)
 
 	if(1 == l_RecProcessThreadcreated)
 	{
-        DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordProcess thread has created.");
+        DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "RecordProcess thread has created.");
 		return LOCAL_RET_OK;
 	}
     RetVal = pthread_create(&ScheduleTid, NULL, RecordScheduleProcessTask, NULL);
     if (0 != RetVal)
     {
-        DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordScheduleProcess thread create error.");
+        DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "RecordScheduleProcess thread create error.");
         return LOCAL_RET_ERR;
     }
-	printf("123\n");
+
 	l_ChannelNum = Chan;
     RetVal = pthread_create(&StreamTId, NULL, RecordStreamProcessTask, &l_ChannelNum);
     if (0 != RetVal)
     {
-        DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordStreamProcess thread create error.");
+        DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "RecordStreamProcess thread create error.");
         return LOCAL_RET_ERR;
     }
 	l_RecProcessThreadcreated = 1;
-	printf("345\n");
 
     return LOCAL_RET_OK;
 }
@@ -2148,7 +2147,7 @@ static void *RecordDbBackupTask(void *InParam)
 		{
 			if(0 == l_IsStartDbProcessTask)
 			{	
-				DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordDbBackupTask exit.\n");							
+				DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "RecordDbBackupTask exit.\n");							
 				goto ErrExit;
 			}
 			sleep(1);
@@ -2196,14 +2195,14 @@ static void *ExceptionProcTask(void *InParam)
 		{
 			exceptionNum = 0;
 			g_HdPart.s_PartStatus = HD_ERROR;
-			DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "[ALARM]disk lost or error");
+			DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "[ALARM]disk lost or error");
 		}
 		
 		while(CycleNum--)
 		{
 			if(0 == l_IsStartDbProcessTask)
 			{	
-				DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "ExceptionProcTask exit.\n");							
+				DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "ExceptionProcTask exit.\n");							
 				goto ErrExit;
 			}
 			sleep(1);
@@ -2226,14 +2225,14 @@ int32_t CreateDbProcessThread(void)
 	l_IsStartDbProcessTask = 1;
 	if(1 == l_DbProcessThreadcreated)
 	{
-        DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordProcess thread has created.");
+        DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "RecordProcess thread has created.");
 		return LOCAL_RET_OK;
 	}
 
     RetVal = pthread_create(&MainDbTid, NULL, RecordDbBackupTask, NULL);
     if (0 != RetVal)
     {
-        DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordScheduleProcess thread create error.");
+        DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "RecordScheduleProcess thread create error.");
 		l_IsStartDbProcessTask = 0;
         return LOCAL_RET_ERR;
     }
@@ -2241,7 +2240,7 @@ int32_t CreateDbProcessThread(void)
     RetVal = pthread_create(&BakDbTId, NULL, ExceptionProcTask, NULL);
     if (0 != RetVal)
     {
-        DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "RecordStreamProcess thread create error.");
+        DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "RecordStreamProcess thread create error.");
 		l_IsStartDbProcessTask = 0;
         return LOCAL_RET_ERR;
     }
@@ -2263,7 +2262,7 @@ int32_t GetSDStatus(StorageStatusQueryResOut **QueryResPtr,
 		|| (NULL == *QueryResPtr)
 		|| (0 == QueryArrayNum))
 	{
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
 		return LOCAL_RET_ERR;
 	}
 
@@ -2311,7 +2310,7 @@ int32_t SetRecConfigParam(RecordParamConfigIn *InParam)
 {
 	if(NULL == InParam)
 	{
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
 		return LOCAL_RET_ERR;
 	}
 
@@ -2329,7 +2328,7 @@ int32_t SetRecScheduleConfig(RecordScheduleConfigIn *InParam)
 	int32_t i,j;
 	if(NULL == InParam)
 	{
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
 		return LOCAL_RET_ERR;
 	}
 
@@ -2371,7 +2370,7 @@ int32_t  RecordCtrlNotify(RecordCtrlIn *InParam)
 		|| ((InParam->s_EncodeType < 0) && (InParam->s_EncodeType > 2))
 	   )
 	{
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam error.\n");
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "InParam error.\n");
 		return LOCAL_RET_ERR;
 	}
 
@@ -2423,7 +2422,7 @@ int32_t  RecordCtrlNotify(RecordCtrlIn *InParam)
 		case TYPE_REC_TRIG_MANU:
 		case TYPE_REC_TRIG_MOTION:
 		case TYPE_REC_TRIG_ALARM:
-			DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "s_RecTrigMode %d no support.\n", InParam->s_RecTrigMode);
+			DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "s_RecTrigMode %d no support.\n", InParam->s_RecTrigMode);
 		    return LOCAL_RET_ERR;
 			break;
 		case TYPE_REC_TRIG_TIME:
@@ -2494,15 +2493,15 @@ static int SearchRecordFiles(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *Cu
                                  uint32_t  *QueryResTotalNum, uint32_t  *QueryResCurNum)
 {
 
-	printf("111111\n");
 	if((RecordFileQueryPtr->s_Channel >=  MAX_ENCODER_NUM)
 		|| (RecordFileQueryPtr->s_RecQueryTime[0] >=  RecordFileQueryPtr->s_RecQueryTime[1])
 		|| (RecordFileQueryPtr->s_RecQueryType > TYPE_REC_QUERY_ALL))
 	{
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "InParam channel=%d, Time=%d-%d, QueryType=%d error.\n", 
+			RecordFileQueryPtr->s_Channel, RecordFileQueryPtr->s_RecQueryTime[0], 
+			RecordFileQueryPtr->s_RecQueryTime[1], RecordFileQueryPtr->s_RecQueryType);
 		return LOCAL_RET_ERR;
 	}
-	printf("2222\n");
 
 	int32_t RetResult = LOCAL_RET_OK;
 	SegmentIdxRecord SegParam;
@@ -2643,6 +2642,7 @@ int32_t QueryRecordFile(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQuer
                             RecordFileQueryResOut **RecordFileQueryResPtr, uint32_t QueryResArraySize,
                             uint32_t  *QueryResTotalNum, uint32_t  *QueryResCurNum)
 {
+	int32_t RetVal = LOCAL_RET_OK;
 	if((NULL == RecordFileQueryPtr)
 		|| (NULL == CurQueryPosNo)
 		|| (NULL == RecordFileQueryResPtr)
@@ -2650,7 +2650,7 @@ int32_t QueryRecordFile(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQuer
 		|| (NULL == QueryResTotalNum)
 		|| (NULL == QueryResCurNum))
 	{
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
 		return LOCAL_RET_ERR;
 	}
 
@@ -2663,17 +2663,21 @@ int32_t QueryRecordFile(RecordFileQueryIn *RecordFileQueryPtr, uint32_t *CurQuer
 			break;
 		case TYPE_REC_QUERY_TIME:
 		default:
-			SearchRecordFiles(RecordFileQueryPtr, CurQueryPosNo, RecordFileQueryResPtr, 
-				QueryResArraySize, QueryResTotalNum, QueryResCurNum);
+			if(SearchRecordFiles(RecordFileQueryPtr, CurQueryPosNo, RecordFileQueryResPtr, 
+				QueryResArraySize, QueryResTotalNum, QueryResCurNum))
+			{
+				DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "SearchRecordFiles error.\n");
+				RetVal = LOCAL_RET_ERR;
+			}
 			break;
 	}
 
-	return LOCAL_RET_OK;
+	return RetVal;
 		
 }
 
 /*Filename:record_XX(通道号)_XXXX(文件号)_XXXX(片段号)_XXXXXXXXXX(起始时间)_XXXXXXXXXX(终止时间)*/
-static int32_t FindDownFileInfo(char_t *FileName, RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr)
+static int32_t FindDownFileInfo(char_t *FileName, RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t *QueryResRealNum)
 {
 	uint32_t StartTime = 0;
 	uint32_t EndTime = 0;
@@ -2690,7 +2694,8 @@ static int32_t FindDownFileInfo(char_t *FileName, RecordDownReplayQueryResOut **
 	if((NULL == FileName)
 		|| (41 > strlen(FileName))
 		|| (NULL == RecordDownReplayQueryResPtr)
-		|| (NULL == *RecordDownReplayQueryResPtr))
+		|| (NULL == *RecordDownReplayQueryResPtr)
+		|| (NULL == QueryResRealNum))
 	{
 		PRT_ERR(("FindDownFileInfo  InParam error.\n"));
 		return LOCAL_RET_ERR;
@@ -2794,6 +2799,7 @@ static int32_t FindDownFileInfo(char_t *FileName, RecordDownReplayQueryResOut **
 		(*RecordDownReplayQueryResPtr)[0].s_RecFileCurNo = 0;
 		(*RecordDownReplayQueryResPtr)[0].s_CurFileStartTime = SegParam.s_StartTime;
 		(*RecordDownReplayQueryResPtr)[0].s_CurFileEndTime = SegParam.s_EndTime;
+		*QueryResRealNum = 1;
 	}while(0);
 
 	if(NULL != QueryResult)
@@ -2810,16 +2816,17 @@ static int32_t FindDownFileInfo(char_t *FileName, RecordDownReplayQueryResOut **
 }
 
 int32_t QueryDownReplayRecordFile(RecordDownReplayQueryIn *RecordDownReplayQueryPtr,
-       RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t QueryResArraySize)
+       RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t QueryResArraySize, uint32_t *QueryResRealNum)
 {
 	if((NULL == RecordDownReplayQueryPtr)
 		|| ((OPERATE_RECORD_DOWN != RecordDownReplayQueryPtr->s_RecQueryType)
 		&& (OPERATE_RECORD_REPLAY != RecordDownReplayQueryPtr->s_RecQueryType))
 		|| (NULL == RecordDownReplayQueryResPtr)
 		|| (NULL == *RecordDownReplayQueryResPtr)
+		|| (NULL == QueryResRealNum)
 		|| (0 >= QueryResArraySize))
 	{
-		DEBUG_LOG(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
+		DEBUG_LOG_STORAGE(&LogClientHd, e_DebugLogLevel_Exception, "InParam NULL.\n");
 		return LOCAL_RET_ERR;
 	}
 
@@ -2829,7 +2836,7 @@ int32_t QueryDownReplayRecordFile(RecordDownReplayQueryIn *RecordDownReplayQuery
 			break;
 		case OPERATE_RECORD_DOWN:
 	    default:
-			if(LOCAL_RET_OK != FindDownFileInfo(RecordDownReplayQueryPtr->RecDownReplayInfo.s_RecFileName, RecordDownReplayQueryResPtr))
+			if(LOCAL_RET_OK != FindDownFileInfo(RecordDownReplayQueryPtr->RecDownReplayInfo.s_RecFileName, RecordDownReplayQueryResPtr, QueryResRealNum))
 			{
 				return LOCAL_RET_ERR;
 			}

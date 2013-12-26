@@ -321,12 +321,13 @@ func:query record file of download or replay
 input:RecordDownReplayQueryPtr--query condition of record;       
         QueryResArraySize--size of array of query result
 output:RecordDownReplayQueryResPtr-query result;
+          QueryResRealNum-real length of query result
 return:success--return GMI_SUCCESS, 
 	failed -- return ERROR CODE
 ---------------------------------------------------------------------*/
 
 GMI_RESULT GMI_RecordDownReplayQuery(RecordDownReplayQueryIn *RecordDownReplayQueryPtr,
-       RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t QueryResArraySize);
+       RecordDownReplayQueryResOut **RecordDownReplayQueryResPtr, uint32_t QueryResArraySize, uint32_t *QueryResRealNum);
 
 
 /*===============================================================
