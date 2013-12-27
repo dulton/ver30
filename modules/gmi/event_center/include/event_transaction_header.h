@@ -11,8 +11,14 @@
 
 enum AlarmInputTriggerType
 {
-    e_AITT_UsuallyClosed = 1,
-    e_AITT_UsuallyOpened,
+    e_AlarmInputTriggerType_UsuallyClosed = 1,
+    e_AlarmInputTriggerType_UsuallyOpened,
+};
+
+enum AlarmInputStatus
+{
+    e_AlarmInputStatus_Closed = 0,
+    e_AlarmInputStatus_Opened,
 };
 
 enum TimeType
@@ -36,9 +42,16 @@ struct AlarmInputInfo
 {
     uint32_t          s_InputNumber;
     char_t            s_Name[ALARM_INPUT_MAX_NAME_LENGTH];
+    uint32_t          s_CheckTime;
     uint32_t          s_TriggerType;
     uint32_t          s_ScheduleTimeNumber;
     ScheduleTimeInfo  s_ScheduleTime[1];
+};
+
+enum AlarmOutputWorkMode
+{
+    e_AlarmOutputWorkMode_DelayAutoTrigger = 1,
+    e_AlarmOutputWorkMode_ManualTrigger,
 };
 
 #define ALARM_OUTPUT_MAX_NAME_LENGTH  32

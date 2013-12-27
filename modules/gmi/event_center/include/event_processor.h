@@ -69,7 +69,7 @@ public:
         m_UserData = UserData;
     }
 
-    uint32_t GetId() const
+    inline uint32_t GetId() const
     {
         return m_ProcessorId;
     }

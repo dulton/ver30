@@ -9,35 +9,35 @@ public:
     AlarmOutput( uint32_t EventProcessorId );
     virtual ~AlarmOutput(void);
 
-    void_t  SetOutputNumber( uint32_t Number )
+    inline void_t  SetOutputNumber( uint32_t Number )
     {
         m_OutputNumber = Number;
     }
-    uint32_t GetOutputNumber() const
+    inline uint32_t GetOutputNumber() const
     {
         return m_OutputNumber;
     }
 
     GMI_RESULT     SetName( const char_t *Name );
-    const char_t*  GetName() const
+    inline const char_t*  GetName() const
     {
         return m_Name.GetPtr();
     }
 
-    void_t SetWorkMode( uint32_t Mode )
+    inline void_t SetWorkMode( enum AlarmOutputWorkMode Mode )
     {
         m_WorkMode  = Mode;
     }
-    uint32_t GetWorkMode() const
+    inline enum AlarmOutputWorkMode GetWorkMode() const
     {
         return m_WorkMode;
     }
 
-    void_t SetDelayTime( uint32_t Time )
+    inline void_t SetDelayTime( uint32_t Time )
     {
         m_DelayTime = Time;
     }
-    uint32_t GetDelayTime() const
+    inline uint32_t GetDelayTime() const
     {
         return m_DelayTime;
     }
@@ -54,7 +54,7 @@ protected:
 private:
     uint32_t                                m_OutputNumber;
     SafePtr<char_t, DefaultObjectsDeleter>  m_Name;
-    uint32_t                                m_WorkMode;
+    enum AlarmOutputWorkMode                m_WorkMode;
     uint32_t                                m_DelayTime;
     std::vector<ScheduleTimeInfo>           m_ScheduleTimes;
 };

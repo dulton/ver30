@@ -1,7 +1,17 @@
 #include "alarm_output.h"
 
+#if defined( __linux__ )
+#include "gmi_brdwrapperdef.h"
+#include "gmi_brdwrapper.h"
+#endif
+
 AlarmOutput::AlarmOutput( uint32_t EventProcessorId )
     : EventProcessor( EventProcessorId )
+    , m_OutputNumber( 0 )
+    , m_Name()
+    , m_WorkMode( e_AlarmOutputWorkMode_DelayAutoTrigger )
+    , m_DelayTime( 0 )
+    , m_ScheduleTimes()
 {
 }
 
@@ -59,6 +69,25 @@ GMI_RESULT  AlarmOutput::ListScheduleTime( uint32_t *ItemNumber, ScheduleTimeInf
 
 GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength )
 {
+    std::vector<uint32_t>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
+    for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
+    {
+        if ( *DetectorIdIt == EventId )
+        {
+#if defined( __linux__ )
+            GMI_RESULT Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmInputStatus_Opened : (uint8_t)e_AlarmInputStatus_Closed );
+            if ( FAILED( Result ) )
+            {
+                return Result;
+            }
+#endif
+            if ( NULL != m_Callback )
+            {
+                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
+            }
+        }
+    }
+
     return GMI_SUCCESS;
 }
 
@@ -67,7 +96,7 @@ GMI_RESULT  AlarmOutput::Start( const void_t *Parameter, size_t ParameterLength 
     const struct AlarmOutputInfo *Info = (const struct AlarmOutputInfo *) Parameter;
     SetOutputNumber( Info->s_OutputNumber );
     SetName( Info->s_Name );
-    SetWorkMode( Info->s_WorkMode );
+    SetWorkMode( (enum AlarmOutputWorkMode) Info->s_WorkMode );
     SetDelayTime( Info->s_DelayTime );
     for ( uint32_t i = 0; i < Info->s_ScheduleTimeNumber; i+=2 )
     {

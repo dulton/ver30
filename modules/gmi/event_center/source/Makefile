@@ -36,7 +36,7 @@ GMI_LFLAGS              =
 #GMI_LFLAGS             = -g -pg
 
 # Set related modules
-GMI_RELATED_MODULES     = pthread osal command_pipeline log_utils
+GMI_RELATED_MODULES     = pthread osal command_pipeline log_utils gmi_brdwrapper
 
 # Set header file path for this module
 GMI_MODULE_INCLUDE_DIR  = ../include

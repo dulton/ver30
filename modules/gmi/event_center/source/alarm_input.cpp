@@ -1,7 +1,21 @@
 #include "alarm_input.h"
 
+#if defined( __linux__ )
+#include "gmi_brdwrapperdef.h"
+#include "gmi_brdwrapper.h"
+#endif//__linux__
+
 AlarmInput::AlarmInput( enum EventDetectorType Type, uint32_t EventDetectorId )
     : EventDetector( Type, EventDetectorId )
+    , m_InputNumber( 0 )
+    , m_Name()
+    , m_CheckTime( 1000 )
+    , m_TriggerType( e_AlarmInputTriggerType_UsuallyClosed )
+    , m_ScheduleTimes()
+    , m_DetectThread()
+    , m_ThreadWorking( false )
+    , m_ThreadExitFlag( false )
+    , m_GPIOInputStatus( e_AlarmInputStatus_Closed )
 {
 }
 
@@ -65,6 +79,18 @@ GMI_RESULT  AlarmInput::Start( const void_t *Parameter, size_t ParameterLength )
         return Result;
     }
 
+    const struct AlarmInputInfo *Info = (const struct AlarmInputInfo *) Parameter;
+    SetInputNumber( Info->s_InputNumber );
+    SetName( Info->s_Name );
+    SetCheckTime( Info->s_CheckTime );
+    SetTriggerType( (enum AlarmInputTriggerType) Info->s_TriggerType );
+    for ( uint32_t i = 0; i < Info->s_ScheduleTimeNumber; i+=2 )
+    {
+        AddScheduleTime( &(Info->s_ScheduleTime[i]) );
+    }
+
+    m_GPIOInputStatus = ( e_AlarmInputTriggerType_UsuallyOpened == Info->s_TriggerType ) ? e_AlarmInputStatus_Opened : e_AlarmInputStatus_Closed;
+
     m_ThreadWorking  = false;
     m_ThreadExitFlag = false;
 
@@ -81,15 +107,6 @@ GMI_RESULT  AlarmInput::Start( const void_t *Parameter, size_t ParameterLength )
         m_DetectThread.Destroy();
         EventDetector::Stop();
         return Result;
-    }
-
-    const struct AlarmInputInfo *Info = (const struct AlarmInputInfo *) Parameter;
-    SetInputNumber( Info->s_InputNumber );
-    SetName( Info->s_Name );
-    SetTriggerType( (enum AlarmInputTriggerType) Info->s_TriggerType );
-    for ( uint32_t i = 0; i < Info->s_ScheduleTimeNumber; i+=2 )
-    {
-        AddScheduleTime( &(Info->s_ScheduleTime[i]) );
     }
 
     return Result;
@@ -115,14 +132,24 @@ void_t* AlarmInput::DetectEntry()
 {
     GMI_RESULT Result = GMI_FAIL;
     m_ThreadWorking   = true;
+
+    uint8_t GPIOStatus = 0;
+
     while( !m_ThreadExitFlag )
     {
 #if defined( __linux__ )
+        Result = GMI_BrdGetAlarmInput( GMI_ALARM_MODE_GPIO, m_InputNumber, &GPIOStatus );
+
+        if ( GPIOStatus != (uint8_t) m_GPIOInputStatus )
+        {
+            m_GPIOInputStatus = (enum AlarmInputStatus) GPIOStatus;
+            m_ProcessCenter->Notify( GetId(), (e_AlarmInputStatus_Opened == m_GPIOInputStatus) ? e_EventType_Start : e_EventType_End, NULL, 0 );
+        }
 #elif defined( _WIN32 ) // only test used
         m_ProcessCenter->Notify( GetId(), e_EventType_Start, NULL, 0 );
-        GMI_Sleep( 1000 );
         m_ProcessCenter->Notify( GetId(), e_EventType_End, NULL, 0 );
 #endif
+        GMI_Sleep( GetCheckTime() );
     }
     m_ThreadWorking   = false;
     return (void_t *) size_t(Result);

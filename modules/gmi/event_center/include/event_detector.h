@@ -35,12 +35,12 @@ public:
         return m_Handle;
     }
 
-    enum EventDetectorType  GetType() const
+    inline enum EventDetectorType  GetType() const
     {
         return m_DetectorType;
     }
 
-    uint32_t                GetId() const
+    inline uint32_t                GetId() const
     {
         return m_DetectorId;
     }

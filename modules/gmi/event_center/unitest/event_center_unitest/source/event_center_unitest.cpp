@@ -10,11 +10,11 @@
 #include "simulated_event_detector.h"
 #include "timer_task_queue.h"
 
-void_t EventProcess( void_t *UserData, uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParamLength )
+void_t EventProcess( void_t *UserData, uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength )
 {
     struct timeval CurrentTime;
     gettimeofday1( &CurrentTime, NULL );
-    printf( "EventProcess: UserData=%p, EventId=%d, Type=%d, Parameter=%p, ParamLength=%d, current time=%ld:%06ld \n", UserData, EventId, Type, Parameter, ParamLength, CurrentTime.tv_sec, CurrentTime.tv_usec );
+    printf( "EventProcess: UserData=%p, EventId=%d, Type=%d, Parameter=%p, ParameterLength=%d, current time=%ld:%06ld \n", UserData, EventId, Type, Parameter, ParameterLength, CurrentTime.tv_sec, CurrentTime.tv_usec );
 }
 
 #if defined( _WIN32 )
