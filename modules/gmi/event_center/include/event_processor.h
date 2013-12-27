@@ -36,6 +36,33 @@ public:
 
     virtual GMI_RESULT Notify( uint32_t EventId, void_t *Parameter, size_t ParamLength ) = 0;
 
+    void_t  AddDetectorId( uint32_t DetectorId )
+    {
+        std::vector<uint32_t>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
+        for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
+        {
+            if ( DetectorId == *DetectorIdIt )
+            {
+                return;
+            }
+        }
+
+        m_DetectorIds.push_back( DetectorId );
+    }
+
+    void_t  RemoveDetectId( uint32_t DetectorId )
+    {
+        std::vector<uint32_t>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
+        for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
+        {
+            if ( DetectorId == *DetectorIdIt )
+            {
+                m_DetectorIds.erase( DetectorIdIt );
+                return;
+            }
+        }
+    }
+
     void_t  SetEventCallback( EventCallback Callback, void_t *UserData )
     {
         m_Callback = Callback;
@@ -48,9 +75,10 @@ public:
     }
 
 protected:
-    EventCallback  m_Callback;
-    void_t         *m_UserData;
+    std::vector<uint32_t>  m_DetectorIds;
+    EventCallback          m_Callback;
+    void_t                 *m_UserData;
 
 private:
-    uint32_t       m_ProcessorId;
+    uint32_t               m_ProcessorId;
 };

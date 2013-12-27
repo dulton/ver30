@@ -14,11 +14,15 @@ SimpleEventProcessor::~SimpleEventProcessor(void)
 
 GMI_RESULT SimpleEventProcessor::Notify( uint32_t EventId, void_t *Parameter, size_t ParamLength )
 {
-    if ( SIMULATED_EVENT_ID == EventId )
+    std::vector<uint32_t>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
+    for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
     {
-        if ( NULL != m_Callback )
+        if ( *DetectorIdIt == EventId )
         {
-            m_Callback( m_UserData, EventId, Parameter, ParamLength );
+            if ( NULL != m_Callback )
+            {
+                m_Callback( m_UserData, EventId, Parameter, ParamLength );
+            }
         }
     }
 

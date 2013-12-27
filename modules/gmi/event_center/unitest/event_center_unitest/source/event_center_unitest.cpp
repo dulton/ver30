@@ -45,6 +45,8 @@ int32_t main( int32_t argc, char_t* argv[] )
         return -1;
     }
 
+    Processor->AddDetectorId( SIMULATED_EVENT_ID );
+
     Processor->SetEventCallback( EventProcess, NULL );
 
     Result = Center->RegisterEventProcessor( Processor, NULL, 0 );
