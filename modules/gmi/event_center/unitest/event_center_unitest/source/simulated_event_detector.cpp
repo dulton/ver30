@@ -64,8 +64,9 @@ void_t* SimulatedEventDetector::DetectEntry()
     m_ThreadWorking   = true;
     while( !m_ThreadExitFlag )
     {
-        m_ProcessCenter->Notify( SIMULATED_EVENT_ID, NULL, 0 );
+        m_ProcessCenter->Notify( SIMULATED_EVENT_ID, e_EventType_Start, NULL, 0 );
         GMI_Sleep( 1000 );
+        m_ProcessCenter->Notify( SIMULATED_EVENT_ID, e_EventType_End, NULL, 0 );
     }
     m_ThreadWorking   = false;
     return (void_t *) size_t(Result);

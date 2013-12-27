@@ -12,7 +12,7 @@ SimpleEventProcessor::~SimpleEventProcessor(void)
 {
 }
 
-GMI_RESULT SimpleEventProcessor::Notify( uint32_t EventId, void_t *Parameter, size_t ParamLength )
+GMI_RESULT SimpleEventProcessor::Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParamLength )
 {
     std::vector<uint32_t>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
     for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
@@ -21,7 +21,7 @@ GMI_RESULT SimpleEventProcessor::Notify( uint32_t EventId, void_t *Parameter, si
         {
             if ( NULL != m_Callback )
             {
-                m_Callback( m_UserData, EventId, Parameter, ParamLength );
+                m_Callback( m_UserData, EventId, Type, Parameter, ParamLength );
             }
         }
     }

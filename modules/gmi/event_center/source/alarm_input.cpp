@@ -119,8 +119,9 @@ void_t* AlarmInput::DetectEntry()
     {
 #if defined( __linux__ )
 #elif defined( _WIN32 ) // only test used
-        m_ProcessCenter->Notify( GetId(), NULL, 0 );
+        m_ProcessCenter->Notify( GetId(), e_EventType_Start, NULL, 0 );
         GMI_Sleep( 1000 );
+        m_ProcessCenter->Notify( GetId(), e_EventType_End, NULL, 0 );
 #endif
     }
     m_ThreadWorking   = false;

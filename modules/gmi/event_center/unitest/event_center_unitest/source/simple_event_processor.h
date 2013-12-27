@@ -8,5 +8,5 @@ public:
     SimpleEventProcessor(void);
     virtual ~SimpleEventProcessor(void);
 
-    virtual GMI_RESULT Notify( uint32_t EventId, void_t *Parameter, size_t ParamLength );
+    virtual GMI_RESULT Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParamLength );
 };

@@ -45,7 +45,7 @@ public:
     GMI_RESULT  AddScheduleTime( const ScheduleTimeInfo *Schedule );
     GMI_RESULT  ListScheduleTime( uint32_t *ItemNumber, ScheduleTimeInfo *Schedule );
 
-    virtual GMI_RESULT Notify( uint32_t EventId, void_t *Parameter, size_t ParamLength );
+    virtual GMI_RESULT Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength );
 
 protected:
     virtual GMI_RESULT Start( const void_t *Parameter, size_t ParameterLength );

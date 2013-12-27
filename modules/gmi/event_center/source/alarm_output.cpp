@@ -57,7 +57,7 @@ GMI_RESULT  AlarmOutput::ListScheduleTime( uint32_t *ItemNumber, ScheduleTimeInf
     return GMI_SUCCESS;
 }
 
-GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, void_t *Parameter, size_t ParamLength )
+GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength )
 {
     return GMI_SUCCESS;
 }

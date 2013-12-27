@@ -34,7 +34,7 @@ public:
         return GMI_SUCCESS;
     }
 
-    virtual GMI_RESULT Notify( uint32_t EventId, void_t *Parameter, size_t ParamLength ) = 0;
+    virtual GMI_RESULT Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength ) = 0;
 
     void_t  AddDetectorId( uint32_t DetectorId )
     {
