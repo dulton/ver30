@@ -6,6 +6,7 @@
 #include "gmi_system_headers.h"
 
 #include "event_center.h"
+#include "event_transaction_center.h"
 #include "simple_event_processor.h"
 #include "simulated_event_detector.h"
 #include "timer_task_queue.h"
@@ -23,6 +24,7 @@ int32_t _tmain( int32_t argc, _TCHAR* argv[] )
 int32_t main( int32_t argc, char_t* argv[] )
 #endif
 {
+#if 0
     ReferrencePtr<EventCenter> Center( BaseMemoryManager::Instance().New<EventCenter>() );
     if ( NULL == Center.GetPtr() )
     {
@@ -95,6 +97,22 @@ int32_t main( int32_t argc, char_t* argv[] )
     Center->UnregisterEventDetector( Detector->GetId() );
     Center->UnregisterEventProcessor( Processor->GetId() );
     Center->Deinitialize();
+#else
+    EventTransactionCenter Center;
+    GMI_RESULT Result = Center.Start( NULL, 0, EventProcess, NULL );
+    if ( FAILED( Result ) )
+    {
+        return -1;
+    }
+
+    do
+    {
+        GMI_Sleep( 1000 );
+    }
+    while( 1 );
+
+    Center.Stop();
+#endif
 
     return 0;
 }
