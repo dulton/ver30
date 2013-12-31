@@ -16,7 +16,7 @@ export GMI_MAKE_VERBOSE
 # To facilitate reading and compiling system can work, please keep module compiling sequence, principle as follows:
 # 1 module dependency
 # 2 alplabet sequence
-GMI_ITEMS                = forgestream psdump logsdk udpcs evtimeout dmtest mdcmem uxevcli uxsvr uslp noacc alarm
+GMI_ITEMS                = forgestream psdump logsdk udpcs evtimeout dmtest mdcmem uxevcli uxsvr uslp noacc alarm udpsock
 
 # Include item_rules.mk
 include $(GMI_TOPDIR)/build/item_rules.mk
