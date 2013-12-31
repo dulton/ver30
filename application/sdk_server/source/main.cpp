@@ -37,11 +37,11 @@ int GetListenPort()
     FD_HANDLE xmlhd=NULL;
     int serverport;
 
-	DEBUG_INFO("search<%s> <%s>\n",SDK_SERVER_PORT_PATH,SDK_SERVER_PORT_ITEM);
+    DEBUG_INFO("search<%s> <%s>\n",SDK_SERVER_PORT_PATH,SDK_SERVER_PORT_ITEM);
     gmiret = GMI_XmlOpen(GMI_SETTING_XML,&xmlhd);
     if(gmiret != GMI_SUCCESS)
-    {		
-		DEBUG_INFO("\n");
+    {
+        DEBUG_INFO("\n");
         goto set_default;
     }
     gmiret = GMI_XmlRead(xmlhd,SDK_SERVER_PORT_PATH,
@@ -50,13 +50,13 @@ int GetListenPort()
                          &serverport,GMI_CONFIG_READ_ONLY);
     if(gmiret != GMI_SUCCESS)
     {
-		DEBUG_INFO("\n");
+        DEBUG_INFO("\n");
         goto set_default;
     }
     GMI_XmlFileSave(xmlhd);
     xmlhd = NULL;
 
-	DEBUG_INFO("\n");
+    DEBUG_INFO("\n");
     return serverport;
 
 
@@ -76,16 +76,20 @@ int main(int argc,char* argv[])
     sighandler_t sigret;
     SdkServerMain *pMain=NULL;
 
-	DEBUG_BUFFER_FMT(NULL,0,"\n");
-	ret = InitializeSdkLog();
-	if (ret < 0)
-	{
-		ERROR_INFO("could not initialize sdk log\n");
-	}
-	DEBUG_BUFFER_FMT(NULL,0,"\n");
+    DEBUG_BUFFER_FMT(NULL,0,"\n");
+    ret = InitializeSdkLog();
+    if(ret < 0)
+    {
+        ERROR_INFO("could not initialize sdk log\n");
+    }
+    DEBUG_BUFFER_FMT(NULL,0,"\n");
 
     port = GetListenPort();
-	DEBUG_INFO("port %d\n",port);
+    if(port >= (1<<16))
+    {
+        port = SDK_SERVER_PORT_DEFAULT;
+    }
+    DEBUG_INFO("port %d\n",port);
     sigret = signal(SIGINT,SigStop);
     if(sigret == SIG_ERR)
     {
@@ -125,6 +129,6 @@ out:
         delete pMain;
     }
     pMain = NULL;
-	DeInitializeSdkLog();
+    DeInitializeSdkLog();
     return ret;
 }

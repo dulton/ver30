@@ -1287,17 +1287,17 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 						self.assertEqual(lastvidx,0)
 					lastvidx = curidx
 
-		for i in xrange(20):
+		for i in xrange(30):
 			time.sleep(1)
 			sys.stdout.write('.')
 			sys.stdout.flush()
 		ok = 1
 		stime = time.time()
-		etime = stime + 5
+		etime = stime + 10
 		ctime = stime
 		try:
 			while ctime < etime:
-				typepack = streamsock.GetStreamPacket()
+				typepack = streamsock.GetStreamPacketTimeout(3)
 				ctime = time.time()
 		except:
 			ok = 0
