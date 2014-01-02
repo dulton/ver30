@@ -1825,6 +1825,7 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 	def test_C110ToGetMessage(self):
 		utcfg = xunit.config.XUnitConfig()
 		buildtop = utcfg.GetValue('build','topdir','.')
+		repotop = utcfg.GetValue('repo','topdir','.')
 		tmpdir = utcfg.GetValue('.telnet','tmpdir','/tmp')
 		messagefile='%s/messageid.txt'%(tmpdir)
 		random.seed(time.time())
@@ -1839,7 +1840,7 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 		self.TelnetExecCmd(shellcmd)
 		# now we should copy the message board
 		self.Mountdir()
-		alarmtest='%s/ipc_fw3.x_core/output/ambarella_a5s_sdk_v3.3/application/sdk_server/unittest/alarm/sdkalarm_unitest'%(buildtop)
+		alarmtest='%s/output/ambarella_a5s_sdk_v3.3/application/sdk_server/unittest/alarm/sdkalarm_unitest'%(repotop)
 		self.CopyNfsFile(alarmtest,tmpdir)
 		# now we start the command
 		writefile='%s/wmessagefile.txt'%(buildtop)
@@ -1966,14 +1967,15 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 		self.__backcmd = None
 		utcfg = xunit.config.XUnitConfig()
 		buildtop = utcfg.GetValue('build','topdir','.')
+		repotop = utcfg.GetValue('repo','topdir','.')
 		tmpdir = utcfg.GetValue('.telnet','tmpdir','/tmp')
 		self.Mountdir()
 		# now we should copy the file
-		shellfile = '%s/ipc_fw3.x_core/prebuilt/tools/leak-check'%(buildtop)
+		shellfile = '%s/prebuilt/tools/leak-check'%(repotop)
 		self.CopyNfsFile(shellfile,tmpdir)
-		sofile = '%s/ipc_fw3.x_core/prebuilt/ambarella_a5s_sdk_v3.3/binary/libleaktracer.so'%(buildtop)
+		sofile = '%s/prebuilt/ambarella_a5s_sdk_v3.3/binary/libleaktracer.so'%(repotop)
 		self.CopyNfsFile(sofile,tmpdir)
-		sdkfile = '%s/ipc_fw3.x_core/output/ambarella_a5s_sdk_v3.3/application/sdk_server/source/sdk_server'%(buildtop) 
+		sdkfile = '%s/output/ambarella_a5s_sdk_v3.3/application/sdk_server/source/sdk_server'%(repotop) 
 		self.CopyNfsFile(sdkfile,tmpdir)
 		self.RemoteKill('sdk_server')
 		self.__backcmd = cfgexptel.CfgExpTel()
@@ -1991,7 +1993,7 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 		time.sleep(1.0)
 		
 		# now we should 
-		forgestreamfile = '%s/ipc_fw3.x_core/output/ambarella_a5s_sdk_v3.3/application/sdk_server/unittest/forgestream/forgestream_unitest'%(buildtop)
+		forgestreamfile = '%s/output/ambarella_a5s_sdk_v3.3/application/sdk_server/unittest/forgestream/forgestream_unitest'%(repotop)
 		self.CopyNfsFile(forgestreamfile,tmpdir)
 		# now to set the forge stream
 		cmdtel = cfgexptel.CfgExpTel()
@@ -2145,6 +2147,8 @@ def Runtest(cfname,variables=[]):
 	# now to add the %(build.topdir)s
 	_appath=os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..','..','..'))
 	utcfg.SetValue('build','topdir',_appath)
+	_repodir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','..','..'))
+	utcfg.SetValue('repo','topdir',_repodir)
 	utcfg.LoadFile(cfname)
 	# we need to set the variable to be overwrited
 	SetOuterVariables(utcfg,variables)
