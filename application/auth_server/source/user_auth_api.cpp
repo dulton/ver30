@@ -124,8 +124,11 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 	uint16_t TmpSessionId = 0;
 	int32_t RetValue = -1;
 	int32_t SessionValid = 0;
-	char_t TmpCheckString[256];
+	char_t TmpCheckString[512];
 	int32_t TmpStrLen = 0;
+	char_t TmpMd5Str1[MAX_LEN_PASSWORD];
+	char_t TmpMd5Str2[MAX_LEN_PASSWORD];
+	UserAuthExtInfo TmpUserAuthExtInfo;
 	//int32_t i = 0;
 	
 
@@ -226,6 +229,43 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 
 			CalcDesEncValue(TmpPassword, strlen(TmpPassword), UserAuthInputData->s_UserAuthExtData, TmpEncPassword, &TmpEncPasswordLen);
 			
+			break;
+		case TYPE_ENCRYPTION_MD5_RTSP:
+			//md5(md5(<username>:<realm>:<password>):<nonce>:md5(<cmd>:<url>))
+			if((0 == UserAuthInputData->s_UserAuthExtDataLen) 
+				|| (sizeof(UserAuthExtInfo) > UserAuthInputData->s_UserAuthExtDataLen)
+				|| (NULL == UserAuthInputData->s_UserAuthExtData)
+				|| (sizeof(UserAuthExtInfo) > UserAuthInputData->s_UserAuthExtDataLen))
+			{
+				ERR_PRINT("TYPE_ENCRYPTION_MD5_RTSP inParam error.\n");
+				return GMI_CODE_ERR_PARAM;
+			}
+			memset(&TmpUserAuthExtInfo, 0, sizeof(TmpUserAuthExtInfo));
+			memcpy(&TmpUserAuthExtInfo, UserAuthInputData->s_UserAuthExtData, sizeof(UserAuthExtInfo));
+			
+			memset(TmpCheckString, 0, sizeof(TmpCheckString));
+			sprintf(TmpCheckString, "%s:%s:%s", UserAuthInputData->s_Username, TmpUserAuthExtInfo.s_Realm, TmpPassword);
+			if(GMI_TMP_FAIL == CalcMd5Value(TmpCheckString, strlen(TmpCheckString), TmpMd5Str1))
+			{
+				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"TYPE_ENCRYPTION_MD5_RTSP0 CalcMd5Value error.\n");
+				return GMI_CODE_ERR_PARAM;
+			}
+
+			memset(TmpCheckString, 0, sizeof(TmpCheckString));
+			sprintf(TmpCheckString, "%s:%s", TmpUserAuthExtInfo.s_Cmd, TmpUserAuthExtInfo.s_Url);
+			if(GMI_TMP_FAIL == CalcMd5Value(TmpCheckString, strlen(TmpCheckString), TmpMd5Str2))
+			{
+				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"TYPE_ENCRYPTION_MD5_RTSP1 CalcMd5Value error.\n");
+				return GMI_CODE_ERR_PARAM;
+			}
+
+			memset(TmpCheckString, 0, sizeof(TmpCheckString));
+			sprintf(TmpCheckString, "%s:%s:%s", TmpMd5Str1, TmpUserAuthExtInfo.s_Nonce, TmpMd5Str2);
+			if(GMI_TMP_FAIL == CalcMd5Value(TmpCheckString, strlen(TmpCheckString), TmpEncPassword))
+			{
+				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"TYPE_ENCRYPTION_MD5_RTSP2 CalcMd5Value error.\n");
+				return GMI_CODE_ERR_PARAM;
+			}
 			break;
 		default:
 			memcpy(TmpEncPassword, TmpPassword, strlen(TmpPassword));
