@@ -21,12 +21,14 @@ extern "C" {
 #define TYPE_AUTH_LOGIN             1      //type of authentication:login
 #define TYPE_AUTH_LOGOUT            2      //type of authentication:logout
 #define TYPE_AUTH_RESET             3      //type of authentication:clear record
-#define TYPE_AUTH_GETSESSIONID     4      //type of authentication:get sessionIds
+#define TYPE_AUTH_GETSESSIONID      4      //type of authentication:get sessionIds
+
 
 #define TYPE_ENCRYPTION_TEXT        0     //type of encryption:text
-#define TYPE_ENCRYPTION_MD5         1     //type 0f encryption:MD5
-#define TYPE_ENCRYPTION_MSCHAP      2     //type 0f encryption:MD5(MD5(password)+random number)
-#define TYPE_ENCRYPTION_DES         3     //type 0f encryption:DES
+#define TYPE_ENCRYPTION_MD5         1     //type of encryption:MD5
+#define TYPE_ENCRYPTION_MSCHAP      2     //type of encryption:MD5(MD5(password)+random number)
+#define TYPE_ENCRYPTION_DES         3     //type of encryption:DES
+#define TYPE_ENCRYPTION_MD5_RTSP    4     //type of encryption:md5(md5(<username>:<realm>:<password>):<nonce>:md5(<cmd>:<url>))
 
 
 #define GMI_CODE_SUCCESS             0    //success
@@ -54,17 +56,17 @@ extern "C" {
 //authentication information of user 
 typedef struct tagAuthRefInfo
 {
-    uint32_t   s_DataType;                         //data type: 1-login, 2-logout, 3-clear record, 4-get sessionIds
+    uint32_t   s_DataType;                         //data type: 1-login, 2-logout, 3-clear record, 4-get sessionIds, 5-rtsp login
 	char_t     s_Username[MAX_LEN_USERNAME];       //username
     char_t     s_Password[MAX_LEN_PASSWORD];       //password
     uint8_t    s_UsernameEncType;                 //type 0f enctyption : 0-text£¬1-MD5£¬...
-    uint8_t    s_PasswordEncType;                 //type 0f enctyption : 0-text£¬1-MD5£¬2-custom type, ...
+    uint8_t    s_PasswordEncType;                 //type 0f enctyption : 0-text£¬1-MD5£¬2-MSCHAP,  3-DES, 4-MD5_RTSP...
     uint16_t   s_SessionId;                       //new login:0, sessionId of SDK in the reconnection, logout:using sessionId
     uint16_t   s_SingleUserMaxLinkNum;           //max linking numbers of single user
     uint16_t   s_AllUserMaxLinkNum;               //max linking numbers of all users
     uint32_t   s_UserAuthExtDataLen;              //length of extended infomation of authority
     char_t    *s_UserAuthExtData;                 //extended infomation of authority
-    uint8_t    s_MoudleId;                         //moudle info: 1-SDK, 2-ONVIF, 3-GB, 4-WEB, 5-CONFIGTOOL
+    uint8_t    s_MoudleId;                         //moudle info: 1-SDK, 2-ONVIF, 3-GB, 4-WEB, 5-CONFIGTOOL, 6-RTSP
     uint8_t    s_Reserved[15];
 }UserAuthRefInfo;
 
@@ -83,6 +85,16 @@ typedef struct tagAuthLinkedSessionId
 	uint32_t   s_LinkedNum;                      //number of sessionId in using 
 	uint32_t   *s_LinkedSessionId;              //record of sessionId  in using
 }UserAuthLinkedSessionId;
+
+
+//information of rtsp of authentication
+typedef struct tagAuthExtInfo
+{
+	char_t   s_Realm[128];
+	char_t   s_Nonce[128];
+	char_t   s_Cmd[128];
+	char_t   s_Url[256];	
+}UserAuthExtInfo;
 
 
 /*===============================================================

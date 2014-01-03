@@ -180,14 +180,23 @@ int32_t  main(int32_t argc, char_t* argv[])
 		InputData.s_DataType = TYPE_AUTH_LOGIN;
 		InputData.s_UsernameEncType = TYPE_ENCRYPTION_TEXT;
 		//InputData.s_PasswordEncType = TYPE_ENCRYPTION_DES;
-		InputData.s_PasswordEncType = TYPE_ENCRYPTION_TEXT;
+		InputData.s_PasswordEncType = TYPE_ENCRYPTION_MD5_RTSP;
 		InputData.s_SessionId = SessionId;
 		InputData.s_SingleUserMaxLinkNum = SINGLEUSERMAXLINK;
 		InputData.s_AllUserMaxLinkNum = ALLUSERMAXLINK;
 		InputData.s_UserAuthExtDataLen = 0;
 		InputData.s_UserAuthExtData = NULL;
-		//InputData.s_MoudleId = ID_MOUDLE_REST_SDK;
+		InputData.s_MoudleId = ID_MOUDLE_REST_RTSP;
 		#if 1
+		UserAuthExtInfo TmpUserAuthExtInfo;
+		memset(&TmpUserAuthExtInfo, 0, sizeof(TmpUserAuthExtInfo));
+		sprintf(TmpUserAuthExtInfo.s_Realm , "%s", "abcdef");
+		sprintf(TmpUserAuthExtInfo.s_Cmd, "%s", "hello");
+		sprintf(TmpUserAuthExtInfo.s_Nonce, "%s", "123456789");
+		sprintf(TmpUserAuthExtInfo.s_Url, "%s", "http123.213");
+		InputData.s_UserAuthExtDataLen = sizeof(TmpUserAuthExtInfo);
+		InputData.s_UserAuthExtData = (char_t*)(&TmpUserAuthExtInfo);
+		#else
 		InputData.s_UserAuthExtDataLen = 8;
 		memset(RandomNumber, 0, sizeof(RandomNumber));
 		sprintf(RandomNumber, "%s", "12345678");
