@@ -5,10 +5,11 @@
 #include "stdarg.h"
 
 
+#ifndef LOG_SERVER_OK
 #define NAME_FILE_MEDIA_LOG          "/opt/log/auth_control_log"
 #define LENGTH_LOG_MAX                500*1024 
 
-LogClientTmp LogClientHdTmp;
+LogClientTmp *LogClientHdTmp;
 
 
 void ERR_PRINT_LOG(LogClientTmp *LogClientHd, enum DebugLogLevel PrtLevel, const char *FileName, const char *FuncName, int32_t LineNum, const char *fmt, ...)
@@ -74,4 +75,4 @@ void ERR_PRINT_LOG(LogClientTmp *LogClientHd, enum DebugLogLevel PrtLevel, const
 	fp = NULL;
 	pthread_mutex_unlock(&logMutex);
 }
-
+#endif

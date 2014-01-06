@@ -10,9 +10,62 @@
 #include "ipc_fw_v3.x_setting.h"
 #include "gmi_daemon_heartbeat_api.h"
 #include "log_record.h"
+#ifdef LOG_SERVER_OK
+#include "application_packet.h"
+#include "share_memory_log_client.h"
+#include "gmi_config_api.h"
+
+
+ShareMemoryLogClient *LogClientHdTmp = NULL;
+#endif
 
 #define  TMP_MAX_ALLUSERS_LINKNUM    32
 #define  TMP_MAX_SINGLEUSER_LINKNUM  32
+
+
+#define ID_MOUDLE_REST_SDK          0x1   //sdk server reset linknum and sessionId
+#define ID_MOUDLE_REST_ONVIF        0x2  //onvif server
+#define ID_MOUDLE_REST_GB           0x3   //GB
+#define ID_MOUDLE_REST_WEB          0x4   //WEB
+#define ID_MOUDLE_REST_CONFIG       0x5   //CONFIG TOOL
+#define ID_MOUDLE_REST_RTSP         0x6   //rtsp server
+#define ID_MOUDLE_REST_ALL          0xF   //all login info of linknums and sessionId
+
+char_t g_MoudleStrMsg[64];
+
+static char_t *MoudleIdToStr(int32_t MoudleId)
+{
+	memset(g_MoudleStrMsg, 0, sizeof(g_MoudleStrMsg));
+	switch(MoudleId)
+	{
+		case ID_MOUDLE_REST_SDK:
+			sprintf(g_MoudleStrMsg, "%s", "MOUDLE_SDK");
+			break;
+		case ID_MOUDLE_REST_ONVIF:
+			sprintf(g_MoudleStrMsg, "%s", "MOUDLE_ONVIF");
+			break;
+		case ID_MOUDLE_REST_GB:
+			sprintf(g_MoudleStrMsg, "%s", "MOUDLE_GB");
+			break;
+		case ID_MOUDLE_REST_WEB:
+			sprintf(g_MoudleStrMsg, "%s", "MOUDLE_WEB");
+			break;
+		case ID_MOUDLE_REST_CONFIG:
+			sprintf(g_MoudleStrMsg, "%s", "MOUDLE_CONFIG");
+			break;
+		case ID_MOUDLE_REST_RTSP:
+			sprintf(g_MoudleStrMsg, "%s", "MOUDLE_RTSP");
+			break;
+		case ID_MOUDLE_REST_ALL:
+			sprintf(g_MoudleStrMsg, "%s", "MOUDLE_ALL");
+			break;
+		default:
+			sprintf(g_MoudleStrMsg, "%s", "MOUDLE_UNKNOW");
+			break;
+	}
+	return g_MoudleStrMsg;
+}
+
 
 GMI_RESULT CalcMd5Value(const char_t *InBuf, const uint32_t InBufLen, char_t *OutBuf)
 {
@@ -52,7 +105,7 @@ GMI_RESULT CalcDesEncValue(char_t *InBuf, uint32_t InBufLen, char_t *InKeyBuf, c
 		|| (NULL == OutBuf)
 		|| (NULL == OutBufLen))
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "InParam error.\n");
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]InParam error.");
 		return GMI_TMP_FAIL;
 	}	
 
@@ -67,7 +120,7 @@ GMI_RESULT CalcDesEncValue(char_t *InBuf, uint32_t InBufLen, char_t *InKeyBuf, c
 	InBufLen = LEN_DES_PASSWORD;
 	if(0 > DES_Encrypt(InBuf, InBufLen, InKeyBuf, OutBuf, OutBufLen))
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "DES_Encrypt error.\n");
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]DES_Encrypt error.");
 		return GMI_TMP_FAIL;
 	}
 
@@ -104,10 +157,10 @@ GMI_RESULT UserAuthReset(uint32_t MoudleId)
 {
 	UserAuthentication UserAuthObject;
 	
-	DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "MoudleId %d Reset.", MoudleId);
+	DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Info, "[AUTH]MoudleId %s Reset.", MoudleIdToStr(MoudleId));
 	if(GMI_TMP_FAIL == UserAuthObject.ClearRecordInfo(MoudleId))
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"ClearRecordInfo(Id-%d) error.\n", MoudleId);
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]ClearRecordInfo(Id-%s) error.", MoudleIdToStr(MoudleId));
 		return GMI_TMP_FAIL;
 	}
 	return GMI_TMP_SUCCESS;
@@ -136,7 +189,7 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 		|| (NULL == UserAuthOutputData)
 		|| (NULL == pRdWrLock))
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"inParam NULL.\n");
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]inParam NULL.");
 		return GMI_CODE_ERR_PARAM;
 	}	
 
@@ -147,12 +200,13 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 		//|| (0 == UserAuthInputData->s_AllUserMaxLinkNum)
 		|| ((TYPE_AUTH_LOGIN != UserAuthInputData->s_DataType) && (TYPE_AUTH_LOGOUT != UserAuthInputData->s_DataType)))
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"inParam(Id-%d) error.\n", UserAuthInputData->s_MoudleId);
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]inParam(Id-%s) error.", MoudleIdToStr(UserAuthInputData->s_MoudleId));
 		return GMI_CODE_ERR_PARAM;
 	}
 
 	if(GMI_TMP_FAIL == UserAuthObject.Initialize(pRdWrLock))
-	{
+	{	
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]UserAuthObject Initialize error.");
 		return GMI_CODE_ERR_INTER;
 	}
 
@@ -160,7 +214,7 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 	memset(TmpPassword, 0, sizeof(TmpPassword));
 	if(GMI_TMP_SUCCESS != UserAuthObject.CheckUserNameValid(UserAuthInputData->s_Username, UserAuthInputData->s_UsernameEncType, TmpPassword, &TmpAuthValue))
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"CheckUserNameValid(Id-%d) %s error.\n", UserAuthInputData->s_MoudleId, UserAuthInputData->s_Username);
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]CheckUserNameValid(Id-%s) %s error.", MoudleIdToStr(UserAuthInputData->s_MoudleId), UserAuthInputData->s_Username);
 		return GMI_CODE_ERR_USER;
 	}
 	else
@@ -170,7 +224,7 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 
 	if('\0' == TmpPassword[0])
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "Id-%d query password error.\n", UserAuthInputData->s_MoudleId);
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]query password(Id-%s) error.", MoudleIdToStr(UserAuthInputData->s_MoudleId));
 		return GMI_CODE_ERR_PASSWORD;
 	}
 
@@ -215,7 +269,7 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 			PRT_TEST(("TYPE_ENCRYPTION_CUSTOM0 333\n"));
 			if(GMI_TMP_FAIL == CalcMd5Value(TmpCheckString, strlen(TmpCheckString), TmpEncPassword))
 			{
-				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"TYPE_ENCRYPTION_CUSTOM0 CalcMd5Value error.\n");
+				DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]TYPE_ENCRYPTION_CUSTOM0 CalcMd5Value error.");
 				return GMI_CODE_ERR_PARAM;
 			}
 			break;
@@ -247,7 +301,7 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 			sprintf(TmpCheckString, "%s:%s:%s", UserAuthInputData->s_Username, TmpUserAuthExtInfo.s_Realm, TmpPassword);
 			if(GMI_TMP_FAIL == CalcMd5Value(TmpCheckString, strlen(TmpCheckString), TmpMd5Str1))
 			{
-				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"TYPE_ENCRYPTION_MD5_RTSP0 CalcMd5Value error.\n");
+				DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]TYPE_ENCRYPTION_MD5_RTSP0 CalcMd5Value error.");
 				return GMI_CODE_ERR_PARAM;
 			}
 
@@ -255,7 +309,7 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 			sprintf(TmpCheckString, "%s:%s", TmpUserAuthExtInfo.s_Cmd, TmpUserAuthExtInfo.s_Url);
 			if(GMI_TMP_FAIL == CalcMd5Value(TmpCheckString, strlen(TmpCheckString), TmpMd5Str2))
 			{
-				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"TYPE_ENCRYPTION_MD5_RTSP1 CalcMd5Value error.\n");
+				DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]TYPE_ENCRYPTION_MD5_RTSP1 CalcMd5Value error.");
 				return GMI_CODE_ERR_PARAM;
 			}
 
@@ -263,7 +317,7 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 			sprintf(TmpCheckString, "%s:%s:%s", TmpMd5Str1, TmpUserAuthExtInfo.s_Nonce, TmpMd5Str2);
 			if(GMI_TMP_FAIL == CalcMd5Value(TmpCheckString, strlen(TmpCheckString), TmpEncPassword))
 			{
-				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"TYPE_ENCRYPTION_MD5_RTSP2 CalcMd5Value error.\n");
+				DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]TYPE_ENCRYPTION_MD5_RTSP2 CalcMd5Value error.");
 				return GMI_CODE_ERR_PARAM;
 			}
 			break;
@@ -279,7 +333,7 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 		if( (strlen(TmpEncPassword) != strlen(UserAuthInputData->s_Password))
 			|| (0 != memcmp(TmpEncPassword, UserAuthInputData->s_Password, strlen(UserAuthInputData->s_Password))))
 		{
-			DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"Id-%d check password error.\n", UserAuthInputData->s_MoudleId);
+			DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]check password(Id-%s) error.", MoudleIdToStr(UserAuthInputData->s_MoudleId));
 			return GMI_CODE_ERR_PASSWORD;
 		}
 	}
@@ -322,7 +376,7 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 		if(0 != memcmp(TmpEncPassword, UserAuthInputData->s_Password, LEN_DES_PASSWORD))
 		{
 			//ERR_PRINT("check password error.\n");
-			DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "Id-%d check password error.", UserAuthInputData->s_MoudleId);
+			DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]check password(Id-%s) error.", MoudleIdToStr(UserAuthInputData->s_MoudleId));
 			return GMI_CODE_ERR_PASSWORD;
 		}
 	}
@@ -339,24 +393,24 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 			if(GMI_FAIL_ALLLINK == RetValue)
 			{
 				//ERR_PRINT("CheckUserLinkNumValid GMI_FAIL_ALLLINK.\n");
-				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "CheckUserLinkNumValid(Id-%d) GMI_FAIL_ALLLINK maxsiglinknum %d error.", UserAuthInputData->s_MoudleId, TMP_MAX_SINGLEUSER_LINKNUM);
+				DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]CheckUserLinkNumValid(Id-%s) GMI_FAIL_ALLLINK maxsiglinknum %d error.", MoudleIdToStr(UserAuthInputData->s_MoudleId), TMP_MAX_SINGLEUSER_LINKNUM);
 				return GMI_CODE_ERR_ALLLINK;
 			}
 			else if(GMI_FAIL_SINGLELINK == RetValue)
 			{
-				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "CheckUserLinkNumValid(Id-%d) GMI_FAIL_SINGLELINK maxalllinknum %d .\n", UserAuthInputData->s_MoudleId, TMP_MAX_ALLUSERS_LINKNUM);
+				DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]CheckUserLinkNumValid(Id-%s) GMI_FAIL_SINGLELINK maxalllinknum %d .", MoudleIdToStr(UserAuthInputData->s_MoudleId), TMP_MAX_ALLUSERS_LINKNUM);
 				return GMI_CODE_ERR_SINGLELINK;
 			}
 			else if(GMI_TMP_FAIL == RetValue)
 			{
-				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "CheckUserLinkNumValid(Id-%d) error.\n", UserAuthInputData->s_MoudleId);
+				DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]CheckUserLinkNumValid(Id-%s) error.", MoudleIdToStr(UserAuthInputData->s_MoudleId));
 				return GMI_CODE_ERR_PARAM;
 			}
 			else
 			{
 				if(GMI_TMP_FAIL == UserAuthObject.CreateSessionId(&TmpSessionId))
 				{
-					DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "CreateSessionId(Id-%d) error.\n", UserAuthInputData->s_MoudleId);
+					DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]CreateSessionId(Id-%s) error.", MoudleIdToStr(UserAuthInputData->s_MoudleId));
 					return GMI_CODE_ERR_SESSIONID;
 				}
 				else
@@ -378,14 +432,14 @@ GMI_RESULT UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo *Us
 			if(GMI_TMP_FAIL == UserAuthObject.SetUserSessionIdRecord(UserAuthOutputData->s_SessionId, UserAuthInputData->s_Username, UserAuthInputData->s_MoudleId, GMI_RECORD_ADD))	
 			//if(GMI_TMP_FAIL == UserAuthObject.SetUserSessionIdRecord(UserAuthOutputData->s_SessionId, UserAuthInputData->s_Username, 15, GMI_RECORD_ADD))
 			{
-				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "SetUserSessionIdRecord(Id-%d) error.\n", UserAuthInputData->s_MoudleId);
+				DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]SetUserSessionIdRecord(Id-%s) error.", MoudleIdToStr(UserAuthInputData->s_MoudleId));
 				return GMI_CODE_ERR_INTER;
 			}
 			else
 			{
 				if(GMI_TMP_FAIL == UserAuthObject.SetUserLinkNumRecord(UserAuthInputData->s_Username, GMI_RECORD_ADD))
 				{
-					DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "SetUserLinkNumRecord(Id-%d) error.\n", UserAuthInputData->s_MoudleId);
+					DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]SetUserLinkNumRecord(Id-%s) error.", MoudleIdToStr(UserAuthInputData->s_MoudleId));
 					return GMI_CODE_ERR_INTER;
 				}
 					
@@ -429,7 +483,7 @@ GMI_RESULT UserLogout(uint16_t  SessionId, uint32_t MoudleId)
 	
 	if(0 == SessionId)
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"sessionId(Id-%d) error.\n", MoudleId);
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]sessionId(Id-%s) error.", MoudleIdToStr(MoudleId));
 		return GMI_CODE_ERR_SESSIONID;
 	}
 
@@ -441,12 +495,12 @@ GMI_RESULT UserLogout(uint16_t  SessionId, uint32_t MoudleId)
 		}
 		else
 		{
-			DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"SetUserLinkNumRecord(Id-%d) error.\n", MoudleId);
+			DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]UserLogout SetUserLinkNumRecord(Id-%s) error.", MoudleIdToStr(MoudleId));
 		}
 	}
 	else
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,"SetUserSessionIdRecord(Id-%d) sessionId %d error.\n", MoudleId, SessionId);
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,"[AUTH]UserLogout SetUserSessionIdRecord(Id-%s) sessionId %d error.", MoudleIdToStr(MoudleId), SessionId);
 	}
 
 	return GMI_CODE_ERR_SESSIONID;
@@ -463,14 +517,14 @@ GMI_RESULT UserQuerySessionId(UserAuthLinkedSessionId *OutLinkedId)
 
 	if(NULL == OutLinkedId)
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "OutLinkedId error.\n");
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]OutLinkedId error.");
 		return GMI_CODE_ERR_PARAM;
 	}
 
 	memset(TmpUserSession, 0, MAX_USER_LINK_NUM*sizeof(UserSessionId));
 	if(GMI_TMP_SUCCESS != UserAuthObject.GetUserSessionIdRecord(&PtrUserSession))
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "GetUserSessionIdRecord error.\n");
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]GetUserSessionIdRecord error.");
 		return GMI_CODE_ERR_INTER;
 	}
 
@@ -528,6 +582,85 @@ static void SignalHandler(int signum)
     return;
 }
 
+#ifdef LOG_SERVER_OK
+#define AUTH_CENTER_SERVER_CONFIG_PATH                "/Config/auth_center_server/"
+#define AUTH_CENTER_SERVER_CONFIG_HEARTBEAT_INTERVAL  "heartbeat_interval"
+#define AUTH_CENTER_SERVER_CONFIG_SERVER_ADDRESS      "server_address"
+#define AUTH_CENTER_SERVER_CONFIG_SERVER_PORT         "command_port"
+
+#define AUTH_CENTER_SERVER_CONFIG_LOG_SERVER_PORT     "log_server_port"
+#define AUTH_CENTER_SERVER_CONFIG_LOG_CLIENT_PORT     "log_client_port"
+#define AUTH_CENTER_SERVER_CONFIG_DEBUG_LOG_LEVEL     "debug_log_level"
+
+static GMI_RESULT GetAuthCenterServerLogConfig( uint32_t *ModuleId, char_t *ModuleName, uint16_t *ServerPort, uint16_t *ClientPort, uint32_t *DebugLogLevel )
+{
+    *ModuleId = GMI_LOG_MODULE_AUTHENTICATION_ID;
+
+    strcpy( ModuleName, GMI_LOG_MODULE_AUTHENTICATION_NAME );
+
+    FD_HANDLE  Handle = NULL;
+    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    if ( FAILED( Result ) )
+    {
+        fprintf(stderr, "GetAuthCenterServerLogConfig, GMI_XmlOpen(%s), Result=%x \n", GMI_RESOURCE_CONFIG_FILE_NAME, (uint32_t) Result );
+        return Result;
+    }
+
+    int32_t TempServerPort = 0;
+    fprintf(stderr, "GetAuthCenterServerLogConfig, DefaultLogServerPort=%d \n", LOG_SERVER_DEFAULT_SERVER_PORT );
+    Result = GMI_XmlRead(Handle, AUTH_CENTER_SERVER_CONFIG_PATH, AUTH_CENTER_SERVER_CONFIG_LOG_SERVER_PORT, LOG_SERVER_DEFAULT_SERVER_PORT, &TempServerPort, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        fprintf(stderr, "GetAuthCenterServerLogConfig, GMI_XmlRead, Result=%x \n", (uint32_t) Result );
+        return Result;
+    }
+    fprintf(stderr, "GetAuthCenterServerLogConfig, DefaultLogServerPort=%d, LogServerPort=%d \n", LOG_SERVER_DEFAULT_SERVER_PORT, TempServerPort );
+    *ServerPort = (uint16_t)TempServerPort;
+
+    int32_t TempClientPort = 0;
+    fprintf(stderr, "GetAuthCenterServerLogConfig, DefaultLogClientPort=%d \n", LOG_MEDIA_CENTER_DEFAULT_PORT );
+    Result = GMI_XmlRead(Handle, AUTH_CENTER_SERVER_CONFIG_PATH, AUTH_CENTER_SERVER_CONFIG_LOG_CLIENT_PORT, LOG_AUTHENTICATION_DEFAULT_PORT, &TempClientPort, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        fprintf(stderr, "GetAuthCenterServerLogConfig, GMI_XmlRead, Result=%x \n", (uint32_t) Result );
+        return Result;
+    }
+    fprintf(stderr, "GetAuthCenterServerLogConfig, DefaultLogClientPort=%d, LogClientPort=%d \n", LOG_AUTHENTICATION_DEFAULT_PORT, TempClientPort );
+    *ClientPort = (uint16_t)TempClientPort;
+
+    Result = GMI_XmlFileSave(Handle);
+    if ( FAILED( Result ) )
+    {
+        fprintf(stderr, "GetAuthCenterServerLogConfig, GMI_XmlFileSave(%s), Result=%x \n", GMI_RESOURCE_CONFIG_FILE_NAME, (uint32_t) Result );
+        return Result;
+    }
+
+    Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    if ( FAILED( Result ) )
+    {
+        fprintf(stderr, "GetAuthCenterServerLogConfig, GMI_XmlOpen(%s), Result=%x \n", GMI_SETTING_CONFIG_FILE_NAME, (uint32_t) Result );
+        return Result;
+    }
+
+    fprintf(stderr, "media center server, GetMediaCenterLogLevel, Default_MediaCenterLogLevel=%d \n", GMI_LOG_MODULE_AUTHENTICATION_DEBUG_LOG_LEVEL );
+    Result = GMI_XmlRead(Handle, AUTH_CENTER_SERVER_CONFIG_PATH, AUTH_CENTER_SERVER_CONFIG_DEBUG_LOG_LEVEL, GMI_LOG_MODULE_AUTHENTICATION_DEBUG_LOG_LEVEL, (int32_t *) DebugLogLevel, GMI_CONFIG_READ_WRITE );
+    if ( FAILED( Result ) )
+    {
+        fprintf(stderr, "GetAuthCenterServerLogConfig, GMI_XmlRead, Result=%x \n", (uint32_t) Result );
+        return Result;
+    }
+    fprintf(stderr, "GetAuthCenterServerLogConfig, Default_MediaCenterLogLevel=%d, Config_MediaCenterLogLevel=%d \n", GMI_LOG_MODULE_AUTHENTICATION_DEBUG_LOG_LEVEL, *DebugLogLevel );
+
+    Result = GMI_XmlFileSave(Handle);
+    if ( FAILED( Result ) )
+    {
+        fprintf(stderr, "GetAuthCenterServerLogConfig, GMI_XmlFileSave(%s), Result=%x \n", GMI_SETTING_CONFIG_FILE_NAME, (uint32_t) Result );
+        return Result;
+    }
+	
+    return GMI_SUCCESS;
+}
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -561,6 +694,34 @@ int main(int argc, char* argv[])
     sigset_t NewMask;
     sigset_t OldMask;
 
+	uint32_t ModuleId = 0;
+    char_t   ModuleName[MAX_PATH_LENGTH] = {0};
+    uint16_t ServerPort = 0;
+    uint16_t ClientPort = 0;
+    uint32_t ServerDebugLogLevel = 0;
+
+	#ifdef LOG_SERVER_OK
+
+    GMI_RESULT Result = GetAuthCenterServerLogConfig( &ModuleId, ModuleName, &ServerPort, &ClientPort, &ServerDebugLogLevel);
+    if ( FAILED( Result ) )
+    {
+        printf( "Auth Center get log client config error \n" );
+        return Result;
+    }
+
+	
+    ShareMemoryLogClient Client;
+    Result = Client.Initialize( ModuleId, ModuleName, ServerPort, ClientPort, GMI_IPC_LOG_FILE_PATH, ServerDebugLogLevel );
+    if ( FAILED( Result ) )
+    {
+        printf( "Auth Center log client initialization error \n" );
+        return Result;
+    }
+
+    // log operation is low speed for now, to test other function, we comment it out
+    LogClientHdTmp = &Client;
+	#endif
+	
     //signal
     SigAction.sa_handler = SignalHandler;
     sigfillset(&SigAction.sa_mask);
@@ -590,7 +751,7 @@ int main(int argc, char* argv[])
 	DaemonRet = GMI_DaemonInit( &DaemonData, AUTH_SERVER_ID, GMI_DAEMON_HEARDBEAT_SERVER, GMI_DAEMON_HEARTBEAT_AUTH);
 	if (FAILED(DaemonRet))
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "GMI_DaemonInit Error!\n");
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]GMI_DaemonInit Error.");
 	}
 	
 	while (DaemonNumber)
@@ -607,7 +768,7 @@ int main(int argc, char* argv[])
 
 	if(DaemonNumber <= 0)
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "Client Server Heartbeat register fail!\n");
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]Client Server Heartbeat register fail.");
 		return -1;
 	}
 
@@ -629,7 +790,7 @@ int main(int argc, char* argv[])
     SockFd = GMI_RudpSocket(LocalPort);
 	if(NULL == SockFd)
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "rudpsock error\n");
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]rudpsock error.");
 		return -1;
 	}
 	
@@ -663,7 +824,7 @@ int main(int argc, char* argv[])
 	#else
 	if(0 > pthread_rwlock_init(&RdWrLock, NULL))
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "pthread_rwlock_init failed\n");
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]pthread_rwlock_init failed.");
 		return -1;
 	}
 	#endif
@@ -687,7 +848,7 @@ int main(int argc, char* argv[])
             {
                 if (APPLICATION_QUIT == DaemonFlags)
                 {
-                    DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "Auth_server Will be Quit!\n");
+                    DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]Auth_server Will be Quit.");
                     break;
                 }
                 else if (APPLICATION_RUNNING == DaemonFlags)
@@ -698,7 +859,7 @@ int main(int argc, char* argv[])
             }
 			else
 			{
-				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "Auth_server Heartbeat Send fail!\n");
+				DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]Auth_server Heartbeat Send fail.");
 			}
             continue;
         }
@@ -714,7 +875,7 @@ int main(int argc, char* argv[])
             {
                 if (APPLICATION_QUIT == DaemonFlags)
                 {
-                    DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "Auth_server Will be Quit!\n");
+                    DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]Auth_server Will be Quit.");
                     break;
                 }
                 else if (APPLICATION_RUNNING == DaemonFlags)
@@ -725,7 +886,7 @@ int main(int argc, char* argv[])
             }
 			else
 			{
-				DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "Auth_server Heartbeat Send fail!\n");
+				DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]Auth_server Heartbeat Send fail.");
 			}
 			
 			continue;
@@ -739,7 +900,7 @@ int main(int argc, char* argv[])
 			case RUDP_MESSAGE_TYPE_PARTIAL:
 				if(1024 <= TmpRecvBufLen+RudpRecvOutput.s_BufferLength)
 				{
-					DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "partial data length error\n");
+					DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]partial data length error.");
 				}
 				memcpy(TmpRecvBuf+TmpRecvBufLen, RudpRecvOutput.s_Buffer, RudpRecvOutput.s_BufferLength);
 				TmpRecvBufLen += RudpRecvOutput.s_BufferLength;
@@ -795,19 +956,23 @@ int main(int argc, char* argv[])
 						case GMI_CODE_SUCCESS:
 							if(TYPE_AUTH_LOGIN == UserAuthInputData->s_DataType)
 							{
+								DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Info, "[AUTH]Login(Id-%s, sId-%d, auth-0x%x) OK.", MoudleIdToStr(UserAuthInputData->s_MoudleId), UserAuthOutputData.s_SessionId, UserAuthOutputData.s_AuthValue);
 								PRT_TEST(("Login OK...\n"));
 								PRT_TEST(("sessionId=%d, authValue=%d\n", UserAuthOutputData.s_SessionId, UserAuthOutputData.s_AuthValue));
 							}
 							else if(TYPE_AUTH_LOGOUT == UserAuthInputData->s_DataType)
 							{
+								DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Info, "[AUTH]Logout(Id-%s, sId-%d) OK.", MoudleIdToStr(UserAuthInputData->s_MoudleId), UserAuthInputData->s_SessionId);
 								PRT_TEST(("Logout OK...\n"));
 							}
 							else if(TYPE_AUTH_RESET == UserAuthInputData->s_DataType)
 							{
+								DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Info, "[AUTH]Reset(Id-%s) OK.", MoudleIdToStr(UserAuthInputData->s_MoudleId));
 								PRT_TEST(("Reset OK...\n"));
 							}
 							else if(TYPE_AUTH_GETSESSIONID == UserAuthInputData->s_DataType)
 							{
+								DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Info, "[AUTH]GetSessionId(Id-%s) OK.", MoudleIdToStr(UserAuthInputData->s_MoudleId));
 								PRT_TEST(("GetSessionId OK...\n"));
 							}
 							break;
@@ -857,7 +1022,7 @@ int main(int argc, char* argv[])
 				
 					if(FAILED(RetValue))
 					{
-						DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception,  "Ack data error\n");
+						DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception,  "[AUTH]Ack data error.");
 					}
 					
 				}
@@ -871,6 +1036,7 @@ int main(int argc, char* argv[])
 		}
 		
 	}
+
 
 	GMI_RudpSocketClose(SockFd);
 	
@@ -891,6 +1057,12 @@ int main(int argc, char* argv[])
 	#else
 	pthread_rwlock_destroy(&RdWrLock);
 	#endif
+
+	#ifdef LOG_SERVER_OK
+    Client.Deinitialize();
+	LogClientHdTmp = NULL;
+	#endif
+	
 	return 0;
 }
 
