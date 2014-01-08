@@ -28,17 +28,19 @@ struct UserLogStorageInfo
     uint64_t  s_Index;// used to identify log item, and increased monotonously and can be reversed back to reuse.
     uint16_t  s_Type;
     uint16_t  s_Subtype;
+    uint32_t  s_Reserved;
     uint64_t  s_LogTime;
     char_t    s_UserName[USER_LOG_NAME_MAX_LENGTH];
     uint8_t   s_SpecificData[USER_LOG_SPECIFIC_DATA_MAX_LENGTH];
 };
 
 // log file meta data
-#define USER_LOG_META_DATA_SIZE  4096
+#define USER_LOG_META_DATA_SIZE        4096
+#define USER_LOG_VALID_META_DATA_SIZE  16
 struct UserLogMetaData
 {
-    uint64_t  s_FirstLogIndex;
     uint64_t  s_LogNumber;
+    uint64_t  s_LatestLogIndex;
 };
 
 class UserLogQueryer

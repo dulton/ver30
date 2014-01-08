@@ -43,10 +43,11 @@ public:
     virtual GMI_RESULT  DebugLog( uint16_t Level, uint64_t LogTime, uint64_t ProcessId, uint64_t ThreadId, uint32_t ModuleId, const char_t *ModuleName, const char_t *FileName, const char_t *FunctionName, uint32_t LineNumber, const void_t *SpecificData, uint32_t SpecificDataLength );
 
 private:
-    GMI_RESULT  GetLogFileName( char_t *LogFileName, long_t FileNameBufferLength );
-    GMI_RESULT  GetUserLogFullPath( char_t *LogFullPath, long_t FullPathBufferLength, const char_t *LogPathName, const char_t *LogFileName );
-    GMI_RESULT  GetDebugLogFullPath( char_t *LogFullPath, long_t FullPathBufferLength, const char_t *LogPathName, const char_t *LogFileName );
-
-private:
-    LogRepositoryInitializationParameter  m_InitializationgParameter;
+    LogRepositoryInitializationParameter    m_InitializationgParameter;
+    SafePtr<char_t, DefaultObjectsDeleter>  m_UserLogFilePath;
+    SafePtr<char_t, DefaultObjectsDeleter>  m_DebugLogFilePath;
+    GMI_File                                m_UserLogFile;
+    GMI_MutexIPC                            m_UserLogOperationLock;
+    GMI_File                                m_DebugLogFile;
+    GMI_MutexIPC                            m_DebugLogOperationLock;
 };
