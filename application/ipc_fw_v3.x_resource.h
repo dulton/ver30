@@ -178,11 +178,14 @@
 #define GMI_STREAMING_MEDIA_SERVER_ENCODE_AUDIO1_IPC_MUTEX_KEY       2354
 #define GMI_STREAMING_MEDIA_SERVER_DECODE_AUDIO1_IPC_MUTEX_KEY       2356
 
+#define GMI_USER_LOG_SHARE_MEMORY_KEY                                2360
+
 /************************ share memory key ************************/
 
 //log server
 #define LOG_SERVER_CONFIG_SHARE_MEMORY_KEY                           "share_memory_key"
 #define GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY                       1230
+#define GMI_USER_LOG_IPC_MUTEX_KEY                                   1231
 
 //streaming media center server
 // the same as MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_IPC_MUTEX_KEY

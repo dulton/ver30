@@ -572,6 +572,12 @@ typedef enum
 #define LOG_SERVER_CONFIG_SHARE_MEMORY_SIZE                   "share_memory_size"
 #define GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE                     (1024*1024)
 
+#define GMI_LOG_DEFAULT_USER_LOG_FILE_PATH                    "/opt/log/gmi_user.log"
+// 1 indicates e_LogStorageLimitMode_RecordNumber
+#define GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_MODE           1
+#define GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_PARAMETER      2000
+#define GMI_LOG_DEFAULT_USER_LOG_SHARE_MEMORY_SIZE            (512*1024)
+
 #define GMI_H264_VIDEO_MONITOR_CONFIG_PATH                              "/Config/media_center/h264_video_monitor/"
 #define GMI_H264_VIDEO_MONITOR_CONFIG_ENABLE_KEY_NAME                   "enable"
 #define GMI_H264_VIDEO_MONITOR_CONFIG_ENABLE_VALUE                      1
