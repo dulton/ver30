@@ -56,7 +56,7 @@ extern "C" {
 //authentication information of user 
 typedef struct tagAuthRefInfo
 {
-    uint32_t   s_DataType;                         //data type: 1-login, 2-logout, 3-clear record, 4-get sessionIds, 5-rtsp login
+    uint32_t   s_DataType;                         //data type: 1-login, 2-logout, 3-clear record, 4-get sessionIds
 	char_t     s_Username[MAX_LEN_USERNAME];       //username
     char_t     s_Password[MAX_LEN_PASSWORD];       //password
     uint8_t    s_UsernameEncType;                 //type 0f enctyption : 0-text£¬1-MD5£¬...

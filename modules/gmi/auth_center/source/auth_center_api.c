@@ -7,8 +7,11 @@
 #include "ipc_fw_v3.x_resource.h"
 
 
-#define USER_LOGIN_PORT     61234
-#define USER_LOGOUT_PORT    61235
+//#define USER_LOGIN_PORT     61234
+//#define USER_LOGOUT_PORT    61235
+#define USER_LOGIN_PORT     0
+#define USER_LOGOUT_PORT    0
+
 
 static uint16_t l_SeqNum = 0;
 
@@ -40,10 +43,18 @@ GMI_RESULT GMI_UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo
 		return GMI_FAIL;
 	}
 
+	#if 0
 	if(InPortNum > 0)
 	{
 		LocalPort = InPortNum;
 	}
+	#else
+	if((InPortNum <= 0) || (InPortNum > 65535))
+	{
+		fprintf(stderr, "GMI_UserAuthCheck input InPortNum %d error\n", InPortNum);
+		return GMI_FAIL;
+	}
+	#endif
 
 	Sock = GMI_RudpSocket(LocalPort);
 	if(Sock == NULL)
@@ -165,10 +176,18 @@ GMI_RESULT GMI_UserLogoutNotify(const uint16_t  sessionId, const uint16_t InPort
 		return GMI_FAIL;
 	}
 
+	#if 0
 	if(InPortNum > 0)
 	{
 		LocalPort = InPortNum;
 	}
+	#else
+	if((InPortNum <= 0) || (InPortNum > 65535))
+	{
+		fprintf(stderr, "GMI_UserLogoutNotify input InPortNum %d error\n", InPortNum);
+		return GMI_FAIL;
+	}
+	#endif
 
 	Sock = GMI_RudpSocket(LocalPort);
 	if(Sock == NULL)
@@ -284,10 +303,18 @@ GMI_RESULT GMI_UserLogInDataReset( const uint32_t MoudleId, const uint16_t InPor
 	uint8_t SndBuf[1024]              = {0};
 
 	
+	#if 0
 	if(InPortNum > 0)
 	{
 		LocalPort = InPortNum;
 	}
+	#else
+	if((InPortNum <= 0) || (InPortNum > 65535))
+	{
+		fprintf(stderr, "GMI_UserLogInDataReset input InPortNum %d error\n", InPortNum);
+		return GMI_FAIL;
+	}
+	#endif
 
 	Sock = GMI_RudpSocket(LocalPort);
 	if(Sock == NULL)
@@ -412,10 +439,18 @@ GMI_RESULT GMI_UserQueryLogInSessionId(const uint16_t InPortNum, UserAuthLinkedS
 
 	//SessionIdData = SessionIdOutData;
 	
+	#if 0
 	if(InPortNum > 0)
 	{
 		LocalPort = InPortNum;
 	}
+	#else
+	if((InPortNum <= 0) || (InPortNum > 65535))
+	{
+		fprintf(stderr, "GMI_UserQueryLogInSessionId input InPortNum %d error\n", InPortNum);
+		return GMI_FAIL;
+	}
+	#endif
 
 	Sock = GMI_RudpSocket(LocalPort);
 	if(Sock == NULL)

@@ -186,7 +186,7 @@ int32_t  main(int32_t argc, char_t* argv[])
 		InputData.s_AllUserMaxLinkNum = ALLUSERMAXLINK;
 		InputData.s_UserAuthExtDataLen = 0;
 		InputData.s_UserAuthExtData = NULL;
-		InputData.s_MoudleId = ID_MOUDLE_REST_RTSP;
+		//InputData.s_MoudleId = ID_MOUDLE_REST_RTSP;
 		#if 1
 		UserAuthExtInfo TmpUserAuthExtInfo;
 		memset(&TmpUserAuthExtInfo, 0, sizeof(TmpUserAuthExtInfo));
