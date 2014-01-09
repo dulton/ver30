@@ -113,6 +113,7 @@
 #define GMI_ONVIF_RTSP_SERVER_ENCODE_AUDIO1_RTCP    2009
 #define GMI_ONVIF_RTSP_SERVER_DECODE_AUDIO1_RTP     2010
 #define GMI_ONVIF_RTSP_SERVER_DECODE_AUDIO1_RTCP    2011
+#define GMI_ONVIF_RTSP_SERVER_AUTH_PORT             56691
 //rtsp server tcp port
 #define GMI_RTSP_SERVER_TCP_PORT                    554
 //http server port
