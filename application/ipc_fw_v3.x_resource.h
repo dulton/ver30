@@ -7,6 +7,7 @@
 #define IPC_FW_V3X_RESOURCE
 
 #define GMI_RESOURCE_CONFIG_FILE_NAME               "/opt/config/gmi_resource.xml"
+#define GMI_RESOURCE_XML                            GMI_RESOURCE_CONFIG_FILE_NAME
 
 #define GMI_EXTERN_NETWORK_PORT_PATH                "/Config/NetworkPort/Extern/"
 #define GMI_INNER_NETWORK_PORT_PATH                 "/Config/NetworkPort/Inner/"
@@ -17,7 +18,8 @@
 #define GMI_HTTP_SERVER_PORT_KEY                    "HTTP_ServerPort"
 #define GMI_SDK_SERVER_PORT_KEY                     "SDK_ServerPort"
 
-//unix socket
+/********************** unix socket ***********************/
+
 #define GMI_CONTROL_S_UNIX_NAME                     "/tmp/sys_server"
 
 /************************ udp port ************************/
@@ -33,7 +35,7 @@
 #define GMI_DAEMON_HEARTBEAT_SDK		            56788
 #define GMI_DAEMON_HEARTBEAT_AUTH		            56789
 #define GMI_DAEMON_HEARTBEAT_CONFIG_TOOL            56790
-#define GMI_MONITOR_TO_SDK_PORT_DEFAULT             57008
+#define GMI_DAEMON_HEARTBEAT_SDK_SERVER             57008
 //onvif server
 #define GMI_ONVIF_C_PORT                            56680
 #define GMI_ONVIF_S_PORT                            56681
@@ -56,6 +58,17 @@
 //media center server
 #define GMI_MEDIA_CENTER_SERVER_COMMAND_PORT        56630
 #define GMI_MEDIA_CENTER_CLIENT_COMMAND_PORT        56631
+
+#define GMI_SYS_SDK_PORT_PATH                      "/ipc/connect_port_resource"
+#define GMI_SYS_SERVER_TO_SDK_PORT_ITEM            "sys_server_to_sdk_port"
+#define SYS_SERVER_TO_SDK_PORT                      57000
+#define GMI_SDK_TO_SYS_SERVER_PORT_ITEM            "sdk_to_sys_server_port"
+#define SDK_TO_SYS_SERVER_PORT                      57002
+
+#define GMI_ONVIF_RTSP_SERVER_AUTH_PORT             56691
+//authentication server port
+#define GMI_AUTH_SERVER_PORT                        51243
+
 //streaming media server
 #define MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH            "/Config/media_center_server/ipc_media_data_dispatch/"
 #define MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_SERVER_UDP_PORT "server_udp_port"
@@ -96,6 +109,22 @@
 #define GMI_STREAMING_MEDIA_SDK_ENCODE_AUDIO1       56644
 #define SDK_MEDIA_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_SERVER_UDP_PORT    "server_udp_port"
 #define GMI_STREAMING_MEDIA_SDK_DECODE_AUDIO1       56645
+
+// these UDP port used by share memory log server and client
+#define LOG_SERVER_DEFAULT_SERVER_PORT              50000
+#define LOG_UPGRADE_DEFAULT_PORT                    50001
+#define LOG_MEDIA_CENTER_DEFAULT_PORT               50002
+#define LOG_CONTROL_CENTER_DEFAULT_PORT             50003
+#define LOG_GB28181_DEFAULT_PORT                    50004
+#define LOG_ONVIF_DEFAULT_PORT                      50005
+#define LOG_PRIVATE_STREAM_DEFAULT_PORT             50006
+#define LOG_STORAGE_DEFAULT_PORT                    50007
+#define LOG_WEB_DEFAULT_PORT                        50008
+#define LOG_AUTHENTICATION_DEFAULT_PORT             50009
+#define LOG_GB_RTP_DEFAULT_PORT                     50010
+#define LOG_ONVIF_RTSP_DEFAULT_PORT                 50011
+#define LOG_SDK_DEFAULT_PORT                        50012
+
 // onvif rtsp server
 #define ONVIF_MEDIA_SERVER_RTSP_CONFIG_PATH                                "/Config/onvif_media_server/rtsp/"
 #define ONVIF_MEDIA_SERVER_RTSP_CONFIG_SERVER_MULTICAST_ADDRESS            "server_multicast_address"
@@ -113,61 +142,31 @@
 #define GMI_ONVIF_RTSP_SERVER_ENCODE_AUDIO1_RTCP    2009
 #define GMI_ONVIF_RTSP_SERVER_DECODE_AUDIO1_RTP     2010
 #define GMI_ONVIF_RTSP_SERVER_DECODE_AUDIO1_RTCP    2011
-#define GMI_ONVIF_RTSP_SERVER_AUTH_PORT             56691
-//rtsp server tcp port
-#define GMI_RTSP_SERVER_TCP_PORT                    554
+
+/************************ tcp port  ************************/
+
 //http server port
 #define GMI_HTTP_SERVER_PORT                        80
+//rtsp server tcp port
+#define GMI_RTSP_SERVER_TCP_PORT                    554
 //onvif port
 #define GMI_ONVIF_SERVER_PORT                       8080
 //sdk server port
 #define GMI_SDK_SERVER_PORT                         30000
 
-//authentication server port
-#define GMI_AUTH_SERVER_PORT                        51243
-
-// these UDP port used by share memory log server and client
-#define LOG_SERVER_DEFAULT_SERVER_PORT              50000
-#define LOG_UPGRADE_DEFAULT_PORT                    50001
-#define LOG_MEDIA_CENTER_DEFAULT_PORT               50002
-#define LOG_CONTROL_CENTER_DEFAULT_PORT             50003
-#define LOG_GB28181_DEFAULT_PORT                    50004
-#define LOG_ONVIF_DEFAULT_PORT                      50005
-#define LOG_PRIVATE_STREAM_DEFAULT_PORT             50006
-#define LOG_STORAGE_DEFAULT_PORT                    50007
-#define LOG_WEB_DEFAULT_PORT                        50008
-#define LOG_AUTHENTICATION_DEFAULT_PORT             50009
-#define LOG_GB_RTP_DEFAULT_PORT                     50010
-#define LOG_ONVIF_RTSP_DEFAULT_PORT                 50011
-#define LOG_SDK_DEFAULT_PORT                        50012
-
-/************************ tcp port  ************************/
 // log server
 // publish server port, later log will use SDK to transmit log information and don't use this tcp port
 #define GMI_LOG_PUBLISH_SERVER_PORT                 2000
 
 //daemon update server port
 #define GMI_DAEMON_UPDATE_SERVER_PORT               8000
-/************************ pipe name ************************/
-//daemon server
-
-#define  GMI_RESOURCE_XML                           "/opt/config/gmi_resource.xml"
-#define  GMI_SYS_SDK_PORT_PATH                      "/ipc/connect_port_resource"
-#define  GMI_SYS_SERVER_TO_SDK_PORT_ITEM            "sys_server_to_sdk_port"
-#define  GMI_SDK_TO_SYS_SERVER_PORT_ITEM            "sdk_to_sys_server_port"
-
-#define SYS_SERVER_TO_SDK_PORT                      57000
-#define SDK_TO_SYS_SERVER_PORT                      57002
-
 
 /************************ mutex id ************************/
-//daemon server
 
 /********* log *********/
 #define LOG_SERVER_CONFIG_PATH                                       "/Config/log_server/"
-//log server
-#define LOG_SERVER_CONFIG_SHARE_MEMORY_MUTEX_ID                      "share_memory_mutex_id"
-#define GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID             2340
+#define LOG_SERVER_CONFIG_SHARE_MEMORY_MUTEX_KEY                     "share_memory_mutex_key"
+#define GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_KEY            2340
 
 //streaming media data dispatch
 #define MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH             "/Config/media_center_server/ipc_media_data_dispatch/"
@@ -179,14 +178,14 @@
 #define GMI_STREAMING_MEDIA_SERVER_ENCODE_AUDIO1_IPC_MUTEX_KEY       2354
 #define GMI_STREAMING_MEDIA_SERVER_DECODE_AUDIO1_IPC_MUTEX_KEY       2356
 
-#define GMI_USER_LOG_SHARE_MEMORY_KEY                                2360
+#define GMI_USER_LOG_IPC_MUTEX_KEY                                   2360
 
 /************************ share memory key ************************/
 
 //log server
 #define LOG_SERVER_CONFIG_SHARE_MEMORY_KEY                           "share_memory_key"
 #define GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY                       1230
-#define GMI_USER_LOG_IPC_MUTEX_KEY                                   1231
+#define GMI_USER_LOG_SHARE_MEMORY_KEY                                1231
 
 //streaming media center server
 // the same as MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_IPC_MUTEX_KEY
