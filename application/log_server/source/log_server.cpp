@@ -666,7 +666,7 @@ GMI_RESULT GetLogServerConfig( uint16_t *ServerPort, long_t *ShareMemoryKey, siz
 #elif defined( _WIN32 )
     TempServerPort    = LOG_SERVER_DEFAULT_SERVER_PORT;
     *ShareMemoryKey   = GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY;
-    *IpcMutexKey      = GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID;
+    *IpcMutexKey      = GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_KEY;
 
     *ShareMemorySize  = GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE;
     *DebugLogLevel    = GMI_LOG_MODULE_LOG_DEBUG_LOG_LEVEL;
