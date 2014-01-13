@@ -34,9 +34,14 @@ Application::Application(int32_t argc, const char_t * argv [])
 {
     // TODO: Parse the parameter from command line
 
+    // Initialize log module
+    LOG_INITIALIZE("/opt/log/rtsp_server.log", (128 << 10));
+    LOG_SET_WRITE_LEVEL(VERBOSE);
+    LOG_SET_DISPLAY_LEVEL(DEBUG);
+
+    // Set priority
     int32_t RetVal = setpriority(PRIO_PROCESS, getpid(), -20);
     PRINT_LOG(INFO, "RetVal = %d", RetVal);
-
 
     // Register singal handler
     signal(SIGTERM, Application::SignalStop);

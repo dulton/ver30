@@ -1,6 +1,6 @@
 #include "GMITaskScheduler.hh"
 
-#include "debug.h"
+#include "common_def.h"
 
 GMITaskScheduler * GMITaskScheduler::createNew(unsigned maxSchedulerGranularity) {
     GMITaskScheduler * scheduler = NULL;

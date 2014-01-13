@@ -3,7 +3,7 @@
 
 #include <gmi_system_headers.h>
 
-#include "debug.h"
+#include "log_module.h"
 
 #define COUNT_OF(array) (sizeof(array) / sizeof(array[0]))
 

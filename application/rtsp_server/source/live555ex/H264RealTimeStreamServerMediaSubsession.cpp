@@ -1,6 +1,7 @@
 #include "H264RealTimeStreamRTPSink.hh"
 #include "H264RealTimeStreamServerMediaSubsession.hh"
 #include "H264RealTimeStreamFramer.hh"
+#include "H264RealTimeStreamFramerEx.hh"
 
 #include <H264VideoRTPSink.hh>
 
@@ -82,7 +83,9 @@ FramedSource * H264RealTimeStreamServerMediaSubsession::createNewStreamSource(un
     estBitrate = fSubStreamInfo.s_MaxBitRate / 1000; // kbps, estimate
 
     // Create a framer for the Video Elementary Stream:
-    return H264RealTimeStreamFramer::createNew(envir(), fSubStreamInfo);
+
+    return H264RealTimeStreamFramerEx::createNew(envir(), fSubStreamInfo);
+    //return H264RealTimeStreamFramer::createNew(envir(), fSubStreamInfo);
 }
 
 RTPSink * H264RealTimeStreamServerMediaSubsession::createNewRTPSink(Groupsock * rtpGroupsock, unsigned char rtpPayloadTypeIfDynamic, FramedSource * /*inputSource*/) {

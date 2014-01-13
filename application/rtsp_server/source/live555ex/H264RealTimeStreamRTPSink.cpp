@@ -28,6 +28,8 @@ H264RealTimeStreamRTPSink::~H264RealTimeStreamRTPSink() {
     delete[] fSPS;
     delete[] fPPS;
 
+    envir().taskScheduler().unscheduleDelayedTask(nextTask());
+
     stopPlaying();
 }
 

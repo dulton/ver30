@@ -31,6 +31,7 @@ GMI_MODULE_SRCS        += $(wildcard rtsp_service/*.cpp)
 GMI_MODULE_SRCS        += $(wildcard media_capture/*.cpp)
 GMI_MODULE_SRCS        += $(wildcard task_scheduler/*.cpp)
 GMI_MODULE_SRCS        += $(wildcard stream_ctrl/*.cpp)
+GMI_MODULE_SRCS        += $(wildcard log_module/*.cpp)
 
 # Set compile flags
 GMI_CFLAGS              = -Wall -O3 -DSOCKLEN_T=socklen_t -DNO_SSTREAM=1 -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64
@@ -53,6 +54,7 @@ GMI_INCLUDE_DIR        += $(shell pwd)/rtsp_service
 GMI_INCLUDE_DIR        += $(shell pwd)/media_capture
 GMI_INCLUDE_DIR        += $(shell pwd)/task_scheduler
 GMI_INCLUDE_DIR        += $(shell pwd)/stream_ctrl
+GMI_INCLUDE_DIR        += $(shell pwd)/log_module
 
 # Include rules.mk
 include $(GMI_TOPDIR)/build/rules.mk

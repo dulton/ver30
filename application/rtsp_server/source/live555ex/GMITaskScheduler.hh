@@ -1,5 +1,5 @@
-#ifndef __GMITASKSCHEDULER_HH__
-#define __GMITASKSCHEDULER_HH__
+#ifndef _GMI_TASK_SCHEDULER_HH
+#define _GMI_TASK_SCHEDULER_HH
 
 #include <sys/select.h>
 
@@ -36,4 +36,4 @@ private:
     FdListener fFdListener;
 };
 
-#endif // __GMITASKSCHEDULER_HH__
+#endif
