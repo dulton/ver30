@@ -1,18 +1,9 @@
 
 #include <sdk_server_sys_req.h>
 #include <gmi_config_api.h>
+#include <ipc_fw_v3.x_resource.h>
 #include <sdk_server_mgmt.h>
 #include <sdk_server_debug.h>
-
-#define  GMI_RESOURCE_XML "/opt/config/gmi_resource.xml"
-#define  GMI_SYS_SDK_PORT_REQ_PATH "/ipc/connect_port_resource"
-#define  GMI_SYS_SERVER_TO_SDK_REQ_PORT_ITEM  "sys_server_to_sdk_req_port"
-#define  GMI_SDK_TO_SYS_SERVER_REQ_PORT_ITEM  "sdk_to_sys_server_req_port"
-
-
-#define SYS_SERVER_TO_SDK_REQ_PORT          56683
-#define SDK_TO_SYS_SERVER_REQ_PORT          57006
-
 
 SdkServerSysReq::SdkServerSysReq(SdkServerMgmt * pSvrMgmt,int * pRunningBits)
     : m_pSvrMgmt(pSvrMgmt),
@@ -80,9 +71,9 @@ int SdkServerSysReq::__GetRPort()
     {
         goto set_default;
     }
-    gmiret = GMI_XmlRead(xmlhd,GMI_SYS_SDK_PORT_REQ_PATH,
-                         GMI_SYS_SERVER_TO_SDK_REQ_PORT_ITEM ,
-                         SYS_SERVER_TO_SDK_REQ_PORT,
+    gmiret = GMI_XmlRead(xmlhd,GMI_SYS_SDK_PORT_PATH,
+                         GMI_SYS_SERVER_TO_SDK_PORT_ITEM ,
+                         SYS_SERVER_TO_SDK_PORT,
                          &serverport,GMI_CONFIG_READ_ONLY);
     if(gmiret != GMI_SUCCESS)
     {
@@ -100,7 +91,7 @@ set_default:
         GMI_XmlFileSave(xmlhd);
     }
     xmlhd= NULL;
-    return SYS_SERVER_TO_SDK_REQ_PORT;
+    return SYS_SERVER_TO_SDK_PORT;
 }
 
 
@@ -115,9 +106,9 @@ int SdkServerSysReq::__GetLPort()
     {
         goto set_default;
     }
-    gmiret = GMI_XmlRead(xmlhd,GMI_SYS_SDK_PORT_REQ_PATH,
-                         GMI_SDK_TO_SYS_SERVER_REQ_PORT_ITEM,
-                         SDK_TO_SYS_SERVER_REQ_PORT,
+    gmiret = GMI_XmlRead(xmlhd,GMI_SYS_SDK_PORT_PATH,
+                         GMI_SDK_TO_SYS_SERVER_PORT_ITEM,
+                         SDK_TO_SYS_SERVER_PORT,
                          &serverport,GMI_CONFIG_READ_ONLY);
     if(gmiret != GMI_SUCCESS)
     {
@@ -135,7 +126,7 @@ set_default:
         GMI_XmlFileSave(xmlhd);
     }
     xmlhd= NULL;
-    return SDK_TO_SYS_SERVER_REQ_PORT;
+    return SDK_TO_SYS_SERVER_PORT;
 }
 
 

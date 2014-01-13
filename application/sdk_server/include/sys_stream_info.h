@@ -160,16 +160,6 @@ typedef struct
     uint64_t m_Pts;
 } stream_pack_t;
 
-
-#define  GMI_RESOURCE_XML "/opt/config/gmi_resource.xml"
-#define  GMI_SYS_SDK_PORT_PATH "/ipc/connect_port_resource"
-#define  GMI_SYS_SERVER_TO_SDK_PORT_ITEM  "sys_server_to_sdk_port"
-#define  GMI_SDK_TO_SYS_SERVER_PORT_ITEM  "sdk_to_sys_server_port"
-
-
-#define SYS_SERVER_TO_SDK_PORT          57000
-#define SDK_TO_SYS_SERVER_PORT          57002
-
 #define   SDK_STREAM_OV_REQUEST  0x1
 #define   SDK_STREAM_OV_RESPONSE 0x2
 #define   SDK_STREAM_OA_REQUEST  0x3
@@ -178,10 +168,6 @@ typedef struct
 #define   SDK_STREAM_AD_SEND     0x6
 #define   SDK_STREAM_AC_REQUEST  0x9
 #define   SDK_STREAM_AC_RESPONSE 0xa
-
-
-
-
 
 #endif /*__SYS_STREAM_INFO_H__*/
 

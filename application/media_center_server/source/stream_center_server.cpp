@@ -284,9 +284,6 @@ void* DaemonHeartbeatProc( void *Argument )
 }
 
 #define MEDIA_CENTER_SERVER_CONFIG_PATH                "/Config/media_center_server/"
-#define MEDIA_CENTER_SERVER_CONFIG_HEARTBEAT_INTERVAL  "heartbeat_interval"
-#define MEDIA_CENTER_SERVER_CONFIG_SERVER_ADDRESS      "server_address"
-#define MEDIA_CENTER_SERVER_CONFIG_SERVER_PORT         "command_port"
 
 #define MEDIA_CENTER_SERVER_CONFIG_LOG_SERVER_PORT     "log_server_port"
 #define MEDIA_CENTER_SERVER_CONFIG_LOG_CLIENT_PORT     "log_client_port"
@@ -368,6 +365,8 @@ GMI_RESULT GetMediaCenterServerLogConfig( uint32_t *ModuleId, char_t *ModuleName
     return GMI_SUCCESS;
 }
 
+#define MEDIA_CENTER_SERVER_CONFIG_SERVER_ADDRESS      "server_address"
+
 GMI_RESULT GetMediaCenterServerAddress( uint32_t *Address )
 {
 #if defined( __linux__ )
@@ -394,6 +393,8 @@ GMI_RESULT GetMediaCenterServerAddress( uint32_t *Address )
 #endif
     return GMI_SUCCESS;
 }
+
+#define MEDIA_CENTER_SERVER_CONFIG_SERVER_PORT         "command_port"
 
 GMI_RESULT GetMediaCenterServerPort( uint16_t *Port )
 {
@@ -1187,6 +1188,8 @@ GMI_RESULT RegisterCommandExecutor( MediaCenterService& Service )
 
     return GMI_SUCCESS;
 }
+
+#define MEDIA_CENTER_SERVER_CONFIG_HEARTBEAT_INTERVAL  "heartbeat_interval"
 
 GMI_RESULT GetHeartbeatInterval( uint32_t *Interval )
 {

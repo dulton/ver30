@@ -578,7 +578,7 @@ FD_HANDLE GMI_InitSystemInquiryPort()
 {
     DAEMON_PRINT_LOG(INFO,"GMI_InitSystemInquiry is Error ! ! ");
 
-    long_t LocalPort = GMI_MONITOR_TO_SDK_PORT_DEFAULT;
+    long_t LocalPort = GMI_DAEMON_HEARTBEAT_SDK_SERVER;
     FD_HANDLE sock;
 
     sock = GMI_RudpSocket(LocalPort);

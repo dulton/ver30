@@ -616,14 +616,14 @@ GMI_RESULT GetLogServerConfig( uint16_t *ServerPort, long_t *ShareMemoryKey, siz
     }
     printf( "log server, GetLogServerShareMemoryKey, DefaultShareMemoryKey=%d, ShareMemoryKey=%ld \n", GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY, *ShareMemoryKey );
 
-    printf( "log server, GetLogServerIpcMutexKey, DefaultIpcMutexKey=%d \n", GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_MUTEX_ID, GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID, (int32_t *) IpcMutexKey, GMI_CONFIG_READ_WRITE );
+    printf( "log server, GetLogServerIpcMutexKey, DefaultIpcMutexKey=%d \n", GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_KEY );
+    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_MUTEX_KEY, GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_KEY, (int32_t *) IpcMutexKey, GMI_CONFIG_READ_WRITE );
     if ( FAILED( Result ) )
     {
         GMI_XmlFileSave(Handle);
         return Result;
     }
-    printf( "log server, GetLogServerIpcMutexKey, DefaultIpcMutexKey=%d, IpcMutexKey=%ld \n", GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_ID, *IpcMutexKey );
+    printf( "log server, GetLogServerIpcMutexKey, DefaultIpcMutexKey=%d, IpcMutexKey=%ld \n", GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_KEY, *IpcMutexKey );
 
     Result = GMI_XmlFileSave(Handle);
     if ( FAILED( Result ) )

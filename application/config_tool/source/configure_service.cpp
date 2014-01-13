@@ -654,7 +654,7 @@ uint16_t ConfigureService::GetDaemonLocalPort()
 
 uint16_t ConfigureService::GetDaemonServerPort()
 {
-    return GMI_MONITOR_TO_SDK_PORT_DEFAULT;
+    return GMI_DAEMON_HEARTBEAT_SDK_SERVER;
 }
 
 int32_t ConfigureService::GetDaemonLocalModuleId()
