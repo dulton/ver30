@@ -50,7 +50,14 @@ GMI_RESULT MediaEncodePipeline::Initialize( uint32_t SourceId, uint32_t MediaId,
             return GMI_OUT_OF_MEMORY;
         }
 
-        Parameter.s_BitRate   = (( VideoEncodeParam * )EncodeParameter)->s_BitRateAverage;
+        if ( BIT_VBR == (( VideoEncodeParam * )EncodeParameter)->s_BitRateType || BIT_VBRQ == (( VideoEncodeParam * )EncodeParameter)->s_BitRateType || BIT_CVBR == (( VideoEncodeParam * )EncodeParameter)->s_BitRateType )
+        {
+            Parameter.s_BitRate   = (( VideoEncodeParam * )EncodeParameter)->s_BitRateUp;
+        }
+        else
+        {
+            Parameter.s_BitRate   = (( VideoEncodeParam * )EncodeParameter)->s_BitRateAverage;
+        }
         Parameter.s_FrameRate = (( VideoEncodeParam * )EncodeParameter)->s_FrameRate;
 
         if ( 0 == Parameter.s_BitRate || 0 == Parameter.s_FrameRate )
