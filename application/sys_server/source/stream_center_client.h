@@ -2,10 +2,10 @@
 #define __STREAM_CENTER_CLIENT_H__
 
 #include "gmi_system_headers.h"
-#include "media_center_proxy.h"
+//#include "media_center_proxy.h"
 #include "media_transport_proxy.h"
 #include "gmi_media_ctrl.h"
-
+#include "media_center.h"
 
 typedef struct tagMediaHandle
 {
@@ -103,12 +103,14 @@ private:
     GMI_RESULT CheckVinVoutConfiguration(VideoInParam *VidInParamPtr, VideoOutParam *VidOutParamPtr);
     GMI_RESULT CheckAudioEncodeConfiguration(AudioEncParam *AudioEncParamPtr);
     GMI_RESULT CheckAudioDecodeConfiguration(AudioDecParam *AudioDecParamPtr);
+    GMI_RESULT StartCodec(boolean_t EncodeMode, uint32_t SourceId, uint32_t MeidaId, uint32_t MediaType, uint32_t CodecType, void_t *CodecParameter, size_t CodecParameterLength, FD_HANDLE *CodecHandle);
+    GMI_RESULT StopCodec(FD_HANDLE& CodecHandle);
 private:
     uint16_t            m_RTSP_ServerPort;
     uint16_t            m_ClientPort;
     uint16_t            m_ServerPort;
     uint16_t            m_UDP_SessionBufferSize;
-    MediaCenterProxy    m_MediaCenter;
+    MediaCenter         m_MediaCenter;
     MediaTransportProxy m_MediaTransport; 
 };
 

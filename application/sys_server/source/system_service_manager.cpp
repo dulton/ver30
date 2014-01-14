@@ -4039,11 +4039,19 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
 
             memset(&Z_CtlCmd, 0, sizeof(ZoomCmd));
             Z_CtlCmd.s_ZoomMode = ((SYS_PTZCMD_ZOOM_TELE == PtzCtrlTmp.s_PtzCmd) ? ZOOM_MODE_IN : ZOOM_MODE_OUT);
-            Result = m_StreamCenterClientPtr->StartZoom(m_AutoFocusHandle, m_ZoomHandle, Z_CtlCmd.s_ZoomMode);
+            Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, true);
             if (FAILED(Result))
             {
-                SYS_ERROR("StartZoom fail, Result = 0x%lx\n", Result);
-                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "StartZoom fail, Result = 0x%lx\n", Result);
+                SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                return Result;
+            }
+
+            Result = m_StreamCenterClientPtr->ControlZoom(m_ZoomHandle, Z_CtlCmd.s_ZoomMode);
+            if (FAILED(Result))
+            {
+                SYS_ERROR("ControlZoom fail, Result = 0x%lx\n", Result);
+                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "ControlZoom fail, Result = 0x%lx\n", Result);
                 return Result;
             }
         }
@@ -4214,11 +4222,11 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
             else if (SYS_PTZCMD_ZOOM_TELE == LastPtzCmd
                      || SYS_PTZCMD_ZOOM_WIDE == LastPtzCmd)
             {
-                Result = m_StreamCenterClientPtr->StopZoom(m_AutoFocusHandle, m_ZoomHandle, &m_ZoomPos);
+                Result = m_StreamCenterClientPtr->ControlZoom(m_ZoomHandle, ZOOM_MODE_STOP);
                 if (FAILED(Result))
                 {
-                    SYS_ERROR("StopZoom fail, Result = 0x%lx\n", Result);
-                    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "StopZoom fail, Result = 0x%lx\n", Result);
+                    SYS_ERROR("ControlZoom fail, Result = 0x%lx\n", Result);
+                    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "ControlZoom fail, Result = 0x%lx\n", Result);
                     return Result;
                 }
 
@@ -4236,16 +4244,16 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
                         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "ControlAutoFocus fail, Result = 0x%lx\n", Result);
                         return Result;
                     }
-                }
-
-                Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, false);
-                if (FAILED(Result))
-                {
-                    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    return Result;
-                }
+                }               
             }
+
+			Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, false);
+			if (FAILED(Result))
+			{
+			    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
+			    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
+			    return Result;
+			}
         }
         else
         {

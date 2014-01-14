@@ -48,14 +48,14 @@ GMI_RESULT StreamCenterClient::Initialize(uint16_t LocalClientPort, uint16_t Loc
     //    return Result;
     //}
 
-    Result = m_MediaCenter.Initialize(inet_addr("127.0.0.1"), htons(LocalClientPort), SessionBufferSize, inet_addr("127.0.0.1"), htons(LocalServerPort));
-    if (FAILED(Result))
-    {
+    //Result = m_MediaCenter.Initialize(inet_addr("127.0.0.1"), htons(LocalClientPort), SessionBufferSize, inet_addr("127.0.0.1"), htons(LocalServerPort));
+    //if (FAILED(Result))
+    //{
         //m_MediaTransport.Deinitialize();
-        SYS_ERROR("m_MediaCenter.Initialize failed\n");
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MediaCenter.Initialize failed\n");
-        return Result;
-    }
+   //     SYS_ERROR("m_MediaCenter.Initialize failed\n");
+   //     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MediaCenter.Initialize failed\n");
+   //     return Result;
+   // }
 
     m_ClientPort            = LocalClientPort;
     m_ServerPort            = LocalServerPort;
@@ -73,13 +73,13 @@ GMI_RESULT StreamCenterClient::Deinitialize()
 
     SYS_INFO("%s:%s in..........\n", __FILE__, __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s:%s in..........\n", __FILE__, __func__);
-    Result = m_MediaCenter.Deinitialize();
-    if (FAILED(Result))
-    {
-        SYS_ERROR("m_MediaCenter.Deinitalize failed, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MediaCenter.Deinitalize failed, Result = 0x%lx\n", Result);
-        return Result;
-    }
+    //Result = m_MediaCenter.Deinitialize();
+    //if (FAILED(Result))
+    //{
+    //    SYS_ERROR("m_MediaCenter.Deinitalize failed, Result = 0x%lx\n", Result);
+    //    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MediaCenter.Deinitalize failed, Result = 0x%lx\n", Result);
+    //    return Result;
+    //}
 
     //Result = m_MediaTransport.Deinitialize();
     //if (FAILED(Result))
@@ -92,6 +92,30 @@ GMI_RESULT StreamCenterClient::Deinitialize()
     SYS_INFO("%s:%s normal out........\n", __FILE__, __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s:%s normal out........\n", __FILE__, __func__);
     return GMI_SUCCESS;
+}
+
+
+GMI_RESULT StreamCenterClient::StartCodec(boolean_t EncodeMode, uint32_t SourceId, uint32_t MediaId, uint32_t MediaType, uint32_t CodecType, void_t *CodecParameter, size_t CodecParameterLength, FD_HANDLE *CodecHandle)
+{
+	SYS_INFO("%s in.......\n", __func__);
+	GMI_RESULT Result = GMI_SUCCESS;
+
+	Result = m_MediaCenter.CreateCodec(EncodeMode, SourceId, MediaId, MediaType, CodecType, CodecParameter, CodecParameterLength, CodecHandle);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("create codec fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+
+	Result = m_MediaCenter.StartCodec(*CodecHandle);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("start codec2 fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+
+	SYS_INFO("%s out.......\n", __func__);
+	return Result;
 }
 
 
@@ -138,7 +162,7 @@ GMI_RESULT StreamCenterClient::Start(uint32_t SourceId, uint32_t StreamId, uint3
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "BitRateUp        = %d\n", VidEncParam->s_BitRateUp);
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "BitRateDown      = %d\n", VidEncParam->s_BitRateDown);
 
-        Result = m_MediaCenter.StartCodec( true, SourceId, StreamId, MediaType, CodecType, VidEncParam, sizeof(VideoEncodeParam), &(MediaHd->s_Encode));
+        Result = StartCodec( true, SourceId, StreamId, MediaType, CodecType, VidEncParam, sizeof(VideoEncodeParam), &(MediaHd->s_Encode));
         if (FAILED(Result))
         {
             SYS_ERROR("m_MediaCenter.Start failed, Result = 0x%lx\n", Result);
@@ -182,7 +206,7 @@ GMI_RESULT StreamCenterClient::Start(uint32_t SourceId, uint32_t StreamId, uint3
             SYS_INFO("AecFlag      = %d\n", AudEncParam->s_AecFlag);
             SYS_INFO("AecDelayTime = %d\n", AudEncParam->s_AecDelayTime);
 
-            Result = m_MediaCenter.StartCodec(true, 0, StreamId, MediaType, CodecType, AudEncParam, sizeof(AudioEncParam), &(MediaHd->s_Encode));
+            Result = StartCodec(true, 0, StreamId, MediaType, CodecType, AudEncParam, sizeof(AudioEncParam), &(MediaHd->s_Encode));
             if (FAILED(Result))
             {
                 SYS_ERROR("m_MediaCenter.Start audio encode failed, Result = 0x%lx\n", Result);
@@ -214,7 +238,7 @@ GMI_RESULT StreamCenterClient::Start(uint32_t SourceId, uint32_t StreamId, uint3
             SYS_INFO("AecFlag      = %d\n", AudDecParam->s_AecFlag);
             SYS_INFO("AecDelayTime = %d\n", AudDecParam->s_AecDelayTime);
 
-            Result = m_MediaCenter.StartCodec(false, 0, StreamId, MediaType, CodecType, AudDecParam, sizeof(AudioDecParam), &(MediaHd->s_Encode));
+            Result = StartCodec(false, 0, StreamId, MediaType, CodecType, AudDecParam, sizeof(AudioDecParam), &(MediaHd->s_Encode));
             if (FAILED(Result))
             {
                 SYS_ERROR("MediaCenter.Start audio decode failed, Result = 0x%lx\n", Result);
@@ -235,6 +259,35 @@ GMI_RESULT StreamCenterClient::Start(uint32_t SourceId, uint32_t StreamId, uint3
     SYS_INFO("%s:%s normal out........\n", __FILE__, __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s:%s normal out........\n", __FILE__, __func__);
     return GMI_SUCCESS;
+}
+
+
+GMI_RESULT StreamCenterClient::StopCodec(FD_HANDLE& CodecHandle)
+{
+	SYS_INFO("%s in........\n", __func__);
+	if (NULL == CodecHandle)
+	{
+		return GMI_DEVICE_NOT_OPENED;
+	}
+
+	GMI_RESULT Result = GMI_SUCCESS;
+
+	Result = m_MediaCenter.StopCodec(CodecHandle);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("stop codec2 fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+
+	Result = m_MediaCenter.DestroyCodec(CodecHandle);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("destroy code fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+	SYS_INFO("%s out.........\n", __func__);
+
+	return Result;
 }
 
 
@@ -260,7 +313,7 @@ GMI_RESULT StreamCenterClient::Stop(FD_HANDLE Handle)
         }
 #endif
 
-        Result = m_MediaCenter.StopCodec(MediaHd->s_Encode);
+        Result = StopCodec(MediaHd->s_Encode);
         if (FAILED(Result))
         {
             SYS_ERROR("m_MediaCenter.Stop fail, Result = 0x%lx\n", Result);
@@ -470,7 +523,7 @@ GMI_RESULT StreamCenterClient::Destroy(FD_HANDLE Handle)
 GMI_RESULT StreamCenterClient::Start2(FD_HANDLE Handle)
 {
     MediaHandle *MediaHd = (MediaHandle*)Handle;
-    GMI_RESULT Result = m_MediaCenter.StartCodec2(MediaHd->s_Encode);
+    GMI_RESULT Result = m_MediaCenter.StartCodec(MediaHd->s_Encode);
     if (FAILED(Result))
     {
         SYS_ERROR("m_MediaCenter.StartCodec2 fail, Result = 0x%lx\n", Result);
@@ -485,7 +538,7 @@ GMI_RESULT StreamCenterClient::Start2(FD_HANDLE Handle)
 GMI_RESULT StreamCenterClient::Stop2(FD_HANDLE Handle)
 {
     MediaHandle *MediaHd = (MediaHandle*)Handle;
-    GMI_RESULT Result = m_MediaCenter.StopCodec2(MediaHd->s_Encode);
+    GMI_RESULT Result = m_MediaCenter.StopCodec(MediaHd->s_Encode);
     if (FAILED(Result))
     {
         SYS_ERROR("m_MediaCenter.StopCodec2 fail, Result = 0x%lx\n", Result);
@@ -2156,13 +2209,13 @@ GMI_RESULT StreamCenterClient::SetZoomStep(FD_HANDLE Handle, int32_t Step)
 
 GMI_RESULT StreamCenterClient::StartZoom(FD_HANDLE FocusHandle, FD_HANDLE ZoomHandle, int8_t Mode)
 {
-    GMI_RESULT Result = m_MediaCenter.StartZoom(FocusHandle, 1, ZoomHandle, Mode);
-    if (FAILED(Result))
-    {
-        SYS_ERROR("m_MediaCenter StartZoom fail, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MediaCenter StartZoom fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
+    //GMI_RESULT Result = m_MediaCenter.StartZoom(FocusHandle, 1, ZoomHandle, Mode);
+    //if (FAILED(Result))
+    //{
+    //    SYS_ERROR("m_MediaCenter StartZoom fail, Result = 0x%lx\n", Result);
+    //    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MediaCenter StartZoom fail, Result = 0x%lx\n", Result);
+    //    return Result;
+    //}
 
     return GMI_SUCCESS;
 }
@@ -2172,13 +2225,13 @@ GMI_RESULT StreamCenterClient::StopZoom(FD_HANDLE FocusHandle, FD_HANDLE ZoomHan
 {
     int32_t ZoomPosition;
 
-    GMI_RESULT Result = m_MediaCenter.StopZoom(FocusHandle, 0, ZoomHandle, ZOOM_MODE_STOP, &ZoomPosition);
-    if (FAILED(Result))
-    {
-        SYS_ERROR("m_MediaCenter StopZoom fail, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MediaCenter StopZoom fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
+    //GMI_RESULT Result = m_MediaCenter.StopZoom(FocusHandle, 0, ZoomHandle, ZOOM_MODE_STOP, &ZoomPosition);
+    //if (FAILED(Result))
+    //{
+    //    SYS_ERROR("m_MediaCenter StopZoom fail, Result = 0x%lx\n", Result);
+    //    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MediaCenter StopZoom fail, Result = 0x%lx\n", Result);
+    //    return Result;
+    //}
 
     *PositionPtr = ZoomPosition;
 
