@@ -1,0 +1,120 @@
+diff -Nur live-2013.08.31/build.sh live-gmi-2014.01.16/build.sh
+--- live-2013.08.31/build.sh	1970-01-01 08:00:00.000000000 +0800
++++ live-gmi-2014.01.16/build.sh	2013-11-13 10:48:32.000000000 +0800
+@@ -0,0 +1,13 @@
++#!/bin/bash
++
++rm -rf liblive555.a
++
++./genMakefiles ambarella
++
++make -C BasicUsageEnvironment
++make -C groupsock
++make -C liveMedia
++make -C UsageEnvironment
++
++find . -name "*.o" | xargs /home/syhuang/Desktop/Workspace/ToolChain/arm-2011.09/bin/arm-none-linux-gnueabi-ar crs liblive555.a
++
+diff -Nur live-2013.08.31/config.ambarella live-gmi-2014.01.16/config.ambarella
+--- live-2013.08.31/config.ambarella	1970-01-01 08:00:00.000000000 +0800
++++ live-gmi-2014.01.16/config.ambarella	2014-01-16 12:11:21.000000000 +0800
+@@ -0,0 +1,18 @@
++CROSS_COMPILE?=		/home/syhuang/Desktop/Workspace/ToolChain/arm-2011.09/bin/arm-none-linux-gnueabi-
++COMPILE_OPTS =		$(INCLUDES) -I. -O2 -DALLOW_RTSP_SERVER_PORT_REUSE -DSOCKLEN_T=socklen_t -DNO_SSTREAM=1 -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64
++C =			c
++C_COMPILER =		$(CROSS_COMPILE)gcc
++C_FLAGS =		$(COMPILE_OPTS)
++CPP =			cpp
++CPLUSPLUS_COMPILER =	$(CROSS_COMPILE)g++
++CPLUSPLUS_FLAGS =	$(COMPILE_OPTS) -Wall -DBSD=1
++OBJ =			o
++LINK =			$(CROSS_COMPILE)g++ -o
++LINK_OPTS =		
++CONSOLE_LINK_OPTS =	$(LINK_OPTS)
++LIBRARY_LINK =		$(CROSS_COMPILE)ar csr 
++LIBRARY_LINK_OPTS =	$(LINK_OPTS)
++LIB_SUFFIX =			a
++LIBS_FOR_CONSOLE_APPLICATION =
++LIBS_FOR_GUI_APPLICATION =
++EXE =
+diff -Nur live-2013.08.31/liveMedia/OnDemandServerMediaSubsession.cpp live-gmi-2014.01.16/liveMedia/OnDemandServerMediaSubsession.cpp
+--- live-2013.08.31/liveMedia/OnDemandServerMediaSubsession.cpp	2013-08-31 17:13:03.000000000 +0800
++++ live-gmi-2014.01.16/liveMedia/OnDemandServerMediaSubsession.cpp	2014-01-16 12:10:49.000000000 +0800
+@@ -500,7 +500,7 @@
+   if (dests->isTCP) {
+     if (fRTPSink != NULL) {
+       fRTPSink->removeStreamSocket(dests->tcpSocketNum, dests->rtpChannelId);
+-      RTPInterface::clearServerRequestAlternativeByteHandler(fRTPSink->envir(), dests->tcpSocketNum);
++      // RTPInterface::clearServerRequestAlternativeByteHandler(fRTPSink->envir(), dests->tcpSocketNum);
+     }
+     if (fRTCPInstance != NULL) {
+       fRTCPInstance->removeStreamSocket(dests->tcpSocketNum, dests->rtcpChannelId);
+diff -Nur live-2013.08.31/liveMedia/RTPInterface.cpp live-gmi-2014.01.16/liveMedia/RTPInterface.cpp
+--- live-2013.08.31/liveMedia/RTPInterface.cpp	2013-08-31 17:13:03.000000000 +0800
++++ live-gmi-2014.01.16/liveMedia/RTPInterface.cpp	2014-01-09 09:40:08.000000000 +0800
+@@ -156,6 +156,10 @@
+   // Also, make sure this new socket is set up for receiving RTP/RTCP-over-TCP:
+   SocketDescriptor* socketDescriptor = lookupSocketDescriptor(envir(), sockNum);
+   socketDescriptor->registerRTPInterface(streamChannelId, this);
++
++  int sendBufSize = (1 << 20);
++  int err = setsockopt(sockNum, SOL_SOCKET, SO_SNDBUF, &sendBufSize, sizeof(sendBufSize));
++  fprintf(stderr, "%s to set socket send buffer size\n", err < 0 ? "Failed" : "Succeed");
+ }
+ 
+ static void deregisterSocket(UsageEnvironment& env, int sockNum, unsigned char streamChannelId) {
+@@ -306,8 +310,10 @@
+     framingHeader[2] = (u_int8_t) ((packetSize&0xFF00)>>8);
+     framingHeader[3] = (u_int8_t) (packetSize&0xFF);
+     if (!sendDataOverTCP(socketNum, framingHeader, 4, False)) break;
++    // if (!sendDataOverTCP(socketNum, framingHeader, 4, True)) break;
+ 
+-    if (!sendDataOverTCP(socketNum, packet, packetSize, True)) break;
++    if (!sendDataOverTCP(socketNum, packet, packetSize, False)) break;
++    // if (!sendDataOverTCP(socketNum, packet, packetSize, True)) break;
+ #ifdef DEBUG_SEND
+     fprintf(stderr, "sendRTPorRTCPPacketOverTCP: completed\n"); fflush(stderr);
+ #endif
+diff -Nur live-2013.08.31/liveMedia/RTSPServer.cpp live-gmi-2014.01.16/liveMedia/RTSPServer.cpp
+--- live-2013.08.31/liveMedia/RTSPServer.cpp	2013-08-31 17:13:03.000000000 +0800
++++ live-gmi-2014.01.16/liveMedia/RTSPServer.cpp	2014-01-09 14:57:36.000000000 +0800
+@@ -314,6 +314,13 @@
+   envir().taskScheduler().turnOffBackgroundReadHandling(fHTTPServerSocket);
+   ::closeSocket(fHTTPServerSocket);
+ 
++  // Close all client session objects:
++  RTSPServer::RTSPClientSession* clientSession;
++  while ((clientSession = (RTSPServer::RTSPClientSession*)fClientSessions->getFirst()) != NULL) {
++    delete clientSession;
++  }
++  delete fClientSessions;
++
+   // Close all client connection objects:
+   RTSPServer::RTSPClientConnection* connection;
+   while ((connection = (RTSPServer::RTSPClientConnection*)fClientConnections->getFirst()) != NULL) {
+@@ -322,13 +329,6 @@
+   delete fClientConnections;
+   delete fClientConnectionsForHTTPTunneling; // all content was already removed as a result of the loop above
+ 
+-  // Close all client session objects:
+-  RTSPServer::RTSPClientSession* clientSession;
+-  while ((clientSession = (RTSPServer::RTSPClientSession*)fClientSessions->getFirst()) != NULL) {
+-    delete clientSession;
+-  }
+-  delete fClientSessions;
+-
+   // Delete all server media sessions
+   ServerMediaSession* serverMediaSession;
+   while ((serverMediaSession = (ServerMediaSession*)fServerMediaSessions->getFirst()) != NULL) {
+@@ -1001,7 +1001,10 @@
+ #ifdef DEBUG
+     fprintf(stderr, "sending response: %s", fResponseBuffer);
+ #endif
+-    send(fClientOutputSocket, (char const*)fResponseBuffer, strlen((char*)fResponseBuffer), 0);
++    int sentBytes = send(fClientOutputSocket, (char const*)fResponseBuffer, strlen((char*)fResponseBuffer), 0);
++    if (sentBytes < 0) {
++        fprintf(stderr, "Failed to send response ... errno = %d\n", errno);
++    }
+     
+     if (clientSession != NULL && clientSession->fStreamAfterSETUP && strcmp(cmdName, "SETUP") == 0) {
+       // The client has asked for streaming to commence now, rather than after a
