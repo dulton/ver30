@@ -1,6 +1,9 @@
 #pragma once
 
 #include "application_packet.h"
+#include "udp_session.h"
+
+#define IPC_MEDIA_DATA_SERVER_DEFAULT_SELECT_TIME (UDP_SESSION_IO_WAITTIME*2)
 
 class IpcMediaDataUDPSession;
 
@@ -10,7 +13,8 @@ public:
     IPC_MediaDataServer(void);
     ~IPC_MediaDataServer(void);
 
-    GMI_RESULT Initialize  ( uint16_t Server_UDP_Port, uint32_t MediaType, uint32_t MediaId, long_t ShareMemoryKey, size_t ShareMemorySize, size_t MaxDataBlockSize, size_t MinDataBlockSize, long_t IpcMutexKey );
+    GMI_RESULT Initialize  ( uint16_t Server_UDP_Port, uint32_t MediaType, uint32_t MediaId, long_t ShareMemoryKey, size_t ShareMemorySize, size_t MaxDataBlockSize, size_t MinDataBlockSize, long_t IpcMutexKey,
+                             uint32_t ThreadSelectTime = IPC_MEDIA_DATA_SERVER_DEFAULT_SELECT_TIME );
     GMI_RESULT Deinitialize();
 
     GMI_RESULT Write( const uint8_t *Frame, size_t FrameLength, const struct timeval *FrameTS, const void_t *ExtraData, size_t ExtraDataLength );
@@ -43,4 +47,5 @@ private:
     GMI_Thread                                                                                     m_ReleaseProcessThread;
     boolean_t                                                                                      m_ReleaseProcessThreadWorking;
     boolean_t                                                                                      m_ReleaseProcessThreadExitFlag;
+    uint32_t                                                                                       m_ThreadSelectTime; // ms unit
 };
