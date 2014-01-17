@@ -869,7 +869,11 @@ next_cycle:
 
 
     /*now we should change the socket send and receive buffer*/
+	
     n32 = (1<<21);
+	res = 0;
+	res = res;
+#if 1	
     res = setsockopt(this->GetSocket(),SOL_SOCKET,SO_SNDBUF,(const char*)&n32,sizeof(n32));
     if(res >= 0)
     {
@@ -893,7 +897,7 @@ next_cycle:
     {
         ERROR_INFO("[%d] set 0x%08x sndbuffer error(%d)\n",this->GetSocket(),n32,errno);
     }
-
+#endif
 
     DEBUG_INFO("\n");
 

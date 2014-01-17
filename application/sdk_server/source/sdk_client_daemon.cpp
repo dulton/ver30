@@ -101,12 +101,12 @@ SdkClientDaemon::~SdkClientDaemon()
 
 int SdkClientDaemon::__GetLPort()
 {
-    return 56788;
+    return GMI_DAEMON_HEARTBEAT_SDK;
 }
 
 int SdkClientDaemon::__GetRPort()
 {
-    return 56780;
+    return GMI_DAEMON_HEARDBEAT_SERVER;
 }
 
 int SdkClientDaemon::__SetSocketUnBlock(int sock)

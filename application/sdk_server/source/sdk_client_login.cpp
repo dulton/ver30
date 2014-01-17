@@ -85,12 +85,12 @@ SdkClientLogin::~SdkClientLogin()
 
 int SdkClientLogin::__GetRPort()
 {
-    return 51243;
+    return GMI_AUTH_SERVER_PORT;
 }
 
 int SdkClientLogin::__GetLPort()
 {
-    return 57012;
+    return SDK_TO_AUTH_SERVER_PORT;
 }
 
 int SdkClientLogin::__SetSocketUnBlock(int sock)

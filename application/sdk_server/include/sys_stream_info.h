@@ -160,6 +160,10 @@ typedef struct
     uint64_t m_Pts;
 } stream_pack_t;
 
+
+
+
+
 #define   SDK_STREAM_OV_REQUEST  0x1
 #define   SDK_STREAM_OV_RESPONSE 0x2
 #define   SDK_STREAM_OA_REQUEST  0x3
@@ -168,6 +172,10 @@ typedef struct
 #define   SDK_STREAM_AD_SEND     0x6
 #define   SDK_STREAM_AC_REQUEST  0x9
 #define   SDK_STREAM_AC_RESPONSE 0xa
+
+
+
+
 
 #endif /*__SYS_STREAM_INFO_H__*/
 

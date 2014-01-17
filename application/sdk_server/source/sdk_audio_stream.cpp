@@ -9,6 +9,7 @@
 
 #define  VFREQ_PER_SECOND(sec)  ( (unsigned long long)(((unsigned long long)sec)*1000000))
 #define  VFREQ_PER_USECOND(usec)  ((unsigned long long)(((unsigned long long)usec)))
+#define  VFREQ_PER_NANOSECOND(usec)  ((unsigned long long)(((unsigned long long)usec)/1000))
 
 
 
@@ -24,7 +25,7 @@ SdkAudioStream::SdkAudioStream(sdk_audio_format_enum_t format,int maxpackets,int
 #else
     m_Initialized = 0;
     m_Registered = 0;
-#endif /*AUDIO_DUAL_FILE_EMULATE*/	
+#endif /*AUDIO_DUAL_FILE_EMULATE*/
     /*ipc client will init itself*/
     SDK_ASSERT(m_DataVec.size() == 0);
     SDK_ASSERT(m_DataLenVec.size() == 0);
@@ -330,7 +331,7 @@ do\
 
 void SdkAudioStream::__ClearVectors()
 {
-#ifndef AUDIO_DUAL_FILE_EMULATE	
+#ifndef AUDIO_DUAL_FILE_EMULATE
     SDK_ASSERT(this->m_Initialized == 0 && this->m_Registered == 0);
 #endif /*AUDIO_DUAL_FILE_EMULATE*/
     /*this is from the single threaded ,so we can do this*/
@@ -381,7 +382,7 @@ int SdkAudioStream::StartStream()
     int ret;
     GMI_RESULT gmiret;
     this->StopStream();
-#ifndef AUDIO_DUAL_FILE_EMULATE	
+#ifndef AUDIO_DUAL_FILE_EMULATE
     ret = this->__InitIPC();
     if(ret < 0)
     {
@@ -389,7 +390,7 @@ int SdkAudioStream::StartStream()
         ERROR_INFO("\n");
         return ret;
     }
-#endif /*not define AUDIO_DUAL_FILE_EMULATE*/	
+#endif /*not define AUDIO_DUAL_FILE_EMULATE*/
 
 #ifdef AUDIO_PULL_MODE
     /*now we should set for the thread running*/
@@ -429,7 +430,7 @@ int SdkAudioStream::ResumeStream()
     GMI_RESULT gmiret;
 
     this->PauseStream();
-#ifndef AUDIO_DUAL_FILE_EMULATE	
+#ifndef AUDIO_DUAL_FILE_EMULATE
     ret = this->__InitIPC();
     if(ret < 0)
     {
@@ -437,7 +438,7 @@ int SdkAudioStream::ResumeStream()
         ERROR_INFO("\n");
         return ret;
     }
-#endif /*AUDIO_DUAL_FILE_EMULATE*/	
+#endif /*AUDIO_DUAL_FILE_EMULATE*/
 #ifdef AUDIO_PULL_MODE
     /*now we should set for the thread running*/
     this->m_ThreadRunning = 1;
@@ -527,100 +528,100 @@ void* SdkAudioStream::__ThreadImpl()
     void* pBuffer=NULL;
     uint32_t buflen = 1024,bufret;
     FILE* fp=NULL;
-	uint32_t seekoff=0;
-	uint32_t framenum=0;
-	unsigned long long pts=0;
-	off_t filesize=0;
-	char fname[32];
+    uint32_t seekoff=0;
+    uint32_t framenum=0;
+    unsigned long long pts=0;
+    off_t filesize=0;
+    char fname[32];
 
-	snprintf(fname,sizeof(fname),"/tmp/test.g711");
+    snprintf(fname,sizeof(fname),"/tmp/test.g711");
     fp = fopen(fname,"r+b");
     if(fp == NULL)
     {
         ret = -errno ? -errno : -1;
-		DEBUG_INFO("open %s error %d\n",fname,ret);
+        DEBUG_INFO("open %s error %d\n",fname,ret);
         goto out;
     }
 
-	pBuffer = malloc(buflen);
-	if (pBuffer == NULL)
-	{
-		ret = -errno ? -errno : -1;
-		goto out;
-	}
+    pBuffer = malloc(buflen);
+    if(pBuffer == NULL)
+    {
+        ret = -errno ? -errno : -1;
+        goto out;
+    }
 
-	ret = fseeko(fp,0,SEEK_END);
-	if (ret != 0)
-	{
-		ret = -errno ? -errno : -1;
-		goto out;
-	}
+    ret = fseeko(fp,0,SEEK_END);
+    if(ret != 0)
+    {
+        ret = -errno ? -errno : -1;
+        goto out;
+    }
 
-	errno = 0;
-	filesize = ftello(fp);
-	if (filesize == -1 && errno != 0)
-	{
-		ret = -errno;
-		goto out;
-	}
+    errno = 0;
+    filesize = ftello(fp);
+    if(filesize == -1 && errno != 0)
+    {
+        ret = -errno;
+        goto out;
+    }
 
-	if (filesize < (int)buflen)
-	{
-		ret = -EINVAL;
-		DEBUG_INFO("\n");
-		goto out;
-	}
+    if(filesize < (int)buflen)
+    {
+        ret = -EINVAL;
+        DEBUG_INFO("\n");
+        goto out;
+    }
 
-	rewind(fp);
-	DEBUG_INFO("\n");
+    rewind(fp);
+    DEBUG_INFO("\n");
 
     while(this->m_ThreadRunning)
     {
-		if (pBuffer == NULL)
-		{
-			pBuffer = malloc(buflen);
-		}
-		if (pBuffer == NULL)
-		{
-			ret = -errno ? -errno : -1;
-			DEBUG_INFO("\n");
-			goto out;
-		}
+        if(pBuffer == NULL)
+        {
+            pBuffer = malloc(buflen);
+        }
+        if(pBuffer == NULL)
+        {
+            ret = -errno ? -errno : -1;
+            DEBUG_INFO("\n");
+            goto out;
+        }
 
-		if ((filesize - seekoff) < buflen)
-		{
-			seekoff =0;
-			rewind(fp);
-		}
+        if((filesize - seekoff) < buflen)
+        {
+            seekoff =0;
+            rewind(fp);
+        }
 
-		if ((seekoff % 16000) == 0)
-		{
-			DEBUG_INFO("seekoff %d\n",seekoff);
-		}
+        if((seekoff % 16000) == 0)
+        {
+            DEBUG_INFO("seekoff %d\n",seekoff);
+        }
 
-		bufret = 160;
-		ret = fread(pBuffer,bufret,1,fp);
-		if (ret != 1)
-		{
-			ret = -errno ? -errno : -1;
-			DEBUG_INFO("read at 0x%08x error %d\n",seekoff,ret);
-			goto out;
-		}
-		//DEBUG_BUFFER_FMT(pBuffer,(bufret > 20 ? 20 : bufret),"At seekoff %d\t",seekoff);
+        bufret = 160;
+        ret = fread(pBuffer,bufret,1,fp);
+        if(ret != 1)
+        {
+            ret = -errno ? -errno : -1;
+            DEBUG_INFO("read at 0x%08x error %d\n",seekoff,ret);
+            goto out;
+        }
+        //DEBUG_BUFFER_FMT(pBuffer,(bufret > 20 ? 20 : bufret),"At seekoff %d\t",seekoff);
 
-		ret = this->__PushStreamData(pBuffer,bufret,framenum,pts);
-		if (ret < 0)
-		{
-			DEBUG_INFO("\n");
-			goto out;
-		}
-		/*success ,so we do this*/
-		pBuffer = NULL;
-		usleep(20000);
+        ret = this->__PushStreamData(pBuffer,bufret,framenum,pts);
+        if(ret < 0)
+        {
+            DEBUG_INFO("\n");
+            goto out;
+        }
+        /*success ,so we do this*/
+        pBuffer = NULL;
+        usleep(20000);
 
-		seekoff += bufret;
-		framenum += 1;
-		pts += 1800;
+        seekoff += bufret;
+        framenum += 1;
+        pts += 1800;
     }
 
 out:
@@ -628,16 +629,16 @@ out:
     {
         free(pBuffer);
     }
-	pBuffer = NULL;
-	if (fp)
-	{
-		fclose(fp);
-	}
-	fp = NULL;
+    pBuffer = NULL;
+    if(fp)
+    {
+        fclose(fp);
+    }
+    fp = NULL;
 
-	DEBUG_INFO("\n");
-	this->m_ThreadExited = 1;	
-	return (void*)ret;
+    DEBUG_INFO("\n");
+    this->m_ThreadExited = 1;
+    return (void*)ret;
 }
 
 #else /*AUDIO_DUAL_FILE_EMULATE*/
@@ -653,7 +654,8 @@ void* SdkAudioStream::__ThreadImpl()
     struct timeval tmval;
     uint32_t lastidx=0;
     GMI_RESULT gmiret;
-    unsigned long long pts;
+    unsigned long long pts=0,lasttick=0,curtick=0;
+    struct timespec tmspec;
 
     buflen = 0x1000;
     if(this->m_Format == audio_format_g711 ||
@@ -697,12 +699,28 @@ void* SdkAudioStream::__ThreadImpl()
                 pts *= 9;
             }
 
+            ret = clock_gettime(CLOCK_MONOTONIC,&tmspec);
+            if(ret < 0)
+            {
+                ERROR_INFO("could not get time error(%d)\n",errno);
+            }
+            else
+            {
+                curtick = VFREQ_PER_SECOND(tmspec.tv_sec) + VFREQ_PER_NANOSECOND(tmspec.tv_nsec);
+                if(lasttick && (curtick - lasttick) >200000)
+                {
+                    ERROR_INFO("audio[%d] curtick(%lld) lasttick(%lld) (%lld)\n",pInfo->s_FrameNum,curtick,lasttick,(curtick-lasttick));
+                }
+				lasttick = curtick;
+            }
+
+
 
             if(pInfo->s_FrameNum != (lastidx + 1))
             {
                 DEBUG_INFO("framenum (%d) != (%d + 1)\n",pInfo->s_FrameNum,lastidx);
             }
-            lastidx = pInfo->s_FrameNum;			
+            lastidx = pInfo->s_FrameNum;
             if((lastidx % 200)==0)
             {
                 DEBUG_BUFFER_FMT(pBuffer,bufret,"framenum %d",lastidx);
@@ -751,11 +769,11 @@ int SdkAudioStream::PullStreamData(stream_pack_t * pPack)
     GMI_RESULT gmiret;
 #ifdef AUDIO_DUAL_FILE_EMULATE
 #ifdef AUDIO_PULL_MODE
-	if (this->m_pThread == NULL)
-	{
-		return 0;
-	}
-#endif /*AUDIO_PULL_MODE*/	
+    if(this->m_pThread == NULL)
+    {
+        return 0;
+    }
+#endif /*AUDIO_PULL_MODE*/
 #else
     if(this->m_Initialized == 0)
     {

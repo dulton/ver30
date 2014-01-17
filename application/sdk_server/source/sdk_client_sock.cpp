@@ -8,6 +8,9 @@ static const char* st_GrmtHeader= "GRMT";
 
 SdkClientSock::SdkClientSock(int sock) : m_Sock(sock)
 {
+    int ret;
+    socklen_t socklen;
+    struct sockaddr_in saddr;
     m_ReadInit = 0;
     memset((&m_ReadHeader),0,sizeof(m_ReadHeader));
     m_ReadLen = 0;
@@ -23,15 +26,26 @@ SdkClientSock::SdkClientSock(int sock) : m_Sock(sock)
     m_WriteTotalLen = 0;
     m_WriteHeaderLen = 0;
     m_pWriteComm = NULL;
+
+    socklen = sizeof(saddr);
+    ret = getsockname(m_Sock,(struct sockaddr*)&saddr,&socklen);
+    if(ret >= 0)
+    {
+        BACK_TRACE_FMT("[%d] socket bind %d port\n",m_Sock,ntohs(saddr.sin_port));
+    }
+    else
+    {
+        ERROR_INFO("Could not Get[%d] sockname Error(%d)\n",m_Sock,errno);
+    }
 }
 
 int SdkClientSock::IsWriteSth()
 {
-    if (this->m_WriteInit == 0)
+    if(this->m_WriteInit == 0)
     {
         return 0;
     }
-    if (this->m_WriteLen == this->m_WriteTotalLen)
+    if(this->m_WriteLen == this->m_WriteTotalLen)
     {
         return 0;
     }
@@ -49,9 +63,9 @@ void SdkClientSock::__FreeRead()
     memset(&(this->m_RcvAddr),0,sizeof(this->m_RcvAddr));
     this->m_HasRcvAddr = 0;
 
-    if (this->m_pReadComm )
+    if(this->m_pReadComm)
     {
-    	DEBUG_INFO("free comm %p\n",this->m_pReadComm);
+        DEBUG_INFO("free comm %p\n",this->m_pReadComm);
         free(this->m_pReadComm);
     }
     this->m_pReadComm = NULL;
@@ -66,7 +80,7 @@ void SdkClientSock::__FreeWrite()
     this->m_WriteTotalLen = 0;
     this->m_WriteHeaderLen = 0;
 
-    if (this->m_pWriteComm )
+    if(this->m_pWriteComm)
     {
         free(this->m_pWriteComm);
     }
@@ -78,7 +92,7 @@ SdkClientSock::~SdkClientSock()
 {
     this->__FreeRead();
     this->__FreeWrite();
-    if (this->m_Sock >= 0)
+    if(this->m_Sock >= 0)
     {
         close(this->m_Sock);
     }
@@ -107,7 +121,7 @@ int SdkClientSock::__ReadInit()
     memset(&(this->m_RcvAddr),0,sizeof(this->m_RcvAddr));
     this->m_HasRcvAddr = 0;
     this->m_ReadLen = 0;
-    if (this->m_pReadComm == NULL)
+    if(this->m_pReadComm == NULL)
     {
         this->m_pReadComm = (sdk_client_comm_t*)calloc(sizeof(*(this->m_pReadComm)),1);
         if(this->m_pReadComm == NULL)
@@ -127,7 +141,7 @@ int SdkClientSock::__AdjustTotalLen()
     uint16_t h16;
     SDK_ASSERT(this->m_ReadHeaderLen <= this->m_ReadLen);
     h16 = INNER_PROTO_TO_HOST16(this->m_ReadHeader.s_BodyLen);
-    if (h16 > sizeof(this->m_pReadComm->m_Data))
+    if(h16 > sizeof(this->m_pReadComm->m_Data))
     {
         return -ENOSPC;
     }
@@ -157,7 +171,7 @@ int SdkClientSock::__ReadNoneBlock()
         mhdr.msg_control = NULL;
         mhdr.msg_controllen = 0;
         iovidx = 0;
-        if ((this->m_ReadLen + readlen) < this->m_ReadHeaderLen)
+        if((this->m_ReadLen + readlen) < this->m_ReadHeaderLen)
         {
             pData = (unsigned char*)&(this->m_ReadHeader);
             pData += (this->m_ReadLen + readlen);
@@ -166,7 +180,7 @@ int SdkClientSock::__ReadNoneBlock()
             iovidx += 1;
         }
 
-        if ((this->m_ReadLen + readlen) <= this->m_ReadHeaderLen)
+        if((this->m_ReadLen + readlen) <= this->m_ReadHeaderLen)
         {
             iovec[iovidx].iov_base = this->m_pReadComm->m_Data;
             iovec[iovidx].iov_len = this->m_ReadTotalLen - this->m_ReadHeaderLen;
@@ -188,10 +202,10 @@ int SdkClientSock::__ReadNoneBlock()
         errno = 0;
         memset(&saddr,0,sizeof(saddr));
         ret = recvmsg(this->m_Sock,&mhdr,MSG_DONTWAIT);
-        if (ret < 0)
+        if(ret < 0)
         {
             ret = -errno ? -errno : -1;
-            if (errno != EWOULDBLOCK &&
+            if(errno != EWOULDBLOCK &&
                     errno != EAGAIN &&
                     errno != EINTR)
             {
@@ -200,22 +214,22 @@ int SdkClientSock::__ReadNoneBlock()
             DEBUG_INFO("ret %d\n",ret);
             return readlen;
         }
-        else if (ret == 0)
+        else if(ret == 0)
         {
             return -EPIPE;
         }
 
         /*now test if the */
         curlen = ret;
-        if ((this->m_ReadLen + readlen)< strlen(st_GrmtHeader) &&
+        if((this->m_ReadLen + readlen)< strlen(st_GrmtHeader) &&
                 (this->m_ReadLen + readlen + curlen) >= strlen(st_GrmtHeader))
         {
             ret = this->__MakeSureHeaderRight((this->m_ReadLen + readlen + curlen));
-            if (ret == 0)
+            if(ret == 0)
             {
                 /*we did not read any header of the buffer ,so just discard all readin and make a fresh start*/
                 res = this->__ReadInit();
-                if (res < 0)
+                if(res < 0)
                 {
                     return res;
                 }
@@ -223,12 +237,12 @@ int SdkClientSock::__ReadNoneBlock()
             }
         }
 
-        if ((this->m_ReadLen + readlen) < this->m_ReadHeaderLen &&
+        if((this->m_ReadLen + readlen) < this->m_ReadHeaderLen &&
                 (this->m_ReadLen + readlen + curlen) >= this->m_ReadHeaderLen)
         {
             /*now we should read for the total len*/
             h16 = INNER_PROTO_TO_HOST16(this->m_ReadHeader.s_BodyLen);
-            if (h16 > sizeof(this->m_pReadComm->m_Data))
+            if(h16 > sizeof(this->m_pReadComm->m_Data))
             {
                 this->__ReadInit();
                 return -EINVAL;
@@ -237,7 +251,7 @@ int SdkClientSock::__ReadNoneBlock()
             maxlen = this->m_ReadTotalLen - this->m_ReadLen;
             leftlen = maxlen - readlen;
 
-            if ((leftlen - curlen) < 0)
+            if((leftlen - curlen) < 0)
             {
                 this->__ReadInit();
                 return -EINVAL;
@@ -246,7 +260,7 @@ int SdkClientSock::__ReadNoneBlock()
 
 
 
-        if (this->m_HasRcvAddr == 0)
+        if(this->m_HasRcvAddr == 0)
         {
             memcpy(&(this->m_RcvAddr),mhdr.msg_name,mhdr.msg_namelen);
             this->m_HasRcvAddr = mhdr.msg_namelen;
@@ -254,12 +268,12 @@ int SdkClientSock::__ReadNoneBlock()
         else
         {
             /*to make sure we receive from the same source*/
-            if (mhdr.msg_namelen != this->m_HasRcvAddr)
+            if(mhdr.msg_namelen != this->m_HasRcvAddr)
             {
                 return -EPIPE;
             }
 
-            if (memcmp(&(this->m_RcvAddr),mhdr.msg_name,mhdr.msg_namelen))
+            if(memcmp(&(this->m_RcvAddr),mhdr.msg_name,mhdr.msg_namelen))
             {
                 return -EPIPE;
             }
@@ -281,11 +295,11 @@ int SdkClientSock::__ReadFillComm()
     SDK_ASSERT(this->m_ReadLen == this->m_ReadTotalLen);
     SDK_ASSERT(pComm);
 
-	if (this->m_HasRcvAddr == 0)
-	{
-		ERROR_INFO("not fill addr\n");
-		return -EINVAL;
-	}
+    if(this->m_HasRcvAddr == 0)
+    {
+        ERROR_INFO("not fill addr\n");
+        return -EINVAL;
+    }
 
     h16 = INNER_PROTO_TO_HOST16(this->m_ReadHeader.s_SessionId);
     pComm->m_SesId = h16;
@@ -296,30 +310,30 @@ int SdkClientSock::__ReadFillComm()
     pComm->m_Priv = h32;
 
     h16 = INNER_PROTO_TO_HOST16(this->m_ReadHeader.s_SvrPort);
-	if (h16 == 0)
-	{
-		/*to change into the port ok*/
-		h16 = ntohs(this->m_RcvAddr.sin_port);
-	}
+    if(h16 == 0)
+    {
+        /*to change into the port ok*/
+        h16 = ntohs(this->m_RcvAddr.sin_port);
+    }
     pComm->m_ServerPort = h16;
 
     pComm->m_Frag = 0;
     pComm->m_Offset = 0;
     pComm->m_Totalsize = 0;
-	pComm->m_DataId = 0;
-    if (this->m_ReadHeader.s_MessageType & RUDP_MESSAGE_TYPE_PARTIAL)
+    pComm->m_DataId = 0;
+    if(this->m_ReadHeader.s_MessageType & RUDP_MESSAGE_TYPE_PARTIAL)
     {
         pComm->m_Frag = 1;
         h16 = INNER_PROTO_TO_HOST16(this->m_ReadHeader.s_PktTotalLength);
         pComm->m_Totalsize = h16;
         h16 = INNER_PROTO_TO_HOST16(this->m_ReadHeader.s_MsgOffsetofPkt);
         pComm->m_Offset = h16;
-		h32 = INNER_PROTO_TO_HOST32(this->m_ReadHeader.s_DataId);
-		pComm->m_DataId = h32;
+        h32 = INNER_PROTO_TO_HOST32(this->m_ReadHeader.s_DataId);
+        pComm->m_DataId = h32;
     }
-	pComm->m_DataLen = this->m_ReadTotalLen - this->m_ReadHeaderLen;
-	//DEBUG_BUFFER((unsigned char*)&(this->m_ReadHeader),this->m_ReadHeaderLen);
-	//DEBUG_BUFFER(pComm->m_Data,pComm->m_DataLen);
+    pComm->m_DataLen = this->m_ReadTotalLen - this->m_ReadHeaderLen;
+    //DEBUG_BUFFER((unsigned char*)&(this->m_ReadHeader),this->m_ReadHeaderLen);
+    //DEBUG_BUFFER(pComm->m_Data,pComm->m_DataLen);
     return 0;
 
 }
@@ -327,9 +341,9 @@ int SdkClientSock::__ReadFillComm()
 int SdkClientSock::__MakeSureHeaderRight(int totallen)
 {
     unsigned char* pHeader=(unsigned char*)&(this->m_ReadHeader);
-    if (totallen >= (int)strlen(st_GrmtHeader))
+    if(totallen >= (int)strlen(st_GrmtHeader))
     {
-        if (memcmp(pHeader,st_GrmtHeader,strlen(st_GrmtHeader))==0)
+        if(memcmp(pHeader,st_GrmtHeader,strlen(st_GrmtHeader))==0)
         {
             /*we find the header ,so this is ok*/
             return 1;
@@ -342,33 +356,33 @@ int SdkClientSock::__MakeSureHeaderRight(int totallen)
 int SdkClientSock::Read()
 {
     int ret;
-    if (this->m_ReadInit &&
+    if(this->m_ReadInit &&
             (this->m_ReadLen == this->m_ReadTotalLen))
     {
         return 1;
     }
 
-    if (this->m_ReadInit == 0)
+    if(this->m_ReadInit == 0)
     {
         ret = this->__ReadInit();
-        if (ret < 0)
+        if(ret < 0)
         {
             return ret;
         }
     }
 
     /*we put here ,because it will return error ,to come here */
-    if (this->m_pReadComm == NULL)
+    if(this->m_pReadComm == NULL)
     {
         ret = this->__ReadInit();
-        if (ret < 0)
+        if(ret < 0)
         {
             return ret;
         }
     }
 
     ret = this->__ReadNoneBlock();
-    if (ret < 0)
+    if(ret < 0)
     {
         this->__ReadInit();
         return ret;
@@ -376,13 +390,13 @@ int SdkClientSock::Read()
 
 
     this->m_ReadLen += ret;
-    if (this->m_ReadLen  < this->m_ReadTotalLen)
+    if(this->m_ReadLen  < this->m_ReadTotalLen)
     {
         return 0;
     }
 
     ret = this->__ReadFillComm();
-    if (ret < 0)
+    if(ret < 0)
     {
         return ret;
     }
@@ -394,7 +408,7 @@ int SdkClientSock::Read()
 sdk_client_comm_t* SdkClientSock::GetRead()
 {
     sdk_client_comm_t* pComm=this->m_pReadComm;
-    if (this->m_ReadInit== 0 ||
+    if(this->m_ReadInit== 0 ||
             (this->m_ReadLen < this->m_ReadTotalLen))
     {
         return NULL;
@@ -416,27 +430,27 @@ void SdkClientSock::ClearRead()
 int SdkClientSock::Write()
 {
     int ret;
-    if (this->m_WriteInit == 0)
+    if(this->m_WriteInit == 0)
     {
         DEBUG_INFO("\n");
         return 1;
     }
 
-    if (this->m_WriteLen == this->m_WriteTotalLen)
+    if(this->m_WriteLen == this->m_WriteTotalLen)
     {
         return 1;
     }
 
-    if (this->m_WriteLen < this->m_WriteTotalLen)
+    if(this->m_WriteLen < this->m_WriteTotalLen)
     {
         ret = this->__WriteNoneBlock();
-        if (ret < 0)
+        if(ret < 0)
         {
             return ret;
         }
         this->m_WriteLen += ret;
     }
-    if (this->m_WriteLen == this->m_WriteTotalLen)
+    if(this->m_WriteLen == this->m_WriteTotalLen)
     {
         return 1;
     }
@@ -465,7 +479,7 @@ int SdkClientSock::__WriteNoneBlock()
     while(leftlen > 0)
     {
         iovidx = 0;
-        if ((this->m_WriteLen + writelen)< this->m_WriteHeaderLen)
+        if((this->m_WriteLen + writelen)< this->m_WriteHeaderLen)
         {
             pData = (unsigned char*) &(this->m_WriteHeader);
             pData += (this->m_WriteLen + writelen);
@@ -474,9 +488,9 @@ int SdkClientSock::__WriteNoneBlock()
             iovidx += 1;
         }
 
-        if ((this->m_WriteLen + writelen) > this->m_WriteHeaderLen)
+        if((this->m_WriteLen + writelen) > this->m_WriteHeaderLen)
         {
-            pData = (unsigned char*) (pComm->m_Data);
+            pData = (unsigned char*)(pComm->m_Data);
             pData += (this->m_WriteLen + writelen) - this->m_WriteHeaderLen;
             iov[iovidx].iov_base = pData;
             iov[iovidx].iov_len = (this->m_WriteTotalLen - this->m_WriteLen - writelen);
@@ -484,7 +498,7 @@ int SdkClientSock::__WriteNoneBlock()
         }
         else
         {
-            pData = (unsigned char*) (pComm->m_Data);
+            pData = (unsigned char*)(pComm->m_Data);
             iov[iovidx].iov_base = pData;
             iov[iovidx].iov_len = pComm->m_DataLen;
             iovidx += 1;
@@ -500,10 +514,10 @@ int SdkClientSock::__WriteNoneBlock()
         mhdr.msg_flags = 0;
         errno = 0;
         ret = sendmsg(this->m_Sock,&mhdr,MSG_DONTWAIT);
-        if (ret < 0)
+        if(ret < 0)
         {
             ret = -errno ? -errno : -1;
-            if (errno != EWOULDBLOCK &&
+            if(errno != EWOULDBLOCK &&
                     errno != EAGAIN &&
                     errno != EINTR)
             {
@@ -564,7 +578,7 @@ int SdkClientSock::__AddWriteComm(sdk_client_comm_t * pComm)
 
 
     this->m_WriteHeader.s_MessageType = RUDP_MESSAGE_TYPE_COMPLETE;
-    if (pComm->m_Frag)
+    if(pComm->m_Frag)
     {
         this->m_WriteHeader.s_MessageType |= RUDP_MESSAGE_TYPE_PARTIAL;
     }
@@ -576,8 +590,8 @@ int SdkClientSock::__AddWriteComm(sdk_client_comm_t * pComm)
 
     n32 = INNER_HOST_TO_PROTO32(0);
     this->m_WriteHeader.s_CheckSum = n32;
-	n32 = INNER_HOST_TO_PROTO32(pComm->m_DataId);
-	this->m_WriteHeader.s_DataId = n32;
+    n32 = INNER_HOST_TO_PROTO32(pComm->m_DataId);
+    this->m_WriteHeader.s_DataId = n32;
     this->m_pWriteComm = pComm;
 
     //DEBUG_BUFFER((unsigned char*)&(this->m_WriteHeader),this->m_WriteHeaderLen);
@@ -607,6 +621,6 @@ int SdkClientSock::Socket()
 
 int SdkClientSock::GetOverloadSize()
 {
-	return sizeof(this->m_ReadHeader);
+    return sizeof(this->m_ReadHeader);
 }
 

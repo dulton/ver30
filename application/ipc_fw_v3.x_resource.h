@@ -70,6 +70,11 @@
 #define GMI_ONVIF_RTSP_SERVER_AUTH_PORT             (GMI_UDP_PORT_BASE+29)
 //authentication server port
 #define GMI_AUTH_SERVER_PORT                        (GMI_UDP_PORT_BASE+30)
+#define GMI_SYS_SERVER_TO_SDK_REQ_PORT_ITEM         "sys_server_to_sdk_req_port"
+#define GMI_SDK_TO_SYS_SERVER_REQ_PORT_ITEM         "sdk_to_sys_server_req_port"
+#define SDK_TO_SYS_SERVER_REQ_PORT                  (GMI_UDP_PORT_BASE+31)
+#define SDK_TO_AUTH_SERVER_PORT                     (GMI_UDP_PORT_BASE+32)
+
 
 //streaming media server
 #define MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH            "/Config/media_center_server/ipc_media_data_dispatch/"
