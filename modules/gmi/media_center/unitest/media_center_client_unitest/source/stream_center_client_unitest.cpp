@@ -9,7 +9,6 @@
 #include "timer_task_queue.h"
 
 #include "ipc_media_data_client.h"
-#include "ipc_media_data_client2.h"
 #include "ipc_media_data_server.h"
 
 #define DEFAULT_MEDIA_CENTER_SERVER_IP   "192.168.0.247"
