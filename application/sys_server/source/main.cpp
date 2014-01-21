@@ -1,14 +1,15 @@
+
+#include "base_memory_manager.h"
+#include "daemon.h"
+#include "gmi_brdwrapper.h"
+#include "gmi_daemon_heartbeat_api.h"
+#include "gmi_system_headers.h"
+#include "ipc_fw_v3.x_resource.h"
+#include "log.h"
+#include "net_manager.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "log.h"
-#include "daemon.h"
-#include "net_manager.h"
 #include "sys_command_processor.h"
-#include "gmi_system_headers.h"
-#include "base_memory_manager.h"
-#include "ipc_fw_v3.x_resource.h"
-#include "gmi_daemon_heartbeat_api.h"
-
 
 //system command service object
 static  SafePtr<SysCommandProcessor> l_SysCmdService;
@@ -58,6 +59,8 @@ void Release(void)
     DaemonUnregister();
     return;
 }
+
+#define HARDWARE_DOG_FAIL_CONFIRM_COUNT 5
 
 int main( int32_t argc, char_t *argv[])
 {
@@ -135,16 +138,32 @@ int main( int32_t argc, char_t *argv[])
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "main initial complete\n");
 
     uint32_t BootFlag = APPLICATION_RUNNING;
+    uint32_t FailCount = 0;
 
     while (1)
     {
         Result = DaemonKeepAlive(&BootFlag);
         if (SUCCEEDED(Result))
         {
+            FailCount = 0;
             if (APPLICATION_QUIT == BootFlag)
             {
                 SYS_INFO("daemon inform system server normal out!!!\n");
                 break;
+            }
+        }
+        else
+        {
+            ++FailCount;
+            if ( HARDWARE_DOG_FAIL_CONFIRM_COUNT <= FailCount )
+            {
+                SYS_INFO( "we will call GMI_BrdHwReset to reboot system, FailCount=%d \n", FailCount );
+                // because SysCmdService->Deinitialize can not return for now(2014/01/21), so we execute GMI_BrdHwReset first, in theory, we should release all resource and then call GMI_BrdHwReset.
+                GMI_BrdHwReset();
+                l_SysCmdService->Deinitialize();
+                DaemonUnregister();
+                SYS_INFO( "we called GMI_BrdHwReset to reboot system \n" );
+                return EXIT_FAILURE;
             }
         }
         GMI_Sleep(1000);
