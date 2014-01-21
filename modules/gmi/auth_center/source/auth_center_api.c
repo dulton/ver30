@@ -54,6 +54,7 @@ GMI_RESULT GMI_UserAuthCheck(UserAuthRefInfo *UserAuthInputData, UserAuthResInfo
 		fprintf(stderr, "GMI_UserAuthCheck input InPortNum %d error\n", InPortNum);
 		return GMI_FAIL;
 	}
+	LocalPort = InPortNum;
 	#endif
 
 	Sock = GMI_RudpSocket(LocalPort);
@@ -187,6 +188,7 @@ GMI_RESULT GMI_UserLogoutNotify(const uint16_t  sessionId, const uint16_t InPort
 		fprintf(stderr, "GMI_UserLogoutNotify input InPortNum %d error\n", InPortNum);
 		return GMI_FAIL;
 	}
+	LocalPort = InPortNum;
 	#endif
 
 	Sock = GMI_RudpSocket(LocalPort);
@@ -314,6 +316,7 @@ GMI_RESULT GMI_UserLogInDataReset( const uint32_t MoudleId, const uint16_t InPor
 		fprintf(stderr, "GMI_UserLogInDataReset input InPortNum %d error\n", InPortNum);
 		return GMI_FAIL;
 	}
+	LocalPort = InPortNum;
 	#endif
 
 	Sock = GMI_RudpSocket(LocalPort);
@@ -450,6 +453,7 @@ GMI_RESULT GMI_UserQueryLogInSessionId(const uint16_t InPortNum, UserAuthLinkedS
 		fprintf(stderr, "GMI_UserQueryLogInSessionId input InPortNum %d error\n", InPortNum);
 		return GMI_FAIL;
 	}
+	LocalPort = InPortNum;
 	#endif
 
 	Sock = GMI_RudpSocket(LocalPort);
