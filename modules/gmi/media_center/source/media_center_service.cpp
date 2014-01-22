@@ -153,7 +153,10 @@ GMI_RESULT MediaCenterService::Run( boolean_t UseCallerThreadDoDispatchLoop )
 {
     DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "MediaCenterService::Run begin, passed UseCallerThreadDoDispatchLoop=%d\n", UseCallerThreadDoDispatchLoop );
 
-    GMI_RESULT Result = m_CommandPipeline->Start( 1, 1, 20 );// 20ms is an experience value, to improve command response speed.
+    // media center server is not used now, but make sure smooth transition, we dicard media center server,
+    // integrate media control and media stream dispatch into sys_server,
+    // so media_center_server only is placehoder process now, we let it use resource as possible as little, include CPU resource, so we change 20ms to 500ms.
+    GMI_RESULT Result = m_CommandPipeline->Start( 1, 1, MEDIA_CENTER_SERVER_MAX_TIMEOUT );
     if ( FAILED( Result ) )
     {
         DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "MediaCenterService::Run, CommandPipeline start failed, function return %x \n", (uint32_t) Result );
