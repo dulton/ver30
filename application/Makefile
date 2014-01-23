@@ -19,7 +19,8 @@ export GMI_MAKE_VERBOSE
 GMI_ITEMS                = common
 GMI_ITEMS               += daemon_server
 GMI_ITEMS               += log_server
-GMI_ITEMS               += media_center_server
+# function of media center server is integrated into sys_server, so we comment it out and do not compile it any longer. 2014/01/23
+# GMI_ITEMS             += media_center_server
 GMI_ITEMS               += auth_server
 GMI_ITEMS               += onvif
 GMI_ITEMS               += sdk_server
