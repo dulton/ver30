@@ -350,7 +350,7 @@ int SdkServerSysReq::__ReadIoImpl()
     pComm = this->m_pSock->GetRead();
     SDK_ASSERT(pComm);
 
-    DEBUG_BUFFER_FMT(pComm->m_Data,pComm->m_DataLen,"read sessionid %d reqnum %d datalen %d\n",pComm->m_SesId,pComm->m_SeqId,pComm->m_DataLen);
+    //DEBUG_BUFFER_FMT(pComm->m_Data,pComm->m_DataLen,"read sessionid %d reqnum %d datalen %d\n",pComm->m_SesId,pComm->m_SeqId,pComm->m_DataLen);
     /*now we should reset the read it should be less*/
     /*we should give the ok for configuration*/
     pComm->m_Type = GMIS_PROTOCOL_TYPE_CONF;

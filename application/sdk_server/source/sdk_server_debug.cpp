@@ -6,14 +6,28 @@ LogClient* g_pSdkLogClient=NULL;
 
 #define INNER_DEBUG(...) do{fprintf(stderr,"%s:%d\t",__FILE__,__LINE__);fprintf(stderr,__VA_ARGS__);}while(0)
 
+
 void SdkDebugBuffer(const char* file,int lineno,unsigned char* pBuffer,int buflen,const char* fmt,...)
 {
     unsigned char* pCurPtr=pBuffer;
     int i;
     va_list ap;
+	time_t curt;
+	struct tm tmval;
+	
+
+	curt = time(NULL);
+	localtime_r(&curt,&tmval);
 
 
-    fprintf(stderr,"At [%s:%d] pointer 0x%p length(%d)\t",file,lineno,pBuffer,buflen);
+    fprintf(stderr,"[%04d-%02d-%02d %02d:%02d:%02d]At [%s:%d] pointer 0x%p length(%d)\t",
+		tmval.tm_year + 1900,
+		tmval.tm_mon + 1,
+		tmval.tm_mday ,
+		tmval.tm_hour,
+		tmval.tm_min,
+		tmval.tm_sec,
+		file,lineno,pBuffer,buflen);
     if(fmt)
     {
         va_start(ap,fmt);
@@ -35,11 +49,11 @@ void SdkDebugBuffer(const char* file,int lineno,unsigned char* pBuffer,int bufle
 
 void Debug_CallBackTrace(const char * file,int lineno,const char* fmt,...)
 {
-
     void *array[30];
     size_t size;
     int i;
     time_t curt;
+	struct tm tmval;
 
     char **strings=NULL;
 
@@ -50,7 +64,15 @@ void Debug_CallBackTrace(const char * file,int lineno,const char* fmt,...)
 		return ;
 	}
     curt = time(NULL);
-    fprintf(stderr,"[%s:%d](%ld)\n",file,lineno,curt);
+	localtime_r(&curt,&tmval);
+    fprintf(stderr,"[%04d-%02d-%02d %02d:%02d:%02d][%s:%d]\n",
+		tmval.tm_year + 1900,
+		tmval.tm_mon + 1,
+		tmval.tm_mday ,
+		tmval.tm_hour,
+		tmval.tm_min,
+		tmval.tm_sec,		
+		file,lineno);
     if(fmt)
     {
         va_list ap;
@@ -601,6 +623,7 @@ void SdkLogFmt(int loglevel ,const char* file,const char* func,int lineno,const 
     va_list ap;
     time_t curt;
     int ret;
+	struct tm tmval;
 
     if(st_LogInited == 0 || loglevel > st_LogLevel)
     {
@@ -615,13 +638,22 @@ void SdkLogFmt(int loglevel ,const char* file,const char* func,int lineno,const 
 
     va_start(ap,fmt);
     curt = time(NULL);
-    ret = __LogAppend(pLogBuffer,"%s:%s:%d [%ld]\t",file,func,lineno,curt);
+	localtime_r(&curt,&tmval);
+    ret = __LogAppend(pLogBuffer,"[%04d-%02d-%02d %02d:%02d:%02d]%s:%s:%d\t",
+		tmval.tm_year + 1900,
+		tmval.tm_mon + 1,
+		tmval.tm_mday ,
+		tmval.tm_hour,
+		tmval.tm_min,
+		tmval.tm_sec,		
+		file,func,lineno);
     /*we do not any thing to this and we should see the next one*/
     if(fmt)
     {
         ret = __LogAppendv(pLogBuffer,fmt,ap);
         if(ret > 0)
         {
+        	fprintf(stderr,pLogBuffer->m_LogCotent);
             __PushLog(pLogBuffer);
             pLogBuffer = NULL;
             pLogBuffer = __AllocateLogBuffer(loglevel);
@@ -634,6 +666,7 @@ void SdkLogFmt(int loglevel ,const char* file,const char* func,int lineno,const 
 
     if(pLogBuffer)
     {
+		fprintf(stderr,pLogBuffer->m_LogCotent);
         __PushLog(pLogBuffer);
     }
 	

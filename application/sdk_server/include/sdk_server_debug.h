@@ -25,8 +25,8 @@
 #define  LOG_INFO_LEVEL        3
 #define  LOG_DEBUG_LEVEL       4
 
-#define ERROR_INFO(...) do{fprintf(stderr,"%s:%s:%d[%ld]\t",__FILE__,__ASSERT_FUNCTION,__LINE__,time(NULL));fprintf(stderr,__VA_ARGS__);SdkLogFmt(LOG_ERROR_LEVEL,__FILE__,__ASSERT_FUNCTION,__LINE__,__VA_ARGS__);}while(0)
-#define DEBUG_INFO(...) do{fprintf(stderr,"%s:%s:%d[%ld]\t",__FILE__,__ASSERT_FUNCTION,__LINE__,time(NULL));fprintf(stderr,__VA_ARGS__);SdkLogFmt(LOG_DEBUG_LEVEL,__FILE__,__ASSERT_FUNCTION,__LINE__,__VA_ARGS__);}while(0)
+#define ERROR_INFO(...) do{SdkLogFmt(LOG_ERROR_LEVEL,__FILE__,__ASSERT_FUNCTION,__LINE__,__VA_ARGS__);}while(0)
+#define DEBUG_INFO(...) do{SdkLogFmt(LOG_DEBUG_LEVEL,__FILE__,__ASSERT_FUNCTION,__LINE__,__VA_ARGS__);}while(0)
 #define BACK_TRACE()  do{Debug_CallBackTrace(__FILE__,__LINE__,NULL);SdkLogCallBackTrace(__FILE__,__LINE__,NULL);}while(0)
 #define BACK_TRACE_FMT(...) do{Debug_CallBackTrace(__FILE__,__LINE__,__VA_ARGS__);SdkLogCallBackTrace(__FILE__,__LINE__,__VA_ARGS__);}while(0)
 
