@@ -82,7 +82,7 @@ GMI_RESULT HeartBeat::RebootSystem()
         return GMI_FAIL;
     }
 
-    GMI_RESULT RetVal = GMI_SystemReboot(&m_DaemonData, GMI_DAEMON_HEARTBEAT_SDK_SERVER);
+    GMI_RESULT RetVal = GMI_SystemReboot(&m_DaemonData, GMI_DAEMON_HEARTBEAT_STATUS_QUERY);
     if (GMI_SUCCESS != RetVal)
     {
         PRINT_LOG(WARNING, "Failed to reboot system");

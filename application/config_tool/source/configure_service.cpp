@@ -654,7 +654,7 @@ uint16_t ConfigureService::GetDaemonLocalPort()
 
 uint16_t ConfigureService::GetDaemonServerPort()
 {
-    return GMI_DAEMON_HEARTBEAT_SDK_SERVER;
+    return GMI_DAEMON_HEARTBEAT_STATUS_QUERY;
 }
 
 int32_t ConfigureService::GetDaemonLocalModuleId()

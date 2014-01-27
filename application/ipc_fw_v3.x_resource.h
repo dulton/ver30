@@ -38,7 +38,7 @@
 #define GMI_DAEMON_HEARTBEAT_SDK                    (GMI_UDP_PORT_BASE+9)
 #define GMI_DAEMON_HEARTBEAT_AUTH                   (GMI_UDP_PORT_BASE+10)
 #define GMI_DAEMON_HEARTBEAT_CONFIG_TOOL            (GMI_UDP_PORT_BASE+11)
-#define GMI_DAEMON_HEARTBEAT_SDK_SERVER             (GMI_UDP_PORT_BASE+12)
+#define GMI_DAEMON_HEARTBEAT_STATUS_QUERY           (GMI_UDP_PORT_BASE+12)
 //onvif server
 #define GMI_ONVIF_C_PORT                            (GMI_UDP_PORT_BASE+13)
 #define GMI_ONVIF_S_PORT                            (GMI_UDP_PORT_BASE+14)

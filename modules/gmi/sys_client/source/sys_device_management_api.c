@@ -598,7 +598,7 @@ GMI_RESULT FactorySimpleDefaultAllLocal(uint16_t SessionId, uint32_t AuthValue)
             break;
         }
 
-	Result = GMI_SystemReboot(&DaemonData, GMI_DAEMON_HEARTBEAT_SDK_SERVER);
+	Result = GMI_SystemReboot(&DaemonData, GMI_DAEMON_HEARTBEAT_STATUS_QUERY);
 	if (FAILED(Result))
 	{
 		SYS_CLIENT_ERROR("GMI_SystemReboot fail, Result = 0x%lx\n", Result);
@@ -644,7 +644,7 @@ GMI_RESULT FactoryDefaultAllLocal(uint16_t SessionId, uint32_t AuthValue)
 		break;
 	}
 
-	Result = GMI_SystemReboot(&DaemonData, GMI_DAEMON_HEARTBEAT_SDK_SERVER);
+	Result = GMI_SystemReboot(&DaemonData, GMI_DAEMON_HEARTBEAT_STATUS_QUERY);
 	if (FAILED(Result))
 	{
 		SYS_CLIENT_ERROR("GMI_SystemReboot fail, Result = 0x%lx\n", Result);

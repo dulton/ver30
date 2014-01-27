@@ -89,7 +89,7 @@ GMI_RESULT CgiLogIn(const char_t *FncCmd)
         CGI_ERROR("GMI_InquiryServerStatus Start [%d] \n",__LINE__);
 
         uint16_t Status = 0;
-        Result = GMI_InquiryServerStatus(&DaemonData, GMI_DAEMON_HEARTBEAT_SDK_SERVER ,GMI_DAEMON_APPLICATION_STATUS_QUIRY, SDK_SERVER_ID, &Status);
+        Result = GMI_InquiryServerStatus(&DaemonData, GMI_DAEMON_HEARTBEAT_STATUS_QUERY,GMI_DAEMON_APPLICATION_STATUS_QUIRY, SDK_SERVER_ID, &Status);
         if (FAILED(Result))
         {
             RetCode = RETCODE_SYSTEM_RNNING;
@@ -3228,7 +3228,7 @@ GMI_RESULT CgiSystemRebootCmd(const char_t *FncCmd)
             break;
         }
 
-        Result = GMI_SystemReboot(&DaemonData, GMI_DAEMON_HEARTBEAT_SDK_SERVER);
+        Result = GMI_SystemReboot(&DaemonData, GMI_DAEMON_HEARTBEAT_STATUS_QUERY);
         if (FAILED(Result))
         {
             RetCode = RETCODE_ERROR;

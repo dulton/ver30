@@ -191,7 +191,7 @@ GMI_RESULT DaemonQueryServerStatus(int32_t ServerId, uint16_t *StatusPtr)
         return GMI_INVALID_PARAMETER;
     }
 
-    GMI_RESULT Result = GMI_InquiryServerStatus(&l_DaemonHandler, GMI_DAEMON_HEARTBEAT_SDK_SERVER, GMI_DAEMON_APPLICATION_STATUS_QUIRY, ServerId, &StatusTmp);
+    GMI_RESULT Result = GMI_InquiryServerStatus(&l_DaemonHandler, GMI_DAEMON_HEARTBEAT_STATUS_QUERY, GMI_DAEMON_APPLICATION_STATUS_QUIRY, ServerId, &StatusTmp);
     if (FAILED(Result))
     {
         SYS_ERROR("InquiryServerStatus fail, Result = 0x%lx\n", Result);
@@ -206,7 +206,7 @@ GMI_RESULT DaemonQueryServerStatus(int32_t ServerId, uint16_t *StatusPtr)
 
 GMI_RESULT DaemonReboot(void)
 {
-    GMI_RESULT Result = GMI_SystemReboot(&l_DaemonHandler, GMI_DAEMON_HEARTBEAT_SDK_SERVER);
+    GMI_RESULT Result = GMI_SystemReboot(&l_DaemonHandler, GMI_DAEMON_HEARTBEAT_STATUS_QUERY);
     if (FAILED(Result))
     {
         SYS_ERROR("SystemReboot fail, Result = 0x%lx\n", Result);
@@ -229,10 +229,10 @@ GMI_RESULT DaemonReboot(uint16_t DelayTime)
 
 GMI_RESULT DaemonReportIpChanged(void)
 {
-    GMI_RESULT Result = GMI_SystemIPChangeReport(&l_DaemonHandler, GMI_DAEMON_HEARTBEAT_SDK_SERVER);
+    GMI_RESULT Result = GMI_SystemIPChangeReport(&l_DaemonHandler, GMI_DAEMON_HEARTBEAT_STATUS_QUERY);
     if (FAILED(Result))
     {
-        GMI_SystemIPChangeReport(&l_DaemonHandler, GMI_DAEMON_HEARTBEAT_SDK_SERVER);
+        GMI_SystemIPChangeReport(&l_DaemonHandler, GMI_DAEMON_HEARTBEAT_STATUS_QUERY);
         return Result;
     }
 
