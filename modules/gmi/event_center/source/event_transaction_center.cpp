@@ -2,6 +2,8 @@
 
 #include "alarm_input.h"
 #include "alarm_output.h"
+#include "event_process_inforecord.h"
+#include "human_detect.h"
 
 EventTransactionCenter::EventTransactionCenter()
     : m_Center( NULL )
@@ -50,11 +52,36 @@ GMI_RESULT EventTransactionCenter::Start( const void_t *Parameter, size_t Parame
         return Result;
     }
 
+
+	Result = StartHumanDetect();
+    if ( FAILED( Result ) )
+    {
+        StopGPIOAlarmOutput();
+        m_Center->Deinitialize();
+        m_Center = NULL;
+        return Result;
+    }
+
+	Result = StartAlarmInfoRecord();
+    if ( FAILED( Result ) )
+    {
+        StopGPIOAlarmInput();
+        StopGPIOAlarmOutput();
+		StopHumanDetect();
+        m_Center->Deinitialize();
+        m_Center = NULL;
+        return Result;
+    }
+
+	
+
     Result = m_Center->Start();
     if ( FAILED( Result ) )
     {
         StopGPIOAlarmInput();
         StopGPIOAlarmOutput();
+		StopHumanDetect();
+		StopAlarmInfoRecord();
         m_Center->Deinitialize();
         m_Center = NULL;
         printf( "EventCenter Start failed \n" );
@@ -79,6 +106,18 @@ GMI_RESULT EventTransactionCenter::Stop()
     }
 
     Result = StopGPIOAlarmOutput();
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+		
+    Result = StopHumanDetect();
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+
+	Result = StopAlarmInfoRecord();
     if ( FAILED( Result ) )
     {
         return Result;
@@ -160,6 +199,7 @@ GMI_RESULT EventTransactionCenter::StartGPIOAlarmOutput()
     }
 
     AlarmOutputProcessor->AddDetectorId( EVENT_DETECTOR_ID_ALARM_INPUT );
+	AlarmOutputProcessor->AddDetectorId( EVENT_DETECTOR_ID_HUMAN_DETECT);
 
     AlarmOutputProcessor->SetEventCallback( m_Callback, m_UserData );
 
@@ -198,3 +238,81 @@ GMI_RESULT EventTransactionCenter::StopGPIOAlarmOutput()
 
     return Result;
 }
+
+GMI_RESULT EventTransactionCenter::StartAlarmInfoRecord()
+{
+    ReferrencePtr<EventProcessInfoRecord> AlarmInfoRecordProcessor( BaseMemoryManager::Instance().New<EventProcessInfoRecord>( EVENT_PROCESSOR_ID_INFO_RECORD ) );
+    if ( NULL == AlarmInfoRecordProcessor.GetPtr() )
+    {
+        m_Center->Deinitialize();
+        printf( "allocating AlarmInfoRecordProcessor object failed \n" );
+        return GMI_OUT_OF_MEMORY;
+    }
+
+    AlarmInfoRecordProcessor->AddDetectorId( EVENT_DETECTOR_ID_ALARM_INPUT );
+	
+	AlarmInfoRecordProcessor->AddDetectorId( EVENT_DETECTOR_ID_HUMAN_DETECT);
+
+    AlarmInfoRecordProcessor->SetEventCallback( m_Callback, m_UserData );
+
+    GMI_RESULT Result = m_Center->RegisterEventProcessor( AlarmInfoRecordProcessor, NULL, 0);
+    if ( FAILED( Result ) )
+    {
+        m_Center->Deinitialize();
+        printf( "EventCenter RegisterEventProcessor failed \n" );
+        return Result;
+    }
+
+    return Result;
+}
+
+GMI_RESULT EventTransactionCenter::StopAlarmInfoRecord()
+{
+    GMI_RESULT Result = m_Center->UnregisterEventProcessor( EVENT_PROCESSOR_ID_INFO_RECORD );
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+
+    return Result;
+}
+
+
+GMI_RESULT EventTransactionCenter::StartHumanDetect()
+{
+    ReferrencePtr<HumanDetect> HumanDetector( BaseMemoryManager::Instance().New<HumanDetect>( e_EventDetectorType_Passive, EVENT_DETECTOR_ID_HUMAN_DETECT) );
+    if ( NULL == HumanDetector.GetPtr() )
+    {
+        m_Center->Deinitialize();
+        printf( "allocating HumanDetector object failed \n" );
+        return GMI_OUT_OF_MEMORY;
+    }
+
+    struct HumanDetectInfo Info;
+    Info.s_CheckTime = 1000;
+    Info.s_ScheduleTimeNumber = 1;
+    Info.s_ScheduleTime[0].s_StartTime = 0x106000000000000;//Monday, AM 06:00:00
+    Info.s_ScheduleTime[0].s_EndTime   = 0x112000000000000;//Monday, PM 06:00:00
+
+    GMI_RESULT Result = m_Center->RegisterEventDetector( HumanDetector, &Info, sizeof(Info) );
+    if ( FAILED( Result ) )
+    {
+        m_Center->Deinitialize();
+        printf( "EventCenter RegisterEventDetector failed \n" );
+        return Result;
+    }
+
+    return Result;
+}
+
+GMI_RESULT EventTransactionCenter::StopHumanDetect()
+{
+    GMI_RESULT Result = m_Center->UnregisterEventDetector( EVENT_DETECTOR_ID_HUMAN_DETECT);
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+
+    return Result;
+}
+

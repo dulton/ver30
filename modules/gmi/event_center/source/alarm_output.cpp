@@ -98,7 +98,7 @@ GMI_RESULT  AlarmOutput::Start( const void_t *Parameter, size_t ParameterLength 
     SetName( Info->s_Name );
     SetWorkMode( (enum AlarmOutputWorkMode) Info->s_WorkMode );
     SetDelayTime( Info->s_DelayTime );
-    for ( uint32_t i = 0; i < Info->s_ScheduleTimeNumber; i+=2 )
+    for ( uint32_t i = 0; i < Info->s_ScheduleTimeNumber; ++i )
     {
         AddScheduleTime( &(Info->s_ScheduleTime[i]) );
     }

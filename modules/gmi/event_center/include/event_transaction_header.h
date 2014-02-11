@@ -5,9 +5,13 @@
 
 // detector id
 #define EVENT_DETECTOR_ID_ALARM_INPUT    1
+#define EVENT_DETECTOR_ID_HUMAN_DETECT    2
+
 
 // processor id
 #define EVENT_PROCESSOR_ID_ALARM_OUTPUT  1
+#define EVENT_PROCESSOR_ID_INFO_RECORD   2
+
 
 enum AlarmInputTriggerType
 {
@@ -65,5 +69,13 @@ struct AlarmOutputInfo
     uint32_t          s_ScheduleTimeNumber;
     ScheduleTimeInfo  s_ScheduleTime[1];
 };
+
+struct HumanDetectInfo
+{
+	uint32_t          s_CheckTime;
+    uint32_t          s_ScheduleTimeNumber;
+    ScheduleTimeInfo  s_ScheduleTime[1];
+};
+
 
 #endif//EVENT_TRANSACTION_HEADER

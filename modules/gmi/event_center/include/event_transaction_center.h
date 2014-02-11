@@ -22,6 +22,10 @@ private:
     GMI_RESULT StopGPIOAlarmInput();
     GMI_RESULT StartGPIOAlarmOutput();
     GMI_RESULT StopGPIOAlarmOutput();
+	GMI_RESULT StartAlarmInfoRecord();
+    GMI_RESULT StopAlarmInfoRecord(); 
+	GMI_RESULT StartHumanDetect();
+    GMI_RESULT StopHumanDetect();
 
 private:
     ReferrencePtr<EventCenter>  m_Center;

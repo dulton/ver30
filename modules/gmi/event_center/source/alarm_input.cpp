@@ -84,7 +84,7 @@ GMI_RESULT  AlarmInput::Start( const void_t *Parameter, size_t ParameterLength )
     SetName( Info->s_Name );
     SetCheckTime( Info->s_CheckTime );
     SetTriggerType( (enum AlarmInputTriggerType) Info->s_TriggerType );
-    for ( uint32_t i = 0; i < Info->s_ScheduleTimeNumber; i+=2 )
+    for ( uint32_t i = 0; i < Info->s_ScheduleTimeNumber; ++i )
     {
         AddScheduleTime( &(Info->s_ScheduleTime[i]) );
     }
