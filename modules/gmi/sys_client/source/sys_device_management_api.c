@@ -1149,6 +1149,7 @@ GMI_RESULT SysSetNetworkPort(uint16_t SessionId, uint32_t AuthValue, SysPkgNetwo
         SysNetworkPort.s_RTSP_Port = htonl(SysNetworkPort.s_RTSP_Port);
         SysNetworkPort.s_SDK_Port  = htonl(SysNetworkPort.s_SDK_Port);
         SysNetworkPort.s_Upgrade_Port= htonl(SysNetworkPort.s_Upgrade_Port);
+		SysNetworkPort.s_ONVIF_Port  = htonl(SysNetworkPort.s_ONVIF_Port);
 
         SysReqAttr.s_Type       = TYPE_NETWORK_PORT;
         SysReqAttr.s_Attr       = (void_t*)&SysNetworkPort;
