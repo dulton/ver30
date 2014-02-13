@@ -261,10 +261,6 @@ GMI_RESULT  GMI_NetManageInit(void)
 
     GMI_RESULT Result = GMI_FAIL;
 
-    // Result = GMI_FileExists(NET_CONFIG_FILE);
-    // if(FAILED(Result))
-    //{
-    // read default Ip
     Result = GMI_SetSystemDefaultIp(g_IpInfo);
     if(FAILED(Result))
     {
@@ -277,6 +273,7 @@ GMI_RESULT  GMI_NetManageInit(void)
         DAEMON_PRINT_LOG(ERROR,"GMI_ReadNetCfg Error	! ! ");
     }
 
+#if 0
     char_t CmdBuffer[MIN_BUFFER_LENGTH];
     memset(CmdBuffer, 0,  sizeof(CmdBuffer));
     snprintf(CmdBuffer, MIN_BUFFER_LENGTH, "ifdown -a");
@@ -295,7 +292,6 @@ GMI_RESULT  GMI_NetManageInit(void)
     }
 
     //}
-#if 0
     else if (SUCCEEDED(Result))
     {
         //read system config file

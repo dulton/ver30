@@ -62,6 +62,7 @@ extern "C"
     GMI_RESULT NET_CheckIPString(char_t *Str);
     GMI_RESULT Soap_WSSE_Authentication(struct soap *soap_ptr);
     GMI_RESULT ONVIF_Fault(struct soap *soap_ptr, const char *Value1, const char *Value2, const char *Reason);
+    GMI_RESULT ONVIF_FAULT(struct soap *soap_ptr, const char *Object, const char *Value1, const char *Value2, const char *Reason);
     GMI_RESULT NET_CheckHostname (char_t *Str);
     GMI_RESULT IsNum(char_t *Str);
 

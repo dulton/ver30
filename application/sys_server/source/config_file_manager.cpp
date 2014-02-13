@@ -5,18 +5,6 @@
 #include "gmi_system_headers.h"
 #include "gmi_config_api.h"
 
-//OSD Font Size Map Table
-static int32_t l_OSD_FontSize[][2] = 
-{
-	{RES_1080P_HEIGHT, OSD_FONT_SIZE_BIGNESS},
-	{RES_720P_HEIGHT, OSD_FONT_SIZE_BIG},
-	{RES_D1_PAL_HEIGHT, OSD_FONT_SIZE_MEDIUM},
-	{RES_D1_NTSC_HEIGHT, OSD_FONT_SIZE_MEDIUM},
-	{RES_CIF_PAL_HEIGHT, OSD_FONT_SIZE_SMALL},
-	{RES_CIF_NTSC_HEIGHT, OSD_FONT_SIZE_SMALL},
-	{RES_QCIF_PAL_HEIGHT, OSD_FONT_SIZE_SMALLNESS},
-	{RES_QVGA_HEIGHT, OSD_FONT_SIZE_SMALLNESS}
-};
 
 ConfigFileManager::ConfigFileManager()
 {
@@ -34,7 +22,7 @@ GMI_RESULT ConfigFileManager::Initialize()
     memcpy(m_DefaultSettingFile, GMI_DEFAULT_SETTING_CONFIG_FILE_NAME, sizeof(m_DefaultSettingFile));
     memcpy(m_SettingFile, GMI_SETTING_CONFIG_FILE_NAME, sizeof(m_SettingFile));
     memcpy(m_ResourceFile, GMI_RESOURCE_CONFIG_FILE_NAME, sizeof(m_ResourceFile));
-    memcpy(m_PresetsFile, GMI_PTZ_PRESETS_PATROLS_FILE_NAME, sizeof(m_PresetsFile));    
+    memcpy(m_PresetsFile, GMI_PTZ_PRESETS_PATROLS_FILE_NAME, sizeof(m_PresetsFile));
     GMI_RESULT Result = m_Mutex.Create(NULL);
     if (FAILED(Result))
     {
@@ -43,12 +31,34 @@ GMI_RESULT ConfigFileManager::Initialize()
         return Result;
     }
 
+	Result = m_SettingFileLock.Create(GMI_SETTING_CONFIG_FILE_NAME_KEY);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("m_SettingFileLock.Create(GMI_SETTING_CONFIG_FILE_NAME_KEY) fail, Result = 0x%lx\n", Result);
+		return Result;
+	}	
+
+	Result = m_CapabilityAutoFileLock.Create(CAPABILITY_AUTO_FILE_NAME_KEY);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("m_CapabilityAutoFileLock.Create(CAPABILITY_AUTO_FILE_NAME_KEY) fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+
+	Result = m_FactoryOperation.Initialize();
+	if (FAILED(Result))
+	{
+		SYS_ERROR("m_FactoryOperation.Initialize fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+	
     return GMI_SUCCESS;
 }
 
 
 GMI_RESULT ConfigFileManager::Deinitialize()
 {
+	m_FactoryOperation.Deinitialize();
     m_Mutex.Destroy();
     return GMI_SUCCESS;
 }
@@ -73,9 +83,11 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeStreamNum(int32_t * StreamNum)
     FD_HANDLE  Handle;
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -84,6 +96,7 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeStreamNum(int32_t * StreamNum)
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -91,9 +104,11 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeStreamNum(int32_t * StreamNum)
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -106,9 +121,11 @@ GMI_RESULT ConfigFileManager::SetVideoEncodeStreamNum(int32_t StreamNum)
     FD_HANDLE  Handle;
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -117,6 +134,7 @@ GMI_RESULT ConfigFileManager::SetVideoEncodeStreamNum(int32_t StreamNum)
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -124,9 +142,11 @@ GMI_RESULT ConfigFileManager::SetVideoEncodeStreamNum(int32_t StreamNum)
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -147,9 +167,8 @@ GMI_RESULT ConfigFileManager::GetStreamCombine(SysPkgEncStreamCombine *SysEncStr
 
     int32_t MaxStreamNum;
     int32_t MaxPicWidth;
-    int32_t MaxPicHeight;
-    FactorySettingOperation FactoryOperation;
-    Result = FactoryOperation.GetVideoMaxCapability(&MaxStreamNum, &MaxPicWidth, &MaxPicHeight);
+    int32_t MaxPicHeight;    
+    Result = m_FactoryOperation.GetVideoMaxCapability(&MaxStreamNum, &MaxPicWidth, &MaxPicHeight);
     if (FAILED(Result))
     {
         return Result;
@@ -170,9 +189,11 @@ GMI_RESULT ConfigFileManager::GetStreamCombine(SysPkgEncStreamCombine *SysEncStr
     }
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -182,6 +203,7 @@ GMI_RESULT ConfigFileManager::GetStreamCombine(SysPkgEncStreamCombine *SysEncStr
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -189,9 +211,11 @@ GMI_RESULT ConfigFileManager::GetStreamCombine(SysPkgEncStreamCombine *SysEncStr
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     SysEncStreamCombinePtr->s_VideoId = 1;
@@ -207,8 +231,8 @@ GMI_RESULT ConfigFileManager::GetSysEncStreamCombineDefault(SysPkgEncStreamCombi
     int32_t MaxStreamNum;
     int32_t MaxPicWidth;
     int32_t MaxPicHeight;
-    FactorySettingOperation FactoryOperation;
-    GMI_RESULT Result = FactoryOperation.GetVideoMaxCapability(&MaxStreamNum, &MaxPicWidth, &MaxPicHeight);
+    
+    GMI_RESULT Result = m_FactoryOperation.GetVideoMaxCapability(&MaxStreamNum, &MaxPicWidth, &MaxPicHeight);
     if (FAILED(Result))
     {
         return Result;
@@ -239,9 +263,11 @@ GMI_RESULT ConfigFileManager::SetStreamCombine(SysPkgEncStreamCombine *SysEncStr
     FD_HANDLE  Handle;
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -249,6 +275,7 @@ GMI_RESULT ConfigFileManager::SetStreamCombine(SysPkgEncStreamCombine *SysEncStr
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -256,9 +283,11 @@ GMI_RESULT ConfigFileManager::SetStreamCombine(SysPkgEncStreamCombine *SysEncStr
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -332,9 +361,8 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeSettings(int32_t StreamId, SysPkgEnc
 
     //first col:width, second col:height
     int32_t Res[16][4];
-    memset(Res, 0, sizeof(Res));
-    FactorySettingOperation FactoryOperation;
-    Result = FactoryOperation.GetVideoParams(StreamNum, CombineNo, Res);
+    memset(Res, 0, sizeof(Res));    
+    Result = m_FactoryOperation.GetVideoParams(StreamNum, CombineNo, Res);
     if (FAILED(Result))
     {
         SYS_ERROR("get video params from capability fail , Result=0x%lx\n", Result);
@@ -342,9 +370,11 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeSettings(int32_t StreamId, SysPkgEnc
     }
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -368,6 +398,7 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeSettings(int32_t StreamId, SysPkgEnc
             if (FAILED(Result))
             {
                 GMI_XmlFileSave(Handle);
+                m_SettingFileLock.Unlock();
                 Unlock();
                 return Result;
             }
@@ -376,12 +407,13 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeSettings(int32_t StreamId, SysPkgEnc
             Result = GMI_XmlRead(Handle, (const char_t*)StreamXPath, VIDEO_ENCODE_STREAM_BITRATEDOWN_KEY,   BitRateDown,                     (int32_t*)&VidEncParam[Id].s_BitRateDown,   GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)StreamXPath, VIDEO_ENCODE_STREAM_GOP_KEY,           VIDEO_ENCODE_STREAM_GOP,          &VidEncParam[Id].s_FrameInterval, GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)StreamXPath, VIDEO_ENCODE_STREAM_QUALITY_KEY,       VIDEO_ENCODE_STREAM_QUALITY,      &VidEncParam[Id].s_EncodeQulity,  GMI_CONFIG_READ_WRITE);
-            Result = GMI_XmlRead(Handle, (const char_t*)StreamXPath, VIDEO_ENCODE_STREAM_ROTATE_KEY,        VIDEO_ENCODE_STREAM_ROTATE,       &VidEncParam[Id].s_Rotate,        GMI_CONFIG_READ_WRITE);            
+            Result = GMI_XmlRead(Handle, (const char_t*)StreamXPath, VIDEO_ENCODE_STREAM_ROTATE_KEY,        VIDEO_ENCODE_STREAM_ROTATE,       &VidEncParam[Id].s_Rotate,        GMI_CONFIG_READ_WRITE);
         }
 
         if (FAILED(Result))
         {
             GMI_XmlFileSave(Handle);
+            m_SettingFileLock.Unlock();
             Unlock();
             return Result;
         }
@@ -390,9 +422,11 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeSettings(int32_t StreamId, SysPkgEnc
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -424,9 +458,8 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeSettingsDefault(int32_t StreamId, Sy
 
     //first col:width, second col:height
     int32_t Res[16][4];
-    memset(Res, 0, sizeof(Res));
-    FactorySettingOperation FactoryOperation;
-    Result = FactoryOperation.GetVideoParams(StreamNum, CombineNo, Res);
+    memset(Res, 0, sizeof(Res));   
+    Result = m_FactoryOperation.GetVideoParams(StreamNum, CombineNo, Res);
     if (FAILED(Result))
     {
         SYS_ERROR("get video params from capability fail , Result=0x%lx\n", Result);
@@ -504,9 +537,8 @@ GMI_RESULT ConfigFileManager::GetVideoEncodeSettingsDefault(int32_t StreamId, Sy
 
     //first col:width, second col:height
     int32_t Res[16][4];
-    memset(Res, 0, sizeof(Res));
-    FactorySettingOperation FactoryOperation;
-    Result = FactoryOperation.GetVideoParams(StreamNum, CombineNo, Res);
+    memset(Res, 0, sizeof(Res));    
+    Result = m_FactoryOperation.GetVideoParams(StreamNum, CombineNo, Res);
     if (FAILED(Result))
     {
         SYS_ERROR("get video params from capability fail , Result=0x%lx\n", Result);
@@ -561,9 +593,11 @@ GMI_RESULT ConfigFileManager::SetVideoEncodeSetting(int32_t StreamId, VideoEncod
     //}
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -585,6 +619,7 @@ GMI_RESULT ConfigFileManager::SetVideoEncodeSetting(int32_t StreamId, VideoEncod
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -592,9 +627,11 @@ GMI_RESULT ConfigFileManager::SetVideoEncodeSetting(int32_t StreamId, VideoEncod
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -608,9 +645,11 @@ GMI_RESULT ConfigFileManager::GetVideoStreamType(int32_t StreamId, int32_t *Stre
     char_t     StreamXPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -622,6 +661,7 @@ GMI_RESULT ConfigFileManager::GetVideoStreamType(int32_t StreamId, int32_t *Stre
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -629,9 +669,11 @@ GMI_RESULT ConfigFileManager::GetVideoStreamType(int32_t StreamId, int32_t *Stre
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -645,9 +687,11 @@ GMI_RESULT ConfigFileManager::SetVideoStreamType(int32_t StreamId, int32_t Strea
     char_t     StreamXPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -658,6 +702,7 @@ GMI_RESULT ConfigFileManager::SetVideoStreamType(int32_t StreamId, int32_t Strea
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -665,9 +710,11 @@ GMI_RESULT ConfigFileManager::SetVideoStreamType(int32_t StreamId, int32_t Strea
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -681,9 +728,11 @@ GMI_RESULT ConfigFileManager::GetOsdTextNum(int32_t StreamId, int32_t *TextNum)
     char_t	   OsdXPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -695,6 +744,7 @@ GMI_RESULT ConfigFileManager::GetOsdTextNum(int32_t StreamId, int32_t *TextNum)
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -702,99 +752,32 @@ GMI_RESULT ConfigFileManager::GetOsdTextNum(int32_t StreamId, int32_t *TextNum)
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
 }
 
 
-GMI_RESULT ConfigFileManager::GetOsdFontSizeDefault(int32_t StreamId, int32_t *FontSize)
-{	
-	SysPkgEncStreamCombine SysEncStreamCombine;	
-	GMI_RESULT Result = GetStreamCombine(&SysEncStreamCombine);
-	if (FAILED(Result))
-	{
-		return Result;
-	}		
-	
-	if (0xff == StreamId)
-	{		
-		ReferrencePtr<VideoEncodeParam, DefaultObjectsDeleter> VidEncParamPtr(BaseMemoryManager::Instance().News<VideoEncodeParam>(SysEncStreamCombine.s_EnableStreamNum));
-		if (NULL == VidEncParamPtr.GetPtr())
-		{
-			return GMI_OUT_OF_MEMORY;
-		}
-		
-		Result = GetVideoEncodeSettings(StreamId, &SysEncStreamCombine, VidEncParamPtr.GetPtr());
-		if (FAILED(Result))
-		{
-			return Result;
-		}
-
-		for (int32_t Id = 0; Id < SysEncStreamCombine.s_EnableStreamNum; Id++)
-		{
-			uint32_t Row;
-			for (Row = 0; Row < sizeof(l_OSD_FontSize)/(sizeof(l_OSD_FontSize[0][0])*2); Row++)
-			{
-			    if (VidEncParamPtr.GetPtr()[Id].s_EncodeHeight == l_OSD_FontSize[Row][0])
-			    {
-			        FontSize[Id] = l_OSD_FontSize[Row][1];
-			        break;
-			    }
-			}
-
-			if (Row >= sizeof(l_OSD_FontSize)/(sizeof(l_OSD_FontSize[0][0])*2))
-			{
-				FontSize[Id] = OSD_FONT_SIZE_MEDIUM;
-			}
-		}
-	}	
-
-	return GMI_SUCCESS;
-}
-
-
 GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum, VideoOSDParam *OsdParamPtr)
 {
-    GMI_RESULT Result;
+    GMI_RESULT Result = GMI_SUCCESS;
     FD_HANDLE  Handle;
-    int32_t    Id;
-    int32_t    TextId;
-    int32_t    TextNum[16];
+    int32_t    Id = 0;
+    int32_t    TextId = 0;
+    int32_t    TextNum[16] = {0};
     char_t     OsdXPath[128] = {0};
-    ReferrencePtr<int32_t, DefaultObjectsDeleter> FontSize;
 
-    if (StreamId == 0xff)
-    {
-        for (Id = 0; Id < StreamNum; Id++)
-        {
-            Result = GetOsdTextNum(Id, &TextNum[Id]);
-            if (FAILED(Result))
-            {
-                return Result;
-            }
-        }
-
-		FontSize = BaseMemoryManager::Instance().News<int32_t>(StreamNum);
-		if (NULL == FontSize.GetPtr())
-		{
-			return GMI_OUT_OF_MEMORY;
-		}
-		//get font size according to resolution   
-        Result = GetOsdFontSizeDefault(StreamId, FontSize.GetPtr());
-        if (FAILED(Result))
-        {
-        	memset(FontSize.GetPtr(), OSD_FONT_SIZE_MEDIUM, sizeof(int32_t)*StreamNum);
-        }
-    }
-    
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -802,7 +785,7 @@ GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum
     if (StreamId == 0xff)
     {
         for (Id = 0; Id < StreamNum; Id++)
-        {        	     	        	
+        {
             OsdParamPtr[Id].s_StreamId = Id;
             memset(OsdXPath, 0, sizeof(OsdXPath));
             sprintf(OsdXPath, OSD_PATH, Id);
@@ -815,7 +798,7 @@ GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_DATE_STYLE_KEY, OSD_TIME_DATE_STYLE,   &(OsdParamPtr[Id].s_TimeDisplay.s_DateStyle), GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_STYLE_KEY, OSD_TIME_STYLE,        &(OsdParamPtr[Id].s_TimeDisplay.s_TimeStyle), GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_FONT_COLOR_KEY, OSD_TIME_FONT_COLOR,   &(OsdParamPtr[Id].s_TimeDisplay.s_FontColor), GMI_CONFIG_READ_WRITE);
-            Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_FONT_STYLE_KEY, FontSize.GetPtr()[Id],   &(OsdParamPtr[Id].s_TimeDisplay.s_FontStyle), GMI_CONFIG_READ_WRITE);
+            Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_FONT_STYLE_KEY, OSD_TIME_FONT_STYLE,   &(OsdParamPtr[Id].s_TimeDisplay.s_FontStyle), GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_FONT_BLOD_KEY,  OSD_TIME_FONT_BLOD,    &(OsdParamPtr[Id].s_TimeDisplay.s_FontBlod),  GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_ROTATE_KEY,    OSD_TIME_ROTATE,       &(OsdParamPtr[Id].s_TimeDisplay.s_Rotate),    GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_ITALIC_KEY,    OSD_TIME_ITALIC,       &(OsdParamPtr[Id].s_TimeDisplay.s_Italic),    GMI_CONFIG_READ_WRITE);
@@ -824,6 +807,13 @@ GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_DISPLAY_Y_KEY,  OSD_TIME_DISPLAY_Y,    &(OsdParamPtr[Id].s_TimeDisplay.s_DisplayY),  GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_DISPLAY_H_KEY,  OSD_TIME_DISPLAY_H,    &(OsdParamPtr[Id].s_TimeDisplay.s_DisplayH),  GMI_CONFIG_READ_WRITE);
             Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TIME_DISPLAY_W_KEY,  OSD_TIME_DISPLAY_W,    &(OsdParamPtr[Id].s_TimeDisplay.s_DisplayW),  GMI_CONFIG_READ_WRITE);
+                    
+            Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_NUM_KEY, OSD_DEFAULT_TEXT_NUM, &TextNum[Id], GMI_CONFIG_READ_WRITE);
+            if (FAILED(Result))
+            {
+            	m_SettingFileLock.Unlock();
+                return Result;
+            }
 
             for (TextId = 0; TextId < TextNum[Id]; TextId++)
             {
@@ -831,7 +821,7 @@ GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum
                 sprintf(OsdXPath, OSD_TEXT_PATH, Id, TextId);
                 Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_ENABLE_KEY,     OSD_TEXT_ENABLE,       &(OsdParamPtr[Id].s_TextDisplay[TextId].s_Flag),      GMI_CONFIG_READ_WRITE);
                 Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_FONT_COLOR_KEY, OSD_TEXT_FONT_COLOR,   &(OsdParamPtr[Id].s_TextDisplay[TextId].s_FontColor), GMI_CONFIG_READ_WRITE);
-                Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_FONT_STYLE_KEY, FontSize.GetPtr()[Id],   &(OsdParamPtr[Id].s_TextDisplay[TextId].s_FontStyle), GMI_CONFIG_READ_WRITE);
+                Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_FONT_STYLE_KEY, OSD_TEXT_FONT_STYLE,   &(OsdParamPtr[Id].s_TextDisplay[TextId].s_FontStyle), GMI_CONFIG_READ_WRITE);
                 Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_FONT_BLOD_KEY,  OSD_TEXT_FONT_BLOD,    &(OsdParamPtr[Id].s_TextDisplay[TextId].s_FontBlod),  GMI_CONFIG_READ_WRITE);
                 Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_ROTATE_KEY,     OSD_TEXT_ROTATE,       &(OsdParamPtr[Id].s_TextDisplay[TextId].s_Rotate),    GMI_CONFIG_READ_WRITE);
                 Result = GMI_XmlRead(Handle, (const char_t*)OsdXPath, OSD_TEXT_ITALIC_KEY,     OSD_TEXT_ITALIC,       &(OsdParamPtr[Id].s_TextDisplay[TextId].s_Italic),    GMI_CONFIG_READ_WRITE);
@@ -856,6 +846,7 @@ GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum
         if (FAILED(Result))
         {
             GMI_XmlFileSave(Handle);
+            m_SettingFileLock.Unlock();
             Unlock();
             return Result;
         }
@@ -864,9 +855,11 @@ GMI_RESULT ConfigFileManager::GetOsdSettings(int32_t StreamId, int32_t StreamNum
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -888,9 +881,11 @@ GMI_RESULT ConfigFileManager::SetOsdSettings(int32_t StreamId, VideoOSDParam *Os
     }
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -938,6 +933,7 @@ GMI_RESULT ConfigFileManager::SetOsdSettings(int32_t StreamId, VideoOSDParam *Os
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -945,9 +941,11 @@ GMI_RESULT ConfigFileManager::SetOsdSettings(int32_t StreamId, VideoOSDParam *Os
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -962,9 +960,8 @@ GMI_RESULT ConfigFileManager::GetImageSettings(int32_t SourceId, int32_t ChanId,
 
     boolean_t  GetImageFail = false;
     int32_t    Images[32];
-    memset(Images, 0, sizeof(Images));
-    FactorySettingOperation FactoryOperation;
-    Result = FactoryOperation.GetImageParams(Images);
+    memset(Images, 0, sizeof(Images));    
+    Result = m_FactoryOperation.GetImageParams(Images);
     if (FAILED(Result))
     {
         SYS_ERROR("get image params form capoperation fail, Result = 0x%lx\n", Result);
@@ -972,9 +969,11 @@ GMI_RESULT ConfigFileManager::GetImageSettings(int32_t SourceId, int32_t ChanId,
     }
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1005,6 +1004,7 @@ GMI_RESULT ConfigFileManager::GetImageSettings(int32_t SourceId, int32_t ChanId,
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1012,9 +1012,11 @@ GMI_RESULT ConfigFileManager::GetImageSettings(int32_t SourceId, int32_t ChanId,
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1025,9 +1027,8 @@ GMI_RESULT ConfigFileManager::GetImageSettingsDefault(int32_t SourceId, int32_t 
 {
     boolean_t  GetImageFail = false;
     int32_t    Images[32];
-    memset(Images, 0, sizeof(Images));
-    FactorySettingOperation FactoryOperation;
-    GMI_RESULT Result = FactoryOperation.GetImageParams(Images);
+    memset(Images, 0, sizeof(Images));  
+    GMI_RESULT Result = m_FactoryOperation.GetImageParams(Images);
     if (FAILED(Result))
     {
         SYS_ERROR("get image params form capoperation fail, Result = 0x%lx\n", Result);
@@ -1067,9 +1068,11 @@ GMI_RESULT ConfigFileManager::SetImageSettings(int32_t SourceId, int32_t ChanId,
     char_t     ImageXPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1089,6 +1092,7 @@ GMI_RESULT ConfigFileManager::SetImageSettings(int32_t SourceId, int32_t ChanId,
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1096,9 +1100,11 @@ GMI_RESULT ConfigFileManager::SetImageSettings(int32_t SourceId, int32_t ChanId,
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1113,9 +1119,8 @@ GMI_RESULT ConfigFileManager::GetImageAdvanceSettings(int32_t SourceId, int32_t 
 
     boolean_t  GetImageFail = false;
     int32_t    Images[32];
-    memset(Images, 0, sizeof(Images));
-    FactorySettingOperation FactoryOperation;
-    Result = FactoryOperation.GetImageParams(Images);
+    memset(Images, 0, sizeof(Images));   
+    Result = m_FactoryOperation.GetImageParams(Images);
     if (FAILED(Result))
     {
         SYS_ERROR("get image params form capoperation fail, Result = 0x%lx\n", Result);
@@ -1123,9 +1128,11 @@ GMI_RESULT ConfigFileManager::GetImageAdvanceSettings(int32_t SourceId, int32_t 
     }
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1149,6 +1156,7 @@ GMI_RESULT ConfigFileManager::GetImageAdvanceSettings(int32_t SourceId, int32_t 
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1156,9 +1164,11 @@ GMI_RESULT ConfigFileManager::GetImageAdvanceSettings(int32_t SourceId, int32_t 
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1169,9 +1179,8 @@ GMI_RESULT ConfigFileManager::GetImageAdvanceSettingsDefault(int32_t SourceId, i
 {
     boolean_t  GetImageFail = false;
     int32_t    Images[32];
-    memset(Images, 0, sizeof(Images));
-    FactorySettingOperation FactoryOperation;
-    GMI_RESULT Result = FactoryOperation.GetImageParams(Images);
+    memset(Images, 0, sizeof(Images));   
+    GMI_RESULT Result = m_FactoryOperation.GetImageParams(Images);
     if (FAILED(Result))
     {
         SYS_ERROR("get image params form capoperation fail, Result = 0x%lx\n", Result);
@@ -1206,9 +1215,11 @@ GMI_RESULT ConfigFileManager::SetImageAdvanceSettings(int32_t SourceId, int32_t 
     char_t     ImageXPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1226,6 +1237,7 @@ GMI_RESULT ConfigFileManager::SetImageAdvanceSettings(int32_t SourceId, int32_t 
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1233,9 +1245,11 @@ GMI_RESULT ConfigFileManager::SetImageAdvanceSettings(int32_t SourceId, int32_t 
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1249,9 +1263,11 @@ GMI_RESULT ConfigFileManager::GetVideoSourceSettings(int32_t SourceId, SysPkgVid
     char_t     SourceXPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1265,6 +1281,7 @@ GMI_RESULT ConfigFileManager::GetVideoSourceSettings(int32_t SourceId, SysPkgVid
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1272,9 +1289,11 @@ GMI_RESULT ConfigFileManager::GetVideoSourceSettings(int32_t SourceId, SysPkgVid
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1288,9 +1307,11 @@ GMI_RESULT ConfigFileManager::SetVideoSourceSettings(int32_t SourceId, SysPkgVid
     char_t     SourceXPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1304,6 +1325,7 @@ GMI_RESULT ConfigFileManager::SetVideoSourceSettings(int32_t SourceId, SysPkgVid
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1311,9 +1333,11 @@ GMI_RESULT ConfigFileManager::SetVideoSourceSettings(int32_t SourceId, SysPkgVid
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1327,9 +1351,11 @@ GMI_RESULT ConfigFileManager::GetWhiteBalanceSettings(int32_t SourceId, ImageWbP
     char_t     WhiteBalancePath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1343,6 +1369,7 @@ GMI_RESULT ConfigFileManager::GetWhiteBalanceSettings(int32_t SourceId, ImageWbP
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1350,9 +1377,11 @@ GMI_RESULT ConfigFileManager::GetWhiteBalanceSettings(int32_t SourceId, ImageWbP
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1366,9 +1395,11 @@ GMI_RESULT ConfigFileManager::SetWhiteBalanceSettings(int32_t SourceId, ImageWbP
     char_t     WhiteBalancePath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1382,6 +1413,7 @@ GMI_RESULT ConfigFileManager::SetWhiteBalanceSettings(int32_t SourceId, ImageWbP
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1389,9 +1421,11 @@ GMI_RESULT ConfigFileManager::SetWhiteBalanceSettings(int32_t SourceId, ImageWbP
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1410,9 +1444,8 @@ GMI_RESULT ConfigFileManager::GetDaynightSettings(int32_t SourceId, ImageDnParam
     boolean_t  GetIrcutDnFail = false;
     int8_t     IrcutMode;
     int8_t     DayToNightThr;
-    int8_t     NightToDayThr;
-    FactorySettingOperation FactoryOperation;
-    Result = FactoryOperation.GetIrCutModeDnThr(&IrcutMode, &DayToNightThr, &NightToDayThr);
+    int8_t     NightToDayThr;   
+    Result = m_FactoryOperation.GetIrCutModeDnThr(&IrcutMode, &DayToNightThr, &NightToDayThr);
     if (FAILED(Result))
     {
         SYS_ERROR("get ircut mode daytonight nighttoday threshold form capoperation fail, Result = 0x%lx\n", Result);
@@ -1420,9 +1453,11 @@ GMI_RESULT ConfigFileManager::GetDaynightSettings(int32_t SourceId, ImageDnParam
     }
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1467,6 +1502,7 @@ GMI_RESULT ConfigFileManager::GetDaynightSettings(int32_t SourceId, ImageDnParam
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1474,9 +1510,11 @@ GMI_RESULT ConfigFileManager::GetDaynightSettings(int32_t SourceId, ImageDnParam
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1493,9 +1531,11 @@ GMI_RESULT ConfigFileManager::SetDaynightSettings(int32_t SourceId, ImageDnParam
     char_t	   SchedEndTimeKey[64];
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1524,6 +1564,7 @@ GMI_RESULT ConfigFileManager::SetDaynightSettings(int32_t SourceId, ImageDnParam
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1531,9 +1572,11 @@ GMI_RESULT ConfigFileManager::SetDaynightSettings(int32_t SourceId, ImageDnParam
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1545,10 +1588,9 @@ GMI_RESULT ConfigFileManager::GetDaynightSettingsDefault(int32_t SourceId, SysPk
     boolean_t  GetIrcutDnFail = false;
     int8_t     IrcutMode;
     int8_t     DayToNightThr;
-    int8_t     NightToDayThr;  
-    
-    FactorySettingOperation FactoryOperation;
-    GMI_RESULT Result = FactoryOperation.GetIrCutModeDnThr(&IrcutMode, &DayToNightThr, &NightToDayThr);
+    int8_t     NightToDayThr;
+  
+    GMI_RESULT Result = m_FactoryOperation.GetIrCutModeDnThr(&IrcutMode, &DayToNightThr, &NightToDayThr);
     if (FAILED(Result))
     {
         SYS_ERROR("get ircut mode daytonight nighttoday threshold form capoperation fail, Result = 0x%lx\n", Result);
@@ -1595,9 +1637,11 @@ GMI_RESULT ConfigFileManager::GetAudioEncodeSettings(AudioEncParam *AudioEncodeC
     char_t     AudioEncodePath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1618,6 +1662,7 @@ GMI_RESULT ConfigFileManager::GetAudioEncodeSettings(AudioEncParam *AudioEncodeC
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1625,9 +1670,11 @@ GMI_RESULT ConfigFileManager::GetAudioEncodeSettings(AudioEncParam *AudioEncodeC
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1641,9 +1688,11 @@ GMI_RESULT ConfigFileManager::GetAudioEncodeSettings(SysPkgAudioEncodeCfg *Audio
     char_t     AudioEncodePath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1664,6 +1713,7 @@ GMI_RESULT ConfigFileManager::GetAudioEncodeSettings(SysPkgAudioEncodeCfg *Audio
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1671,9 +1721,11 @@ GMI_RESULT ConfigFileManager::GetAudioEncodeSettings(SysPkgAudioEncodeCfg *Audio
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1687,9 +1739,11 @@ GMI_RESULT ConfigFileManager::SetAudioEncodeSettings(SysPkgAudioEncodeCfg *Audio
     char_t     AudioEncodePath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1709,6 +1763,7 @@ GMI_RESULT ConfigFileManager::SetAudioEncodeSettings(SysPkgAudioEncodeCfg *Audio
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1716,9 +1771,11 @@ GMI_RESULT ConfigFileManager::SetAudioEncodeSettings(SysPkgAudioEncodeCfg *Audio
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1727,30 +1784,19 @@ GMI_RESULT ConfigFileManager::SetAudioEncodeSettings(SysPkgAudioEncodeCfg *Audio
 
 GMI_RESULT ConfigFileManager::GetHwAutoDetectInfo(SysPkgComponents *SysComponents)
 {
-#define SENSOR_ID_2715   "ov2715"
-#define SENSOR_ID_9715   "ov9715"
-#define SENSOR_ID_IMX122 "imx122"
-#define SENSOR_ID_34041  "mn34041pl"
-#define SENSOR_ID_TW9910 "tw9910"
-
-#define CPU_ID_A55       "A5S_55"
-#define CPU_ID_A66       "A5S_66"
-#define CPU_ID_A88       "A5S_88"
-
-#define LENS_NONE        "NONE"
-#define LENS_DF003       "DF003"
-#define LENS_YB22        "YB22"
-
     GMI_RESULT Result;
     FD_HANDLE  Handle;
     char_t     HwAutoDetectPath[128] = {0};
     char_t     Cpu[64];
     char_t     Sensor[64];
     char_t     Lens[64];
+    char_t     Board[64];
 
-    Result = GMI_XmlOpen("/opt/config/capability_auto.xml", &Handle);
+	m_CapabilityAutoFileLock.Lock();
+    Result = GMI_XmlOpen(CAPABILITY_AUTO_FILE_NAME, &Handle);
     if (FAILED(Result))
     {
+    	m_CapabilityAutoFileLock.Unlock();
         return Result;
     }
 
@@ -1759,18 +1805,21 @@ GMI_RESULT ConfigFileManager::GetHwAutoDetectInfo(SysPkgComponents *SysComponent
     Result = GMI_XmlRead(Handle, (const char_t*)HwAutoDetectPath, HW_CPU_KEY,    HW_CPU,    Cpu,    GMI_CONFIG_READ_ONLY);
     Result = GMI_XmlRead(Handle, (const char_t*)HwAutoDetectPath, HW_SENSOR_KEY, HW_SENSOR, Sensor, GMI_CONFIG_READ_ONLY);
     Result = GMI_XmlRead(Handle, (const char_t*)HwAutoDetectPath, HW_LENS_KEY,   HW_LENS,   Lens,   GMI_CONFIG_READ_ONLY);
-
+    Result = GMI_XmlRead(Handle, (const char_t*)HwAutoDetectPath, HW_MAINBOARD_KEY, HW_MAINBOARD, Board, GMI_CONFIG_READ_ONLY);
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_CapabilityAutoFileLock.Unlock();
         return Result;
     }
 
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_CapabilityAutoFileLock.Unlock();
         return Result;
     }
+    m_CapabilityAutoFileLock.Unlock();
 
     SYS_INFO("Cpu %s, Sensor %s, Lens %s\n", Cpu, Sensor, Lens);
 
@@ -1821,6 +1870,28 @@ GMI_RESULT ConfigFileManager::GetHwAutoDetectInfo(SysPkgComponents *SysComponent
         SysComponents->s_ZoomLensId = e_ZOOM_LENS_NONE;
     }
 
+    if (strcmp(Board, BOARD_NORMAL) == 0)
+    {
+    	SysComponents->s_BoardId = e_BOARD_NORMAL;
+    }
+    else
+    {
+    	SysComponents->s_BoardId = e_BOARD_LARK;
+    }
+
+    return GMI_SUCCESS;
+}
+
+
+GMI_RESULT ConfigFileManager::GetFactoryIrcut(GeneralParam_Ircut *Ircut)
+{
+	GMI_RESULT Result = m_FactoryOperation.GetIrcut(Ircut);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("get factory ircut informaiton from factoryoperationsetting fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+
     return GMI_SUCCESS;
 }
 
@@ -1831,21 +1902,22 @@ GMI_RESULT ConfigFileManager::GetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr)
     FD_HANDLE  Handle;
     char_t     DeviceInfoPath[128] = {0};
 
-	boolean_t  GetDeviceInfoFail = false;
-	SysPkgDeviceInfo SysDeviceInfoFactory;
-	memset(&SysDeviceInfoFactory, 0, sizeof(SysPkgDeviceInfo));
-	FactorySettingOperation FactoryOperation;
-	Result = FactoryOperation.GetDeviceInfo(&SysDeviceInfoFactory);
-	if (FAILED(Result))
-	{
-		SYS_ERROR("get factory device informaiton form capoperation fail, Result = 0x%lx\n", Result);
-		GetDeviceInfoFail = true;
-	}
+    boolean_t  GetDeviceInfoFail = false;
+    SysPkgDeviceInfo SysDeviceInfoFactory;
+    memset(&SysDeviceInfoFactory, 0, sizeof(SysPkgDeviceInfo));    
+    Result = m_FactoryOperation.GetDeviceInfo(&SysDeviceInfoFactory);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("get factory device informaiton form capoperation fail, Result = 0x%lx\n", Result);
+        GetDeviceInfoFail = true;
+    }
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1854,26 +1926,27 @@ GMI_RESULT ConfigFileManager::GetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr)
     strcpy(DeviceInfoPath, DEVICE_INFO_PATH);
     if (GetDeviceInfoFail)
     {
-	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_NAME_KEY,  DEVICE_NAME,  (char_t*)&(SysDeviceInfoPtr->s_DeviceName),     GMI_CONFIG_READ_WRITE);
-	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_ID_KEY,    DEVICE_ID,    (int32_t*)&(SysDeviceInfoPtr->s_DeviceId),      GMI_CONFIG_READ_WRITE);
-	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MODEL_KEY, DEVICE_MODEL, (char_t*)&(SysDeviceInfoPtr->s_DeviceModel),    GMI_CONFIG_READ_WRITE);
-	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MANUFACTUER_KEY, DEVICE_MANUFACTUER, (char_t*)&(SysDeviceInfoPtr->s_DeviceManufactuer), GMI_CONFIG_READ_WRITE);
-	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_SN_KEY,    DEVICE_SN,    (char_t*)&(SysDeviceInfoPtr->s_DeviceSerialNum),GMI_CONFIG_READ_WRITE);	   
-	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_HWVER_KEY, DEVICE_HWVER, (char_t*)&(SysDeviceInfoPtr->s_DeviceHwVer),    GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_NAME_KEY,  DEVICE_NAME,  (char_t*)&(SysDeviceInfoPtr->s_DeviceName),     GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_ID_KEY,    DEVICE_ID,    (int32_t*)&(SysDeviceInfoPtr->s_DeviceId),      GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MODEL_KEY, DEVICE_MODEL, (char_t*)&(SysDeviceInfoPtr->s_DeviceModel),    GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MANUFACTUER_KEY, DEVICE_MANUFACTUER, (char_t*)&(SysDeviceInfoPtr->s_DeviceManufactuer), GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_SN_KEY,    DEVICE_SN,    (char_t*)&(SysDeviceInfoPtr->s_DeviceSerialNum),GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_HWVER_KEY, DEVICE_HWVER, (char_t*)&(SysDeviceInfoPtr->s_DeviceHwVer),    GMI_CONFIG_READ_WRITE);
     }
     else
     {
-    	Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_NAME_KEY,  SysDeviceInfoFactory.s_DeviceName,  (char_t*)&(SysDeviceInfoPtr->s_DeviceName),     GMI_CONFIG_READ_WRITE);
-	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_ID_KEY,    SysDeviceInfoFactory.s_DeviceId,    (int32_t*)&(SysDeviceInfoPtr->s_DeviceId),      GMI_CONFIG_READ_WRITE);
-	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MODEL_KEY, SysDeviceInfoFactory.s_DeviceModel, (char_t*)&(SysDeviceInfoPtr->s_DeviceModel),    GMI_CONFIG_READ_WRITE);
-	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MANUFACTUER_KEY, SysDeviceInfoFactory.s_DeviceManufactuer, (char_t*)&(SysDeviceInfoPtr->s_DeviceManufactuer), GMI_CONFIG_READ_WRITE);
-	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_SN_KEY,    SysDeviceInfoFactory.s_DeviceSerialNum,    (char_t*)&(SysDeviceInfoPtr->s_DeviceSerialNum),GMI_CONFIG_READ_WRITE);	    
-	    Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_HWVER_KEY, SysDeviceInfoFactory.s_DeviceHwVer, (char_t*)&(SysDeviceInfoPtr->s_DeviceHwVer),    GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_NAME_KEY,  SysDeviceInfoFactory.s_DeviceName,  (char_t*)&(SysDeviceInfoPtr->s_DeviceName),     GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_ID_KEY,    SysDeviceInfoFactory.s_DeviceId,    (int32_t*)&(SysDeviceInfoPtr->s_DeviceId),      GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MODEL_KEY, SysDeviceInfoFactory.s_DeviceModel, (char_t*)&(SysDeviceInfoPtr->s_DeviceModel),    GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_MANUFACTUER_KEY, SysDeviceInfoFactory.s_DeviceManufactuer, (char_t*)&(SysDeviceInfoPtr->s_DeviceManufactuer), GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_SN_KEY,    SysDeviceInfoFactory.s_DeviceSerialNum,    (char_t*)&(SysDeviceInfoPtr->s_DeviceSerialNum),GMI_CONFIG_READ_WRITE);
+        Result = GMI_XmlRead(Handle, (const char_t*)DeviceInfoPath, DEVICE_HWVER_KEY, SysDeviceInfoFactory.s_DeviceHwVer, (char_t*)&(SysDeviceInfoPtr->s_DeviceHwVer),    GMI_CONFIG_READ_WRITE);
     }
-    
+
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1881,9 +1954,11 @@ GMI_RESULT ConfigFileManager::GetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr)
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1897,9 +1972,11 @@ GMI_RESULT ConfigFileManager::SetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr)
     char_t     DeviceInfoPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1917,6 +1994,7 @@ GMI_RESULT ConfigFileManager::SetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr)
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1924,9 +2002,11 @@ GMI_RESULT ConfigFileManager::SetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr)
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1940,9 +2020,11 @@ GMI_RESULT ConfigFileManager::SetNtpServerInfo(SysPkgNtpServerInfo *SysNtpServer
     char_t     NtpInfoPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1956,6 +2038,7 @@ GMI_RESULT ConfigFileManager::SetNtpServerInfo(SysPkgNtpServerInfo *SysNtpServer
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1963,9 +2046,11 @@ GMI_RESULT ConfigFileManager::SetNtpServerInfo(SysPkgNtpServerInfo *SysNtpServer
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -1979,9 +2064,11 @@ GMI_RESULT ConfigFileManager::GetNtpServerInfo(SysPkgNtpServerInfo *SysNtpServer
     char_t     NtpInfoPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -1995,6 +2082,7 @@ GMI_RESULT ConfigFileManager::GetNtpServerInfo(SysPkgNtpServerInfo *SysNtpServer
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2002,9 +2090,11 @@ GMI_RESULT ConfigFileManager::GetNtpServerInfo(SysPkgNtpServerInfo *SysNtpServer
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -2018,9 +2108,11 @@ GMI_RESULT ConfigFileManager::GetSysTimeType(SysPkgDateTimeType *SysDateTimePtr)
     char_t     TimeTypeInfoPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2032,6 +2124,7 @@ GMI_RESULT ConfigFileManager::GetSysTimeType(SysPkgDateTimeType *SysDateTimePtr)
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2039,9 +2132,11 @@ GMI_RESULT ConfigFileManager::GetSysTimeType(SysPkgDateTimeType *SysDateTimePtr)
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -2055,9 +2150,11 @@ GMI_RESULT ConfigFileManager::SetSysTimeType(SysPkgDateTimeType *SysDateTimePtr)
     char_t     TimeTypeInfoPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2070,6 +2167,7 @@ GMI_RESULT ConfigFileManager::SetSysTimeType(SysPkgDateTimeType *SysDateTimePtr)
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2077,9 +2175,11 @@ GMI_RESULT ConfigFileManager::SetSysTimeType(SysPkgDateTimeType *SysDateTimePtr)
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -2093,9 +2193,11 @@ GMI_RESULT ConfigFileManager::SetExternNetworkPort(SysPkgNetworkPort *SysNetwork
     char_t     ExternNetworkPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2107,9 +2209,11 @@ GMI_RESULT ConfigFileManager::SetExternNetworkPort(SysPkgNetworkPort *SysNetwork
     Result = GMI_XmlWrite(Handle, (const char_t*)ExternNetworkPath,  GMI_RTSP_SERVER_TCP_PORT_KEY, (const int32_t)(SysNetworkPortPtr->s_RTSP_Port));
     Result = GMI_XmlWrite(Handle, (const char_t*)ExternNetworkPath,  GMI_SDK_SERVER_PORT_KEY, (const int32_t)(SysNetworkPortPtr->s_SDK_Port));
     Result = GMI_XmlWrite(Handle, (const char_t*)ExternNetworkPath,  GMI_DAEMON_UPDATE_SERVER_PORT_KEY, (const int32_t)(SysNetworkPortPtr->s_Upgrade_Port));
+	Result = GMI_XmlWrite(Handle, (const char_t*)ExternNetworkPath,  GMI_ONVIF_SERVER_PORT_KEY, (const int32_t)(SysNetworkPortPtr->s_ONVIF_Port));
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2117,9 +2221,11 @@ GMI_RESULT ConfigFileManager::SetExternNetworkPort(SysPkgNetworkPort *SysNetwork
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
     return GMI_SUCCESS;
 }
@@ -2132,9 +2238,11 @@ GMI_RESULT ConfigFileManager::GetExternNetworkPort(SysPkgNetworkPort *SysNetwork
     char_t     ExternNetworkPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2145,9 +2253,11 @@ GMI_RESULT ConfigFileManager::GetExternNetworkPort(SysPkgNetworkPort *SysNetwork
     Result = GMI_XmlRead(Handle, (const char_t*)ExternNetworkPath, GMI_RTSP_SERVER_TCP_PORT_KEY,  GMI_RTSP_SERVER_TCP_PORT,  (int32_t*)&(SysNetworkPortPt->s_RTSP_Port),  GMI_CONFIG_READ_WRITE);
     Result = GMI_XmlRead(Handle, (const char_t*)ExternNetworkPath, GMI_SDK_SERVER_PORT_KEY,  GMI_SDK_SERVER_PORT,  (int32_t*)&(SysNetworkPortPt->s_SDK_Port),  GMI_CONFIG_READ_WRITE);
     Result = GMI_XmlRead(Handle, (const char_t*)ExternNetworkPath, GMI_DAEMON_UPDATE_SERVER_PORT_KEY,  GMI_DAEMON_UPDATE_SERVER_PORT,  (int32_t*)&(SysNetworkPortPt->s_Upgrade_Port),  GMI_CONFIG_READ_WRITE);
+    Result = GMI_XmlRead(Handle, (const char_t*)ExternNetworkPath, GMI_ONVIF_SERVER_PORT_KEY,  GMI_ONVIF_SERVER_PORT,  (int32_t*)&(SysNetworkPortPt->s_ONVIF_Port),  GMI_CONFIG_READ_WRITE);
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2155,10 +2265,53 @@ GMI_RESULT ConfigFileManager::GetExternNetworkPort(SysPkgNetworkPort *SysNetwork
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
+    return GMI_SUCCESS;
+}
+
+
+GMI_RESULT ConfigFileManager::GetCapabilities(int32_t CapabilityBufferLength, char_t* Capability, SysPkgXml *SysCapabilities)
+{
+    FILE *Fp = NULL;
+    Fp = fopen(CAPABILITY_SW_FILE_NAME, "rb");
+    if (NULL == Fp)
+    {
+        return GMI_INVALID_OPERATION;
+    }
+
+    fseek(Fp, 0, SEEK_END);
+    int32_t FileSize = ftell(Fp);
+    fseek(Fp, 0, SEEK_SET);
+    int32_t ReadSize = (CapabilityBufferLength >= FileSize ? FileSize : CapabilityBufferLength);
+
+    int32_t Num = fread(Capability, 1, ReadSize, Fp);
+    if (Num != ReadSize)
+    {
+        return GMI_FAIL;
+    }
+
+    for (int32_t i = 0; i < Num; i++)
+    {
+        if (Capability[i] == '\t' || Capability[i] == '\n')
+        {
+            Capability[i] = ' ';
+        }
+    }
+
+    //padding
+    int32_t Paddings = 4-Num%4;
+    for (int32_t i = 0; i < Paddings; i++)
+    {
+        Capability[Num + i] = '\0';
+    }
+    Num += Paddings;
+    SysCapabilities->s_ContentLength = Num;
+
     return GMI_SUCCESS;
 }
 
@@ -2170,9 +2323,11 @@ GMI_RESULT ConfigFileManager::GetAutoFocusMode(int32_t *FocusModePtr)
     char_t     AutoFocusConfigPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2183,6 +2338,7 @@ GMI_RESULT ConfigFileManager::GetAutoFocusMode(int32_t *FocusModePtr)
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2190,9 +2346,11 @@ GMI_RESULT ConfigFileManager::GetAutoFocusMode(int32_t *FocusModePtr)
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -2206,9 +2364,11 @@ GMI_RESULT ConfigFileManager::SetAutoFocusMode(int32_t FocusMode)
     char_t     AutoFocusConfigPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2220,6 +2380,7 @@ GMI_RESULT ConfigFileManager::SetAutoFocusMode(int32_t FocusMode)
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2227,9 +2388,11 @@ GMI_RESULT ConfigFileManager::SetAutoFocusMode(int32_t FocusMode)
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -2316,9 +2479,11 @@ GMI_RESULT ConfigFileManager::GetCurrentZoomPos(int32_t *ZoomPosPtr)
     char_t     ZoomPosConfigPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2329,6 +2494,7 @@ GMI_RESULT ConfigFileManager::GetCurrentZoomPos(int32_t *ZoomPosPtr)
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2336,9 +2502,11 @@ GMI_RESULT ConfigFileManager::GetCurrentZoomPos(int32_t *ZoomPosPtr)
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -2352,9 +2520,11 @@ GMI_RESULT ConfigFileManager::SetCurrentZoomPos(int32_t ZoomPos)
     char_t     ZoomPosConfigPath[128] = {0};
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2366,6 +2536,7 @@ GMI_RESULT ConfigFileManager::SetCurrentZoomPos(int32_t ZoomPos)
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2373,9 +2544,11 @@ GMI_RESULT ConfigFileManager::SetCurrentZoomPos(int32_t ZoomPos)
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;
@@ -2388,9 +2561,8 @@ GMI_RESULT ConfigFileManager::GetPtzSpeedMap(char_t HSpeed[10][64], char_t VSpee
     char_t Hs[10][64]; // ptz speed range 0~100, step by 10
     char_t Vs[10][64];
     memset(Hs, 0, sizeof(Hs));
-    memset(Vs, 0, sizeof(Vs));
-    FactorySettingOperation FactoryOperation;
-    GMI_RESULT Result = FactoryOperation.GetPtzSpeed(Hs, Vs);
+    memset(Vs, 0, sizeof(Vs));    
+    GMI_RESULT Result = m_FactoryOperation.GetPtzSpeed(Hs, Vs);
     if (FAILED(Result))
     {
         SYS_ERROR("get ptz speed map form gmi_factory_setting.xml fail, Result = 0x%lx\n", Result);
@@ -2400,9 +2572,11 @@ GMI_RESULT ConfigFileManager::GetPtzSpeedMap(char_t HSpeed[10][64], char_t VSpee
     FD_HANDLE Handle;
 
     Lock();
+    m_SettingFileLock.Lock();
     Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2442,6 +2616,7 @@ GMI_RESULT ConfigFileManager::GetPtzSpeedMap(char_t HSpeed[10][64], char_t VSpee
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
@@ -2449,9 +2624,11 @@ GMI_RESULT ConfigFileManager::GetPtzSpeedMap(char_t HSpeed[10][64], char_t VSpee
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_SettingFileLock.Unlock();
         Unlock();
         return Result;
     }
+    m_SettingFileLock.Unlock();
     Unlock();
 
     return GMI_SUCCESS;

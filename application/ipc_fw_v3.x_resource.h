@@ -6,7 +6,7 @@
 #if !defined( IPC_FW_V3X_RESOURCE )
 #define IPC_FW_V3X_RESOURCE
 
-#define GMI_RESOURCE_CONFIG_FILE_NAME               "/opt/config/gmi_resource.xml"
+#define GMI_RESOURCE_CONFIG_FILE_NAME               "/opt/config/ipc_network_resource.xml"
 #define GMI_RESOURCE_XML                            GMI_RESOURCE_CONFIG_FILE_NAME
 
 #define GMI_EXTERN_NETWORK_PORT_PATH                "/Config/NetworkPort/Extern/"
@@ -17,6 +17,7 @@
 #define GMI_DAEMON_UPDATE_SERVER_PORT_KEY           "UpdatePort"
 #define GMI_HTTP_SERVER_PORT_KEY                    "HTTP_ServerPort"
 #define GMI_SDK_SERVER_PORT_KEY                     "SDK_ServerPort"
+#define GMI_ONVIF_SERVER_PORT_KEY                   "ONVIF_Port"
 
 /********************** unix socket ***********************/
 
@@ -189,6 +190,13 @@
 #define GMI_STREAMING_MEDIA_SERVER_ENCODE_VIDEO4_IPC_MUTEX_KEY       (GMI_IPC_MUTEX_BASE_KEY+8)
 #define GMI_STREAMING_MEDIA_SERVER_ENCODE_AUDIO1_IPC_MUTEX_KEY       (GMI_IPC_MUTEX_BASE_KEY+10)
 #define GMI_STREAMING_MEDIA_SERVER_DECODE_AUDIO1_IPC_MUTEX_KEY       (GMI_IPC_MUTEX_BASE_KEY+12)
+
+//file lock
+#define CAPABILITY_SW_FILE_NAME_KEY                                  3346
+#define CAPABILITY_AUTO_FILE_NAME_KEY                                3348
+#define GMI_SETTING_CONFIG_FILE_NAME_KEY                             3350
+#define GMI_FACTORY_SETTING_CONFIG_FILE_NAME_KEY                     3352
+#define GMI_RESOURCE_CONFIG_FILE_NAME_KEY                            3354
 
 #define GMI_USER_LOG_IPC_MUTEX_KEY                                   (GMI_IPC_MUTEX_BASE_KEY+14)
 // not used for now 

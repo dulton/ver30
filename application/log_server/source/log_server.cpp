@@ -13,6 +13,7 @@
 #if defined( __linux__ )
 #include "gmi_config_api.h"
 #include "gmi_daemon_heartbeat_api.h"
+#include "sys_info_readonly.h"
 #endif
 #include "share_memory_log_server.h"
 
@@ -65,8 +66,15 @@ int32_t main( int32_t argc, char_t* argv[] )
     }
 #endif
 
+	GMI_RESULT Result = SysInfoReadInitialize();
+    if ( FAILED( Result ) )
+    {
+        printf( "SysInfoReadInitialize fail, Result=%x \n", (uint32_t) Result );
+        return Result;
+    }
+	
     LogPrinter Printer;
-    GMI_RESULT Result = Printer.Initialize( NULL, 0 );
+    Result = Printer.Initialize( NULL, 0 );
     if ( FAILED( Result ) )
     {
         printf( "log printer initialization fail, Result=%x \n", (uint32_t) Result );
@@ -103,6 +111,7 @@ int32_t main( int32_t argc, char_t* argv[] )
     if ( FAILED( Result ) )
     {
         Printer.Deinitialize();
+		SysInfoReadDeinitialize();
         printf( "log repository debug log parameter getting fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -143,6 +152,7 @@ int32_t main( int32_t argc, char_t* argv[] )
     {
         Repository.Deinitialize();
         Printer.Deinitialize();
+		SysInfoReadDeinitialize();
         printf( "get log publish server address fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -153,6 +163,7 @@ int32_t main( int32_t argc, char_t* argv[] )
     {
         Repository.Deinitialize();
         Printer.Deinitialize();
+        SysInfoReadDeinitialize();
         printf( "get log publish server port fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -168,6 +179,7 @@ int32_t main( int32_t argc, char_t* argv[] )
     {
         Repository.Deinitialize();
         Printer.Deinitialize();
+        SysInfoReadDeinitialize();
         printf( "Publisher.Initialize failed, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -186,6 +198,7 @@ int32_t main( int32_t argc, char_t* argv[] )
         Publisher.Deinitialize();
         Repository.Deinitialize();
         Printer.Deinitialize();
+        SysInfoReadDeinitialize();
         printf( "get log server config fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -196,6 +209,7 @@ int32_t main( int32_t argc, char_t* argv[] )
         Publisher.Deinitialize();
         Repository.Deinitialize();
         Printer.Deinitialize();
+        SysInfoReadDeinitialize();
         printf( "get log server heartbeat interval fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -211,6 +225,7 @@ int32_t main( int32_t argc, char_t* argv[] )
         Publisher.Deinitialize();
         Repository.Deinitialize();
         Printer.Deinitialize();
+        SysInfoReadDeinitialize();
         printf( "heartbeat thread creating fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -222,6 +237,7 @@ int32_t main( int32_t argc, char_t* argv[] )
         Publisher.Deinitialize();
         Repository.Deinitialize();
         Printer.Deinitialize();
+        SysInfoReadDeinitialize();
         printf( "heartbeat thread starting fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -237,6 +253,7 @@ int32_t main( int32_t argc, char_t* argv[] )
         Publisher.Deinitialize();
         Repository.Deinitialize();
         Printer.Deinitialize();
+        SysInfoReadDeinitialize();
         printf( "log_server initialization fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -252,6 +269,7 @@ int32_t main( int32_t argc, char_t* argv[] )
         Publisher.Deinitialize();
         Repository.Deinitialize();
         Printer.Deinitialize();
+		SysInfoReadDeinitialize();
         printf( "log_server register log printer fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -281,6 +299,7 @@ int32_t main( int32_t argc, char_t* argv[] )
         Publisher.Deinitialize();
         Repository.Deinitialize();
         Printer.Deinitialize();
+        SysInfoReadDeinitialize();
         printf( "log_server register log publisher fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -303,6 +322,7 @@ int32_t main( int32_t argc, char_t* argv[] )
         Publisher.Deinitialize();
         Repository.Deinitialize();
         Printer.Deinitialize();
+        SysInfoReadDeinitialize();
         printf( "log_server run fail, Result=%x \n", (uint32_t) Result );
         return Result;
     }
@@ -322,6 +342,7 @@ int32_t main( int32_t argc, char_t* argv[] )
     Result = Publisher.Deinitialize();
     Result = Repository.Deinitialize();
     Result = Printer.Deinitialize();
+    Result = SysInfoReadDeinitialize();
     return 0;
 }
 
@@ -396,84 +417,82 @@ GMI_RESULT GetLogRepositoryUserLogParameter( char_t *UserLogFilePath, int32_t *U
 #if defined( __linux__ )
 
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
     }
 
     printf( "GetUserLogShareMemoryKey, Default_ShareMemoryKey=%d \n", GMI_USER_LOG_SHARE_MEMORY_KEY );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_SHARE_MEMORY_KEY, GMI_USER_LOG_SHARE_MEMORY_KEY, (int32_t*)UserLogShareMemoryKey, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_SHARE_MEMORY_KEY, GMI_USER_LOG_SHARE_MEMORY_KEY, (int32_t*)UserLogShareMemoryKey);
     if ( FAILED( Result ) )
-    {
-        GMI_XmlFileSave(Handle);
+    {        
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "GetUserLogShareMemoryKey, Default_ShareMemoryKey=%d, ShareMemoryKey=%ld \n", GMI_USER_LOG_SHARE_MEMORY_KEY, *UserLogShareMemoryKey );
 
     printf( "GetUserLogIpcMutexKey, Default_IpcMutexKey=%d \n", GMI_USER_LOG_IPC_MUTEX_KEY );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_IPC_MUTEX_KEY, GMI_USER_LOG_IPC_MUTEX_KEY, (int32_t*)UserLogIpcMutexKey, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_IPC_MUTEX_KEY, GMI_USER_LOG_IPC_MUTEX_KEY, (int32_t*)UserLogIpcMutexKey );
     if ( FAILED( Result ) )
-    {
-        GMI_XmlFileSave(Handle);
+    {       
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "GetUserLogIpcMutexKey, Default_IpcMutexKey=%d, IpcMutexKey=%ld \n", GMI_USER_LOG_IPC_MUTEX_KEY, *UserLogIpcMutexKey );
-
-    Result = GMI_XmlFileSave(Handle);
+	
+	Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;
     }
 
-    Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
     }
 
     printf( "log server, GetUserLogFilePath, Default_UserLogFilePath=%s \n", GMI_LOG_DEFAULT_USER_LOG_FILE_PATH );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_FILE_PATH, GMI_LOG_DEFAULT_USER_LOG_FILE_PATH, UserLogFilePath, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_FILE_PATH, GMI_LOG_DEFAULT_USER_LOG_FILE_PATH, UserLogFilePath);
     if ( FAILED( Result ) )
-    {
-        GMI_XmlFileSave(Handle);
+    {        
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "log server, GetUserLogFilePath, Default_UserLogFilePath=%s, UserLogFilePath=%s \n", GMI_LOG_DEFAULT_USER_LOG_FILE_PATH, UserLogFilePath );
 
     printf( "log server, GetUserLogStorageLimitMode, Default_UserLogStorageLimitMode=%d \n", GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_MODE );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_STORAGE_LIMET_MODE, GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_MODE, UserLogStorageLimitMode, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_STORAGE_LIMET_MODE, GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_MODE, UserLogStorageLimitMode );
     if ( FAILED( Result ) )
-    {
-        GMI_XmlFileSave(Handle);
+    {        
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "log server, GetUserLogStorageLimitMode, Default_UserLogStorageLimitMode=%d, UserLogStorageLimitMode=%d \n", GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_MODE, *UserLogStorageLimitMode );
 
     printf( "log server, GetUserLogStorageLimitParameter, Default_UserLogStorageLimitParameter=%d \n", GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_PARAMETER );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_STORAGE_LIMET_PARAMETER, GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_PARAMETER, UserLogStorageLimitParameter, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_STORAGE_LIMET_PARAMETER, GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_PARAMETER, UserLogStorageLimitParameter);
     if ( FAILED( Result ) )
-    {
-        GMI_XmlFileSave(Handle);
+    {        
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "log server, GetUserLogStorageLimitParameter, Default_UserLogStorageLimitParameter=%d, UserLogStorageLimitParameter=%d \n", GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_PARAMETER, *UserLogStorageLimitParameter );
 
     printf( "log server, GetUserUserLogShareMemorySize, Default_UserLogShareMemorySize=%d \n", GMI_LOG_DEFAULT_USER_LOG_SHARE_MEMORY_SIZE );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_SHARE_MEMORY_SIZE, GMI_LOG_DEFAULT_USER_LOG_SHARE_MEMORY_SIZE, UserLogShareMemorySize, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_USER_LOG_SHARE_MEMORY_SIZE, GMI_LOG_DEFAULT_USER_LOG_SHARE_MEMORY_SIZE, UserLogShareMemorySize );
     if ( FAILED( Result ) )
     {
-        GMI_XmlFileSave(Handle);
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "log server, GetUserUserLogShareMemorySize, Default_UserLogShareMemorySize=%d, UserLogShareMemorySize=%d \n", GMI_LOG_DEFAULT_USER_LOG_SHARE_MEMORY_SIZE, *UserLogShareMemorySize );
-
-    Result = GMI_XmlFileSave(Handle);
+   	Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;
     }
-
 #elif defined( _WIN32 )
     strcpy_s( UserLogFilePath, MAX_PATH_LENGTH, "gmi_user.log" );
     *UserLogStorageLimitMode      = GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_MODE;
@@ -545,27 +564,28 @@ GMI_RESULT GetLogPublishServerPort( uint16_t *Port )
     int32_t ServerPort = 0;
 
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
     }
 
     printf( "GetLogPublishServerPort, Default_Port=%d \n", GMI_LOG_PUBLISH_SERVER_PORT );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_PUBLISH_SERVER_PORT, GMI_LOG_PUBLISH_SERVER_PORT, &ServerPort, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_PUBLISH_SERVER_PORT, GMI_LOG_PUBLISH_SERVER_PORT, &ServerPort );
     if ( FAILED( Result ) )
     {
-        GMI_XmlFileSave(Handle);
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "GetLogPublishServerPort, Default_Port=%d, ServerPort=%d \n", GMI_LOG_PUBLISH_SERVER_PORT, ServerPort );
     *Port = htons((uint16_t)ServerPort);
 
-    Result = GMI_XmlFileSave(Handle);
+	Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;
     }
+
 
 #elif defined( _WIN32 )
     uint32_t ServerPort = 0;
@@ -592,72 +612,70 @@ GMI_RESULT GetLogServerConfig( uint16_t *ServerPort, long_t *ShareMemoryKey, siz
 #if defined( __linux__ )
 
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
     }
 
     printf( "log server, GetLogServerUDPPort, Default_UDP_Port=%d \n", LOG_SERVER_DEFAULT_SERVER_PORT );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SERVER_UDP_PORT, LOG_SERVER_DEFAULT_SERVER_PORT, (int32_t *) &TempServerPort, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SERVER_UDP_PORT, LOG_SERVER_DEFAULT_SERVER_PORT, (int32_t *) &TempServerPort );
     if ( FAILED( Result ) )
-    {
-        GMI_XmlFileSave(Handle);
+    {       
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "log server, GetLogServerUDPPort, Default_UDP_Port=%d, UDP_Port=%d \n", LOG_SERVER_DEFAULT_SERVER_PORT, TempServerPort );
 
     printf( "log server, GetLogServerShareMemoryKey, DefaultShareMemoryKey=%d \n", GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_KEY, GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY, (int32_t *) ShareMemoryKey, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_KEY, GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY, (int32_t *) ShareMemoryKey );
     if ( FAILED( Result ) )
-    {
-        GMI_XmlFileSave(Handle);
+    {    
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "log server, GetLogServerShareMemoryKey, DefaultShareMemoryKey=%d, ShareMemoryKey=%ld \n", GMI_LOG_SERVER_DEFAUL_SHARE_MEMORY_KEY, *ShareMemoryKey );
 
     printf( "log server, GetLogServerIpcMutexKey, DefaultIpcMutexKey=%d \n", GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_KEY );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_MUTEX_KEY, GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_KEY, (int32_t *) IpcMutexKey, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_MUTEX_KEY, GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_KEY, (int32_t *) IpcMutexKey);
     if ( FAILED( Result ) )
-    {
-        GMI_XmlFileSave(Handle);
+    {  
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "log server, GetLogServerIpcMutexKey, DefaultIpcMutexKey=%d, IpcMutexKey=%ld \n", GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_KEY, *IpcMutexKey );
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
-        GMI_XmlFileSave(Handle);
         return Result;
     }
 
-    Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
-    {
-        GMI_XmlFileSave(Handle);
+    {    
         return Result;
     }
 
     printf( "log server, GetLogServerShareMemorySize, DefaultShareMemorySize=%d \n", GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_SIZE, GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE, (int32_t *) ShareMemorySize, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_SHARE_MEMORY_SIZE, GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE, (int32_t *) ShareMemorySize );
     if ( FAILED( Result ) )
-    {
-        GMI_XmlFileSave(Handle);
+    {  
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "log server, GetLogServerShareMemorySize, DefaultShareMemorySize=%d, ShareMemorySize=%d \n", GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE, *ShareMemorySize );
 
     printf( "log server, GetLogServerDebugLevel, DefaultDebugLogLevel=%d \n", GMI_LOG_MODULE_LOG_DEBUG_LOG_LEVEL );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_DEBUG_LOG_LEVEL, GMI_LOG_MODULE_LOG_DEBUG_LOG_LEVEL, (int32_t *) DebugLogLevel, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_DEBUG_LOG_LEVEL, GMI_LOG_MODULE_LOG_DEBUG_LOG_LEVEL, (int32_t *) DebugLogLevel );
     if ( FAILED( Result ) )
-    {
-        GMI_XmlFileSave(Handle);
+    {    
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "log server, GetLogServerDebugLevel, DefaultDebugLogLevel=%d, DebugLogLevel=%d \n", GMI_LOG_MODULE_LOG_DEBUG_LOG_LEVEL, *DebugLogLevel );
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -683,22 +701,22 @@ GMI_RESULT GetHeartbeatInterval( uint32_t *Interval )
 #if defined( __linux__ )
 
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
     }
 
     printf( "log server, GetHeartbeatInterval, Default_Interval=%d \n", GMI_LOG_SERVER_HEARTBEAT_INTERVAL );
-    Result = GMI_XmlRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_HEARTBEAT_INTERVAL, GMI_LOG_SERVER_HEARTBEAT_INTERVAL, (int32_t *) Interval, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, LOG_SERVER_CONFIG_PATH, LOG_SERVER_CONFIG_HEARTBEAT_INTERVAL, GMI_LOG_SERVER_HEARTBEAT_INTERVAL, (int32_t *) Interval );
     if ( FAILED( Result ) )
     {
-        GMI_XmlFileSave(Handle);
+		SysInfoClose(Handle);
         return Result;
     }
     printf( "log server, GetHeartbeatInterval, Default_Interval=%d, Interval=%d \n", GMI_LOG_SERVER_HEARTBEAT_INTERVAL, *Interval );
 
-    Result = GMI_XmlFileSave(Handle);
+	Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;

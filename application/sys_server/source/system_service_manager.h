@@ -16,6 +16,7 @@
 
 #define FACTORY_DEFAULT_REBOOT_DELAY_TIMES  (5)
 #define REBOOT_DELAY_TIMES                  (10)
+#define VIDIN_BLOCKED_TIMES                 (45)
 
 class SystemServiceManager :public UserLogQuery
 {
@@ -101,7 +102,9 @@ private:
         return Stamp;
     }
 private:
+	//get version
     GMI_RESULT GetVersion(char_t FwVer[64]);
+    //media param load
     GMI_RESULT MediaParamLoad(void);
     GMI_RESULT MiscInitial(void);
     GMI_RESULT MiscDeinitial(void);
@@ -110,19 +113,24 @@ private:
     GMI_RESULT MediaDeinitial(void);
     GMI_RESULT PTZ_Initial();
     GMI_RESULT PTZ_Deinitial();
+    //rtsp & sdk stream server monitor
     static void* ServerMonitorThread(void *Argument);
     void_t *ServerMonitor(void);
+    GMI_RESULT StartStreamMonitor();
+    GMI_RESULT StopStreamMonitor();
+    //record zoom position
     static void* RecordZoomPosThread(void *Argument);
     void_t *RecordZoomPos(void);
     GMI_RESULT StopRecordZoomPos();
     GMI_RESULT StartRecordZoomPos();
+    //maintain system
+    static void* MaintainSystemThread(void *Argument);
+    void_t *MaintainSystem(void);     
     GMI_RESULT OsalResourceDeinitial(void);
     GMI_RESULT OsalResourceInitial(void);
     int32_t FloatToInt(float_t Value);
     GMI_RESULT FactoryResetImaging(void);
-    GMI_RESULT FactoryResetNetInfo(void);
-    GMI_RESULT StartStreamMonitor();
-    GMI_RESULT StopStreamMonitor();
+    GMI_RESULT FactoryResetNetInfo(void);    
     GMI_RESULT RecreateVideoCodec(int32_t StreamId, VideoEncodeParam *EncParamPtr);
     void AudVidStreamIsExis(boolean_t *Exit);
     GMI_RESULT StartAudioEncode(void);
@@ -145,6 +153,7 @@ private:
     boolean_t                          m_RecordZoomPosThreadExitFlag;
     GMI_Thread                         m_RecordZoomPosThread;
     GMI_Event                          m_RecordZoomNotify;
+    GMI_Thread                         m_MaintainSystemThread;
 
     //objects
     ReferrencePtr<ConfigFileManager>   m_ConfigFileManagerPtr;
@@ -165,10 +174,9 @@ private:
     int32_t                                              m_VideoStreamNum;
     ReferrencePtr<int32_t, DefaultObjectsDeleter>        m_VideoStreamTypePtr;
     ReferrencePtr<VideoEncodeParam, DefaultObjectsDeleter>  m_VideoEncParamPtr;
-    ReferrencePtr<FD_HANDLE, DefaultObjectsDeleter>      m_VideoCodecHandle;
-    ReferrencePtr<SysPkgEncStreamCombine>                m_SysEncStreamCombine;
+    ReferrencePtr<FD_HANDLE, DefaultObjectsDeleter>      m_VideoCodecHandle;    
     ReferrencePtr<AudioEncParam>                         m_AudioEncParamPtr;
-    ReferrencePtr<AudioDecParam>                         m_AudioDecParamPtr;
+    ReferrencePtr<AudioDecParam>                         m_AudioDecParamPtr;    
     FD_HANDLE                                            m_VideoInOutHandle;
     FD_HANDLE                                            m_ImageHandle;
     FD_HANDLE                                            m_AutoFocusHandle;
@@ -193,6 +201,18 @@ private:
     ReferrencePtr<SysPkgPresetInfo_Inner, DefaultObjectsDeleter>  m_PresetsInfo_InnerPtr;
     int32_t                            m_FocusMode;
     int32_t                            m_ZoomPos;
+    //network port
+    SysPkgNetworkPort                  m_SysNetWorkPort;
+    //device info
+    SysPkgDeviceInfo                   m_SysDeviceInfo;
+    //capabilities
+    ReferrencePtr<char_t, DefaultObjectsDeleter> m_CapabilitiesMessagePtr;
+    SysPkgXml                          m_SysCapability;
+    //ntp server info
+    SysPkgNtpServerInfo                m_SysNtpServerInfo;
+	//set vidin blocked flag
+	boolean_t                          m_VidInBlocked;
+    
 };
 
 

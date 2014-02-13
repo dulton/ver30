@@ -10,6 +10,8 @@
 #include "sys_env_types.h"
 #include "gmi_system_headers.h"
 
+extern uint16_t  g_ONVIF_Port;
+extern uint16_t  g_RTSP_Port;
 
 static DevNetworkInterface l_NetworkInterfaceInfo[DEFAULT_VALID_NETWORK_NUM] =
 {
@@ -44,12 +46,12 @@ static NetworkProtocols l_NetworkProtocols[DEFAULT_NETWORK_PROTOCOLS] =
     {
         tt__NetworkProtocolType__HTTP,
         xsd__boolean__true_,
-        DEFAULT_SERVER_PORT
+        g_ONVIF_Port
     },
     {
         tt__NetworkProtocolType__RTSP,
         xsd__boolean__true_,
-        DEFAULT_RTSP_PORT
+        g_RTSP_Port
     }
 };
 
@@ -92,35 +94,35 @@ DevScopes g_DeviceScopes[DEFAULT_VALID_SCOPE_NUM] =
 
 int min(int x, int y)
 {
-	return ((x>y)?y:x);
+    return ((x>y)?y:x);
 }
 
 
 void SaveTestValueBeforeReboot()
 {
-	FILE   *fp = NULL;
-	int n_i = 0;
+    FILE   *fp = NULL;
+    int n_i = 0;
 
-	fp = fopen("/usr/local/bin/onvifTmpFile", "wb");
+    fp = fopen("/usr/local/bin/onvifTmpFile", "wb");
     if (fp)
     {
         fprintf(fp, "DiscoveryMode %d\n", g_DiscoveryMode);
-		fprintf(fp, "LocalAddressFlag %d\n", g_LocalAddressFlag);
-		fprintf(fp, "DhcpFlag %d\n", g_DhcpFlag);
-		fprintf(fp, "ChangeScopes %d\n", g_ChangeScopes);
+        fprintf(fp, "LocalAddressFlag %d\n", g_LocalAddressFlag);
+        fprintf(fp, "DhcpFlag %d\n", g_DhcpFlag);
+        fprintf(fp, "ChangeScopes %d\n", g_ChangeScopes);
 
-		for(n_i = DEFAULT_USED_SCOPE_NUM; n_i < DEFAULT_VALID_SCOPE_NUM; n_i++)
-		{
-			if(strlen(g_DeviceScopes[n_i].s_ScopeUrl) > 0)
-			{
-				fprintf(fp, "ScopeUrl %s\n", g_DeviceScopes[n_i].s_ScopeUrl);
-			}
-		}		
+        for(n_i = DEFAULT_USED_SCOPE_NUM; n_i < DEFAULT_VALID_SCOPE_NUM; n_i++)
+        {
+            if(strlen(g_DeviceScopes[n_i].s_ScopeUrl) > 0)
+            {
+                fprintf(fp, "ScopeUrl %s\n", g_DeviceScopes[n_i].s_ScopeUrl);
+            }
+        }
         fclose(fp);
         fp = NULL;
     }
-	
-	return;
+
+    return;
 }
 
 
@@ -153,7 +155,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__GetServices(struct soap *soap_ptr, struct _tds_
 
     do
     {
-        HttpPort           = DEFAULT_SERVER_PORT;
+        HttpPort           = g_ONVIF_Port;
         NetInterface       = l_NetworkInterfaceInfo;
         ValidInterfacesNum = DEFAULT_VALID_NETWORK_NUM;
         for (No = 0; No < ValidInterfacesNum; No++)
@@ -278,29 +280,20 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__SetSystemDateAndTime(struct soap *soap_ptr, str
         }
 
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "DateTimeType       = %d\n", tds__SetSystemDateAndTime->DateTimeType);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "DaylightSavings    = %d\n", tds__SetSystemDateAndTime->DaylightSavings);
-        if (tds__SetSystemDateAndTime->TimeZone
-                && tds__SetSystemDateAndTime->TimeZone->TZ
-                && tds__SetSystemDateAndTime->UTCDateTime
-                && tds__SetSystemDateAndTime->UTCDateTime->Date
-                && tds__SetSystemDateAndTime->UTCDateTime->Time)
-        {
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "TimeZone           = %s\n", tds__SetSystemDateAndTime->TimeZone->TZ);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "Year               = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Date->Year);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "Moth               = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Date->Month);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "Day                = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Date->Day);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "Hour               = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Time->Hour);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "Min                = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Time->Minute);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "Second             = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Time->Second);
-        }
-
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "DaylightSavings    = %d\n", tds__SetSystemDateAndTime->DaylightSavings);        
+        ONVIF_INFO("DateTimeType       = %d\n", tds__SetSystemDateAndTime->DateTimeType);
+        ONVIF_INFO("DaylightSavings    = %d\n", tds__SetSystemDateAndTime->DaylightSavings);  
         //timezone
         if (tds__SetSystemDateAndTime->TimeZone
                 && tds__SetSystemDateAndTime->TimeZone->TZ)
         {
-            if (0 == strcmp(tds__SetSystemDateAndTime->TimeZone->TZ, "INVALIDTIMEZONE"))
+        	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "TimeZone = %s\n", tds__SetSystemDateAndTime->TimeZone->TZ);
+        	ONVIF_INFO("TimeZone = %s\n", tds__SetSystemDateAndTime->TimeZone->TZ);
+            if (strlen(tds__SetSystemDateAndTime->TimeZone->TZ) == strlen("INVALIDTIMEZONE")
+            	&& 0 == strcmp(tds__SetSystemDateAndTime->TimeZone->TZ, "INVALIDTIMEZONE"))
             {
                 DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "invalid timezone\n");
+                ONVIF_ERROR("invalid timezone\n");
                 ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:InvalidTimeZone", "The argument value is invalid");
                 break;
             }
@@ -311,6 +304,12 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__SetSystemDateAndTime(struct soap *soap_ptr, str
                 && tds__SetSystemDateAndTime->UTCDateTime->Date
                 && tds__SetSystemDateAndTime->UTCDateTime->Time)
         {
+        	ONVIF_INFO("Year               = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Date->Year);
+            ONVIF_INFO("Moth               = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Date->Month);
+            ONVIF_INFO("Day                = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Date->Day);
+            ONVIF_INFO("Hour               = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Time->Hour);
+            ONVIF_INFO("Min                = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Time->Minute);
+            ONVIF_INFO("Second             = %d\n", tds__SetSystemDateAndTime->UTCDateTime->Time->Second);
             if ((tds__SetSystemDateAndTime->UTCDateTime->Time->Hour > 24)
                     || (tds__SetSystemDateAndTime->UTCDateTime->Time->Minute > 60)
                     || (tds__SetSystemDateAndTime->UTCDateTime->Time->Second > 60)
@@ -318,11 +317,11 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__SetSystemDateAndTime(struct soap *soap_ptr, str
                     || (tds__SetSystemDateAndTime->UTCDateTime->Date->Day > 31))
             {
                 DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "invalid datetime\n");
+                ONVIF_ERROR("invalid datetime\n");
                 ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:InvalidDateTime", "The argument value is invalid");
                 break;
-            }
+            }			                        
         }
-
 
         SysPkgSysTime SysTime;
         SysPkgTimeZone SysTimezone;
@@ -333,6 +332,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__SetSystemDateAndTime(struct soap *soap_ptr, str
         if (FAILED(Result))
         {
             DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SysGetTime fail, Result = 0x%lx\n", Result);
+            ONVIF_ERROR("SysGetTime fail, Result = 0x%lx\n", Result);
             break;
         }
 
@@ -345,8 +345,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__SetSystemDateAndTime(struct soap *soap_ptr, str
             time_t        TimeTmp;
             struct tm    *TodayPtr;
 
-            memset(&SysTime, 0, sizeof(SysPkgSysTime));
-            memset(&SysTimezone, 0, sizeof(SysPkgTimeZone));
+            memset(&SysTime, 0, sizeof(SysPkgSysTime));           
             UTCTime.tm_year   = tds__SetSystemDateAndTime->UTCDateTime->Date->Year  - 1900;
             UTCTime.tm_mon    = tds__SetSystemDateAndTime->UTCDateTime->Date->Month - 1;
             UTCTime.tm_mday   = tds__SetSystemDateAndTime->UTCDateTime->Date->Day;
@@ -378,7 +377,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__SetSystemDateAndTime(struct soap *soap_ptr, str
                 }
             }
             else//user not set timezone
-            {
+            {            			        
                 switch (SysTimezone.s_TimeZone)
                 {
                 case 8://CST
@@ -406,6 +405,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__SetSystemDateAndTime(struct soap *soap_ptr, str
             if (FAILED(Result))
             {
                 DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SysSetTime fail, Result = 0x%lx\n", Result);
+                ONVIF_ERROR("SysSetTime fail, Result = 0x%lx\n", Result);
                 Failure = true;
                 break;
             }
@@ -631,9 +631,9 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__SystemReboot(struct soap *soap_ptr, struct _tds
         tds__SystemRebootResponse->Message = soap_strdup(soap_ptr, REBOOT_MESSAGE);
 
         if(tt__DiscoveryMode__Discoverable == g_DiscoveryMode)
-		{
-			DevStatusVaryNotifyService(TYPE_BYE);
-		}
+        {
+            DevStatusVaryNotifyService(TYPE_BYE);
+        }
 
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
         ONVIF_INFO("%s normal out.........\n", __func__);
@@ -780,98 +780,98 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__GetScopes(struct soap *soap_ptr, struct _tds__G
 SOAP_FMAC5 int SOAP_FMAC6 __tds__SetScopes(struct soap *soap_ptr, struct _tds__SetScopes *tds__SetScopes, struct _tds__SetScopesResponse *tds__SetScopesResponse)
 {
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
-    ONVIF_INFO("%s In.........\n", __func__);    
-	int ScopesNum = 0;
-	int n_i = 0;
-	int n_k = 0;
-	int IsHaveUrl = 0;
+    ONVIF_INFO("%s In.........\n", __func__);
+    int ScopesNum = 0;
+    int n_i = 0;
+    int n_k = 0;
+    int IsHaveUrl = 0;
 
     do
     {
-		if (NULL == tds__SetScopes)
-		{			
-			break;
-		}
+        if (NULL == tds__SetScopes)
+        {
+            break;
+        }
 
-		ScopesNum = tds__SetScopes->__sizeScopes;
+        ScopesNum = tds__SetScopes->__sizeScopes;
 
-		if (0 == ScopesNum)
-		{
-			g_ChangeScopes = 0;
-			for(n_k=DEFAULT_USED_SCOPE_NUM; n_k<DEFAULT_VALID_SCOPE_NUM; n_k++)
-			{
-				memset(g_DeviceScopes[n_k].s_ScopeUrl, 0, sizeof(g_DeviceScopes[n_k].s_ScopeUrl));
-			}
-			SaveTestValueBeforeReboot();
-			break;
-		}
+        if (0 == ScopesNum)
+        {
+            g_ChangeScopes = 0;
+            for(n_k=DEFAULT_USED_SCOPE_NUM; n_k<DEFAULT_VALID_SCOPE_NUM; n_k++)
+            {
+                memset(g_DeviceScopes[n_k].s_ScopeUrl, 0, sizeof(g_DeviceScopes[n_k].s_ScopeUrl));
+            }
+            SaveTestValueBeforeReboot();
+            break;
+        }
 
-		for (n_i = 0; n_i < ScopesNum; n_i++)
-		{
-			IsHaveUrl = 0;
-			if(n_i > (DEFAULT_VALID_SCOPE_NUM-1))
-			{	
-				break;
-			}	
+        for (n_i = 0; n_i < ScopesNum; n_i++)
+        {
+            IsHaveUrl = 0;
+            if(n_i > (DEFAULT_VALID_SCOPE_NUM-1))
+            {
+                break;
+            }
 
-			for(n_k=0; n_k<DEFAULT_VALID_SCOPE_NUM; n_k++)
-			{
-				if((0 != strlen(g_DeviceScopes[n_k].s_ScopeUrl)) 
-					&& (NULL != tds__SetScopes->Scopes[n_i])
-					&& (0 == strncmp(g_DeviceScopes[n_k].s_ScopeUrl, tds__SetScopes->Scopes[n_i], strlen(g_DeviceScopes[n_k].s_ScopeUrl))))
-				{
-					IsHaveUrl = 1;
-					break;
-				}
-			}
-		}
+            for(n_k=0; n_k<DEFAULT_VALID_SCOPE_NUM; n_k++)
+            {
+                if((0 != strlen(g_DeviceScopes[n_k].s_ScopeUrl))
+                        && (NULL != tds__SetScopes->Scopes[n_i])
+                        && (0 == strncmp(g_DeviceScopes[n_k].s_ScopeUrl, tds__SetScopes->Scopes[n_i], strlen(g_DeviceScopes[n_k].s_ScopeUrl))))
+                {
+                    IsHaveUrl = 1;
+                    break;
+                }
+            }
+        }
 
-		if (1 == IsHaveUrl)
-		{
-			ONVIF_Fault(soap_ptr, "ter:OperationProhibited", "ScopeOverwrite", "Scope parameter overwrites fixed device scope setting, command rejected.");
-			break;
-		}
+        if (1 == IsHaveUrl)
+        {
+            ONVIF_Fault(soap_ptr, "ter:OperationProhibited", "ScopeOverwrite", "Scope parameter overwrites fixed device scope setting, command rejected.");
+            break;
+        }
 
-		n_i = 0;
-		for (n_k = 0; n_k < DEFAULT_VALID_SCOPE_NUM; n_k++)
-		{
-			if(0 != strlen(g_DeviceScopes[n_k].s_ScopeUrl))
-			{
-				n_i++;
-			}
-		}
-		if ((ScopesNum+n_i) > DEFAULT_VALID_SCOPE_NUM)
-		{			
-			break;
-		}
+        n_i = 0;
+        for (n_k = 0; n_k < DEFAULT_VALID_SCOPE_NUM; n_k++)
+        {
+            if(0 != strlen(g_DeviceScopes[n_k].s_ScopeUrl))
+            {
+                n_i++;
+            }
+        }
+        if ((ScopesNum+n_i) > DEFAULT_VALID_SCOPE_NUM)
+        {
+            break;
+        }
 
-		n_i = 0;
-		for (n_k = 0; n_k < DEFAULT_VALID_SCOPE_NUM; n_k++)
-		{
-			if((0 == strlen(g_DeviceScopes[n_k].s_ScopeUrl))
-				&& (NULL != tds__SetScopes->Scopes[n_i]))
-			{
-				memcpy(g_DeviceScopes[n_k].s_ScopeUrl, tds__SetScopes->Scopes[n_i], min(strlen(tds__SetScopes->Scopes[n_i]), sizeof(g_DeviceScopes[n_k].s_ScopeUrl)-1));	
-				n_i++;
-				if(n_i >= ScopesNum)
-				{
-					break;
-				}
-			}
-		}
+        n_i = 0;
+        for (n_k = 0; n_k < DEFAULT_VALID_SCOPE_NUM; n_k++)
+        {
+            if((0 == strlen(g_DeviceScopes[n_k].s_ScopeUrl))
+                    && (NULL != tds__SetScopes->Scopes[n_i]))
+            {
+                memcpy(g_DeviceScopes[n_k].s_ScopeUrl, tds__SetScopes->Scopes[n_i], min(strlen(tds__SetScopes->Scopes[n_i]), sizeof(g_DeviceScopes[n_k].s_ScopeUrl)-1));
+                n_i++;
+                if(n_i >= ScopesNum)
+                {
+                    break;
+                }
+            }
+        }
 
-		if (n_i > 0)
-		{
-			g_ChangeScopes = 1;
-			SaveTestValueBeforeReboot();			
-		}
-	    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
-	    ONVIF_INFO("%s normal out.........\n", __func__);
-	    return SOAP_OK;
+        if (n_i > 0)
+        {
+            g_ChangeScopes = 1;
+            SaveTestValueBeforeReboot();
+        }
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
+        ONVIF_INFO("%s normal out.........\n", __func__);
+        return SOAP_OK;
     }
     while (0);
 
-	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
     ONVIF_INFO("%s abnormal out.........\n", __func__);
     return SOAP_SVR_FAULT;
 }
@@ -882,52 +882,52 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__AddScopes(struct soap *soap_ptr, struct _tds__A
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
     ONVIF_INFO("%s In.........\n", __func__);
     int ScopesCount = 0;
-	int n_i = 0;
-	int n_k = 0;
-	int AddScopeNum = 0;
+    int n_i = 0;
+    int n_k = 0;
+    int AddScopeNum = 0;
 
-	for (n_i = 0; n_i < DEFAULT_VALID_SCOPE_NUM; n_i++)
-	{
-		if(0 != strlen(g_DeviceScopes[n_i].s_ScopeUrl))
-		{
-			ScopesCount++;
-		}
-	}
+    for (n_i = 0; n_i < DEFAULT_VALID_SCOPE_NUM; n_i++)
+    {
+        if(0 != strlen(g_DeviceScopes[n_i].s_ScopeUrl))
+        {
+            ScopesCount++;
+        }
+    }
 
-	do
-	{
-		AddScopeNum = tds__AddScopes->__sizeScopeItem;
-		if ((AddScopeNum+ScopesCount) > DEFAULT_VALID_SCOPE_NUM)
-		{			
-			break;
-		}
+    do
+    {
+        AddScopeNum = tds__AddScopes->__sizeScopeItem;
+        if ((AddScopeNum+ScopesCount) > DEFAULT_VALID_SCOPE_NUM)
+        {
+            break;
+        }
 
-		for (n_i = 0; n_i < DEFAULT_VALID_SCOPE_NUM; n_i++)
-		{
-			if((0 == strlen(g_DeviceScopes[n_i].s_ScopeUrl))
-				&& (NULL != tds__AddScopes->ScopeItem[n_k]))
-			{
-				memcpy(g_DeviceScopes[n_i].s_ScopeUrl, tds__AddScopes->ScopeItem[n_k], min(strlen(tds__AddScopes->ScopeItem[n_k]), sizeof(g_DeviceScopes[n_i].s_ScopeUrl)-1));	
-				n_k++;
-				if(n_k >= AddScopeNum)
-				{
-					break;
-				}
-			}
-		}
+        for (n_i = 0; n_i < DEFAULT_VALID_SCOPE_NUM; n_i++)
+        {
+            if((0 == strlen(g_DeviceScopes[n_i].s_ScopeUrl))
+                    && (NULL != tds__AddScopes->ScopeItem[n_k]))
+            {
+                memcpy(g_DeviceScopes[n_i].s_ScopeUrl, tds__AddScopes->ScopeItem[n_k], min(strlen(tds__AddScopes->ScopeItem[n_k]), sizeof(g_DeviceScopes[n_i].s_ScopeUrl)-1));
+                n_k++;
+                if(n_k >= AddScopeNum)
+                {
+                    break;
+                }
+            }
+        }
 
-		if (n_k > 0)
-		{
-			g_ChangeScopes = 1;
-			SaveTestValueBeforeReboot();
-			if(tt__DiscoveryMode__Discoverable == g_DiscoveryMode)
-			{
-				DevStatusVaryNotifyService(TYPE_HELLO);
-			}
-		}
-	    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
-	    ONVIF_INFO("%s normal out.........\n", __func__);
-	    return SOAP_OK;
+        if (n_k > 0)
+        {
+            g_ChangeScopes = 1;
+            SaveTestValueBeforeReboot();
+            if(tt__DiscoveryMode__Discoverable == g_DiscoveryMode)
+            {
+                DevStatusVaryNotifyService(TYPE_HELLO);
+            }
+        }
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
+        ONVIF_INFO("%s normal out.........\n", __func__);
+        return SOAP_OK;
     }
     while(0);
 
@@ -942,50 +942,50 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__RemoveScopes(struct soap *soap_ptr, struct _tds
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
     ONVIF_INFO("%s In.........\n", __func__);
     int n_k = 0;
-	int n_i = 0;	
-	int IsHaveUrl = 0;
+    int n_i = 0;
+    int IsHaveUrl = 0;
 
-	do
-	{
-		if (0 >= tds__RemoveScopes->__sizeScopeItem)
-		{
-			break;
-		}
+    do
+    {
+        if (0 >= tds__RemoveScopes->__sizeScopeItem)
+        {
+            break;
+        }
 
-		for (n_i = 0; n_i < tds__RemoveScopes->__sizeScopeItem; n_i++)
-		{
-			for (n_k = DEFAULT_USED_SCOPE_NUM; n_k < DEFAULT_VALID_SCOPE_NUM; n_k++)
-			{
-				if((0 != strlen(g_DeviceScopes[n_k].s_ScopeUrl)) 
-					&& (NULL != tds__RemoveScopes->ScopeItem[n_i])
-					&&(strlen(g_DeviceScopes[n_k].s_ScopeUrl) == strlen(tds__RemoveScopes->ScopeItem[n_i]))
-					&&(0 == strncmp(g_DeviceScopes[n_k].s_ScopeUrl, tds__RemoveScopes->ScopeItem[n_i], strlen(tds__RemoveScopes->ScopeItem[n_i]))))
-				{
-					memset(g_DeviceScopes[n_k].s_ScopeUrl, 0, sizeof(g_DeviceScopes[n_k].s_ScopeUrl));
-					IsHaveUrl = 1;
-				}
-			}
-		}
+        for (n_i = 0; n_i < tds__RemoveScopes->__sizeScopeItem; n_i++)
+        {
+            for (n_k = DEFAULT_USED_SCOPE_NUM; n_k < DEFAULT_VALID_SCOPE_NUM; n_k++)
+            {
+                if((0 != strlen(g_DeviceScopes[n_k].s_ScopeUrl))
+                        && (NULL != tds__RemoveScopes->ScopeItem[n_i])
+                        &&(strlen(g_DeviceScopes[n_k].s_ScopeUrl) == strlen(tds__RemoveScopes->ScopeItem[n_i]))
+                        &&(0 == strncmp(g_DeviceScopes[n_k].s_ScopeUrl, tds__RemoveScopes->ScopeItem[n_i], strlen(tds__RemoveScopes->ScopeItem[n_i]))))
+                {
+                    memset(g_DeviceScopes[n_k].s_ScopeUrl, 0, sizeof(g_DeviceScopes[n_k].s_ScopeUrl));
+                    IsHaveUrl = 1;
+                }
+            }
+        }
 
-		if(1 == IsHaveUrl)
-		{
-			g_ChangeScopes = 1;
-			SaveTestValueBeforeReboot();
-			if(tt__DiscoveryMode__Discoverable == g_DiscoveryMode)
-			{
-				DevStatusVaryNotifyService(TYPE_HELLO);
-			}
-		}
-		
-		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
-	    ONVIF_INFO("%s normal out.........\n", __func__);
-	    return SOAP_OK;
-	}
-	while(0);
-	
-	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
-	ONVIF_INFO("%s Abnormal out.........\n", __func__);
-	return SOAP_SVR_FAULT;
+        if(1 == IsHaveUrl)
+        {
+            g_ChangeScopes = 1;
+            SaveTestValueBeforeReboot();
+            if(tt__DiscoveryMode__Discoverable == g_DiscoveryMode)
+            {
+                DevStatusVaryNotifyService(TYPE_HELLO);
+            }
+        }
+
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
+        ONVIF_INFO("%s normal out.........\n", __func__);
+        return SOAP_OK;
+    }
+    while(0);
+
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
+    ONVIF_INFO("%s Abnormal out.........\n", __func__);
+    return SOAP_SVR_FAULT;
 }
 
 
@@ -1005,7 +1005,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__SetDiscoveryMode(struct soap *soap_ptr, struct 
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
     ONVIF_INFO("%s In.........\n", __func__);
     g_DiscoveryMode= tds__SetDiscoveryMode->DiscoveryMode;
-	SaveTestValueBeforeReboot();
+    SaveTestValueBeforeReboot();
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
     ONVIF_INFO("%s normal out.........\n", __func__);
     return SOAP_OK;
@@ -1522,7 +1522,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tds__GetCapabilities(struct soap *soap_ptr, struct _
         AudioSources  = DEFAULT_AUDIO_SOURCES;
         AudioOutputs  = DEFAULT_AUIDO_OUTPUTS;
         memcpy(InterfaceName, DEFAULT_NETWORK_NAME, NETWORK_INFO_LENGTH);
-        HttpPort      = DEFAULT_SERVER_PORT;
+        HttpPort      = g_ONVIF_Port;
 
         Result = NET_GetIpInfo(InterfaceName, IP);
         if (FAILED(Result))

@@ -420,10 +420,17 @@ typedef enum tagSysIRCutMaterialType
 
 typedef enum tagSysZoomLensId
 {
+	  e_ZOOM_LENS_NONE  = 0,
 	  e_ZOOM_LENS_DF003 = 1,//18x,TAMRON
-	  e_ZOOM_LENS_YB22,//22x,FUJI
-	  e_ZOOM_LENS_NONE  = 255
+	  e_ZOOM_LENS_YB22,//22x,FUJI	  
 }SysPkgZoomLensId;
+
+
+typedef enum tagSysBoardId
+{
+	e_BOARD_NORMAL = 1,
+	e_BOARD_LARK,
+}SysPkgBoardId;
 
 
 //just only superuser(manufactory tools) can write it.
@@ -461,7 +468,8 @@ typedef struct tagSysComponents
     uint8_t            s_IRCutCtrlType;//e_IRCUT_CTRL_GPIO/e_IRCUT_CTRL_SPI
 	uint8_t            s_IRLedCtrlType;//e_IR_CTRL_GPIO/e_IR_CTRL_PWM/e_IR_CTRL_SERIAL/e_IR_CTRL_ALARM_INPUT/e_IR_CTRL_NONE
 	uint8_t            s_ShieldType;//e_SHIELD_TIAN_JING/e_SHIELD_HONG_BEN
-    uint8_t            s_Reserved[3];
+	uint8_t            s_BoardId;
+    uint8_t            s_Reserved[2];
 }SysPkgComponents;
 
 
@@ -485,6 +493,7 @@ typedef enum tagSysCapabilityCategory
 }SysPkgCapabilityCategory;
 
 
+#define MAX_MESSAGE_LENGTH   (16384)
 typedef struct tagSysXml
 {	
 	int32_t  s_Encrypt;// 0-no encrypt, 1-md5, 2-aes
@@ -628,7 +637,8 @@ typedef struct tagSysNetworkPort
 	int32_t  s_RTSP_Port;
 	int32_t  s_SDK_Port;
 	int32_t  s_Upgrade_Port;
-	int32_t  s_Reserved[6];	
+	int32_t  s_ONVIF_Port;
+	int32_t  s_Reserved[5];	
 }SysPkgNetworkPort;
 
 
@@ -741,7 +751,7 @@ typedef struct tagUserInfo
 	char_t    s_UserName[128];
 	char_t    s_UserPass[128];
 	uint16_t  s_UserFlag;//admin--1, operator--2, viewer--3
-	uint16_t  s_UserLevel;//user auth
+	uint16_t  s_UserLevel;//operator 0-9
 }SysPkgUserInfo;
 
 

@@ -2,43 +2,23 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include<sys/time.h>
 #include "gmi_system_headers.h"
-#include "gmi_debug.h"
 #include "gmi_brdwrapperdef.h"
 #include "gmi_brdwrapper.h"
-
-//#define SYSTEM_DEBUG_LOG
-#define NETWORK_DOWN      0
-#define NETWORK_UP            1
-#define GMI_NETWORK_RX_PACKETS_CMD "ifconfig eth0 | grep \"RX packets:\" | awk '{print $2}' | tr -d 'packets:'"
-#define GMI_NETWORK_TX_PACKETS_CMD "ifconfig eth0 | grep \"TX packets:\" | awk '{print $2}' | tr -d 'packets:'"
+#include <syslog.h>
+#include "gmi_network_reboot_times.h"
 
 int machine_init(struct statics * statics);
 void get_system_info(struct system_info *info);
-GMI_RESULT GMI_GetNetWorkPackets(const char_t *Cmd, char_t *Buf, int32_t Length)
-{
-    if(NULL == Cmd)
-    {
-        return GMI_INVALID_PARAMETER;
-    }
 
-    FILE *Fp = popen(Cmd, "r");
-    if ( NULL == Fp )
-    {
-        return GMI_FAIL;
-    }
 
-    int32_t Retval = fread(Buf, 1, Length, Fp);
-    pclose(Fp);
-    if ( Retval < 0 )
-    {
-        return GMI_FAIL;
-    }
-
-    Buf[Retval] = '\0';
-
-    return GMI_SUCCESS;
-}
+static uint32_t l_DetectNumber = NETWORK_DETECT_NUMBER_MAX;
+static uint32_t l_InterruptsNumber = NETWORK_DETECT_INTERRUPTS_MAX;
+SystemNetWorkRebootTimes RebootTimes;
+static uint8_t DownFlags = 0;
+static uint8_t UpFlags = 0;
+static uint8_t PhyFlags = 0;
 
 int32_t main(void)
 {
@@ -46,98 +26,194 @@ int32_t main(void)
     struct system_info Info;
 
     machine_init(&Stat);
-    GMI_DebugLog2FileInitial();
+
+    openlog("system_resource_detect", LOG_CONS |LOG_PERROR , LOG_LOCAL0);
 
     int32_t IdleCpu = 0;
-    int32_t TmpLen=0;
-    int32_t RxLength=0;
-    int32_t TxLength=0;
-    char_t RxBuffer[8];
-    char_t TxBuffer[8];
     uint8_t Link = 0;
-    uint8_t EthId = 0;
-    uint8_t WriteId = 10;
-    GMI_RESULT  Result = GMI_FAIL;
-    
+    uint32_t InterruptsNumber = 0;
+    uint32_t OldInterruptsNumber = 0;
 
     for(;;)
     {
         get_system_info(&Info);
-#ifdef SYSTEM_DEBUG_LOG
-        printf("Used CPU:%.1f%%\n",(float_t)Info.cpustates[0]/10);
-        printf("Nice CPU:%.1f%%\n",(float_t)Info.cpustates[1]/10);
-        printf("System CPU:%.1f%%\n",(float_t)Info.cpustates[2]/10);
-        printf("Idle CPU:%.1f%%\n",(float_t)Info.cpustates[3]/10);
-        printf("total memroy:%d\n", Info.memory[0]);
-        printf("free memroy:%d\n", Info.memory[1]);
-        printf("buffers:%d\n", Info.memory[2]);
-        printf("cached:%d\n", Info.memory[3]);
-        printf("total swap:%d\n", Info.memory[4]);
-        printf("free swap:%d\n", Info.memory[5]);
-#endif
+
         IdleCpu = Info.cpustates[3]/10;
         if(IdleCpu < 20)
         {
-            GMI_DeBugPrint("System  CPU  Use  Is  %d %",(100-IdleCpu));
+            syslog(LOG_DEBUG,"[%d]System  CPU  Use  Is  %d",__LINE__, (100-IdleCpu));
         }
 
         if(Info.memory[1] < 21000)
         {
-            GMI_DeBugPrint("System Free Memroy Is  %d Kb",Info.memory[1]);
+            syslog(LOG_DEBUG,"[%d]System Free Memroy Is  %d Kb",__LINE__, Info.memory[1]);
         }
 
-        Result  = GMI_BrdGetEthLinkStat(EthId, &Link);
+	GMI_RESULT	Result = GMI_FAIL;
+
+        //detect system Phy is exist
+      //  memset(TxBuffer, 0 ,sizeof(TxBuffer));
+       // Result = GMI_GetNetWorkPackets(GMI_NETWORK_DEV_CMD, TxBuffer, sizeof(TxBuffer));
+	boolean_t dev = false;
+	Result = GMI_NetWorkDevCheck(&dev);
         if (SUCCEEDED(Result))
         {
-            if (NETWORK_DOWN == Link)
+   //         const char_t *tmp = "eth0";
+            //if Phy is exist , detect network Line is exist
+           // if(memcmp(tmp, TxBuffer,4) == 0)
+	    if ( dev )
             {
-                GMI_DeBugPrint("System NetWork Status Is Down");
+		syslog(LOG_DEBUG,"[%d]GMI_NetWorkDevCheck Is Exist",__LINE__);
+                l_DetectNumber = NETWORK_DETECT_NUMBER_MAX;
+                Result  = GMI_BrdGetEthLinkStat(0, &Link);
+                if (SUCCEEDED(Result))
+                {
+                    //Network is Down
+                    if (NETWORK_DOWN == Link)
+                    {
+                        if(DownFlags == 0)
+                        {
+                            DownFlags = 1;
+                            UpFlags = 0;
+                            syslog(LOG_DEBUG,"[%d]System NetWork Status Is Down",__LINE__);
+                        }
+                    }
+                    //Network is Up
+                    else if (NETWORK_UP == Link)
+                    {
+                        if(UpFlags == 0)
+                        {
+                            UpFlags = 1;
+                            DownFlags = 0;
+                            syslog(LOG_DEBUG,"[%d]System NetWork Status Is Up",__LINE__);
+                        }
+                    }
+
+                    char_t Buffer[32];
+                    Result = GMI_GetNetWorkPackets(GMI_NETWORK_INTERRUPTS_CMD, Buffer, sizeof(Buffer));
+                    if (SUCCEEDED(Result))
+                    {
+                          InterruptsNumber = atoi(Buffer) - OldInterruptsNumber;
+                          OldInterruptsNumber = atoi(Buffer);
+                          if(InterruptsNumber > NETWORK_INTERRUPTS_NUMBER_MAX)
+                          {
+				syslog(LOG_DEBUG,"[%d]System NetWork Restart l_InterruptsNumber = %d",__LINE__,l_InterruptsNumber);
+                                l_InterruptsNumber--;
+                                if(0 == l_InterruptsNumber)
+                                {
+				        syslog(LOG_DEBUG,"[%d]System NetWork Restart",__LINE__);
+				        l_InterruptsNumber = NETWORK_DETECT_INTERRUPTS_MAX;
+                                       char_t CmdBuffer[256];
+                                       memset(CmdBuffer, 0, sizeof(CmdBuffer));
+                                       strcpy(CmdBuffer, GMI_NETWORK_RESTART);
+                                       system(CmdBuffer);
+                                       //网卡重启，会导致config_tool服务CPU 飙升到60%，重启网卡后，kill config_tool服务。
+				       syslog(LOG_DEBUG,"[%d]System NetWork Restart, config_tool server restart",__LINE__);
+                                       memset(CmdBuffer, 0, sizeof(CmdBuffer));
+                                       strcpy(CmdBuffer, GMI_CONFIT_TOOL_RESTART);
+                                       system(CmdBuffer);       
+                                }
+                          }
+                     }
+                }
+                else
+                {
+                    syslog(LOG_ERR,"[%d]System  GetEthLinkStat Fail",__LINE__);
+                }
+            }
+            else
+            {
+		syslog(LOG_DEBUG,"[%d]GMI_NetWorkDevCheck Is not Exist",__LINE__);
+                //Phy is not exist ,Detect Phy 2 minute
+                l_DetectNumber--;
+                if(0 == l_DetectNumber)
+                {
+                    GMI_RESULT Result = GMI_FAIL;
+                    struct timeval tv;
+                    struct timezone tz;
+                    gettimeofday (&tv , &tz);
+
+                    Result = GMI_FileExists(NETWORK_REBOOT_FILE);
+                    if (SUCCEEDED(Result))
+                    {
+                        Result = GMI_ReadRebootTimes(&RebootTimes);
+                        if (SUCCEEDED(Result))
+                        {
+
+			    //如果上次找不到PHY的时间和这次相差24小时，那么重新开始计时
+                            if ((tv.tv_sec - RebootTimes.s_RebootTime) > 86400)
+                            {
+				syslog(LOG_DEBUG,"[%d]System NetWork Phy not detect time for 24 hours", __LINE__);
+                                RebootTimes.s_Times = 0;
+                                RebootTimes.s_RebootTime = tv.tv_sec;
+                                Result = GMI_WriteRebootTimes(&RebootTimes);
+                                if(FAILED(Result))
+                                {
+                                    syslog(LOG_ERR,"[%d]Write Reboot file Fail",__LINE__);
+                                }
+                            }
+
+                            if(RebootTimes.s_Times > 5)
+                            {
+                                if(PhyFlags == 0)
+                                     syslog(LOG_ERR,"[%d]System Phy  is not Exist, System Reboot 5 times",__LINE__);
+                            }
+                            else
+                            {
+                                RebootTimes.s_Times += 1;
+                                RebootTimes.s_RebootTime = tv.tv_sec;
+                                
+                                Result = GMI_WriteRebootTimes(&RebootTimes);
+                                if(FAILED(Result))
+                                {
+                                    syslog(LOG_ERR,"[%d]Write Reboot file Fail",__LINE__);
+                                }
+
+                                Result = GMI_BrdHwReset();
+                                if (FAILED(Result))
+                                {
+                                    syslog(LOG_ERR,"[%d]GMI_BrdHwReset Call Fail",__LINE__);
+                                }
+                                else if (SUCCEEDED(Result))
+                                {
+                                    syslog(LOG_ERR,"[%d]System Phy  is not Exist, GMI_BrdHwReset	for Watchdog",__LINE__);
+                                }
+                            }
+                        }
+                    }
+                    else if (FAILED(Result))
+                    { 
+                        syslog(LOG_DEBUG,"[%d]System NetWork Phy First reboot", __LINE__);
+
+                        RebootTimes.s_Times = 1;
+                        RebootTimes.s_RebootTime = tv.tv_sec;
+                        Result = GMI_WriteRebootTimes(&RebootTimes);
+                        if(FAILED(Result))
+                        {
+                            syslog(LOG_ERR,"[%d]Write Reboot file Fail",__LINE__);
+                        }
+
+                        Result = GMI_BrdHwReset();
+                        if (FAILED(Result))
+                        {
+                            syslog(LOG_ERR,"[%d]GMI_BrdHwReset Call Fail",__LINE__);
+                        }
+                        else if (SUCCEEDED(Result))
+                        {
+                            syslog(LOG_ERR,"[%d]System Phy is not Exist, GMI_BrdHwReset  for Watchdog",__LINE__);
+                        }
+                    }
+                }
             }
         }
         else
         {
-            GMI_DeBugPrint("System  GetEthLinkStat Fail");
+            //Phy is not exist
+            syslog(LOG_ERR,"[%d]Get  System   Phy  Fail",__LINE__);
         }
-
-        memset(RxBuffer, 0 ,sizeof(RxBuffer));
-        Result = GMI_GetNetWorkPackets(GMI_NETWORK_RX_PACKETS_CMD, RxBuffer, sizeof(RxBuffer));
-        if (SUCCEEDED(Result))
-        {
-        	TmpLen = atoi(RxBuffer) - RxLength;
-        	RxLength = atoi(RxBuffer);
-        	if (TmpLen < 10)
-        	{
-        		GMI_DeBugPrint("System NetWork Recieve Packets Number is 0");
-        	}
-        }
-        else
-        {
-        	GMI_DeBugPrint("System	GMI_GetNetWorkPackets Fail");
-        }
-
-        memset(TxBuffer, 0 ,sizeof(TxBuffer));
-        Result = GMI_GetNetWorkPackets(GMI_NETWORK_TX_PACKETS_CMD, TxBuffer, sizeof(TxBuffer));
-        if (SUCCEEDED(Result))
-        {
-        	TmpLen = atoi(TxBuffer) - TxLength;
-        	TxLength = atoi(TxBuffer);
-        	if (TmpLen == 0)
-        	{
-                        if(WriteId == 0)
-                        {
-        		      GMI_DeBugPrint("System NetWork Send Packets Number is 0");
-			      WriteId = 5;
-                        }
-		        WriteId--;
-        	}
-        }
-        else
-        {
-        	GMI_DeBugPrint("System	GMI_GetNetWorkPackets Fail");
-        }
-
-        sleep(2);
+        sleep(30);
     }
 
+    closelog();
     return 0;
 }

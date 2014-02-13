@@ -7,6 +7,8 @@
 #ifdef DEBUG_ONVIF
 int        g_LogCount = 0;
 int        g_FLogFile1 = 0;
+boolean_t  g_ErrorEnable = 0;
+boolean_t  g_InfoEnable = 0;
 time_t     Now;
 struct tm *pTime;
 char_t     g_Buffer[1024];
@@ -14,12 +16,14 @@ char_t     g_Buffer[1024];
 
 // LogClient  g_Client;
 
-int LogInitial()
+int LogInitial(boolean_t ErrEnable, boolean_t InfoEnable)
 {
 #ifdef DEBUG_ONVIF
     char szCmdBuffer[255] = {"0"};
 
     g_LogCount = 0;
+    g_ErrorEnable = ErrEnable;
+    g_InfoEnable  = InfoEnable;
     memset(szCmdBuffer, 0, 255);
     snprintf(szCmdBuffer, 255, "cp %s %s", LOG_FILE1, LOG_FILE1_OLD);
     system(szCmdBuffer);

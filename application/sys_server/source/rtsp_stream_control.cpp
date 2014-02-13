@@ -94,20 +94,20 @@ GMI_RESULT RtspStreamControl::Start(SysPkgEncodeCfg *SysEncodeCfg, int32_t Video
     for (int32_t i = 0; i < VideoCount; i++)
     {
         //audio and video
-        if (SYS_AUDIO_VIDEO_STREAM == SysVideoEncodeCfgPtr.GetPtr()->s_StreamType)
+        if (SYS_AUDIO_VIDEO_STREAM == SysVideoEncodeCfgPtr.GetPtr()[i].s_StreamType)
         {
             StreamTable[i].s_SubStreamNum  = 2;
             StreamTable[i].s_SubStreamInfo = BaseMemoryManager::Instance().News<SubStreamInfo>(StreamTable[i].s_SubStreamNum);
             StreamTable[i].s_SubStreamInfo[0].s_EncodeType = MEDIA_VIDEO_H264;
             StreamTable[i].s_SubStreamInfo[0].s_StreamId   = i;
-            StreamTable[i].s_SubStreamInfo[0].s_FrameRate  = SysVideoEncodeCfgPtr.GetPtr()->s_FPS;
+            StreamTable[i].s_SubStreamInfo[0].s_FrameRate  = SysVideoEncodeCfgPtr.GetPtr()[i].s_FPS;
             if (SYS_BRC_CBR == SysVideoEncodeCfgPtr.GetPtr()->s_BitrateCtrl)
             {
-                StreamTable[i].s_SubStreamInfo[0].s_MaxBitRate = SysVideoEncodeCfgPtr.GetPtr()->s_BitRateAverage*1024;
+                StreamTable[i].s_SubStreamInfo[0].s_MaxBitRate = SysVideoEncodeCfgPtr.GetPtr()[i].s_BitRateAverage*1024;
             }
             else
             {
-                StreamTable[i].s_SubStreamInfo[0].s_MaxBitRate = SysVideoEncodeCfgPtr.GetPtr()->s_BitRateUp*1024;
+                StreamTable[i].s_SubStreamInfo[0].s_MaxBitRate = SysVideoEncodeCfgPtr.GetPtr()[i].s_BitRateUp*1024;
             }
             StreamTable[i].s_SubStreamInfo[1].s_EncodeType = MEDIA_AUDIO_G711A;
             StreamTable[i].s_SubStreamInfo[1].s_StreamId   = 0;
@@ -120,14 +120,14 @@ GMI_RESULT RtspStreamControl::Start(SysPkgEncodeCfg *SysEncodeCfg, int32_t Video
             StreamTable[i].s_SubStreamInfo = BaseMemoryManager::Instance().News<SubStreamInfo>(StreamTable[i].s_SubStreamNum);
             StreamTable[i].s_SubStreamInfo[0].s_EncodeType = MEDIA_VIDEO_H264;
             StreamTable[i].s_SubStreamInfo[0].s_StreamId   = i;
-            StreamTable[i].s_SubStreamInfo[0].s_FrameRate  = SysVideoEncodeCfgPtr.GetPtr()->s_FPS;
-            if (SYS_BRC_CBR == SysVideoEncodeCfgPtr.GetPtr()->s_BitrateCtrl)
+            StreamTable[i].s_SubStreamInfo[0].s_FrameRate  = SysVideoEncodeCfgPtr.GetPtr()[i].s_FPS;
+            if (SYS_BRC_CBR == SysVideoEncodeCfgPtr.GetPtr()[i].s_BitrateCtrl)
             {
-                StreamTable[i].s_SubStreamInfo[0].s_MaxBitRate = SysVideoEncodeCfgPtr.GetPtr()->s_BitRateAverage*1024;
+                StreamTable[i].s_SubStreamInfo[0].s_MaxBitRate = SysVideoEncodeCfgPtr.GetPtr()[i].s_BitRateAverage*1024;
             }
             else
             {
-                StreamTable[i].s_SubStreamInfo[0].s_MaxBitRate = SysVideoEncodeCfgPtr.GetPtr()->s_BitRateUp*1024;
+                StreamTable[i].s_SubStreamInfo[0].s_MaxBitRate = SysVideoEncodeCfgPtr.GetPtr()[i].s_BitRateUp*1024;
             }
         }
     }

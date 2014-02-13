@@ -10,6 +10,7 @@
 #include "ipc_fw_v3.x_resource.h"
 #include "gmi_daemon_heartbeat_api.h"
 #include "sys_client.h"
+#include "sys_info_readonly.h"
 #include "log.h"
 
 //#define DEBUG_TEST
@@ -99,12 +100,14 @@ GMI_RESULT CgiLogIn(const char_t *FncCmd)
 
         CGI_ERROR("GMI_DaemonInit [%d] Status = %d\n",__LINE__, Status);
 
+
         if (1 == Status)
         {
             uint32_t Authvalue = 0;
             uint16_t OutSessionId = 0;
             uint8_t UserFlag =0;
-
+            uint16_t SdkPort = 30000;
+#if 0
             Result = SysAuthLogin(UserName, Password, atoi(InSessionId), ID_MOUDLE_REST_WEB, &OutSessionId, &UserFlag, &Authvalue);
             if (FAILED(Result))
             {
@@ -113,8 +116,17 @@ GMI_RESULT CgiLogIn(const char_t *FncCmd)
                 break;
             }
 
-            RetFormat = "cgiFncCmd=%s&cgiContentType=%s&Content={\"RetCode\":\"%d\",\"SessionId\":\"%d\",\"UserFlag\":\"%d\",\"Authvalue\":\"%u\"}";
-            fprintf(stdout, RetFormat, FncCmd, CONTENT_TYPE_JSON, RetCode, OutSessionId, UserFlag, Authvalue);
+#endif
+            Result = SysAuthLoginExt(UserName, Password, atoi(InSessionId), ID_MOUDLE_REST_WEB, &OutSessionId, &UserFlag, &Authvalue, &SdkPort);
+	    if (FAILED(Result))
+	    {
+		RetCode = RETCODE_ERROR;
+		CGI_ERROR("Call SysAuthLogin Error Result = %ld\n",Result);
+		break;
+	    }
+
+            RetFormat = "cgiFncCmd=%s&cgiContentType=%s&Content={\"RetCode\":\"%d\",\"SessionId\":\"%d\",\"UserFlag\":\"%d\",\"Authvalue\":\"%u\",\"SdkPort\":\"%u\"}";
+            fprintf(stdout, RetFormat, FncCmd, CONTENT_TYPE_JSON, RetCode, OutSessionId, UserFlag, Authvalue, SdkPort);
 
             GMI_DaemonUnInit(&DaemonData);
             return GMI_SUCCESS;
@@ -3905,6 +3917,206 @@ GMI_RESULT CgiConfigToolIrCutClose(const char_t *FncCmd)
     fprintf(stdout, RetFormat, Cmd, RetCode);
     return GMI_FAIL;
 }
+
+
+GMI_RESULT CgiConfigToolGetSystemInfo(const char_t *FncCmd)
+{
+
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t	Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+    
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+    
+    do
+    {
+    	if (NULL == SessionId || NULL == AuthValue)
+    	{
+    		RetCode = RETCODE_ERROR;
+    		break;
+    	}
+
+        Result = SysInfoReadInitialize();
+	if (FAILED(Result))
+	{
+		RetCode = RETCODE_ERROR;
+		break;
+	}
+	
+	FD_HANDLE Handle;
+
+	Result = SysInfoOpen(CAPABILITY_AUTO_FILE_NAME, &Handle);
+	if (FAILED(Result))
+	{
+		RetCode = RETCODE_ERROR;
+		break;
+	}
+
+        //read cpu name
+        char_t CpuInfo[32] = "0";
+        
+	Result = SysInfoRead(Handle, HW_AUTO_DETECT_INFO_PATH, HW_CPU_KEY, HW_CPU, CpuInfo);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+
+	//read sensor name
+	char_t Sensor[32] = "0";
+
+	Result = SysInfoRead(Handle, HW_AUTO_DETECT_INFO_PATH, HW_SENSOR_KEY, HW_SENSOR, Sensor);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+
+        SysInfoClose(Handle);
+	
+	Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+	if (FAILED(Result))
+	{
+		RetCode = RETCODE_ERROR;
+		break;
+	}
+		
+	//read software version
+	char_t SoftwareVersion[64] = "0";
+#if 0
+	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY,  0, &StreamNum);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+#endif
+
+	//read hardware version
+	char_t HardwareVersion[64] = "0";
+	Result = SysInfoRead(Handle, DEVICE_INFO_PATH, DEVICE_HWVER_KEY, "NULL", HardwareVersion);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+	
+	//read alarm state, true-enable, false-disable
+	boolean_t AlarmEnabled = 0;
+#if 0
+	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY,  0, &StreamNum);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+#endif
+
+	
+	//read language
+	char_t Language[32] = "0";
+        strcpy(Language, "chinese");
+#if 0
+	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY,	0, &StreamNum);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+#endif
+	
+	//read GB28181 state, true-enable, false-disable
+	boolean_t GbEnabled = 0;
+#if 0
+	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY,	0, &StreamNum);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+#endif
+    
+        SysInfoClose(Handle);
+
+	Result = SysInfoOpen(CAPABILITY_SW_FILE_NAME, &Handle);
+	if (FAILED(Result))
+	{
+		RetCode = RETCODE_ERROR;
+		break;
+	}
+
+	//read max resolution
+	int32_t Width = 0;
+	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_WIDTH_KEY, 0, &Width);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+	
+	int32_t Height = 0;
+	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_HEIGHT_KEY, 0, &Height);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+	
+	//read max stream num
+		int32_t StreamNum = 0;
+	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY,	0, &StreamNum);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+
+	SysInfoClose(Handle);
+
+
+	Result = SysInfoOpen(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, &Handle);
+	if (FAILED(Result))
+	{
+		RetCode = RETCODE_ERROR;
+		break;
+	}
+
+		//read ircut name
+	char_t IRcut[32] = "0";
+	Result = SysInfoRead(Handle, VIDEO_IRCUT_NAME_PATH, VIDEO_IRCUT_NAME_KEY, "NULL", IRcut);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+	
+	//read shield name
+	char_t Shield[32] = "0";
+	Result = SysInfoRead(Handle, PTZ_SHIELD_NAME_PATH, PTZ_SHIELD_NAME_KEY, "NULL", Shield);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+        SysInfoClose(Handle);
+
+	SysInfoReadDeinitialize();
+
+    	RetFormat = "%s={\"RetCode\":\"%d\",\"CpuInfo\":\"%s\",\"Sensor\":\"%s\",\"IRcut\":\"%s\",\"Shield\":\"%s\",\"Width\":\"%d\",\"Height\":\"%d\",\"StreamNum\":\"%d\",\"SoftwareVersion\":\"%s\",\"HardwareVersion\":\"%s\",\"AlarmEnabled\":\"%d\",\"Language\":\"%s\",\"GbEnabled\":\"%d\"}";
+    	fprintf(stdout, RetFormat, Cmd, RetCode, CpuInfo, Sensor, IRcut, Shield, Width, Height, StreamNum, SoftwareVersion, HardwareVersion, AlarmEnabled, Language, GbEnabled);
+    	return GMI_SUCCESS;
+    
+    } while(0);
+    
+    SysInfoReadDeinitialize();
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+}
+
 
 GMI_RESULT CgiSysGetLogInfo(const char_t *FncCmd)
 {

@@ -387,6 +387,7 @@ GMI_RESULT GMI_InquiryMassge(FD_HANDLE SockFd)
         {
             GMI_DeBugPrint("[%s][%d] Reboot Cmd from server  = %d ! ",__func__,__LINE__,ntohs(l_DaemonMessage->s_LocalServerId));
 
+            Tmp=0;
             if(g_ApplicationOpenFlags->s_Gb28181ServerOpenFlags)
             {
                 g_ApplicationQuitFlag->s_GbQuitFlag = true;
@@ -405,7 +406,7 @@ GMI_RESULT GMI_InquiryMassge(FD_HANDLE SockFd)
             if(g_ApplicationOpenFlags->s_SdkServerOpenFlags)
             {
                 g_ApplicationQuitFlag->s_SdkQuitFlag = true;
-                while (g_ApplicationQuitFlag->s_OnvifQuitFlag)
+                while (g_ApplicationQuitFlag->s_SdkQuitFlag)
                 {
                     if(0 == Tmp)
                     {
@@ -421,6 +422,21 @@ GMI_RESULT GMI_InquiryMassge(FD_HANDLE SockFd)
             {
                 g_ApplicationQuitFlag->s_OnvifQuitFlag = true;
                 while (g_ApplicationQuitFlag->s_OnvifQuitFlag)
+                {
+                    if(0 == Tmp)
+                    {
+                        break;
+                    }
+                    sleep(1);
+                    --Tmp;
+                }
+            }
+
+            Tmp=5;
+            if(g_ApplicationOpenFlags->s_TransportServerOpenFlags)
+            {
+                g_ApplicationQuitFlag->s_TransPortQuitFlag = true;
+                while (g_ApplicationQuitFlag->s_TransPortQuitFlag)
                 {
                     if(0 == Tmp)
                     {
@@ -451,36 +467,6 @@ GMI_RESULT GMI_InquiryMassge(FD_HANDLE SockFd)
             {
                 g_ApplicationQuitFlag->s_MediaQuitFlag = true;
                 while (g_ApplicationQuitFlag->s_MediaQuitFlag)
-                {
-                    if(0 == Tmp)
-                    {
-                        break;
-                    }
-                    sleep(1);
-                    --Tmp;
-                }
-            }
-
-            Tmp=5;
-            if(g_ApplicationOpenFlags->s_LogServerOpenFlags)
-            {
-                g_ApplicationQuitFlag->s_LogServerQuitFlag = true;
-                while (g_ApplicationQuitFlag->s_LogServerQuitFlag)
-                {
-                    if(0 == Tmp)
-                    {
-                        break;
-                    }
-                    sleep(1);
-                    --Tmp;
-                }
-            }
-
-            Tmp=5;
-            if(g_ApplicationOpenFlags->s_AuthServerOpenFlags)
-            {
-                g_ApplicationQuitFlag->s_AuthQuitFlag = true;
-                while (g_ApplicationQuitFlag->s_AuthQuitFlag)
                 {
                     if(0 == Tmp)
                     {

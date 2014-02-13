@@ -105,10 +105,41 @@ modification	:
 ******************************************************************************/
 void GMI_ApplicationUpdateQuit(void)
 {
-    int32_t Tmp=5;
+    uint32_t Tmp=5;
 
     GMI_DeBugPrint("[%s][%d]GMI_ApplicationUpdateQuit Start Running ! ",__func__,__LINE__);
-    if(g_ApplicationRegisterFlags->s_OnvifRegisterFlag)
+
+    if(g_ApplicationOpenFlags->s_Gb28181ServerOpenFlags)
+    {
+        g_ApplicationQuitFlag->s_GbQuitFlag = true;
+        while(g_ApplicationQuitFlag->s_GbQuitFlag)
+        {
+            if(0 == Tmp)
+            {
+                break;
+            }
+            sleep(1);
+            --Tmp;
+        }
+    }
+
+    Tmp=5;
+    if(g_ApplicationOpenFlags->s_SdkServerOpenFlags)
+    {
+        g_ApplicationQuitFlag->s_SdkQuitFlag = true;
+        while (g_ApplicationQuitFlag->s_SdkQuitFlag)
+        {
+            if(0 == Tmp)
+            {
+                break;
+            }
+            sleep(1);
+            --Tmp;
+        }
+    }
+
+    Tmp=5;
+    if(g_ApplicationOpenFlags->s_OnVifServerOpenFlags)
     {
         g_ApplicationQuitFlag->s_OnvifQuitFlag = true;
         while (g_ApplicationQuitFlag->s_OnvifQuitFlag)
@@ -122,8 +153,23 @@ void GMI_ApplicationUpdateQuit(void)
         }
     }
 
-    Tmp = 5;
-    if(g_ApplicationRegisterFlags->s_ControlRegisterFlag)
+    Tmp=5;
+    if(g_ApplicationOpenFlags->s_TransportServerOpenFlags)
+    {
+        g_ApplicationQuitFlag->s_TransPortQuitFlag = true;
+        while (g_ApplicationQuitFlag->s_TransPortQuitFlag)
+        {
+            if(0 == Tmp)
+            {
+                break;
+            }
+            sleep(1);
+            --Tmp;
+        }
+    }
+
+    Tmp=5;
+    if(g_ApplicationOpenFlags->s_ControlServerOpenFlags)
     {
         g_ApplicationQuitFlag->s_ControlQuitFlag = true;
         while (g_ApplicationQuitFlag->s_ControlQuitFlag)
@@ -137,8 +183,8 @@ void GMI_ApplicationUpdateQuit(void)
         }
     }
 
-    Tmp = 5;
-    if(g_ApplicationRegisterFlags->s_MediaRegisterFlag)
+    Tmp=5;
+    if(g_ApplicationOpenFlags->s_MediaServerOpenFlags)
     {
         g_ApplicationQuitFlag->s_MediaQuitFlag = true;
         while (g_ApplicationQuitFlag->s_MediaQuitFlag)
@@ -151,6 +197,25 @@ void GMI_ApplicationUpdateQuit(void)
             --Tmp;
         }
     }
+
+
+    char_t CmdBuffer[128];
+    memset(CmdBuffer, 0, sizeof(CmdBuffer));
+    strcpy(CmdBuffer, SDK_SERVER_APPLICATION_KILL);
+    system(CmdBuffer);
+
+    memset(CmdBuffer, 0, sizeof(CmdBuffer));
+    strcpy(CmdBuffer, ONVIF_SERVER_APPLICATON_KILL);
+    system(CmdBuffer);
+
+    memset(CmdBuffer, 0, sizeof(CmdBuffer));
+    strcpy(CmdBuffer, TRANSPORT_SERVER_APPLICATION_KILL);
+    system(CmdBuffer);
+
+    memset(CmdBuffer, 0, sizeof(CmdBuffer));
+    strcpy(CmdBuffer, CONFIG_TOOL_SERVER_APPLICATION_KILL);
+    system(CmdBuffer);
+
 }
 
 

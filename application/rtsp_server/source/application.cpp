@@ -5,6 +5,7 @@
 #include "application.h"
 #include "heartbeat.h"
 #include "media_capture.h"
+#include "configure.h"
 
 inline static const char_t * Signal2String(int32_t SignalNumber)
 {
@@ -68,6 +69,13 @@ GMI_RESULT Application::Start()
 
     do
     {
+        RetVal = Configure::GetInstance().Initialize();
+        if (RetVal != GMI_SUCCESS)
+        {
+            PRINT_LOG(ERROR, "Failed to initialize configure");
+            break;
+        }
+
         m_RtspService = RtspService::CreateInstance();
         if (NULL == m_RtspService)
         {
@@ -140,6 +148,8 @@ GMI_RESULT Application::Start()
         delete m_RtspService;
         m_RtspService = NULL;
     }
+
+    Configure::GetInstance().Uninitialize();
 
     return RetVal;
 }

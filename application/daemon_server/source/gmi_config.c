@@ -63,7 +63,7 @@ GMI_RESULT WriteDefaultApplicationCfg(const char_t * FileName, const char_t *Ite
     int32_t  Value;
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "log_server_new");
+    strcpy(Key, "log_server_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, DefaultApplicationCfg->s_LogServer , &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
     {
@@ -75,20 +75,7 @@ GMI_RESULT WriteDefaultApplicationCfg(const char_t * FileName, const char_t *Ite
     }
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "media_center_server_new");
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, DefaultApplicationCfg->s_MediaServer , &Value,GMI_CONFIG_READ_WRITE);
-    if (SUCCEEDED(Ret))
-    {
-        SystemApplicationCfg->s_MediaServer = Value;
-    }
-    else
-    {
-        SystemApplicationCfg->s_MediaServer = DefaultApplicationCfg->s_MediaServer ;
-    }
-
-
-    memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "tranport_server_new");
+    strcpy(Key, "tranport_server_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, DefaultApplicationCfg->s_TransportServer, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
     {
@@ -100,7 +87,7 @@ GMI_RESULT WriteDefaultApplicationCfg(const char_t * FileName, const char_t *Ite
     }
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "system_server_new");
+    strcpy(Key, "system_server_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, DefaultApplicationCfg->s_ControlServer, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
     {
@@ -112,7 +99,7 @@ GMI_RESULT WriteDefaultApplicationCfg(const char_t * FileName, const char_t *Ite
     }
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "onvif_new");
+    strcpy(Key, "onvif_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, DefaultApplicationCfg->s_OnVifServer, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
     {
@@ -124,7 +111,7 @@ GMI_RESULT WriteDefaultApplicationCfg(const char_t * FileName, const char_t *Ite
     }
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "gb_server_new");
+    strcpy(Key, "gb_server_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, DefaultApplicationCfg->s_Gb28181Server, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
     {
@@ -136,7 +123,7 @@ GMI_RESULT WriteDefaultApplicationCfg(const char_t * FileName, const char_t *Ite
     }
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "sdk_server_new");
+    strcpy(Key, "sdk_server_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, DefaultApplicationCfg->s_SdkServer, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
     {
@@ -148,7 +135,7 @@ GMI_RESULT WriteDefaultApplicationCfg(const char_t * FileName, const char_t *Ite
     }
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "auth_server_new");
+    strcpy(Key, "auth_server_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, DefaultApplicationCfg->s_AuthServer, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
     {
@@ -160,7 +147,7 @@ GMI_RESULT WriteDefaultApplicationCfg(const char_t * FileName, const char_t *Ite
     }
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "config_tool_new");
+    strcpy(Key, "config_tool_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, DefaultApplicationCfg->s_ConfigToolServer, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
     {
@@ -329,33 +316,24 @@ GMI_RESULT ReadApplicationCfg(const char_t * FileName, const char_t *ItemPath, S
     int32_t  Value = 0;
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "log_server_new");
+    strcpy(Key, "log_server_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, 2, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
         SystemApplicationCfg->s_LogServer = Value;
     else
         return Ret;
 
-
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "media_center_server_new");
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, 4, &Value,GMI_CONFIG_READ_WRITE);
-    if (SUCCEEDED(Ret))
-        SystemApplicationCfg->s_MediaServer = Value;
-    else
-        return Ret;
-
-    memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "tranport_server_new");
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, 6, &Value,GMI_CONFIG_READ_WRITE);
+    strcpy(Key, "tranport_server_run");
+    Ret = GMI_XmlRead(Handle, ItemPath, Key, 5, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
         SystemApplicationCfg->s_TransportServer = Value;
     else
         return Ret;
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "system_server_new");
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, 5, &Value,GMI_CONFIG_READ_WRITE);
+    strcpy(Key, "system_server_run");
+    Ret = GMI_XmlRead(Handle, ItemPath, Key, 4, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
         SystemApplicationCfg->s_ControlServer = Value;
     else
@@ -363,15 +341,15 @@ GMI_RESULT ReadApplicationCfg(const char_t * FileName, const char_t *ItemPath, S
 
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "onvif_new");
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, 7, &Value,GMI_CONFIG_READ_WRITE);
+    strcpy(Key, "onvif_run");
+    Ret = GMI_XmlRead(Handle, ItemPath, Key, 6, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
         SystemApplicationCfg->s_OnVifServer = Value;
     else
         return Ret;
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "gb_server_new");
+    strcpy(Key, "gb_server_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, 0, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
         SystemApplicationCfg->s_Gb28181Server = Value;
@@ -379,15 +357,15 @@ GMI_RESULT ReadApplicationCfg(const char_t * FileName, const char_t *ItemPath, S
         return Ret;
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "sdk_server_new");
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, 8, &Value,GMI_CONFIG_READ_WRITE);
+    strcpy(Key, "sdk_server_run");
+    Ret = GMI_XmlRead(Handle, ItemPath, Key, 7, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
         SystemApplicationCfg->s_SdkServer = Value;
     else
         return Ret;
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "auth_server_new");
+    strcpy(Key, "auth_server_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, 3, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
         SystemApplicationCfg->s_AuthServer = Value;
@@ -395,7 +373,7 @@ GMI_RESULT ReadApplicationCfg(const char_t * FileName, const char_t *ItemPath, S
         return Ret;
 
     memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "config_tool_new");
+    strcpy(Key, "config_tool_run");
     Ret = GMI_XmlRead(Handle, ItemPath, Key, 1, &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
         SystemApplicationCfg->s_ConfigToolServer = Value;
@@ -407,14 +385,6 @@ GMI_RESULT ReadApplicationCfg(const char_t * FileName, const char_t *ItemPath, S
     Ret = GMI_XmlRead(Handle, ItemPath, Key, MAX_RETURN_VALUE , &Value,GMI_CONFIG_READ_WRITE);
     if (SUCCEEDED(Ret))
         SystemApplicationCfg->s_LogServerTimer= Value;
-    else
-        return Ret;
-
-    memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "media_center_server_timer");
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, MAX_RETURN_VALUE, &Value,GMI_CONFIG_READ_WRITE);
-    if (SUCCEEDED(Ret))
-        SystemApplicationCfg->s_MediaServerTimer= Value;
     else
         return Ret;
 
@@ -505,13 +475,13 @@ GMI_RESULT GMI_LoadApplicationCfg(void)
 
     SystemApplicationCfg_t  SystemApplicationCfg = {0};
     SystemApplicationCfg.s_LogServer                                            = 2;    //must be running
-    SystemApplicationCfg.s_MediaServer                                         = 4; //must be running
-    SystemApplicationCfg.s_TransportServer                                   = 6; //now this application is not write
-    SystemApplicationCfg.s_ControlServer                                       = 5; //must be running
-    SystemApplicationCfg.s_OnVifServer                                          = 7;   //must be running
+    SystemApplicationCfg.s_MediaServer                                         = 0; //must be running
+    SystemApplicationCfg.s_TransportServer                                   = 5; //now this application is not write
+    SystemApplicationCfg.s_ControlServer                                       = 4; //must be running
+    SystemApplicationCfg.s_OnVifServer                                          = 6;   //must be running
     SystemApplicationCfg.s_Gb28181Server                                    = 0;  //Gb server is choice
     SystemApplicationCfg.s_WebServer                                           = 0;  //web server not running
-    SystemApplicationCfg.s_SdkServer                                             = 8;  //sdk server not running
+    SystemApplicationCfg.s_SdkServer                                             = 7;  //sdk server not running
     SystemApplicationCfg.s_AuthServer                                           = 3;  //auth server not running
     SystemApplicationCfg.s_ConfigToolServer                                  = 1;  //auth server not running
 

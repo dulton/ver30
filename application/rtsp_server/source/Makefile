@@ -40,7 +40,7 @@ GMI_CFLAGS              = -Wall -O3 -DSOCKLEN_T=socklen_t -DNO_SSTREAM=1 -D_LARG
 GMI_LFLAGS              =
 
 # Set related modules
-GMI_RELATED_MODULES     = streaming_pipeline ipc_media_data_dispatch osal media command_pipeline pthread live555 daemon_heartbeat rudp rt
+GMI_RELATED_MODULES     = streaming_pipeline ipc_media_data_dispatch osal media command_pipeline pthread live555 daemon_heartbeat rudp rt sys_client auth_center des
 
 # Set other header file path
 GMI_INCLUDE_DIR         = $(GMI_TOPDIR)/application

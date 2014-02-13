@@ -89,6 +89,7 @@ static CgiFncHandler WebFncTable[] =
     {"ConfigToolSetMac",CgiConfigToolSetMac},
     {"ConfigToolIrCutOpen",CgiConfigToolIrCutOpen},
     {"ConfigToolIrCutClose",CgiConfigToolIrCutClose},
+	{"ConfigToolGetSystemInfo",CgiConfigToolGetSystemInfo},
 	{"SysGetLogInfo",CgiSysGetLogInfo},
     {}
 };

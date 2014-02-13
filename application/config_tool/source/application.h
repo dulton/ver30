@@ -18,34 +18,34 @@ public:
 
     inline GMI_RESULT AddDelayTask(CbOnSchedule Proc, void_t * Data, uint32_t Sec, uint32_t USec)
     {
-        if (IsRunning())
+        if (m_GtpHandle != GTP_INVALID_HANDLE)
         {
             return GtpAddDelayTask(m_GtpHandle, Proc, Data, Sec, USec); 
         }
 
-        PRINT_LOG(WARNING, "Main loop is not running now");
+        PRINT_LOG(WARNING, "Task list is not prepared yet");
         return GMI_INVALID_OPERATION;
     }
 
     inline GMI_RESULT UpdateDelayTask(CbOnSchedule Proc, void_t * Data, uint32_t Sec, uint32_t USec)
     {
-        if (IsRunning())
+        if (m_GtpHandle != GTP_INVALID_HANDLE)
         {
             return GtpUpdateDelayTask(m_GtpHandle, Proc, Data, Sec, USec); 
         }
 
-        PRINT_LOG(WARNING, "Main loop is not running now");
+        PRINT_LOG(WARNING, "Task list is not prepared yet");
         return GMI_INVALID_OPERATION;
     }
 
     inline GMI_RESULT CancelDelayTask(CbOnSchedule Proc, void_t * Data)
     {
-        if (IsRunning())
+        if (m_GtpHandle != GTP_INVALID_HANDLE)
         {
             return GtpCancelDelayTask(m_GtpHandle, Proc, Data); 
         }
 
-        PRINT_LOG(WARNING, "Main loop is not running now");
+        PRINT_LOG(WARNING, "Task list is not prepared yet");
         return GMI_INVALID_OPERATION;
     }
 

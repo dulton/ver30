@@ -425,6 +425,11 @@ int SdkServerClient::__HandleMessageRead(sdk_client_comm_t * & pComm)
     sdk_client_comm_t *pRetComm=NULL;
     int expiretime,keeptime;
 
+    if(pComm->m_Type != GMIS_PROTOCOL_TYPE_LOGGIN)
+    {
+        return 0;
+    }
+
     if(pComm->m_FHB == 0 && pComm->m_Type == GMIS_PROTOCOL_TYPE_LOGGIN)
     {
         ret = EINVAL;

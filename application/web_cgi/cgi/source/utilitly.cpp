@@ -13,7 +13,7 @@
 #include "gmi_config_api.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "ipc_fw_v3.x_setting.h"
-
+#include "sys_info_readonly.h"
 
 
 static struct hsearch_data htab;
@@ -423,25 +423,31 @@ GMI_RESULT GMI_SysCheckSessionId(uint16_t SessionId)
 GMI_RESULT GMI_CheckAutoFlags(boolean_t *AutoFlags)
 {
     GMI_RESULT Result = GMI_FAIL;
-    FD_HANDLE  Handle = NULL;
-
-
-    Result = GMI_XmlOpen("/opt/config/capability_auto.xml", &Handle);
+    Result = SysInfoReadInitialize();
     if (FAILED(Result))
     {
+       return Result;
+    }
+    
+    FD_HANDLE Handle;
+    Result = SysInfoOpen(CAPABILITY_AUTO_FILE_NAME, &Handle);
+    if (FAILED(Result))
+    {
+       SysInfoReadDeinitialize();
+       return Result;
+    }
+    
+    char_t  Value[64] = {"0"};
+    Result = SysInfoRead(Handle, HW_AUTO_DETECT_INFO_PATH, HW_LENS_KEY, "DF003", Value);
+    if (FAILED(Result))
+    {
+        SysInfoClose(Handle);      
+        SysInfoReadDeinitialize();
         return Result;
     }
-
-    char_t  Key[64] = {"0"};
-    char_t  Value[64] = {"0"};
-
-    memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "Lens");
-    memset(Value, 0 ,sizeof(Value));
-    Result = GMI_XmlRead(Handle, "/Capability/", Key, "DF003", Value, GMI_CONFIG_READ_ONLY);
-    if (SUCCEEDED(Result))
+    else if (SUCCEEDED(Result))
     {
-        if (strcmp("DF003", Value) == 0)
+       if (strcmp("DF003", Value) == 0)
         {
             *AutoFlags = true;
         }
@@ -451,16 +457,10 @@ GMI_RESULT GMI_CheckAutoFlags(boolean_t *AutoFlags)
         }
     }
 
-    Result = GMI_XmlFileSave(Handle);
-    if (FAILED(Result))
-    {
-        return Result;
-    }
-
+    SysInfoClose(Handle);
+    SysInfoReadDeinitialize();
     return Result;
-
 }
-
 
 GMI_RESULT CheckIpExist(const char_t* InData)
 {
@@ -494,39 +494,37 @@ GMI_RESULT CheckIpExist(const char_t* InData)
     return Result;
 }
 
+
 GMI_RESULT GMI_GetUpdatePort(int32_t  *UpgradePort)
 {
 
     GMI_RESULT Result = GMI_FAIL;
-    FD_HANDLE  Handle = NULL;
 
-    Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    Result = SysInfoReadInitialize();
     if (FAILED(Result))
     {
-        return Result;
+       return Result;
     }
-
-    char_t  Key[64] = {"0"};
-    int32_t  Value = 0;
-
-    memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "UpdatePort");
-    Result = GMI_XmlRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, Key, GMI_DAEMON_UPDATE_SERVER_PORT, &Value, GMI_CONFIG_READ_ONLY);
-    if (SUCCEEDED(Result))
-    {
-        *UpgradePort = Value;
-    }
-    else
-    {
-        *UpgradePort = GMI_DAEMON_UPDATE_SERVER_PORT;
-    }
-
-    Result = GMI_XmlFileSave(Handle);
+    
+    FD_HANDLE Handle;
+    
+    Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
     if (FAILED(Result))
     {
+       SysInfoReadDeinitialize();
+       return Result;
+    }
+        
+    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, "UpdatePort", GMI_DAEMON_UPDATE_SERVER_PORT, UpgradePort);
+    if (FAILED(Result))
+    {
+        SysInfoClose(Handle);      
+        SysInfoReadDeinitialize();
         return Result;
     }
-
+    
+    SysInfoClose(Handle);
+    SysInfoReadDeinitialize();
     return Result;
 }
 

@@ -22,6 +22,8 @@ modification	:
 #include "gmi_debug.h"
 #include "ipc_fw_v3.x_setting.h"
 #include "ipc_fw_v3.x_resource.h"
+#include "gmi_brdwrapper.h"
+#include "sys_info_readonly.h"
 
 
 static int32_t l_I2cFd = -1;
@@ -897,7 +899,6 @@ GMI_RESULT GMI_SetHardwareConfig(const char_t * FileName, const char_t *ItemPath
     return GMI_SUCCESS;
 }
 
-
 GMI_RESULT GMI_GetHardwareConfig(const char_t * FileName, const char_t *ItemPath, HardwareConfig *Hardware)
 {
     if (ItemPath == NULL || FileName == NULL )
@@ -906,70 +907,78 @@ GMI_RESULT GMI_GetHardwareConfig(const char_t * FileName, const char_t *ItemPath
         return GMI_INVALID_PARAMETER;
     }
 
+    GMI_RESULT Result = SysInfoReadInitialize();
+    if (FAILED(Result))
+    {
+        return Result;
+    }
+
+    FD_HANDLE Handle;
+    Result = SysInfoOpen(FileName, &Handle);
+    if (FAILED(Result))
+    {
+        SysInfoReadDeinitialize();
+        return Result;
+    }
 
     DAEMON_PRINT_LOG(INFO,"GMI_GetHardwareConfig  Start!! ");
-
-    GMI_RESULT Ret = GMI_FAIL;
-    FD_HANDLE  Handle = NULL;
-
-    Ret = GMI_XmlOpen(FileName, &Handle);
-    if (FAILED(Ret))
-    {
-        DAEMON_PRINT_LOG(ERROR,"GMI_XmlOpen xml file Error!");
-        return Ret;
-    }
-
-    char_t  Key[MAX_BUFFER_LENGTH] = {"0"};
     char_t  Value[MAX_BUFFER_LENGTH] = {"0"};
-
-    memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "CPU");
     memset(Value, 0 ,sizeof(Value));
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, "A5S_66", Value,GMI_CONFIG_READ_ONLY);
-    if (SUCCEEDED(Ret))
+    Result = SysInfoRead(Handle, ItemPath, HW_CPU_KEY, "A5S_33", Value);
+    if (FAILED(Result))
     {
-        memcpy(Hardware->s_CPU , Value, strlen(Value));
-        Hardware->s_CPU[strlen(Value)] = '\0';
+        SysInfoClose(Handle);
+        SysInfoReadDeinitialize();
+        return Result;
+    }
+    else
+    {
+        strcpy(Hardware->s_CPU, Value);
     }
 
-    memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "VideoIn");
     memset(Value, 0 ,sizeof(Value));
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, "NONE", Value,GMI_CONFIG_READ_ONLY);
-    if (SUCCEEDED(Ret))
+    Result = SysInfoRead(Handle, ItemPath, HW_SENSOR_KEY, HW_SENSOR, Value);
+    if (FAILED(Result))
     {
-        memcpy(Hardware->s_VideoIn , Value, strlen(Value));
-        Hardware->s_VideoIn[strlen(Value)] = '\0';
+        SysInfoClose(Handle);
+        SysInfoReadDeinitialize();
+        return Result;
+    }
+    else
+    {
+        strcpy(Hardware->s_VideoIn, Value);
     }
 
-    memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "MainBoard");
     memset(Value, 0 ,sizeof(Value));
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, "NORMAL", Value,GMI_CONFIG_READ_ONLY);
-    if (SUCCEEDED(Ret))
+    Result = SysInfoRead(Handle, ItemPath, HW_MAINBOARD_KEY, HW_MAINBOARD, Value);
+    if (FAILED(Result))
     {
-        memcpy(Hardware->s_MainBoard , Value, strlen(Value));
-        Hardware->s_MainBoard[strlen(Value)] ='\0';
+        SysInfoClose(Handle);
+        SysInfoReadDeinitialize();
+        return Result;
+    }
+    else
+    {
+        strcpy(Hardware->s_MainBoard, Value);
     }
 
-    memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "Lens");
     memset(Value, 0 ,sizeof(Value));
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, "DF003", Value,GMI_CONFIG_READ_ONLY);
-    if (SUCCEEDED(Ret))
+    Result = SysInfoRead(Handle, ItemPath, HW_LENS_KEY, HW_LENS, Value);
+    if (FAILED(Result))
     {
-        memcpy(Hardware->s_Len , Value, strlen(Value));
-        Hardware->s_Len[strlen(Value)] = '\0';
+        SysInfoClose(Handle);
+        SysInfoReadDeinitialize();
+        return Result;
+    }
+    else
+    {
+        strcpy(Hardware->s_Len, Value);
     }
 
-    Ret = GMI_XmlFileSave(Handle);
-    if (FAILED(Ret))
-    {
-        DAEMON_PRINT_LOG(ERROR,"GMI_XmlFileSave xml file Error!!");
-        return Ret;
-    }
+    SysInfoClose(Handle);
+    SysInfoReadDeinitialize();
 
-    return Ret;
+    return Result;
 }
 
 /*=======================================================
@@ -986,35 +995,45 @@ modification	:
 ******************************************************************************/
 GMI_RESULT GMI_GetUpdateServerPort(int32_t *Port)
 {
-    GMI_RESULT Result;
-    FD_HANDLE  Handle;
-    char_t     ExternNetworkPath[128] = {0};
-
-    Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoReadInitialize();
     if (FAILED(Result))
     {
         return Result;
     }
 
-    memset(ExternNetworkPath, 0, sizeof(ExternNetworkPath));
-    strcpy(ExternNetworkPath, GMI_EXTERN_NETWORK_PORT_PATH);
-    Result = GMI_XmlRead(Handle, (const char_t*)ExternNetworkPath, GMI_DAEMON_UPDATE_SERVER_PORT_KEY,  GMI_DAEMON_UPDATE_SERVER_PORT,  Port,  GMI_CONFIG_READ_ONLY);
+    FD_HANDLE Handle;
+    Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
     if (FAILED(Result))
     {
-        GMI_XmlFileSave(Handle);
+        SysInfoReadDeinitialize();
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_DAEMON_UPDATE_SERVER_PORT_KEY, GMI_DAEMON_UPDATE_SERVER_PORT, Port);
     if (FAILED(Result))
     {
+        SysInfoClose(Handle);
+        SysInfoReadDeinitialize();
         return Result;
     }
 
-    // GMI_DeBugPrint("[%s][%d]GMI_GetUpdateServerPort   g_UpdatePort = [%d]! ", __func__, __LINE__, g_UpdatePort);
+    SysInfoClose(Handle);
+    SysInfoReadDeinitialize();
 
     return GMI_SUCCESS;
+}
 
+GMI_RESULT GMI_CheckCpu(const HardwareConfig *Hardware)
+{
+    const char_t Cpu[16] = "A5S_33";
+
+    if(0 == strcmp(Cpu, Hardware->s_CPU))
+    {
+        GMI_DeBugPrint("[%s][%d] CPU check  Error ! ",__func__,__LINE__);
+        return GMI_FAIL;
+    }
+
+    return GMI_SUCCESS;
 }
 
 /*=============================================================================
@@ -1039,6 +1058,19 @@ GMI_RESULT GMI_HardwareInit(void)
     if (FAILED(Ret))
     {
         DAEMON_PRINT_LOG(INFO,"Config File is not Exists!! ");
+        //cpu_check_bak running for cpu check
+        Ret = GMI_FileExists("/opt/bin/cpu_check_bak");
+        if (SUCCEEDED(Ret))
+        {
+            memset(CmdBuffer, 0, sizeof(CmdBuffer));
+            snprintf(CmdBuffer, 255,"mv	/opt/bin/cpu_check_bak  /opt/bin/cpu_check");
+            if (system(CmdBuffer) < 0)
+            {
+                DAEMON_PRINT_LOG(ERROR,"System running is Error CmdBuffer = %s!! ",CmdBuffer);
+                return GMI_FAIL;
+            }
+        }
+
         //hardware recognition
         Ret = GMI_HardWareMonitor(g_Hardware);
         if (SUCCEEDED(Ret))
@@ -1046,45 +1078,55 @@ GMI_RESULT GMI_HardwareInit(void)
             Ret = GMI_SetHardwareConfig(GMI_HARDWARE_CONFIG_FILE,GMI_HARDWARE_PATH,g_Hardware);
             if (SUCCEEDED(Ret))
             {
-                memset(CmdBuffer, 0, sizeof(CmdBuffer));
-                snprintf(CmdBuffer, 255,"reboot -f");
-                if (system(CmdBuffer) < 0)
+                GMI_DeBugPrint("[%s][%d]GMI_SetHardwareConfig Error ! ",__func__,__LINE__);
+                Ret = GMI_BrdHwReset();
+                if (FAILED(Ret))
                 {
-                    DAEMON_PRINT_LOG(ERROR,"System running is Error CmdBuffer = %s!! ",CmdBuffer);
-                    return GMI_FAIL;
+                    DAEMON_PRINT_LOG(ERROR,"GMI_Reboot! !!!");
                 }
             }
         }
         else
         {
             GMI_DeBugPrint("[%s][%d]GMI_HardWareMonitor Error ! ",__func__,__LINE__);
-            sleep(10);
-            memset(CmdBuffer, 0, sizeof(CmdBuffer));
-            snprintf(CmdBuffer, 255,"reboot -f");
-            if (system(CmdBuffer) < 0)
-            {
-                DAEMON_PRINT_LOG(ERROR,"System running is Error CmdBuffer = %s!! ",CmdBuffer);
-                return GMI_FAIL;
-            }
         }
     }
     else if (SUCCEEDED(Ret))
     {
         DAEMON_PRINT_LOG(INFO,"Config File is  Exists, Get System hardware config!! ");
-        //Delete cpu_check bin, for this mode cpu_check not running
-        memset(CmdBuffer, 0, sizeof(CmdBuffer));
-        snprintf(CmdBuffer, 255,"rm -rf /opt/bin/cpu_check");
-        if (system(CmdBuffer) < 0)
-        {
-            DAEMON_PRINT_LOG(ERROR,"System running is Error CmdBuffer = %s!! ",CmdBuffer);
-            return GMI_FAIL;
-        }
-
         //Get Hardware config
         Ret = GMI_GetHardwareConfig(GMI_HARDWARE_CONFIG_FILE, GMI_HARDWARE_PATH, g_Hardware);
         if (FAILED(Ret))
         {
             DAEMON_PRINT_LOG(ERROR,"GMI_GetHardwareConfig Error!! ");
+            return Ret;
+        }
+
+        Ret = GMI_CheckCpu(g_Hardware);
+        if (FAILED(Ret))
+        {
+            sleep(10);
+            memset(CmdBuffer, 0, sizeof(CmdBuffer));
+            snprintf(CmdBuffer, 255,"rm -rf %s",GMI_HARDWARE_CONFIG_FILE);
+            if (system(CmdBuffer) < 0)
+            {
+                DAEMON_PRINT_LOG(ERROR,"System running is Error CmdBuffer = %s!! ",CmdBuffer);
+                return GMI_FAIL;
+            }
+
+            memset(CmdBuffer, 0, sizeof(CmdBuffer));
+            snprintf(CmdBuffer, 255,"mv  /opt/bin/cpu_check_bak  /opt/bin/cpu_check");
+            if (system(CmdBuffer) < 0)
+            {
+                DAEMON_PRINT_LOG(ERROR,"System running is Error CmdBuffer = %s!! ",CmdBuffer);
+                return GMI_FAIL;
+            }
+
+            Ret = GMI_BrdHwReset();
+            if (FAILED(Ret))
+            {
+                DAEMON_PRINT_LOG(ERROR,"GMI_Reboot! !!!");
+            }
             return Ret;
         }
 

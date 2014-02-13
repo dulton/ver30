@@ -36,7 +36,7 @@ GMI_LFLAGS              =
 #GMI_LFLAGS             = -g
 
 # Set related modules
-GMI_RELATED_MODULES     = pthread osal log_utils command_pipeline rudp daemon_heartbeat xml2 config rt
+GMI_RELATED_MODULES     = pthread osal log_utils command_pipeline rudp daemon_heartbeat xml2 config sys_info_readonly rt
 
 # Set header file path for this module
 GMI_MODULE_INCLUDE_DIR  = ../include
