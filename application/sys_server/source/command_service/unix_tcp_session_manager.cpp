@@ -213,7 +213,7 @@ void* UnixTcpSessionManager::Server()
             continue;
         }
 
-        //SYS_INFO("Accept ClientFd %d\n", ClientFd);
+        SYS_INFO("Accept ClientFd %d\n", ClientFd);
         SessionManagerParam *SessionManagerParamPtr(BaseMemoryManager::Instance().New<SessionManagerParam>());
         if (NULL == SessionManagerParamPtr)
         {

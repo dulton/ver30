@@ -36,14 +36,6 @@
 							$("#HTTP_Port").val(PackDate.Content.HTTP_Port);
 							$("#RTSP_Port").val(PackDate.Content.RTSP_Port);
 							$("#SDK_Port").val(PackDate.Content.SDK_Port);
-							
-//							//判断权限
-//							if(parent.canspzAuth == false)
-//							{
-//								document.getElementById("HTTP_Port").disabled = true;
-//								document.getElementById("RTSP_Port").disabled = true;
-//								document.getElementById("SDK_Port").disabled = true;
-//							}
 							delete PackDate;
 						}
 						
@@ -53,9 +45,9 @@
 							
 							//跳转到登陆界面
 							delete PackDate;
-							if (!confirm("设置已成功，重启后生效，是否立即重启设备?"))
+							if (!confirm("是否重启设备?"))
 							{
-								//alert("设置成功，重启设备生效！");
+								alert("设置成功，重启设备生效！");
 								return;	
 							}
 							
@@ -141,14 +133,7 @@
 		
            $("#portSubmit").bind("click",function(e){
 			   //按回车检查
-							//判断权限
-							parent.StartimeVideo();
-							if(parent.canspzAuth == false)
-							{
-								alert("没有权限！");
-								return;
-							}
-							
+			 
 			   if (isvalid.length == 0) {
 				  var  content={};
 				  content.SessionId=parent.id;
@@ -214,13 +199,6 @@
 				
 			});
 		   $("#portCancel").bind("click",function(e){
-							//判断权限
-							parent.StartimeVideo();
-							if(parent.canspzAuth == false)
-							{
-								alert("没有权限！");
-								return;
-							}
 				 GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", successfunc);
 		  //去除红色边框
                     for (var i = 0; i < isvalid.length; i++) {
@@ -279,7 +257,7 @@
                         </div>
                        </div>
                        <div class="motion_det_list">
-                       <div class="motion_det_list_inner_lmt">RTSP服务端口:</div>
+                       <div class="motion_det_list_inner_lmt">RTSP 服务端口:</div>
                         <div class="motion_det_list_inner_2" style="width:250px">
                             <div style="float:left">
                                
@@ -294,7 +272,7 @@
                         </div>
                        </div>
                        <div class="motion_det_list">
-                       <div class="motion_det_list_inner_lmt">SDK服务端口:</div>
+                       <div class="motion_det_list_inner_lmt"> SDK服务端口:</div>
                         <div class="motion_det_list_inner_2" style="width:250px">
                           <div style="float:left">
                                

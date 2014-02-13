@@ -9,15 +9,13 @@
 #include "sys_env_types.h"
 #include "gmi_system_headers.h"
 
-extern uint16_t g_ONVIF_Port;
-extern uint16_t g_RTSP_Port;
 
 SOAP_FMAC5 int SOAP_FMAC6 __trt__GetStreamUri(struct soap *soap_ptr, struct _trt__GetStreamUri *trt__GetStreamUri, struct _trt__GetStreamUriResponse *trt__GetStreamUriResponse)
 {
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
     uint16_t   SessionId = 0;
     uint32_t   AuthValue = 0;
-    int32_t    RtspPort = g_RTSP_Port;
+    int32_t    RtspPort = DEFAULT_RTSP_PORT;
     GMI_RESULT Result = GMI_SUCCESS;
     char_t     Url[100] = {0};
     char_t     IP[NETWORK_INFO_LENGTH] = {0};
@@ -39,8 +37,17 @@ SOAP_FMAC5 int SOAP_FMAC6 __trt__GetStreamUri(struct soap *soap_ptr, struct _trt
         if (FAILED(Result))
         {
             break;
-        }      
-        
+        }
+
+        SysPkgNetworkPort SysNetworkPort;
+        Result = SysGetNetworkPort(SessionId, AuthValue, &SysNetworkPort);
+        if (FAILED(Result))
+        {
+            break;
+        }
+        RtspPort = SysNetworkPort.s_RTSP_Port;
+
+        //ONVIF_INFO("ProfileToken  = %s\n", trt__GetStreamUri->ProfileToken);
         if (0 == strcmp(trt__GetStreamUri->ProfileToken, PROFILE_TOKEN_1))
         {
             Result = SysForceIdr(SessionId, AuthValue, 0);

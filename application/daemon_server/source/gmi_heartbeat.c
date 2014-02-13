@@ -173,6 +173,7 @@ GMI_RESULT GMI_SystemAppRunning(const SystemApplicationCfg_t *SystemApplicationC
 
 GMI_RESULT GMI_RudpPackFill(PkgRudpSendInput *RudpSendInput, int32_t AppId,  uint32_t RemotePort)
 {
+
     switch (AppId)
     {
     case LOG_SERVER_ID:
@@ -223,7 +224,7 @@ void GMI_MessageLinkPackFill( uint32_t RemotePort, boolean_t *QuitFlag,  boolean
         *QuitFlag = false;
         *OpenFlags = false;
         strcpy((char *)(RudpSendInput->s_Buffer), APPLICATION_QUIT_FLAGS);
-        // GMI_DeBugPrint("[%s][%d]  Server  will be quit",__func__,__LINE__);
+        GMI_DeBugPrint("[%s][%d]  Server  will be quit",__func__,__LINE__);
     }
     else if (*IPChangeFlags)
     {
@@ -258,14 +259,13 @@ void GMI_SystemRunningApp(void)
     {
         GMI_DeBugPrint("[%s][%d]	snmp running fail",__func__,__LINE__);
     }
-#if 0
+
     memset(CmdBuffer, 0, sizeof(CmdBuffer));
     snprintf(CmdBuffer, 255, "/opt/bin/system_resource_detect &");
     if (system(CmdBuffer) < 0)
     {
         GMI_DeBugPrint("[%s][%d]	system_resource_detect	running fail",__func__,__LINE__);
     }
-#endif
 }
 
 GMI_RESULT GMI_QueryHeartbeatMassge(FD_HANDLE SockFd)
@@ -514,10 +514,6 @@ GMI_RESULT GMI_QueryHeartbeatMassge(FD_HANDLE SockFd)
             memset(buffer,0,sizeof(buffer));
             memset(&RudpSendInput, 0, sizeof(PkgRudpSendInput));
             RudpSendInput.s_Buffer = (uint8_t*)buffer;
-
-            if(g_ApplicationQuitFlag->s_LogServerQuitFlag)
-                GMI_DeBugPrint("[%s][%d]  log Server  will be quit",__func__,__LINE__);
-
             GMI_MessageLinkPackFill( GMI_DAEMON_HEARDBEAT_LOG, &(g_ApplicationQuitFlag->s_LogServerQuitFlag), &(g_ApplicationOpenFlags->s_LogServerOpenFlags), &(g_ApplicationIPChangeFlags->s_LogServerIPChangeFlags), &RudpSendInput);
             LOCK(&g_LockRudpLogPort);
 
@@ -543,10 +539,6 @@ GMI_RESULT GMI_QueryHeartbeatMassge(FD_HANDLE SockFd)
             memset(buffer,0,sizeof(buffer));
             memset(&RudpSendInput, 0, sizeof(PkgRudpSendInput));
             RudpSendInput.s_Buffer = (uint8_t*)buffer;
-
-            if(g_ApplicationQuitFlag->s_AuthQuitFlag)
-                GMI_DeBugPrint("[%s][%d]  auth Server  will be quit",__func__,__LINE__);
-
             GMI_MessageLinkPackFill( GMI_DAEMON_HEARTBEAT_AUTH, &(g_ApplicationQuitFlag->s_AuthQuitFlag), &(g_ApplicationOpenFlags->s_AuthServerOpenFlags), &(g_ApplicationIPChangeFlags->s_AuthServerIPChangeFlags), &RudpSendInput);
             LOCK(&g_LockRudpAuthPort);
 
@@ -573,10 +565,6 @@ GMI_RESULT GMI_QueryHeartbeatMassge(FD_HANDLE SockFd)
             memset(buffer,0,sizeof(buffer));
             memset(&RudpSendInput, 0, sizeof(PkgRudpSendInput));
             RudpSendInput.s_Buffer = (uint8_t*)buffer;
-
-            if(g_ApplicationQuitFlag->s_MediaQuitFlag)
-                GMI_DeBugPrint("[%s][%d]  Media Server  will be quit",__func__,__LINE__);
-
             GMI_MessageLinkPackFill( GMI_DAEMON_HEARDBEAT_MEDIA, &(g_ApplicationQuitFlag->s_MediaQuitFlag), &(g_ApplicationOpenFlags->s_MediaServerOpenFlags), &(g_ApplicationIPChangeFlags->s_MediaServerIPChangeFlags), &RudpSendInput);
             LOCK(&g_LockRudpMediaPort);
             Ret = GMI_RudpSend(SockFd, &RudpSendInput, &RudpSendOutput);
@@ -600,10 +588,6 @@ GMI_RESULT GMI_QueryHeartbeatMassge(FD_HANDLE SockFd)
             memset(buffer,0,sizeof(buffer));
             memset(&RudpSendInput, 0, sizeof(PkgRudpSendInput));
             RudpSendInput.s_Buffer = (uint8_t*)buffer;
-
-            if(g_ApplicationQuitFlag->s_TransPortQuitFlag)
-                GMI_DeBugPrint("[%s][%d]  Rtsp Server  will be quit",__func__,__LINE__);
-
             GMI_MessageLinkPackFill( GMI_DAEMON_HEARDBEAT_TRANSPORT, &(g_ApplicationQuitFlag->s_TransPortQuitFlag), &(g_ApplicationOpenFlags->s_TransportServerOpenFlags), &(g_ApplicationIPChangeFlags->s_TransportServerIPChangeFlags), &RudpSendInput);
 
             LOCK(&g_LockRudpTransportPort);
@@ -629,10 +613,6 @@ GMI_RESULT GMI_QueryHeartbeatMassge(FD_HANDLE SockFd)
             memset(buffer,0,sizeof(buffer));
             memset(&RudpSendInput, 0, sizeof(PkgRudpSendInput));
             RudpSendInput.s_Buffer = (uint8_t*)buffer;
-
-            if(g_ApplicationQuitFlag->s_ControlQuitFlag)
-                GMI_DeBugPrint("[%s][%d]  System Server  will be quit",__func__,__LINE__);
-
             GMI_MessageLinkPackFill( GMI_DAEMON_HEARDBEAT_CONTROL, &(g_ApplicationQuitFlag->s_ControlQuitFlag), &(g_ApplicationOpenFlags->s_ControlServerOpenFlags), &(g_ApplicationIPChangeFlags->s_ControlServerIPChangeFlags), &RudpSendInput);
 
             LOCK(&g_LockRudpSystemPort);
@@ -657,10 +637,6 @@ GMI_RESULT GMI_QueryHeartbeatMassge(FD_HANDLE SockFd)
             memset(buffer,0,sizeof(buffer));
             memset(&RudpSendInput, 0, sizeof(PkgRudpSendInput));
             RudpSendInput.s_Buffer = (uint8_t*)buffer;
-
-            if(g_ApplicationQuitFlag->s_GbQuitFlag)
-                GMI_DeBugPrint("[%s][%d]  System Server  will be quit",__func__,__LINE__);
-
             GMI_MessageLinkPackFill( GMI_DAEMON_HEARDBEAT_GB28181, &(g_ApplicationQuitFlag->s_GbQuitFlag), &(g_ApplicationOpenFlags->s_Gb28181ServerOpenFlags), &(g_ApplicationIPChangeFlags->s_Gb28181ServerIPChangeFlags), &RudpSendInput);
             LOCK(&g_LockRudpGBPort);
 
@@ -686,10 +662,6 @@ GMI_RESULT GMI_QueryHeartbeatMassge(FD_HANDLE SockFd)
             memset(buffer,0,sizeof(buffer));
             memset(&RudpSendInput, 0, sizeof(PkgRudpSendInput));
             RudpSendInput.s_Buffer = (uint8_t*)buffer;
-
-            if(g_ApplicationQuitFlag->s_OnvifQuitFlag)
-                GMI_DeBugPrint("[%s][%d]  Onvif Server  will be quit",__func__,__LINE__);
-
             GMI_MessageLinkPackFill( GMI_DAEMON_HEARDBEAT_ONVIF, &(g_ApplicationQuitFlag->s_OnvifQuitFlag), &(g_ApplicationOpenFlags->s_OnVifServerOpenFlags), &(g_ApplicationIPChangeFlags->s_OnVifServerIPChangeFlags), &RudpSendInput);
             LOCK(&g_LockRudpOnvifPort);
 
@@ -722,10 +694,6 @@ GMI_RESULT GMI_QueryHeartbeatMassge(FD_HANDLE SockFd)
             memset(&RudpSendInput, 0, sizeof(PkgRudpSendInput));
             RudpSendInput.s_Buffer = (uint8_t*)buffer;
             RudpSendInput.s_SequenceNum = RudpRecvOutput.s_SequenceNum;
-
-            if(g_ApplicationQuitFlag->s_SdkQuitFlag)
-                GMI_DeBugPrint("[%s][%d]  Sdk Server  will be quit",__func__,__LINE__);
-
             GMI_MessageLinkPackFill( GMI_DAEMON_HEARTBEAT_SDK, &(g_ApplicationQuitFlag->s_SdkQuitFlag), &(g_ApplicationOpenFlags->s_SdkServerOpenFlags), &(g_ApplicationIPChangeFlags->s_SdkServerIPChangeFlags), &RudpSendInput);
 
             LOCK(&g_LockRudpSdkPort);
@@ -752,10 +720,6 @@ GMI_RESULT GMI_QueryHeartbeatMassge(FD_HANDLE SockFd)
             memset(buffer,0,sizeof(buffer));
             memset(&RudpSendInput, 0, sizeof(PkgRudpSendInput));
             RudpSendInput.s_Buffer = (uint8_t*)buffer;
-
-            if(g_ApplicationQuitFlag->s_ConfigToolQuitFlag)
-                GMI_DeBugPrint("[%s][%d]  Config_tool Server  will be quit",__func__,__LINE__);
-
             GMI_MessageLinkPackFill( GMI_DAEMON_HEARTBEAT_CONFIG_TOOL, &(g_ApplicationQuitFlag->s_ConfigToolQuitFlag), &(g_ApplicationOpenFlags->s_ConfigToolOpenFlags), &(g_ApplicationIPChangeFlags->s_ConfigToolIPChangeFlags), &RudpSendInput);
 
             LOCK(&g_LockRudpConfigToolPort);
@@ -810,7 +774,7 @@ GMI_RESULT GMI_QueryHeartbeatMassge(FD_HANDLE SockFd)
         else if (strcmp(TRANSPORT_SERVER_UNREGISTER_MESSAGE, (char_t*)RudpRecvOutput.s_Buffer) == 0)
         {
             GMI_ApplicationUnRegister(&(g_ApplicationRegisterFlags->s_TransPortRegisterFlag), &(g_ApplicationOnlineFlag->s_TransPortOnlineFlag));
-            GMI_DeBugPrint("[%s][%d] Rtsp	Server Will be unregister ",__func__,__LINE__);
+            GMI_DeBugPrint("[%s][%d] Transport	Server Will be unregister ",__func__,__LINE__);
         }
         else if (strcmp(CONTROL_SERVER_UNREGISTER_MESSAGE, (char_t*)RudpRecvOutput.s_Buffer) == 0)
         {

@@ -6,7 +6,7 @@
 #if !defined( IPC_FW_V3X_RESOURCE )
 #define IPC_FW_V3X_RESOURCE
 
-#define GMI_RESOURCE_CONFIG_FILE_NAME               "/opt/config/ipc_network_resource.xml"
+#define GMI_RESOURCE_CONFIG_FILE_NAME               "/opt/config/gmi_resource.xml"
 #define GMI_RESOURCE_XML                            GMI_RESOURCE_CONFIG_FILE_NAME
 
 #define GMI_EXTERN_NETWORK_PORT_PATH                "/Config/NetworkPort/Extern/"
@@ -17,7 +17,6 @@
 #define GMI_DAEMON_UPDATE_SERVER_PORT_KEY           "UpdatePort"
 #define GMI_HTTP_SERVER_PORT_KEY                    "HTTP_ServerPort"
 #define GMI_SDK_SERVER_PORT_KEY                     "SDK_ServerPort"
-#define GMI_ONVIF_SERVER_PORT_KEY                   "ONVIF_Port"
 
 /********************** unix socket ***********************/
 
@@ -172,89 +171,14 @@
 //daemon update server port
 #define GMI_DAEMON_UPDATE_SERVER_PORT               8000
 
-/********* log *********/
-// log_server
-#define LOG_SERVER_DEFAULT_PIPE_NAME                    "log_server_pipe"
-// upgrade log
-#define LOG_UPGRADE_DEFAULT_CLIENT_PIPE_NAME            "log_upgrade_client_pipe"
-#define LOG_UPGRADE_DEFAULT_PEER_PIPE_NAME              "log_upgrade_peer_pipe"
-// media center log
-#define LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_NAME       "log_media_center_client_pipe"
-#define LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_NAME         "log_media_center_peer_pipe"
-// control center log
-#define LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_NAME     "log_control_center_client_pipe"
-#define LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_NAME       "log_control_center_peer_pipe"
-// gb28181 log
-#define LOG_GB28181_DEFAULT_CLIENT_PIPE_NAME            "log_gb28181_client_pipe"
-#define LOG_GB28181_DEFAULT_PEER_PIPE_NAME              "log_gb28181_peer_pipe"
-// onvif log
-#define LOG_ONVIF_DEFAULT_CLIENT_PIPE_NAME              "log_onvif_client_pipe"
-#define LOG_ONVIF_DEFAULT_PEER_PIPE_NAME                "log_onvif_peer_pipe"
-// transport log
-#define LOG_PRIVATE_STREAM_DEFAULT_CLIENT_PIPE_NAME     "log_private_stream_client_pipe"
-#define LOG_PRIVATE_STREAM_DEFAULT_PEER_PIPE_NAME       "log_private_stream_peer_pipe"
-// storage log
-#define LOG_STORAGE_DEFAULT_CLIENT_PIPE_NAME            "log_storage_client_pipe"
-#define LOG_STORAGE_DEFAULT_PEER_PIPE_NAME              "log_storage_peer_pipe"
-// web log
-#define LOG_WEB_DEFAULT_CLIENT_PIPE_NAME                "log_web_client_pipe"
-#define LOG_WEB_DEFAULT_PEER_PIPE_NAME                  "log_web_peer_pipe"
-// authentication log
-#define LOG_AUTHENTICATION_DEFAULT_CLIENT_PIPE_NAME     "log_authentication_client_pipe"
-#define LOG_AUTHENTICATION_DEFAULT_PEER_PIPE_NAME       "log_authentication_peer_pipe"
-// gb rtp log
-#define LOG_GB_RTP_DEFAULT_CLIENT_PIPE_NAME             "log_gb_rtp_client_pipe"
-#define LOG_GB_RTP_DEFAULT_PEER_PIPE_NAME               "log_gb_rtp_peer_pipe"
-// onvif rtsp log
-#define LOG_ONVIF_RTSP_DEFAULT_CLIENT_PIPE_NAME         "log_onvif_rtsp_client_pipe"
-#define LOG_ONVIF_RTSP_DEFAULT_PEER_PIPE_NAME           "log_onvif_rtsp_peer_pipe"
-// sdk log
-#define LOG_SDK_DEFAULT_CLIENT_PIPE_NAME                "log_sdk_client_pipe"
-#define LOG_SDK_DEFAULT_PEER_PIPE_NAME                  "log_sdk_peer_pipe"
-
-
 /************************ mutex id ************************/
 
 #define GMI_IPC_MUTEX_BASE_KEY                                       1000
 
 /********* log *********/
-#define LOG_SERVER_DEFAULT_PIPE_MUTEX_ID                1234
-// upgrade log
-#define LOG_UPGRADE_DEFAULT_CLIENT_PIPE_MUTEX_ID        1236
-#define LOG_UPGRADE_DEFAULT_PEER_PIPE_MUTEX_ID          1238
-// media center log
-#define LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID   1240
-#define LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID     1242
-// control center log
-#define LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID 1244
-#define LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID   1246
-// gb28181 log
-#define LOG_GB2818_DEFAULT_CLIENT_PIPE_MUTEX_ID         1248
-#define LOG_GB2818_DEFAULT_PEER_PIPE_MUTEX_ID           1250
-// onvif log
-#define LOG_ONVIF_DEFAULT_CLIENT_PIPE_MUTEX_ID          1252
-#define LOG_ONVIF_DEFAULT_PEER_PIPE_MUTEX_ID            1254
-// transport log
-#define LOG_PRIVATE_STREAM_DEFAULT_CLIENT_PIPE_MUTEX_ID 1256
-#define LOG_PRIVATE_STREAM_DEFAULT_PEER_PIPE_MUTEX_ID   1258
-// storage log
-#define LOG_STORAGE_DEFAULT_CLIENT_PIPE_MUTEX_ID        1260
-#define LOG_STORAGE_DEFAULT_PEER_PIPE_MUTEX_ID          1262
-// web log
-#define LOG_WEB_DEFAULT_CLIENT_PIPE_MUTEX_ID            1264
-#define LOG_WEB_DEFAULT_PEER_PIPE_MUTEX_ID              1266
-// authentication log
-#define LOG_AUTHENTICATION_DEFAULT_CLIENT_PIPE_MUTEX_ID 1268
-#define LOG_AUTHENTICATION_DEFAULT_PEER_PIPE_MUTEX_ID   1270
-// gb rtp log
-#define LOG_GB_RTP_DEFAULT_CLIENT_PIPE_MUTEX_ID         1272
-#define LOG_GB_RTP_DEFAULT_PEER_PIPE_MUTEX_ID           1274
-// onvif rtsp log
-#define LOG_ONVIF_RTSP_DEFAULT_CLIENT_PIPE_MUTEX_ID     1276
-#define LOG_ONVIF_RTSP_DEFAULT_PEER_PIPE_MUTEX_ID       1278
-// sdk log
-#define LOG_SDK_DEFAULT_CLIENT_PIPE_MUTEX_ID            1280
-#define LOG_SDK_DEFAULT_PEER_PIPE_MUTEX_ID              1282
+#define LOG_SERVER_CONFIG_PATH                                       "/Config/log_server/"
+#define LOG_SERVER_CONFIG_SHARE_MEMORY_MUTEX_KEY                     "share_memory_mutex_key"
+#define GMI_LOG_SERVER_DEFAULT_SHARE_MEMORY_IPC_MUTEX_KEY            (GMI_IPC_MUTEX_BASE_KEY+0)
 
 //streaming media data dispatch
 #define MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH             "/Config/media_center_server/ipc_media_data_dispatch/"
@@ -266,12 +190,9 @@
 #define GMI_STREAMING_MEDIA_SERVER_ENCODE_AUDIO1_IPC_MUTEX_KEY       (GMI_IPC_MUTEX_BASE_KEY+10)
 #define GMI_STREAMING_MEDIA_SERVER_DECODE_AUDIO1_IPC_MUTEX_KEY       (GMI_IPC_MUTEX_BASE_KEY+12)
 
-//file lock
-#define CAPABILITY_SW_FILE_NAME_KEY                                  3346
-#define CAPABILITY_AUTO_FILE_NAME_KEY                                3348
-#define GMI_SETTING_CONFIG_FILE_NAME_KEY                             3350
-#define GMI_FACTORY_SETTING_CONFIG_FILE_NAME_KEY                     3352
-#define GMI_RESOURCE_CONFIG_FILE_NAME_KEY                            3354
+#define GMI_USER_LOG_IPC_MUTEX_KEY                                   (GMI_IPC_MUTEX_BASE_KEY+14)
+// not used for now 
+#define GMI_DEBUG_LOG_IPC_MUTEX_KEY                                  (GMI_IPC_MUTEX_BASE_KEY+16)
 
 /************************ share memory key ************************/
 

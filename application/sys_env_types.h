@@ -128,6 +128,8 @@ extern "C" {
 #define SYSCODE_STOP_AUDIO_DECODE_RSP     2005
 #define SYSCODE_IMPORT_EXCUTE_REQ         2006
 #define SYSCODE_IMPORT_EXCUTE_RSP         2007
+#define SYSCODE_STOP_3A_REQ               2008
+#define SYSCODE_STOP_3A_RSP               2009
 #define SYSCODE_REPORT_CONFIG             2001
 
 
@@ -221,9 +223,9 @@ extern "C" {
 #define RETCODE_NOSPECDISK      MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 2)
 #define RETCODE_FORMATING       MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 3)
 #define RETCODE_OTHERUSER_FORMAITING MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 4)
-#define RETCODE_IP_INVAILD  MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 5)
-#define RETCODE_IP_CONFLICT MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 6)
-#define RETCODE_SYSTEM_RNNING MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 7)
+#define RETCODE_IP_INVAILD      MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 5)
+#define RETCODE_IP_CONFLICT     MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 6)
+#define RETCODE_SYSTEM_RNNING   MAKE_RETCODE(RET_TYPE_FAIL,    MODULE_TYPE_RECORD, 7)
 
 
 #define SYS_COMM_VERSION            1
@@ -418,17 +420,10 @@ typedef enum tagSysIRCutMaterialType
 
 typedef enum tagSysZoomLensId
 {
-	  e_ZOOM_LENS_NONE  = 0,
 	  e_ZOOM_LENS_DF003 = 1,//18x,TAMRON
-	  e_ZOOM_LENS_YB22,//22x,FUJI	  
+	  e_ZOOM_LENS_YB22,//22x,FUJI
+	  e_ZOOM_LENS_NONE  = 255
 }SysPkgZoomLensId;
-
-
-typedef enum tagSysBoardId
-{
-	e_BOARD_NORMAL = 1,
-	e_BOARD_LARK,
-}SysPkgBoardId;
 
 
 //just only superuser(manufactory tools) can write it.
@@ -466,8 +461,7 @@ typedef struct tagSysComponents
     uint8_t            s_IRCutCtrlType;//e_IRCUT_CTRL_GPIO/e_IRCUT_CTRL_SPI
 	uint8_t            s_IRLedCtrlType;//e_IR_CTRL_GPIO/e_IR_CTRL_PWM/e_IR_CTRL_SERIAL/e_IR_CTRL_ALARM_INPUT/e_IR_CTRL_NONE
 	uint8_t            s_ShieldType;//e_SHIELD_TIAN_JING/e_SHIELD_HONG_BEN
-	uint8_t            s_BoardId;
-    uint8_t            s_Reserved[2];
+    uint8_t            s_Reserved[3];
 }SysPkgComponents;
 
 
@@ -491,7 +485,6 @@ typedef enum tagSysCapabilityCategory
 }SysPkgCapabilityCategory;
 
 
-#define MAX_MESSAGE_LENGTH   (16384)
 typedef struct tagSysXml
 {	
 	int32_t  s_Encrypt;// 0-no encrypt, 1-md5, 2-aes
@@ -635,8 +628,7 @@ typedef struct tagSysNetworkPort
 	int32_t  s_RTSP_Port;
 	int32_t  s_SDK_Port;
 	int32_t  s_Upgrade_Port;
-	int32_t  s_ONVIF_Port;
-	int32_t  s_Reserved[5];	
+	int32_t  s_Reserved[6];	
 }SysPkgNetworkPort;
 
 
@@ -749,7 +741,7 @@ typedef struct tagUserInfo
 	char_t    s_UserName[128];
 	char_t    s_UserPass[128];
 	uint16_t  s_UserFlag;//admin--1, operator--2, viewer--3
-	uint16_t  s_UserLevel;//operator 0-9
+	uint16_t  s_UserLevel;//user auth
 }SysPkgUserInfo;
 
 
@@ -794,9 +786,9 @@ typedef struct tagLogInfoSearch
 	int32_t  s_SelectMode; //all--0, type--1, time--2, type&time--3
 	int32_t  s_MajorType; //all type--0
 	int32_t  s_MinorType; //all type --0
-	char_t   s_StartTime[32];
-	char_t   s_StopTime[32];
-    int32_t  s_Offset; 
+	char_t   s_StartTime[32];//"yyyy-mm-dd hh:mm:ss"
+	char_t   s_StopTime[32];//"yyyy-mm-dd hh:mm:ss"
+    int32_t  s_Offset; //first, offset is 0
     int32_t  s_MaxNum; //show count one page
 }SysPkgLogInfoSearch;
 
@@ -814,7 +806,6 @@ typedef struct tagLogInfo
     char_t   s_Reserved[4];
 }SysPkgLogInfo;
 
-
 //log info num
 typedef struct tagLogInfoInt
 {
@@ -824,7 +815,7 @@ typedef struct tagLogInfoInt
 
 
 //alarm info
-typedef struct tagAlarmInfo
+typedef struct tagAlarmInfor
 {
     uint64_t s_WaringId;
     int32_t  s_WaringType;
@@ -833,11 +824,11 @@ typedef struct tagAlarmInfo
     uint8_t  s_Time[36];
     uint8_t  s_DevId[64];
     uint8_t  s_Description[128];
-    union
+    union 
     {
         uint32_t s_IoNum;
     }s_ExtraInfo;
-}SysPkgAlarmInfo;
+}SysPkgAlarmInfor;
 
 
 //log major type and minor type
@@ -1250,7 +1241,7 @@ typedef struct tagPtzHomeCfg
 typedef struct tagPtzPresetInfo
 {
 	int32_t s_PtzId;
-	int32_t s_PresetIndex;
+	int32_t s_PresetIndex; // 1<<16 :have setted, 0<<16:not setted
 	char_t  s_PresetName[128];
 }SysPkgPtzPresetInfo;
 
@@ -1269,11 +1260,11 @@ typedef struct tagPtzPresetSearch
 typedef struct tagPtz3Dctrl
 {
 	int32_t  s_PtzId;//default form 1
-	int32_t  s_PtzCmd; // 3D cmd
-	uint8_t  s_StartX; 
-	uint8_t  s_StartY;
-	uint8_t  s_EndX;
-	uint8_t  s_EndY;
+	int32_t  s_X;
+	int32_t  s_Y;
+	int32_t  s_Width;
+	int32_t  s_Height;
+	uint8_t  s_Reserved[4];
 }SysPkgPtz3Dctrl;
 
 

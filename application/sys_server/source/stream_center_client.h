@@ -18,6 +18,23 @@ typedef struct tagMediaHandle
     FD_HANDLE s_Transport;
 } MediaHandle;
 
+#define RES_1080P_WIDTH     1920
+#define RES_1080P_HEIGHT    1080
+#define RES_720P_WIDTH      1280
+#define RES_720P_HEIGHT     720
+#define RES_D1_PAL_WIDTH    720
+#define RES_D1_PAL_HEIGHT   576
+#define RES_D1_NTSC_WIDTH   720
+#define RES_D1_NTSC_HEIGHT  480
+#define RES_CIF_PAL_WIDTH   352
+#define RES_CIF_PAL_HEIGHT  288
+#define RES_CIF_NTSC_WIDTH  352
+#define RES_CIF_NTSC_HEIGHT 240
+#define RES_QCIF_PAL_WIDTH  176
+#define RES_QCIF_PAL_HEIGHT 144
+#define RES_QVGA_WIDTH      320
+#define RES_QVGA_HEIGHT     240
+
 //Zoom & Focus Cmd
 typedef struct
 {
@@ -38,7 +55,6 @@ public:
     GMI_RESULT Start2(FD_HANDLE Handle);
     GMI_RESULT Stop2(FD_HANDLE Handle);
     GMI_RESULT Deinitialize();
-    GMI_RESULT GeneralParamSet(General_Param ParamType, void_t *GeneralParamPtr);
     
     GMI_RESULT OpenVideoInOutDevice(uint32_t VidSourceId, uint32_t VidChanId, FD_HANDLE *Handle);
     GMI_RESULT CloseVideoInOutDevice(FD_HANDLE Handle);
@@ -75,10 +91,9 @@ public:
     GMI_RESULT SetZoomStep(FD_HANDLE Handle, int32_t Step);
     GMI_RESULT StartZoom(FD_HANDLE FocusHandle, FD_HANDLE ZoomHandle, int8_t Mode);
     GMI_RESULT StopZoom(FD_HANDLE FocusHandle, FD_HANDLE ZoomHandle, int32_t *PositionPtr);
-public:
-	GMI_RESULT CheckVideoEncodeConfiguration(VideoEncodeParam *EncParamPtr);
     
-private:    
+private:
+    GMI_RESULT CheckVideoEncodeConfiguration(VideoEncodeParam *EncParamPtr);
     GMI_RESULT CheckOsdConfiguration(VideoOSDParam *OsdParamPtr);
     GMI_RESULT CheckImageConfiguration(ImageBaseParam *ImageParamPtr);
     GMI_RESULT CheckVideoReslution(uint16_t Height, uint16_t Width);
@@ -88,7 +103,6 @@ private:
     GMI_RESULT CheckVinVoutConfiguration(VideoInParam *VidInParamPtr, VideoOutParam *VidOutParamPtr);
     GMI_RESULT CheckAudioEncodeConfiguration(AudioEncParam *AudioEncParamPtr);
     GMI_RESULT CheckAudioDecodeConfiguration(AudioDecParam *AudioDecParamPtr);
-    GMI_RESULT GetAdaptedOsdFontSize(uint32_t Id, uint8_t *FontSize);
     GMI_RESULT StartCodec(boolean_t EncodeMode, uint32_t SourceId, uint32_t MeidaId, uint32_t MediaType, uint32_t CodecType, void_t *CodecParameter, size_t CodecParameterLength, FD_HANDLE *CodecHandle);
     GMI_RESULT StopCodec(FD_HANDLE& CodecHandle);
 private:
@@ -98,7 +112,6 @@ private:
     uint16_t            m_UDP_SessionBufferSize;
     MediaCenter         m_MediaCenter;
     MediaTransportProxy m_MediaTransport; 
-    VideoEncodeParam    m_VideoEncParam[MAX_VIDEO_STREAM_NUM];
 };
 
 #endif

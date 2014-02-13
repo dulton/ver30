@@ -31,8 +31,8 @@
                 //语言初始化
                 initLang();
                 //初始化 get
-                //var section = 'PMSETS';
-                //GetAndSet('get', section, '', "process",false,false,0,2);
+                var section = 'PMSETS';
+                GetAndSet('get', section, '', "process",false,false,0,2);
 
                 $("#submit").bind("click",
                 function(e) {
@@ -53,85 +53,22 @@
 
                 });
 
-				//开始绘制
                 $("#addmask").bind("click",
                 function(e) {
-					document.getElementById("GMIIPCmrWebPlugIn1").StartDrawMask(true);
-                    //andmasktoocx();
+                    andmasktoocx();
                 });
-				//保存
-                $("#save").bind("click",
-                function(e) {
-					var st = document.getElementById("GMIIPCmrWebPlugIn1").GetMaskInfo();
-                    //andmasktoocx();
-                });
-				//清除绘制
                 $("#delmask").bind("click",
                 function(e) {
-//                    var index = document.getElementById("GMIIPCmrWebPlugIn1").GetPmCurrWinIndex();
-//                    document.getElementById("GMIIPCmrWebPlugIn1").DelPmWindow(index);
-//                    var oldinfo = $("#mask" + index).val();
-//                    var p = new private(oldinfo, index);
-//                    p.pm_enable = 0;
-//                    p.getPosStr();
-//                    $("#mask" + index).val(p.posStrServer); //记录服务器端 删除数据
-//					//alert(p.posStrServer);
-//                    $("#masklist option[value='" + index + "']").remove();
-					document.getElementById("GMIIPCmrWebPlugIn1").ClearInfo();
+                    var index = document.getElementById("GMIIPCmrWebPlugIn1").GetPmCurrWinIndex();
+                    document.getElementById("GMIIPCmrWebPlugIn1").DelPmWindow(index);
+                    var oldinfo = $("#mask" + index).val();
+                    var p = new private(oldinfo, index);
+                    p.pm_enable = 0;
+                    p.getPosStr();
+                    $("#mask" + index).val(p.posStrServer); //记录服务器端 删除数据
+					//alert(p.posStrServer);
+                    $("#masklist option[value='" + index + "']").remove();
                 });
-				//改变颜色
-				$("#32pm_color").bind("change",
-                	function(e) {
-						var R = 0;
-						var G = 0;
-						var B = 0;
-						var stmp = $("#32pm_color").val();
-						switch(stmp)
-						{
-							case "0":	//黑色
-								R = 0;
-								G = 0;
-								B = 0;
-							break;	
-							case "1":	//红色
-								R = 255;
-								G = 0;
-								B = 0;
-							break;
-							case "2":	//蓝色
-								R = 0;
-								G = 0;
-								B = 255;
-							break;
-							case "3":	//绿色
-								R = 4;
-								G = 126;
-								B = 39;
-							break;
-							case "4":	//黄色
-								R = 245;
-								G = 253
-								B = 2;
-							break;
-							case "5":	//洋红
-								R = 215;
-								G = 0;
-								B = 64;
-							break;
-							case "6":	//青绿
-								R = 170;
-								G = 196;
-								B = 104;
-							break;
-							case "7":	//白色
-								R = 255;
-								G = 255;
-								B = 255;
-							break;
-						}
-						
-						document.getElementById("GMIIPCmrWebPlugIn1").SetMaskColor(R,G,B);
-					});
                 //取消按钮
                 $("#cancelmask").bind("click",
                 function(e) {
@@ -263,15 +200,11 @@
 					}
                 });
                
-				var cameraip=parent.getip();
+				var cameraip=parent.getIp();
 				if(cameraip!="")
 				{
 					//alert(cameraip);
-					//加载图像
-					LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
-					//获取隐私块
-					GetPrivate();
-                     //LoadMaskActiveX(cameraip, 0);
+                     LoadMaskActiveX(cameraip, 0);
 				}
 
             });
@@ -281,7 +214,7 @@
 		var activex=document.getElementById("GMIIPCmrWebPlugIn1");
 							if (activex != null && activex != 'null') {
 						if(activex)
-							activex.StopPlay();
+							activex.Stop();
 					}
 			  }catch(e){alert(e.message);}
 	});
@@ -356,83 +289,6 @@
                 };
 
             }
-			
-	function LoadImg(name,password,ip,port) {
-		while(true)
-		{
-			if(parent.VideoAuth == 1)
-			{
-				break;
-			}
-			else if(parent.VideoAuth == 0)
-			{
-				alert("没有视频预览权限！");
-				return;
-			}
-		}
-	//debugger;
-    //if (window.ActiveXObject) {
-		
-			if(typeof(parent.NetPlay) == "undefined" ||parent.NetPlay == null || isNaN(parent.NetPlay))
-			{
-				parent.NetPlay = 10;
-			}
-        	try {
- 
-		    var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
-			
-			activeX.SetLoginInfo(name, password, ip, port);			
-			activeX.SetVideoBuffer(0,parseInt(parent.NetPlay));	
-			activeX.SetOCXType(2);
-			activeX.Play();
-       		} catch(e) { 
-			//alert(e.message);
-			alert("控件未加载，请手动加载控件！");
-            return;
-        }
-    //}
-	
-}
-	//获取隐私块
-	function GetPrivate()
-	{
-		var  content={};
-		content.SessionId=parent.id;
-		content.AuthValue=parent.Authvalue;
-		contentstr=jsonToString(content);
-		//GetAndSet("SetImagingDefaultMode","json",contentstr, succfunSetImagingDefault);
-		
-		//先拼装一组数据
-		var ss = "<MaskInfo count='4'>\
-    <Mask Name='1' Color = '255,255,255'>\
-	      <SiteLeft>100</SiteLeft>\
-		  <SiteTop>100</SiteTop>\
-		  <SiteRight>200</SiteRight>\
-		  <SiteDown>200</SiteDown>\
-	</Mask>\
-	<Mask Name='2' Color = '255,255,255'>\
-	      <SiteLeft>300</SiteLeft>\
-		  <SiteTop>300</SiteTop>\
-		  <SiteRight>400</SiteRight>\
-		  <SiteDown>400</SiteDown>\
-	</Mask>\
-	<Mask Name='3' Color = '255,255,255'>\
-	      <SiteLeft>500</SiteLeft>\
-		  <SiteTop>500</SiteTop>\
-		  <SiteRight>600</SiteRight>\
-		  <SiteDown>600</SiteDown>\
-	</Mask>\
-	<Mask Name='4' Color = '255,255,255'>\
-	      <SiteLeft>600</SiteLeft>\
-		  <SiteTop>600</SiteTop>\
-		  <SiteRight>700</SiteRight>\
-		  <SiteDown>700</SiteDown>\
-	</Mask>\
-</MaskInfo>";
-		document.getElementById("GMIIPCmrWebPlugIn1").SetMaskInfo(ss,true);
-		
-	}
-	//
         </script>
         <script language="Javascript" event="OnPmWinChanged(changedIndex)" for="GMIIPCmrWebPlugIn1">
             OnPmWinChanged(changedIndex);
@@ -444,26 +300,11 @@
             <h3 id="hprivacy">
                 隐私遮挡
             </h3>
-            <dl id="streamInfo">
-                <dt id="dstream" style="visibility:hidden">
-                    码流
-                </dt>
-                <dd>
-                    <input type="radio" name="bitstream" value="0" id="radiostream0" checked="checked"
-                     style="visibility:hidden"/>
-                    <label id="1stream" style="visibility:hidden">
-                        码流
-                    </label>
-                    <label style="visibility:hidden">
-                        1
-                    </label>
-                </dd>
-            </dl>
         </div>
         <div class="down_main_content">
             <div class="camera_top">
                 <div class="video">
-<!--                    <OBJECT CLASSID="CLSID:3BCDAA6A-7306-42FF-B8CF-BE5D3534C1E4" 
+                    <OBJECT CLASSID="CLSID:3BCDAA6A-7306-42FF-B8CF-BE5D3534C1E4" 
                     WIDTH=702 HEIGHT=395 align="absmiddle" ID="GMIIPCmrWebPlugIn1">
                         <PARAM NAME="_Version" VALUE="65536">
                         <PARAM NAME="_ExtentX" VALUE="19045">
@@ -472,11 +313,7 @@
                         <embed src="65536" width="700" height="395" align="absmiddle" _version="65536"
                         _extentx="19045" _extenty="11478" _stockprops="0">
                         </embed>
-                    </OBJECT>-->
-            		<object classid="CLSID:D761DC49-4CDC-458E-ABB6-4F594E9DA1EB" codebase=""
-            		width=702 height=395 align="absmiddle" id="GMIIPCmrWebPlugIn1">
-            
-            		</object>
+                    </OBJECT>
                 </div>
                  <div style="clear:both"></div>
         
@@ -518,18 +355,18 @@
                         </select>
 						<input type="hidden" id="32pm1_color" />
                     </p>
-<!--                    <p>
+                    <p>
                         <label id="llist">
                             列表
                         </label>
-                        
+                        <!--<textarea rows="4"></textarea>-->
                         <input type="hidden" id="mask1" />
                         <input type="hidden" id="mask2" />
                         <input type="hidden" id="mask3" />
                         <input type="hidden" id="mask4" />
                         <select class="selectlist" size="5" id="masklist">
                         </select>
-                    </p>-->
+                    </p>
                     <p>
                         <!--马军港 注销 <label>遮挡区域范围</label>
                         <span>左边</span><input name="left" class="small"/>
@@ -539,22 +376,19 @@
                         -->
                     </p>
                 </div>
-                <div class="actions1" style="width:260px; color:#d5d5d5;">
+                <div class="actions1">
                     <p>
-                  	 	<input id="01backlight_comp" name="" type="checkbox" />启用隐私遮挡
+                        <input type="button" class="btn24" id="addmask" value="添加" />
                     </p>
-                    <!--<p>-->
-                        <input type="button" class="btn24_wk" id="addmask" value="开始绘制" />
-<!--                    </p>
-                    <p>-->
-                        <input type="button" class="btn24_wk" id="delmask" value="取消绘制" />
-<!--                    </p>
-                    <p>-->
-                        <input type="button" class="btn24_wk" id="save" value="保存" />
-                    <!--</p>-->
-<!--                    <p>
-                        <input type="button" class="btn24_wk" id="cancelmask" value="取消" />
-                    </p>-->
+                    <p>
+                        <input type="button" class="btn24" id="delmask" value="删除" />
+                    </p>
+                    <p>
+                        <input type="button" class="btn24" id="submitmask" value="确定" />
+                    </p>
+                    <p>
+                        <input type="button" class="btn24" id="cancelmask" value="取消" />
+                    </p>
                 </div>
            
             </div>

@@ -112,8 +112,6 @@ static PTZ_Node  l_PTZ_Node[DEFAULT_PTZ_NUM] =
     }
 };
 
-uint32_t             l_PtzPresetTotal;
-PTZ_Preset          *l_PtzPreset;
 
 //func declaration
 void *Ptz_ContinousMoveStopThread(void);
@@ -140,109 +138,6 @@ GMI_RESULT PtzTimeoutProcessStop(void)
     }
 
     return GMI_SUCCESS;
-}
-
-
-GMI_RESULT __tptz__Initialize()
-{
-    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
-    ONVIF_INFO("%s In.........\n", __func__);
-    uint16_t SessionId  = 0;
-    uint32_t AuthValue  = 0;
-    int32_t  MaxPresetNum;
-    boolean_t Fail = false;
-    GMI_RESULT Result = GMI_SUCCESS;
-    //SysPkgPtzPresetInfo *SysPtzPresetInfoPtr = NULL;
-
-    do
-    {
-        PtzTimeoutProcessStart();
-
-        Result = SysGetMaxPresetNum(SessionId, AuthValue, &MaxPresetNum);
-        if (FAILED(Result))
-        {
-            ONVIF_ERROR("get max preset num fail, Result = 0x%lx\n", Result);
-            return Result;
-        }
-
-#if 0
-        SysPtzPresetInfoPtr = (SysPkgPtzPresetInfo*)malloc(sizeof(SysPkgPtzPresetInfo)*MaxPresetNum);
-        if (NULL == SysPtzPresetInfoPtr)
-        {
-            ONVIF_ERROR("malloc fail\n");
-            return GMI_OUT_OF_MEMORY;
-        }
-
-        int32_t RspCnt = 0;
-        Result = SysGetPtzPresetInfo(SessionId, AuthValue, MaxPresetNum, SysPtzPresetInfoPtr, &RspCnt);
-        if (FAILED(Result))
-        {
-            ONVIF_ERROR("get ptz presetinfo fail, Result = 0x%lx\n", Result);
-            if (NULL != SysPtzPresetInfoPtr)
-            {
-                free(SysPtzPresetInfoPtr);
-                SysPtzPresetInfoPtr = NULL;
-            }
-            return Result;
-        }
-#endif
-        l_PtzPreset = (PTZ_Preset*)malloc(sizeof(PTZ_Preset)*MaxPresetNum);
-        if (FAILED(Result))
-        {
-            return GMI_OUT_OF_MEMORY;
-        }
-        memset(l_PtzPreset, 0, sizeof(PTZ_Preset)*MaxPresetNum);
-
-        l_PtzPresetTotal = MaxPresetNum;
-        for (int32_t i = 0; i < MaxPresetNum; i++)
-        {
-            boolean_t Setted = false;
-            char_t    PresetName[128];
-            Result = SysSearchPtzPresetInfo(SessionId, AuthValue, i+1, &Setted, PresetName);
-            if (FAILED(Result))
-            {
-                Fail = true;
-                ONVIF_ERROR("SysSearchPtzPresetInfo %d fail\n", i+1);
-                break;
-            }
-            memcpy(l_PtzPreset[i].s_Token, PresetName, sizeof(l_PtzPreset[i].s_Token));
-            l_PtzPreset[i].s_Index = i+1;
-            l_PtzPreset[i].s_Setted = Setted;
-        }
-
-        if (Fail)
-        {
-            break;
-        }
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s normal Out.........\n", __func__);
-        ONVIF_INFO("%s normal out.........\n", __func__);
-        return GMI_SUCCESS;
-    }
-    while (0);
-
-    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
-    ONVIF_INFO("%s abnormal out.........\n", __func__);
-    return Result;
-}
-
-
-void __tptz__Deinitialize()
-{
-    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
-    ONVIF_INFO("%s In.........\n", __func__);
-
-
-    if (NULL != l_PtzPreset)
-    {
-        free(l_PtzPreset);
-        l_PtzPreset = NULL;
-    }
-
-    PtzTimeoutProcessStop();
-
-    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s normal Out.........\n", __func__);
-    ONVIF_INFO("%s normal out.........\n", __func__);
-    return;
 }
 
 
@@ -375,11 +270,15 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__GetPresets(struct soap *soap_ptr, struct _tptz
 {
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
     ONVIF_INFO("%s In.........\n", __func__);
+    int32_t               Id                    = 0;
+    uint8_t               PresetsTokenPrefixLen = 0;
+    SysPkgPtzPresetInfo  *PTZPresetInfoPtr      = NULL;
+    GMI_RESULT            Result                = GMI_SUCCESS;
 
     do
     {
         //user auth
-        GMI_RESULT Result = Soap_WSSE_Authentication(soap_ptr);
+        Result = Soap_WSSE_Authentication(soap_ptr);
         if (FAILED(Result))
         {
             ONVIF_ERROR("user auth failed\n");
@@ -387,56 +286,63 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__GetPresets(struct soap *soap_ptr, struct _tptz
             break;
         }
 
-        if (NULL == tptz__GetPresets->ProfileToken)
+        ONVIF_INFO("Profile Token         = %s\n", tptz__GetPresets->ProfileToken);
+        //if (0 == strcmp(tptz__GetPresets->ProfileToken, ))
         {
-            ONVIF_ERROR("ProfileToken %s not exist\n", tptz__GetPresets->ProfileToken);
-            ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "NoPTZProfile", "The requested profile token does not reference a PTZ configuration");
-            break;
-        }
-        ONVIF_INFO("ProfileToken      = %s\n", tptz__GetPresets->ProfileToken);
-
-        int32_t Count = 0;
-        uint32_t Id = 0;
-        PTZ_Preset *PtzPreset = l_PtzPreset;
-        for (Id = 0; Id < l_PtzPresetTotal; Id++)
-        {
-            if (PtzPreset[Id].s_Setted)
+            PTZPresetInfoPtr = (SysPkgPtzPresetInfo*)malloc(MAX_PTZ_PRESET_NUM * sizeof(SysPkgPtzPresetInfo));
+            if (NULL == PTZPresetInfoPtr)
             {
-                printf("Id%d %s\n", Id, PtzPreset[Id].s_Token);
-                Count++;
+                ONVIF_ERROR("PTZPresetInfoPtr malloc failed\n");
+                break;
             }
-        }
+            memset(PTZPresetInfoPtr, 0, MAX_PTZ_PRESET_NUM * sizeof(SysPkgPtzPresetInfo));
 
-        if (0 < Count)
-        {
-            tptz__GetPresetsResponse->__sizePreset = Count;
+            //default value , can delete
+            for (Id = 0; Id < MAX_PTZ_PRESET_NUM; Id++)
+            {
+                PTZPresetInfoPtr[Id].s_PtzId       = 1;
+                PTZPresetInfoPtr[Id].s_PresetIndex = Id+1;
+                sprintf(PTZPresetInfoPtr[Id].s_PresetName, "%d", Id+1);
+            }
+
+            //get presets from system control server
+
+            //soap malloc presets
+            PresetsTokenPrefixLen                  = strlen(PTZ_PRESET_TOKEN_PREFIX);
+            tptz__GetPresetsResponse->__sizePreset = MAX_PTZ_PRESET_NUM;
             tptz__GetPresetsResponse->Preset       = (struct tt__PTZPreset*)soap_malloc_zero(soap_ptr, tptz__GetPresetsResponse->__sizePreset * sizeof(struct tt__PTZPreset));
-            for (Id = 0; Id < (uint32_t)tptz__GetPresetsResponse->__sizePreset; Id++)
+            for (Id = 0; Id < tptz__GetPresetsResponse->__sizePreset; Id++)
             {
-                tptz__GetPresetsResponse->Preset[Id].token = (char_t*)soap_malloc_zero(soap_ptr, TOKEN_LENGTH);
-                tptz__GetPresetsResponse->Preset[Id].Name  = (char_t*)soap_malloc_zero(soap_ptr, TOKEN_LENGTH);
-            }
-
-            int32_t i;
-            for (Id = 0, i = 0; Id < l_PtzPresetTotal && i < Count; Id++)
-            {
-                if (PtzPreset[Id].s_Setted
-                	&& 0 < strlen(PtzPreset[Id].s_Token))
+                tptz__GetPresetsResponse->Preset[Id].token = (char_t*)soap_malloc_zero(soap_ptr, (sizeof(char_t) * (PresetsTokenPrefixLen + AJUST_GAP)));
+                if (NULL == tptz__GetPresetsResponse->Preset[Id].token)
                 {
-                    strcpy(tptz__GetPresetsResponse->Preset[i].token, PtzPreset[Id].s_Token);                 
-                    strcpy(tptz__GetPresetsResponse->Preset[i].Name, PtzPreset[Id].s_Token);                
-                    i++;
+                    ONVIF_ERROR("token malloc failed\n");
+                    break;
                 }
             }
+
+            //fill out the struct of Preset
+            for (Id = 0; Id <tptz__GetPresetsResponse->__sizePreset; Id++)
+            {
+                sprintf(tptz__GetPresetsResponse->Preset[Id].token, "%s%d", PTZ_PRESET_TOKEN_PREFIX, (Id + 1));
+                tptz__GetPresetsResponse->Preset[Id].Name = soap_strdup(soap_ptr, PTZPresetInfoPtr[Id].s_PresetName);
+            }
         }
 
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Normal Out.........\n", __func__);
-        ONVIF_INFO("%s normal out.........\n", __func__);
+        if (NULL != PTZPresetInfoPtr)
+        {
+            free(PTZPresetInfoPtr);
+        }
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
         return SOAP_OK;
     }
     while (0);
+
+    if (NULL != PTZPresetInfoPtr)
+    {
+        free(PTZPresetInfoPtr);
+    }
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
-    ONVIF_INFO("%s abnormal out.........\n", __func__);
     return SOAP_SVR_FAULT;
 }
 
@@ -444,12 +350,20 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__GetPresets(struct soap *soap_ptr, struct _tptz
 SOAP_FMAC5 int SOAP_FMAC6 __tptz__SetPreset(struct soap *soap_ptr, struct _tptz__SetPreset *tptz__SetPreset, struct _tptz__SetPresetResponse *tptz__SetPresetResponse)
 {
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
-    ONVIF_INFO("%s In.........\n", __func__);
+    uint16_t   SessionId = 0;
+    uint32_t   AuthValue = 0;
+    char_t     BufferTmp[INFO_LENGTH] = {0};
+    uint32_t   Id                     = 0;
+    uint32_t   Preset                 = 0;
+    GMI_RESULT Result                 = GMI_SUCCESS;
+    SysPkgPtzCtrl PtzCtrlCmd = {0};
+    char_t     *CurPos = NULL;
+    uint16_t        i = 0;
 
     do
     {
         //user auth
-        GMI_RESULT Result = Soap_WSSE_Authentication(soap_ptr);
+        Result = Soap_WSSE_Authentication(soap_ptr);
         if (FAILED(Result))
         {
             ONVIF_ERROR("user auth failed\n");
@@ -457,193 +371,101 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__SetPreset(struct soap *soap_ptr, struct _tptz_
             break;
         }
 
-        if (NULL == tptz__SetPreset->ProfileToken)
-        {
-            ONVIF_ERROR("PresetToken %s not exist\n", tptz__SetPreset->PresetToken);
-            ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "NoPTZProfile", "The requested profile token does not reference a PTZ configuration");
-            break;
-        }
         ONVIF_INFO("ProfileToken      = %s\n", tptz__SetPreset->ProfileToken);
-
-        uint16_t      SessionId  = 0;
-        uint32_t      AuthValue  = 0;
-        boolean_t     TokenExist = false;
-        boolean_t     NameExist  = false;
-        boolean_t     Fail       = false;
-        SysPkgPtzPresetInfo SysPtzPresetInfo;
-
         if (NULL != tptz__SetPreset->PresetToken)
         {
             ONVIF_INFO("PresetToken       = %s\n", tptz__SetPreset->PresetToken);
-            TokenExist = true;
         }
         if (NULL != tptz__SetPreset->PresetName)
         {
             ONVIF_INFO("PresetName        = %s\n", tptz__SetPreset->PresetName);
-            NameExist = true;
         }
 
-        //overwrite
-        if (TokenExist)
+        //if (0 == strcmp(tptz__SetPreset->ProfileToken, ))
         {
-            uint32_t Id;
-            PTZ_Preset *PtzPresetPtr = l_PtzPreset;
-
-            for (Id = 0; Id < l_PtzPresetTotal; Id++)
+            if (NULL != tptz__SetPreset->PresetToken)
             {
-                if (strlen(tptz__SetPreset->PresetToken) == strlen(PtzPresetPtr[Id].s_Token)
-                	&& 0 == strcmp(tptz__SetPreset->PresetToken, PtzPresetPtr[Id].s_Token))
+                for (Id = 0; Id < MAX_PTZ_PRESET_NUM; Id++)
                 {
-                    //overwrite
-                    SysPtzPresetInfo.s_PtzId = 1;
-                    SysPtzPresetInfo.s_PresetIndex = PtzPresetPtr[Id].s_Index;
-                    strcpy(SysPtzPresetInfo.s_PresetName, PtzPresetPtr[Id].s_Token);
-                    Result = SysSetPtzPresetInfo(SessionId, AuthValue, &SysPtzPresetInfo);
-                    if (FAILED(Result))
+                    sprintf(BufferTmp, "%s%d", PTZ_PRESET_TOKEN_PREFIX, Id);
+                    if (0 == strcmp(tptz__SetPreset->PresetToken, BufferTmp))
                     {
-
-                        ONVIF_ERROR("set preset to system fail, Result = 0x%lx\n", Result);
-                        Fail = true;
+                        ONVIF_INFO("find preset no %d\n", Id);
+                        //set preset to sysctrl server
+                        Preset = Id;
                         break;
                     }
-                    break;
+                    memset(BufferTmp, 0, sizeof(BufferTmp));
                 }
-            }
-            if (Fail)
-            {
-                break;
-            }
 
-            if (Id >= l_PtzPresetTotal)
-            {
-                ONVIF_ERROR("PresetToken %s not exist\n", tptz__SetPreset->PresetToken);
-                ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:NoToken", "The requested preset token does not exist");
-                break;
-            }
-
-            tptz__SetPresetResponse->PresetToken = soap_strdup(soap_ptr, tptz__SetPreset->PresetToken);
-        }
-        //create
-        else if (NameExist)
-        {
-            if (strlen(tptz__SetPreset->PresetName) >= TOKEN_LENGTH)
-            {
-                ONVIF_ERROR("PresetName %s too long\n", tptz__SetPreset->PresetName);
-                ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:InvalidPresetName", "The PresetName is either too long or contains invalid characters");
-                break;
-            }
-
-            uint32_t Id;
-            PTZ_Preset *PtzPresetPtr = l_PtzPreset;
-            for (Id = 0; Id < l_PtzPresetTotal; Id++)
-            {
-                if (strlen(tptz__SetPreset->PresetName) == strlen(PtzPresetPtr[Id].s_Name)
-                        && 0 == strcmp(tptz__SetPreset->PresetName, PtzPresetPtr[Id].s_Name))
+                //support number of PresetToken
+                if(Id >= MAX_PTZ_PRESET_NUM)
                 {
-                    ONVIF_ERROR("PresetName %s have exist\n", tptz__SetPreset->PresetName);
-                    //ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:PresetExist", "The requested name already exist for another preset");
-                    //Fail = true;
-                    //no empty presets been used when this device have been interfaced with many NVR . this method solve this problem.guoqiang.lu 14/1/23
-                    //overwrite
-                    PtzPresetPtr[Id].s_Setted = true;                    
-                    strcpy(PtzPresetPtr[Id].s_Token, tptz__SetPreset->PresetName);
-                    SysPtzPresetInfo.s_PtzId = 1;
-                    SysPtzPresetInfo.s_PresetIndex = PtzPresetPtr[Id].s_Index;
-                    strcpy(SysPtzPresetInfo.s_PresetName, PtzPresetPtr[Id].s_Token);
-                    Result = SysSetPtzPresetInfo(SessionId, AuthValue, &SysPtzPresetInfo);
-                    if (FAILED(Result))
+                    CurPos = tptz__SetPreset->PresetToken;
+                    for(i = 0; i < strlen(tptz__SetPreset->PresetToken); i++)
                     {
-                        ONVIF_ERROR("set preset to system fail, Result = 0x%lx\n", Result);
-                        Fail = true;
-                        break;
-                    }
-                    break;
-                }
-            }
-            if (Fail)
-            {
-                break;
-            }
-
-            if (Id >= l_PtzPresetTotal)
-            {
-                uint32_t i;
-                PTZ_Preset *PtzPresetPtr = l_PtzPreset;
-                for (i = 0; i < l_PtzPresetTotal; i++)
-                {
-                    boolean_t Setted = 	PtzPresetPtr[i].s_Setted;
-                    if (!Setted)
-                    {
-                        ONVIF_INFO("index %d, name %s, set preset\n", PtzPresetPtr[i].s_Index, tptz__SetPreset->PresetName);
-                        SysPtzPresetInfo.s_PtzId = 1;
-                        SysPtzPresetInfo.s_PresetIndex = PtzPresetPtr[i].s_Index;
-                        strcpy(SysPtzPresetInfo.s_PresetName, tptz__SetPreset->PresetName);
-                        Result = SysSetPtzPresetInfo(SessionId, AuthValue, &SysPtzPresetInfo);
-                        if (FAILED(Result))
+                        if((*CurPos >= '0') && (*CurPos <= '9'))
                         {
-
-                            ONVIF_ERROR("set preset to system fail, Result = 0x%lx\n", Result);
-                            Fail = true;
+                            Preset = atoi(CurPos);
                             break;
                         }
-                        strcpy(PtzPresetPtr[i].s_Name, tptz__SetPreset->PresetName);
-                        strcpy(PtzPresetPtr[i].s_Token, tptz__SetPreset->PresetName);
-                        PtzPresetPtr[i].s_Setted = true;
-                        break;
+                        CurPos++;
                     }
                 }
-                if (Fail)
+            }
+            else if (NULL != tptz__SetPreset->PresetName)
+            {
+                Result = IsNum(tptz__SetPreset->PresetName);
+                if (SUCCEEDED(Result))
                 {
-                    break;
+                    Preset = atoi(tptz__SetPreset->PresetName);
                 }
-                if (i >= l_PtzPresetTotal)
+                //support onvif of dahua NVR about presetname include presetXX
+                else
                 {
-                    ONVIF_ERROR("no free spaces to create new preset %s\n", tptz__SetPreset->PresetName);
-                    break;
+                    CurPos = tptz__SetPreset->PresetName;
+                    for(i = 0; i < strlen(tptz__SetPreset->PresetName); i++)
+                    {
+                        if((*CurPos >= '0') && (*CurPos <= '9'))
+                        {
+                            Preset = atoi(CurPos);
+                            break;
+                        }
+                        CurPos++;
+                    }
                 }
-            }           
+            }
 
-            tptz__SetPresetResponse->PresetToken = soap_strdup(soap_ptr, tptz__SetPreset->PresetName);
+            if (Preset > 0
+                    && Preset < MAX_PTZ_PRESET_NUM)
+            {
+                PtzCtrlCmd.s_PtzCmd   = 1;
+                PtzCtrlCmd.s_PtzCmd   = SYS_PTZCMD_SETPRESET;
+                PtzCtrlCmd.s_Param[0] = Preset;
+                Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd);
+                if ( FAILED(Result) )
+                {
+                    ONVIF_ERROR("SYS_PTZCMD_SETPRESET failed\n");
+                    break;
+                }
+            }
+        }
+
+        //add response
+        if(NULL != tptz__SetPreset->PresetToken)
+        {
+            tptz__SetPresetResponse->PresetToken = soap_strdup( soap_ptr, tptz__SetPreset->PresetToken);
         }
         else
         {
-            ONVIF_ERROR("no token, no name, support\n");
-            uint32_t i;
-            PTZ_Preset *PtzPresetPtr = l_PtzPreset;
-            for (i = 0; i < l_PtzPresetTotal; i++)
-            {
-                boolean_t Setted = PtzPresetPtr[i].s_Setted;
-                if (!Setted)
-                {
-                    SysPtzPresetInfo.s_PtzId = 1;
-                    SysPtzPresetInfo.s_PresetIndex = PtzPresetPtr[i].s_Index;
-                    sprintf(SysPtzPresetInfo.s_PresetName, "%d", PtzPresetPtr[i].s_Index);
-                    Result = SysSetPtzPresetInfo(SessionId, AuthValue, &SysPtzPresetInfo);
-                    if (FAILED(Result))
-                    {
-                        ONVIF_ERROR("set preset to system fail, Result = 0x%lx\n", Result);
-                        Fail = true;
-                        break;
-                    }
-                    strcpy(PtzPresetPtr[i].s_Name, SysPtzPresetInfo.s_PresetName);
-                    strcpy(PtzPresetPtr[i].s_Token, SysPtzPresetInfo.s_PresetName);
-                    PtzPresetPtr[i].s_Setted = true;
-                    break;
-                }
-            }
-            if (Fail)
-            {
-                break;
-            }
-            tptz__SetPresetResponse->PresetToken = soap_strdup(soap_ptr, PtzPresetPtr[i].s_Token);
+            tptz__SetPresetResponse->PresetToken = soap_strdup( soap_ptr, tptz__SetPreset->PresetName);
         }
-
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Normal Out.........\n", __func__);
-        ONVIF_INFO("%s normal out.........\n", __func__);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
         return SOAP_OK;
     }
     while (0);
-    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
+
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Normal Out.........\n", __func__);
     ONVIF_INFO("%s abnormal out.........\n", __func__);
     return SOAP_SVR_FAULT;
 }
@@ -653,13 +475,20 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__RemovePreset(struct soap *soap_ptr, struct _tp
 {
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
     ONVIF_INFO("%s In.........\n", __func__);
+    uint16_t   SessionId = 0;
+    uint32_t   AuthValue = 0;
+    uint32_t   Id                     = 0;
+    uint32_t   Preset                 = 0;
+    char_t     BufferTmp[INFO_LENGTH] = {0};
+    GMI_RESULT Result               = GMI_SUCCESS;
+    SysPkgPtzCtrl PtzCtrlCmd        = {0};
+    char_t		  *CurPos = NULL;
+    uint16_t	   i = 0;
+
     do
     {
-        uint16_t   SessionId = 0;
-        uint32_t   AuthValue = 0;
-
         //user auth
-        GMI_RESULT Result = Soap_WSSE_Authentication(soap_ptr);
+        Result = Soap_WSSE_Authentication(soap_ptr);
         if (FAILED(Result))
         {
             ONVIF_ERROR("user auth failed\n");
@@ -667,64 +496,64 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__RemovePreset(struct soap *soap_ptr, struct _tp
             break;
         }
 
-        if (NULL == tptz__RemovePreset->ProfileToken)
-        {
-            ONVIF_ERROR("ProfileToken %s not exist\n", tptz__RemovePreset->ProfileToken);
-            ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "NoPTZProfile", "The requested profile token does not reference a PTZ configuration");
-            break;
-        }
         ONVIF_INFO("ProfileToken      = %s\n", tptz__RemovePreset->ProfileToken);
-
-        if (NULL == tptz__RemovePreset->PresetToken)
+        if (NULL != tptz__RemovePreset->PresetToken)
         {
-            ONVIF_ERROR("PresetToken %s not exist\n", tptz__RemovePreset->PresetToken);
-            ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:NoToken", "The requested preset token does not exist");
-            break;
+            ONVIF_INFO("PresetToken       = %s\n", tptz__RemovePreset->PresetToken);
         }
 
-        uint32_t      Id;
-        boolean_t     Fail = false;
-        SysPkgPtzCtrl PtzCtrlCmd = {0};
-        PTZ_Preset   *PtzPresetPtr = l_PtzPreset;
-        for (Id = 0; Id < l_PtzPresetTotal; Id++)
+        //if (0 == strcmp(tptz__RemovePreset->ProfileToken, ))
         {
-            if (strlen(tptz__RemovePreset->PresetToken) == strlen(PtzPresetPtr[Id].s_Token)
-            	&& 0 == strcmp(tptz__RemovePreset->PresetToken, PtzPresetPtr[Id].s_Token))
+            if (NULL != tptz__RemovePreset->PresetToken)
+            {
+                for (Id = 0; Id < MAX_PTZ_PRESET_NUM; Id++)
+                {
+                    sprintf(BufferTmp, "%s%d", PTZ_PRESET_TOKEN_PREFIX, Id);
+                    if (0 == strcmp(tptz__RemovePreset->PresetToken, BufferTmp))
+                    {
+                        ONVIF_INFO("find preset no %d\n", Id);
+                        //set preset to sysctrl server
+                        Preset = Id;
+                        break;
+                    }
+                    memset(BufferTmp, 0, sizeof(BufferTmp));
+                }
+
+                if(Id >=  MAX_PTZ_PRESET_NUM)
+                {
+                    CurPos = tptz__RemovePreset->PresetToken;
+                    for(i = 0; i < strlen(tptz__RemovePreset->PresetToken); i++)
+                    {
+                        if((*CurPos >= '0') && (*CurPos <= '9'))
+                        {
+                            Preset = atoi(CurPos);
+                            break;
+                        }
+                        CurPos++;
+                    }
+                }
+            }
+
+            if (Preset > 0
+                    && Preset < MAX_PTZ_PRESET_NUM)
             {
                 PtzCtrlCmd.s_PtzCmd   = 1;
                 PtzCtrlCmd.s_PtzCmd   = SYS_PTZCMD_CLEARPRESET;
-                PtzCtrlCmd.s_Param[0] = PtzPresetPtr[Id].s_Index;
+                PtzCtrlCmd.s_Param[0] = Id;
                 Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd);
                 if (FAILED(Result))
                 {
                     ONVIF_ERROR("SYS_PTZCMD_CLEARPRESET failed\n");
-                    Fail = true;
                     break;
                 }
-                PtzPresetPtr[Id].s_Setted = false;
-                memset(PtzPresetPtr[Id].s_Name, 0, sizeof(PtzPresetPtr[Id].s_Name));
-                memset(PtzPresetPtr[Id].s_Token, 0, sizeof(PtzPresetPtr[Id].s_Token));
-                break;
             }
         }
 
-        if (Fail)
-        {
-            break;
-        }
-
-        if (Id >= l_PtzPresetTotal)
-        {
-            ONVIF_ERROR("PresetToken %s not exist\n", tptz__RemovePreset->PresetToken);
-            ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:NoToken", "The requested preset token does not exist");
-            break;
-        }
-
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
-        ONVIF_INFO("%s Out.........\n", __func__);
         return SOAP_OK;
     }
     while (0);
+
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
     ONVIF_INFO("%s abnormal out.........\n", __func__);
     return SOAP_SVR_FAULT;
@@ -735,13 +564,20 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__GotoPreset(struct soap *soap_ptr, struct _tptz
 {
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
     ONVIF_INFO("%s In.........\n", __func__);
+    uint16_t   SessionId = 0;
+    uint32_t   AuthValue = 0;
+    uint32_t   Id                     = 0;
+    uint32_t   Preset                 = 0;
+    char_t     BufferTmp[INFO_LENGTH] = {0};
+    GMI_RESULT Result                 = GMI_SUCCESS;
+    SysPkgPtzCtrl PtzCtrlCmd          = {0};
+    char_t		  *CurPos = NULL;
+    uint16_t	   i = 0;
+
     do
     {
-        uint16_t   SessionId = 0;
-        uint32_t   AuthValue = 0;
-
         //user auth
-        GMI_RESULT Result = Soap_WSSE_Authentication(soap_ptr);
+        Result = Soap_WSSE_Authentication(soap_ptr);
         if (FAILED(Result))
         {
             ONVIF_ERROR("user auth failed\n");
@@ -749,61 +585,65 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__GotoPreset(struct soap *soap_ptr, struct _tptz
             break;
         }
 
-        if (NULL == tptz__GotoPreset->ProfileToken)
-        {
-            ONVIF_ERROR("ProfileToken %s not exist\n", tptz__GotoPreset->ProfileToken);
-            ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "NoPTZProfile", "The requested profile token does not reference a PTZ configuration");
-            break;
-        }
         ONVIF_INFO("ProfileToken      = %s\n", tptz__GotoPreset->ProfileToken);
-
-        if (NULL == tptz__GotoPreset->PresetToken)
+        if (NULL != tptz__GotoPreset->PresetToken)
         {
-            ONVIF_ERROR("PresetToken %s not exist\n", tptz__GotoPreset->PresetToken);
-            ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:NoToken", "The requested preset token does not exist");
-            break;
+            ONVIF_INFO("PresetToken       = %s\n", tptz__GotoPreset->PresetToken);
         }
 
-        uint32_t   Id;
-        boolean_t  Fail = false;
-        SysPkgPtzCtrl PtzCtrlCmd = {0};
-        PTZ_Preset *PtzPresetPtr = l_PtzPreset;
-        for (Id = 0; Id < l_PtzPresetTotal; Id++)
+        //if (0 == strcmp(tptz__GotoPreset->ProfileToken, ))
         {
-            if (strlen(tptz__GotoPreset->PresetToken) == strlen(PtzPresetPtr[Id].s_Token)
-            	&& 0 == strcmp(tptz__GotoPreset->PresetToken, PtzPresetPtr[Id].s_Token))
+            if (NULL != tptz__GotoPreset->PresetToken)
             {
-                ONVIF_INFO("Token %s\n", PtzPresetPtr[Id].s_Token);
+                for (Id = 0; Id < MAX_PTZ_PRESET_NUM; Id++)
+                {
+                    sprintf(BufferTmp, "%s%d", PTZ_PRESET_TOKEN_PREFIX, Id);
+                    if (0 == strcmp(tptz__GotoPreset->PresetToken, BufferTmp))
+                    {
+                        ONVIF_INFO("find preset no %d\n", Id);
+                        //set preset to sysctrl server
+                        Preset = Id;
+                        break;
+                    }
+                    memset(BufferTmp, 0, sizeof(BufferTmp));
+                }
+
+                //support xiongmai and dahua NVR
+                if(Id >=  MAX_PTZ_PRESET_NUM)
+                {
+                    CurPos = tptz__GotoPreset->PresetToken;
+                    for(i = 0; i < strlen(tptz__GotoPreset->PresetToken); i++)
+                    {
+                        if((*CurPos >= '0') && (*CurPos <= '9'))
+                        {
+                            Preset = atoi(CurPos);
+                            break;
+                        }
+                        CurPos++;
+                    }
+                }
+            }
+
+            if (Preset > 0
+                    && Preset < MAX_PTZ_PRESET_NUM)
+            {
                 PtzCtrlCmd.s_PtzCmd   = 1;
                 PtzCtrlCmd.s_PtzCmd   = SYS_PTZCMD_GOTOPRESET;
-                PtzCtrlCmd.s_Param[0] = PtzPresetPtr[Id].s_Index;
+                PtzCtrlCmd.s_Param[0] = Preset;
                 Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd);
                 if (FAILED(Result))
                 {
-                    ONVIF_ERROR("goto preset fail, Result = 0x%lx\n", Result);
-                    Fail = true;
+                    ONVIF_ERROR("SYS_PTZCMD_GOTOPRESET failed\n");
                     break;
                 }
-                break;
             }
-        }
-        if (Fail)
-        {
-            break;
-        }
-
-        if (Id >= l_PtzPresetTotal)
-        {
-            ONVIF_ERROR("PresetToken %s not exist\n", tptz__GotoPreset->PresetToken);
-            ONVIF_Fault(soap_ptr, "ter:InvalidArgVal", "ter:NoToken", "The requested preset token does not exist");
-            break;
         }
 
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
-        ONVIF_INFO("%s Out.........\n", __func__);
         return SOAP_OK;
     }
     while (0);
+
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
     ONVIF_INFO("%s abnormal out.........\n", __func__);
     return SOAP_SVR_FAULT;
@@ -1465,8 +1305,10 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__SetHomePosition(struct soap *soap_ptr, struct 
 
 SOAP_FMAC5 int SOAP_FMAC6 __tptz__ContinuousMove(struct soap *soap_ptr, struct _tptz__ContinuousMove *tptz__ContinuousMove, struct _tptz__ContinuousMoveResponse *tptz__ContinuousMoveResponse)
 {
-    uint16_t      SessionId  = 0;
-    uint32_t      AuthValue  = 0;
+    //DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
+    //ONVIF_INFO("%s In.........\n", __func__);
+    uint16_t      SessionId = 0;
+    uint32_t      AuthValue = 0;
     uint8_t       Id         = 0;
     uint8_t       PTZ_Num    = DEFAULT_PTZ_NUM;
     GMI_RESULT    Result     = GMI_SUCCESS;
@@ -1475,6 +1317,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__ContinuousMove(struct soap *soap_ptr, struct _
     uint32_t      ZoomXRange = 255;
     SysPkgPtzCtrl PtzCtrlCmd = {0};
 
+    //printf("%s %d\n", __func__, __LINE__);
     do
     {
         //user auth
@@ -1491,6 +1334,30 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__ContinuousMove(struct soap *soap_ptr, struct _
             break;
         }
 
+//mask print,10/12/2013,guoqiang.lu
+        /*
+        	    ONVIF_INFO("#=========ContinuousMove========\n");
+        	    ONVIF_INFO("Profile Token          = %s\n", tptz__ContinuousMove->ProfileToken);
+        	    if (NULL != tptz__ContinuousMove->Velocity->PanTilt)
+        	    {
+        	        ONVIF_INFO("Velocity:PanTilt:x     = %f\n", tptz__ContinuousMove->Velocity->PanTilt->x);
+        	        ONVIF_INFO("Velocity:PanTilt:y     = %f\n", tptz__ContinuousMove->Velocity->PanTilt->y);
+        	        ONVIF_INFO("Velocity:PanTilt:space = %s\n", tptz__ContinuousMove->Velocity->PanTilt->space);
+        	    }
+
+        	    if (NULL != tptz__ContinuousMove->Velocity->Zoom)
+        	    {
+        	        ONVIF_INFO("Velocity:Zoom:x        = %f\n", tptz__ContinuousMove->Velocity->Zoom->x);
+        	        ONVIF_INFO("Velocity:Zoom:space    = %s\n", tptz__ContinuousMove->Velocity->Zoom->space);
+        	    }
+
+        	    if (NULL != tptz__ContinuousMove->Timeout)
+        	    {
+        	        ONVIF_INFO("Timeout                = %lld\n", *tptz__ContinuousMove->Timeout);
+        	    }
+        */
+
+        //
         for (Id = 0; Id < PTZ_Num; Id++)
         {
             //if (memcmp(tptz__ContinuousMove->ProfileToken, ))
@@ -1499,99 +1366,44 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__ContinuousMove(struct soap *soap_ptr, struct _
 
                 if (tptz__ContinuousMove->Velocity->PanTilt != NULL)
                 {
-                    if (tptz__ContinuousMove->Velocity->PanTilt->x > 0
-                            && tptz__ContinuousMove->Velocity->PanTilt->y > 0)
-                    {
-                        PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_RIGHTUP;
-                        PtzCtrlCmd.s_Param[0] =  abs((int32_t)(LocalXRange*(tptz__ContinuousMove->Velocity->PanTilt->x))); /*rightup*/
-                        PtzCtrlCmd.s_Param[1] =  abs((int32_t)(LocalYRange*(tptz__ContinuousMove->Velocity->PanTilt->y)));
-                        Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
-                        {
-                            ONVIF_ERROR("SYS_PTZCMD_RIGHTUP fail, Result = 0x%lx\n", Result);
-                            break;
-                        }
-                    }
-                    else if (tptz__ContinuousMove->Velocity->PanTilt->x > 0
-                             && tptz__ContinuousMove->Velocity->PanTilt->y < 0)
-                    {
-                        PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_RIGHTDOWN;
-                        PtzCtrlCmd.s_Param[0] =  abs((int32_t)(LocalXRange*(tptz__ContinuousMove->Velocity->PanTilt->x))); /*rightdown*/
-                        PtzCtrlCmd.s_Param[1] =  abs((int32_t)(LocalYRange*(tptz__ContinuousMove->Velocity->PanTilt->y)));
-                        Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
-                        {
-                            ONVIF_ERROR("SYS_PTZCMD_RIGHTDOWN fail, Result = 0x%lx\n", Result);
-                            break;
-                        }
-                    }
-                    else if (tptz__ContinuousMove->Velocity->PanTilt->x < 0
-                             && tptz__ContinuousMove->Velocity->PanTilt->y > 0)
-                    {
-                        PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_LEFTUP;
-                        PtzCtrlCmd.s_Param[0] =  abs((int32_t)(LocalXRange*(tptz__ContinuousMove->Velocity->PanTilt->x))); /*leftup*/
-                        PtzCtrlCmd.s_Param[1] =  abs((int32_t)(LocalYRange*(tptz__ContinuousMove->Velocity->PanTilt->y)));
-                        Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
-                        {
-                            ONVIF_ERROR("SYS_PTZCMD_LEFTUP fail, Result = 0x%lx\n", Result);
-                            break;
-                        }
-                    }
-                    else if (tptz__ContinuousMove->Velocity->PanTilt->x < 0
-                             && tptz__ContinuousMove->Velocity->PanTilt->y < 0)
-                    {
-                        PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_LEFTDOWN;
-                        PtzCtrlCmd.s_Param[0] =  abs((int32_t)(LocalXRange*(tptz__ContinuousMove->Velocity->PanTilt->x))); /*leftdown*/
-                        PtzCtrlCmd.s_Param[1] =  abs((int32_t)(LocalYRange*(tptz__ContinuousMove->Velocity->PanTilt->y)));
-                        Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
-                        {
-                            ONVIF_ERROR("SYS_PTZCMD_LEFTDOWN fail, Result = 0x%lx\n", Result);
-                            break;
-                        }
-                    }
-                    else if (tptz__ContinuousMove->Velocity->PanTilt->x > 0)
+                    if ( tptz__ContinuousMove->Velocity->PanTilt->x > 0)
                     {
                         PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_RIGHT;
-                        PtzCtrlCmd.s_Param[0] =  abs((int32_t)(LocalXRange*(tptz__ContinuousMove->Velocity->PanTilt->x))); /*right*/
+                        PtzCtrlCmd.s_Param[0] = (int32_t)(LocalXRange*(tptz__ContinuousMove->Velocity->PanTilt->x)); /*right*/
                         Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
+                        if ( FAILED(Result) )
                         {
-                            ONVIF_ERROR("SYS_PTZCMD_RIGHT fail, Result = 0x%lx\n", Result);
                             break;
                         }
                     }
-                    else if (tptz__ContinuousMove->Velocity->PanTilt->x < 0)
+                    else if ( tptz__ContinuousMove->Velocity->PanTilt->x < 0)
                     {
                         PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_LEFT;
                         PtzCtrlCmd.s_Param[0] = abs((int32_t)(LocalXRange*(tptz__ContinuousMove->Velocity->PanTilt->x))); /*left*/
                         Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
+                        if ( FAILED(Result) )
                         {
-                            ONVIF_ERROR("SYS_PTZCMD_LEFT fail, Result = 0x%lx\n", Result);
                             break;
                         }
                     }
-                    else if (tptz__ContinuousMove->Velocity->PanTilt->y > 0)
+
+                    if ( tptz__ContinuousMove->Velocity->PanTilt->y > 0)
                     {
                         PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_UP;
-                        PtzCtrlCmd.s_Param[0] =  abs((int32_t)(LocalYRange*(tptz__ContinuousMove->Velocity->PanTilt->y))); /*up*/
+                        PtzCtrlCmd.s_Param[0] = (int32_t)(LocalYRange*(tptz__ContinuousMove->Velocity->PanTilt->y)); /*up*/
                         Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
+                        if ( FAILED(Result) )
                         {
-                            ONVIF_ERROR("SYS_PTZCMD_UP fail, Result = 0x%lx\n", Result);
                             break;
                         }
                     }
-                    else if (tptz__ContinuousMove->Velocity->PanTilt->y < 0)
+                    else if ( tptz__ContinuousMove->Velocity->PanTilt->y < 0)
                     {
                         PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_DOWN;
                         PtzCtrlCmd.s_Param[0] = abs((int32_t)(LocalYRange*(tptz__ContinuousMove->Velocity->PanTilt->y))); /*down*/
                         Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
+                        if ( FAILED(Result) )
                         {
-                            ONVIF_ERROR("SYS_PTZCMD_DOWN fail, Result = 0x%lx\n", Result);
                             break;
                         }
                     }
@@ -1602,11 +1414,10 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__ContinuousMove(struct soap *soap_ptr, struct _
                     if (tptz__ContinuousMove->Velocity->Zoom->x > 0)
                     {
                         PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_ZOOM_TELE;
-                        PtzCtrlCmd.s_Param[0] =  abs((int32_t)(ZoomXRange*(tptz__ContinuousMove->Velocity->Zoom->x))); /*zoom wide*/
+                        PtzCtrlCmd.s_Param[0] = (int32_t)(ZoomXRange*(tptz__ContinuousMove->Velocity->Zoom->x)); /*zoom wide*/
                         Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
+                        if ( FAILED(Result) )
                         {
-                            ONVIF_ERROR("SYS_PTZCMD_ZOOM_TELE fail, Result = 0x%lx\n", Result);
                             break;
                         }
                     }
@@ -1615,9 +1426,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__ContinuousMove(struct soap *soap_ptr, struct _
                         PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_ZOOM_WIDE;
                         PtzCtrlCmd.s_Param[0] = abs((int32_t)(ZoomXRange*(tptz__ContinuousMove->Velocity->Zoom->x))); /*zoom tele*/
                         Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
+                        if ( FAILED(Result) )
                         {
-                            ONVIF_ERROR("SYS_PTZCMD_ZOOM_WIDE fail, Result = 0x%lx\n", Result);
                             break;
                         }
                     }
@@ -1630,10 +1440,13 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__ContinuousMove(struct soap *soap_ptr, struct _
                 }
             }
         }
+
+        //DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
         return SOAP_OK;
     }
     while (0);
-    ONVIF_INFO("%s Abnormal out.........\n", __func__);
+
+    //DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
     return SOAP_SVR_FAULT;
 }
 
@@ -1643,7 +1456,8 @@ void *Ptz_ContinousMoveStopThread(void)
 {
     uint16_t   SessionId = 0;
     uint32_t   AuthValue = 0;
-    GMI_RESULT     Result = GMI_SUCCESS;    
+    GMI_RESULT     Result = GMI_SUCCESS;
+    struct timeval Delay;
     SysPkgPtzCtrl  PtzCtrlCmd = {0};
 
     pthread_detach(pthread_self());
@@ -1652,26 +1466,22 @@ void *Ptz_ContinousMoveStopThread(void)
     {
         if (l_Ptz0ContinousMoveStop)
         {
-        	if (l_Ptz0ContinousMoveTimeout <= 0)
-        	{
-        		PtzCtrlCmd.s_PtzId = PTZ_0 + 1;
-	            PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_STOP;
-	            Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-	            if ( FAILED(Result) )
-	            {
-	                ONVIF_ERROR("SysPtzControl fail, Result = 0x%lx\n", Result);
-	            }
+            Delay.tv_sec = l_Ptz0ContinousMoveTimeout;
+            Delay.tv_usec = 0;
+            select(0, NULL, NULL, NULL, &Delay);
 
-	            l_Ptz0ContinousMoveStop = false;
-	            l_Ptz0ContinousMoveTimeout = 0;
-        	}
-        	else
-        	{
-        		l_Ptz0ContinousMoveTimeout--;
-        	}                       
+            PtzCtrlCmd.s_PtzId = PTZ_0 + 1;
+            PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_STOP;
+            Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
+            if ( FAILED(Result) )
+            {
+                ONVIF_ERROR("SysPtzControl failed\n");
+            }
+
+            l_Ptz0ContinousMoveStop = false;
+            l_Ptz0ContinousMoveTimeout = 0;
         }
-        
-        sleep(1);
+        usleep(200000);
     }
 
     l_PtzContinousMoveThreadExit = false;
@@ -1710,6 +1520,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__AbsoluteMove(struct soap *soap_ptr, struct _tp
 
 SOAP_FMAC5 int SOAP_FMAC6 __tptz__Stop(struct soap *soap_ptr, struct _tptz__Stop *tptz__Stop, struct _tptz__StopResponse *tptz__StopResponse)
 {
+    //DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s In.........\n", __func__);
+    //ONVIF_INFO("%s In.........\n", __func__);
     uint16_t   SessionId = 0;
     uint32_t   AuthValue = 0;
     uint8_t       Id         = PTZ_0;
@@ -1728,6 +1540,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__Stop(struct soap *soap_ptr, struct _tptz__Stop
             break;
         }
 
+        //ONVIF_INFO("ProfileToken       = %s\n", tptz__Stop->ProfileToken);
+
         for (Id = 0; Id < PTZ_Num; Id++)
         {
             //if (0 == strcmp(tptz__Stop->ProfileToken, ))
@@ -1740,11 +1554,10 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__Stop(struct soap *soap_ptr, struct _tptz__Stop
                     {
                         PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_STOP;
                         Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
+                        if ( FAILED(Result) )
                         {
                             break;
                         }
-                        l_Ptz0ContinousMoveStop = false;
                     }
                 }
 
@@ -1754,21 +1567,23 @@ SOAP_FMAC5 int SOAP_FMAC6 __tptz__Stop(struct soap *soap_ptr, struct _tptz__Stop
                     {
                         PtzCtrlCmd.s_PtzCmd = SYS_PTZCMD_STOP;
                         Result = SysPtzControl(SessionId, AuthValue, &PtzCtrlCmd );
-                        if (FAILED(Result))
+                        if ( FAILED(Result) )
                         {
                             break;
                         }
-                        l_Ptz0ContinousMoveStop = false;
                     }
                 }
             }
         }
 
+        //DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Out.........\n", __func__);
+        //ONVIF_INFO("%s out........\n", __func__);
         return SOAP_OK;
     }
     while (0);
 
-    ONVIF_INFO("%s abnormal out.........\n", __func__);
+    //DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s Abnormal Out.........\n", __func__);
+    //ONVIF_INFO("%s abnormal out.........\n", __func__);
     return SOAP_SVR_FAULT;
 }
 

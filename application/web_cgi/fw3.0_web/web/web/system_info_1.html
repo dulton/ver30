@@ -24,8 +24,7 @@ html,body{
         </script>
         <script>
 		   jQuery(document).ready(function() {
-				//权限
-				//Authority();		  
+			  
 			  // 调用模版也方法
 				 parent.innerCallMe(true); 
 				  //语言初始化
@@ -205,12 +204,6 @@ else if(record == "1")//未录像
 		//配置设备编号
 		function SBBHBTNOK()
 		{
-			parent.StartimeVideo();
-			if(parent.canspzAuth == false|| parent.UserLevel != 1)
-			{
-				alert("没有权限！");
-				return;
-			}	
 			var st = $("#SBBHTEXT").val();
 			if(st == "")
 			{
@@ -258,26 +251,7 @@ else if(record == "1")//未录像
 		//取消
 		function SBBHBTNCAN()
 		{
-	
 			getSystemInfo();
-		}
-		
-		//判断权限
-		function Authority()
-		{
-			//如果是观察员
-			//if(parent.UserLevel == 3)
-			parent.StartimeVideo();
-			if(parent.canspzAuth == false)
-			{
-				$("#SBBHNAME").attr("disabled", "disabled");
-				$("#SBBHTEXT").attr("disabled", "disabled");
-//				$("#sbbhbtn").css("display", "none");
-//				$("#canbtn").css("display", "none");
-				//document.getElementById("sbbhbtn").display = "none";
-				//document.getElementById("canbtn").display = "none";
-			}
-
 		}
 		</script>
 </head>
@@ -339,19 +313,19 @@ else if(record == "1")//未录像
                                 </div>
 
                             </div>
-<!--                            <div class="video_top">
+                            <div class="video_top">
                             	<div class="system_ma_list">设备型号</div>
                                 <div class="system_ma_list divinfo" id="DeviceModel"></div>
-                            </div>-->
+                            </div>
                              <div class="video_top">
                             	<div class="system_ma_list">设备序列号</div>
                                 <div class="system_ma_list divinfo" id="DeviceSerialNum"></div>
                             </div>
 
-                            <!-- <div class="video_top">
+                             <div class="video_top">
                             	<div class="system_ma_list">厂家信息</div>
                                 <div class="system_ma_list divinfo" id="DeviceManufactuer"></div>
-                            </div>-->
+                            </div>
 
                         	<div class="video_top">
                             	<div class="system_ma_list">固件版本</div>
@@ -363,7 +337,7 @@ else if(record == "1")//未录像
                             </div>
                             <div class="video_top">
                             	<div class="system_ma_list">WEB版本</div>
-                                <div class="system_ma_list divinfo" id="webvision">W:3.0.3.2-A:1.0.0.9</div>
+                                <div class="system_ma_list divinfo" id="webvision">3.0.3.1</div>
                             </div>
 <!--                                <div class="video_top" id="DeviceIdbtnok">
                                 <input class="btn22" type="button" id="sbbhbtn" onclick="SBBHBTNOK()" value="保存">
@@ -378,7 +352,7 @@ else if(record == "1")//未录像
                           
 <div class="bottom-action" style="width:880px;padding-left:110px;">
             			<input type="button" id="sbbhbtn" class="btn3" value="确定" onclick="SBBHBTNOK()" style="margin-left:50px"/>
-            			<input type="reset" class="btn3" value="取消" id="canbtn" onclick="SBBHBTNCAN()"/>
+            			<input type="reset" class="btn3" value="取消" id="sbbhbtn" onclick="SBBHBTNCAN()"/>
                     </div>                        
                        
                             

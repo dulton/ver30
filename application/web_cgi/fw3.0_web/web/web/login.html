@@ -130,13 +130,6 @@
 				$("#slang").bind("change",function(e){
 					
 					});
-				$("#reset").bind("click",function(e){
-						LoginClock = 0;
-						clearTimeout(LoginClockFun);
-						$("#username").focus();
-						$("#username").val("");
-		     			$("#password").val("");
-					});
 				
 			 });
 			 
@@ -159,9 +152,8 @@
 					{
 						
 					
-						if (!confirm("登录设备遇到问题，可能是后台服务无法启动的原因，\n是否跳转系统维护界面?")) return;
-						setCookie("gmiAuthvalue","-1");
-						top.location.href="index.html?id=0";
+						if (!confirm("登录设备遇到问题，可能是后台服务无法启动的原因，\n是否跳转设备升级界面，通过升级设备来修复设备?")) return;
+						top.location.href="index.html?id=0&authvalue=-1";
 					
 					}
 					else
@@ -179,46 +171,17 @@
 					{
 						 try
 						 {
-//			   							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("登录：login star---" + h+":"+m+":"+s + ":" +ss);
-//						f.WriteBlankLines(1);
-//						f.Close();		 
-							//alert(data);
+							 		//alert(data);
 									//关闭定时器
-									var currenturlcookiename = window.location.host + "currenturl";
 									clearTimeout(LoginClockFun);
 							     setCookie("gmiwebusername",$("#username").val());
 								 setCookie("gmiwebpassword",$("#password").val());
-								 setCookie("gmiAuthvalue",PackDate.Content.Authvalue);
-								 setCookie("StreamIndex_osd", 0);
-								 setCookie("StreamIndex_yy", 0);
-								 //deleteCookie("SdkPort");
-								 setCookie("SdkPort", PackDate.Content.SdkPort);
-								deleteCookie(currenturlcookiename);//IE6 cookie 限制 。先删后加。
-                                setCookie(currenturlcookiename, "ylanzkai_1.html");
-								 top.location.href="index.html?id="+PackDate.Content.SessionId +"&UserFlag="+PackDate.Content.UserFlag;
-								 
-//			   							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("登录：login end---" + h+":"+m+":"+s + ":" +ss);
-//						f.WriteBlank
-								 //top.location.href="index.html?id="+PackDate.Content.SessionId +"&authvalue=" +PackDate.Content.Authvalue+"&UserFlag="+PackDate.Content.UserFlag+"&gmiwebusername="+$("#username").val()+"&gmiwebpassword="+$("#password").val();
-								 //window.event.returnValue=false;
+								 top.location.href="index.html?id="+PackDate.Content.SessionId +"&authvalue=" + PackDate.Content.Authvalue +"&UserFlag="+PackDate.Content.UserFlag;
+								 //top.location.href="index.html?id=0&authvalue=-1";
+								 window.event.returnValue=false;
 						 }
 						 catch(e)
 						 {
-							 //alert("login:"+e+"\r\nPackDate.Content.RetCode:"+PackDate.Content.RetCode+"\r\ntop.location.href:"+top.location.href);
 							 alert(e);
 						 }
 					}
@@ -230,7 +193,6 @@
 						$("#password").val("");
 						
 						$('#username').focus();
-						clearTimeout(LoginClockFun);
 						
 					}
 					else if(PackDate.Content.RetCode=="-2147287033")
@@ -245,7 +207,6 @@
 						$("#password").val("");	
 						
 						$('#username').focus();
-						clearTimeout(LoginClockFun);
 					}
 					delete PackDate;
 				}

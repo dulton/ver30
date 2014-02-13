@@ -12,18 +12,18 @@ static boolean_t l_DaemonKeepAliveStop = false;
 GMI_RESULT DaemonRegister(void)
 {
     ulong_t RegisterNum = 20;
-    GMI_RESULT Result = GMI_SUCCESS;
-
-    ONVIF_INFO("%s In.........\n", __func__);
+    GMI_RESULT Result = GMI_SUCCESS; 
+    
+	ONVIF_INFO("%s In.........\n", __func__);  
     Result = GMI_DaemonInit(&l_DaemonHandler, ONVIF_SERVER_ID, GMI_DAEMON_HEARDBEAT_SERVER, GMI_DAEMON_HEARDBEAT_ONVIF);
     if (FAILED(Result))
-    {
+    {        
         ONVIF_ERROR("GMI_DaemonInit fail, Result = 0x%lx\n", Result);
         Result = GMI_DaemonInit(&l_DaemonHandler, ONVIF_SERVER_ID, GMI_DAEMON_HEARDBEAT_SERVER, GMI_DAEMON_HEARDBEAT_ONVIF);
         if (FAILED(Result))
         {
-            ONVIF_ERROR("GMI_DaemonInit again fail, Result = 0x%lx\n", Result);
-            return Result;
+        	ONVIF_ERROR("GMI_DaemonInit again fail, Result = 0x%lx\n", Result);
+        	return Result;
         }
     }
 
@@ -37,8 +37,8 @@ GMI_RESULT DaemonRegister(void)
         }
         sleep(1);
     }
-    while (RegisterNum--);
-    ONVIF_INFO("%s Out.........\n", __func__);
+    while (RegisterNum--);   
+	ONVIF_INFO("%s Out.........\n", __func__);
     return Result;
 }
 

@@ -2,6 +2,15 @@
 #include "user_auth_center.h"
 #include "user_auth_api.h"
 #include "log_record.h"
+#ifdef LOG_SERVER_OK
+
+#include "application_packet.h"
+#include "share_memory_log_client.h"
+#include "gmi_config_api.h"
+
+
+extern ShareMemoryLogClient *LogClientHdTmp;
+#endif
 
 UserSessionId UserAuthentication::m_UserSessionId[MAX_USER_LINK_NUM] = {};
 UserLinkNum UserAuthentication::m_UserLinkNum[MAX_USER_ACCOUNT_NUM] = {};
@@ -147,6 +156,7 @@ GMI_RESULT UserAuthentication::SetUserSessionIdRecord(const uint16_t InSessionId
     {
     	return GMI_TMP_FAIL;
     }
+	PRT_TEST(("\n********111SetUserSessionIdRecord*******\n"));
 
 	if(GMI_RECORD_DEL == ModifyFlag)
 	{
@@ -493,7 +503,7 @@ GMI_RESULT UserAuthentication::CheckUserLinkNumValid(const char_t *InUserName, c
 	if((m_AllUserLinkTotalNum >= InAllUserMaxLinkNum) 
 		|| (m_AllUserLinkTotalNum >= MAX_USER_LINK_NUM))
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "all user link %d over Max value\n", m_AllUserLinkTotalNum);
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]all user link %d over Max value.", m_AllUserLinkTotalNum);
 		return GMI_FAIL_ALLLINK;
 	}
 
@@ -510,7 +520,7 @@ GMI_RESULT UserAuthentication::CheckUserLinkNumValid(const char_t *InUserName, c
 	//compare linking numbers between current linking numbers and total linking numbers of single user
 	if(CurUserLinkNum >= InSingleUserMaxLinkNum)
 	{
-		DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "user %s link %d over Max value\n", InUserName, CurUserLinkNum);
+		DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]user %s link %d over Max value.", InUserName, CurUserLinkNum);
 		return GMI_FAIL_SINGLELINK;
 	}
 
@@ -659,7 +669,7 @@ GMI_RESULT UserAuthentication::ClearRecordInfo(uint32_t MoudleId)
 			}
 			break;
 		default:
-			DEBUG_LOG_TMP(&LogClientHdTmp, e_DebugLogLevel_Exception, "MoudleId %x error.", MoudleId);
+			DEBUG_LOG_TMP(LogClientHdTmp, e_DebugLogLevel_Exception, "[AUTH]MoudleId %x error.", MoudleId);
 			break;
 	}
 

@@ -41,6 +41,8 @@ def __PlayStream(ssock,opts):
 		random.seed(time.time())
 	vfile = None
 	afile = None
+	lastaudiotime=None
+	curaudiotime=None
 	if OptsHasName(opts,'audiodump'):
 		afile = open(opts.audiodump,'w+b')
 	if OptsHasName(opts,'videodump'):
@@ -61,6 +63,17 @@ def __PlayStream(ssock,opts):
 					elif curidx != (lastaidx + 1):
 						logging.error('audio frame lastidx %d curidx %d'%(lastaidx,curidx))
 				lastaidx = curidx
+				curaudiotime = time.time()
+				sys.stdout.write('audio[%d] %f\n'%(lastaidx,curaudiotime))
+				if lastaudiotime is not None:
+					if (curaudiotime - lastaudiotime) > 0.15:
+						logging.info('[%d]audio time (%s) (%s) %s'%(curidx,curaudiotime,lastaudiotime,(curaudiotime - lastaudiotime)))
+					
+					if (curaudiotime - lastaudiotime) > 1.0:
+						#logging.info('[%d]audio time (%s) (%s) %s'%(curidx,curaudiotime,lastaudiotime,(curaudiotime - lastaudiotime)))
+						#assert(0!=0)
+						pass
+				lastaudiotime = curaudiotime
 				if (lastaidx % 200) == 0:
 					logging.info('audio idx %d'%(lastaidx))
 				if afile is not None:

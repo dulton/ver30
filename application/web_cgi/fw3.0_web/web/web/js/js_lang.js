@@ -1,36 +1,14 @@
 //µÃµ½xmlÉÏÏÂÎÄ 
 function getXMLHandler(xmlFile){ 
   var xmlDoc;
-  var IeVesion1 = navigator.userAgent;
-  if(IeVesion1.indexOf("rv:11.0") != -1 || IeVesion1.indexOf("MSIE 10.0") != -1
-  ||IeVesion1.indexOf("MSIE 9.0") != -1
-  ||IeVesion1.indexOf("MSIE 8.0") != -1
-  ||IeVesion1.indexOf("MSIE 7.0") != -1
-  ||IeVesion1.indexOf("MSIE 6.0") != -1)
-  {
-	try
-	{
-    	xmlDoc=new ActiveXObject("Microsoft.XMLDOM"); 
-    	xmlDoc.onreadystatechange = function() { 
-      	if(xmlDoc.readyState == 4);// doAction(); 
-    		} 
-	}
-	catch(e)
-	{
-		alert("getXMLHandler creat xml error!");
-		return null;
-	}	  
-  }
-  else
-  {
-  	if(window.ActiveXObject){ 
-    	xmlDoc=new ActiveXObject("Microsoft.XMLDOM"); 
-    	xmlDoc.onreadystatechange = function() { 
-      	if(xmlDoc.readyState == 4);// doAction(); 
-    	} 
+  if(window.ActiveXObject){ 
+    xmlDoc=new ActiveXObject("Microsoft.XMLDOM"); 
+    xmlDoc.onreadystatechange = function() { 
+      if(xmlDoc.readyState == 4);// doAction(); 
+    } 
     
- 	}
-  	else if(document.implementation&&document.implementation.createDocument){ 
+  }
+  else if(document.implementation&&document.implementation.createDocument){ 
     // string ÀàÐÍ
 	 xmlDoc=document.implementation.createDocument("","",null);
 
@@ -38,12 +16,11 @@ function getXMLHandler(xmlFile){
 	//var parser = new DOMParser();
     //xmlDoc = parser.parseFromString(xmlFile, "text/xml");
 
-  	}
-  	else 
-  	{
-	 	alert("´íÎó:Parameter Error in function LoadXML£¡ä¯ÀÀÆ÷²»Ö§³Ö¼ÓÔØxml£¡\n--Your browser cannot handle this script")
-    	return null; 
-  	}
+  }
+  else 
+  {
+	 alert("´íÎó:Parameter Error in function LoadXML£¡ä¯ÀÀÆ÷²»Ö§³Ö¼ÓÔØxml£¡\n--Your browser cannot handle this script")
+    return null; 
   }
   xmlDoc.async=false; 
   xmlDoc.load(xmlFile); 

@@ -48,7 +48,6 @@
             //界面初始化
 			function init()
 			{
-				
 					var  content={};
 					content.SessionId=parent.id;
 					content.AuthValue=parent.Authvalue;	
@@ -171,14 +170,7 @@
 									$("#audio_in_vol").val(10);
 								break;
 							}
-							//判断权限
-							parent.StartimeVideo();
-							if(parent.canspzAuth == false)
-							{
-								document.getElementById("codec_fmt").disabled = true;
-//								document.getElementById("audio_out_vol").disabled = true;
-//								document.getElementById("audio_in_vol").disabled = true;
-							}
+							//	
 						}
 						else
 						{

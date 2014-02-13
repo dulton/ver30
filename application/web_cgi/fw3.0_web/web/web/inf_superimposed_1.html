@@ -24,7 +24,7 @@ html,body{
 		 var VidieID;
 		 
 		  //获取码流参数
- var Streamid=getCookie("StreamIndex_osd");//getQueryString("streamid");
+ var Streamid=0;//getQueryString("streamid");
  //最多码流数
  var RspShowNum = 0;
  //------------所有码流OSD信息---------------
@@ -79,12 +79,6 @@ html,body{
  {
 	 Streamid=0;
  }
-var streamtmp = parseInt(parent.StreamShow,10)-1;
-if(streamtmp <= parseInt(Streamid,10))
-{
-	Streamid = 0;
-	setCookie("StreamIndex_osd", Streamid);
-}
  
  var mystreamid=Streamid;
  function changeLanguage(lang)
@@ -112,11 +106,11 @@ if(streamtmp <= parseInt(Streamid,10))
 						//将不同码流的值记录下来
 						//获取码流数
 						RspShowNum = PackDate.Content.RspShowNum;
-//						if(parent.maxStreams != RspShowNum) 
-//						{
-//							alert("码流数不匹配,获取OSD数据失败！");
-//							return;
-//						}	
+						if(parent.maxStreams != RspShowNum) 
+						{
+							alert("码流数不匹配,获取OSD数据失败！");
+							return;
+						}	
 						//VidieID = PackDate.Content.VideoId;
 						//码流1
 						if(RspShowNum >=1)
@@ -238,12 +232,8 @@ if(streamtmp <= parseInt(Streamid,10))
  $(window).bind('unload',function(){
 	 try
 	 {
-		var activex = document.getElementById("GMIIPCmrWebPlugIn1");
-					if (activex != null && activex != 'null')
-					{
-							if(activex)
-							{activex.StopPlay();}
-					}
+		var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+		activeX.StopPlay();
 	 }
 	catch(e)
 	{
@@ -266,12 +256,6 @@ if(streamtmp <= parseInt(Streamid,10))
 			if(parent.StreamNum_NLJ != 0)
 			{
 				getMaxStreamNum(false,parent.id,parent.Authvalue,3);
-					//设置码流
-		   			$("#radiostream" + Streamid).attr("checked", "checked");
-					if(Streamid>0)
-					{
-						changeStream(Streamid);	
-					}
 			}
 			else
 			{
@@ -295,12 +279,6 @@ if(streamtmp <= parseInt(Streamid,10))
 					
 					//再去获取最大码流和设置界面
 					getMaxStreamNum(false,parent.id,parent.Authvalue,3);
-					//设置码流
-		   			$("#radiostream" + Streamid).attr("checked", "checked");
-					if(Streamid>0)
-					{
-						changeStream(Streamid);	
-					}
 				}
 				delete PackDate;
 			}
@@ -317,6 +295,7 @@ if(streamtmp <= parseInt(Streamid,10))
   //获取所有码流OSD
  getAllOSD();
  //getsetOsdInfo(Streamid);
+ 	$("#radiostream"+Streamid).attr("checked","checked");
 	
 	
 	//取消
@@ -463,9 +442,6 @@ if(streamtmp <= parseInt(Streamid,10))
 			case "40":
 				timeFontSize[Streamid] = "40";
 			break;
-			case "0":
-				timeFontSize[Streamid] = "0";
-			break;
 			default:
 				timeFontSize[Streamid] = "16";
 			break;
@@ -597,9 +573,6 @@ if(streamtmp <= parseInt(Streamid,10))
 			case "40":
 				changeFontSize[Streamid] = "40";
 			break;
-			case "0":
-				changeFontSize[Streamid] = "0";
-			break;
 			default:
 				changeFontSize[Streamid] = "16";
 			break;
@@ -666,13 +639,6 @@ if(streamtmp <= parseInt(Streamid,10))
 			}
 		});
 	$("#submit").bind("click",function(e){
-					//判断权限
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var  content={};
 					content.SessionId=parent.id;
 					content.AuthValue=parent.Authvalue;
@@ -926,25 +892,11 @@ if(streamtmp <= parseInt(Streamid,10))
 			//播放视频
 			var cameraip  = "";
 				cameraip = parent.getip();
-				
 				if(cameraip != "")
 				{
-		   			if(parent.port==""|| parent.port == "undefined")
+		   			if(parent.port=="")
 		   			{
-						alert("getCookie(SdkPort)");
-						parent.port = getCookie("SdkPort");
-			   			if(parent.port == "" || parent.port == "undefined")
-			   			{
-				   			if(parent.id == "" || parent.id == "undefined")
-				   			{
-					  			parent.id = getQueryString("id"); 
-				   			}
-							GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", getportsuccessfunc);   
-			   			}
-			  			else
-			   			{
-							LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);   
-			   			}
+			   			GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", getportsuccessfunc);
 			   			function getportsuccessfunc(data)
 						{
 							var PackDate=new UnPackData(data);
@@ -953,11 +905,10 @@ if(streamtmp <= parseInt(Streamid,10))
 								if(PackDate.Content.RetCode=="0")
 								{
 										parent.port=PackDate.Content.SDK_Port;
-//										if(parent.isZY)
-//										{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
-//										else
-//										{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
-										LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);
+										if(parent.isZY)
+										{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
+										else
+										{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
 										delete PackDate;
 								}
 							}
@@ -965,32 +916,32 @@ if(streamtmp <= parseInt(Streamid,10))
 		  			 }
 		  			 else
 		   			{
-//						if(parent.isZY)
-//		   				{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
-//						else
-//						{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
-						LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);
+						if(parent.isZY)
+		   				{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
+						else
+						{LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),cameraip,parent.port);}
+						delete PackDate;
 		   			}
 
 				}
 
   });
-//  			  $(window).bind('beforeunload',function()
-//			  { 
-//			  	try
-//			  	{
-//					var activex=document.getElementById("GMIIPCmrWebPlugIn1");
-//					if (activex != null && activex != 'null')
-//					{
-//							if(activex)
-//							{activex.Pause();}
-//					}
-//			  }
-//			  catch(e)
-//			  {
-//				  //alert(e.message);
-//			  }
-//	});
+  			  $(window).bind('beforeunload',function()
+			  { 
+			  	try
+			  	{
+					var activex=document.getElementById("GMIIPCmrWebPlugIn1");
+					if (activex != null && activex != 'null')
+					{
+							if(activex)
+							{activex.Pause();}
+					}
+			  }
+			  catch(e)
+			  {
+				  //alert(e.message);
+			  }
+	});
 	
 
 	//获取OSD数据	
@@ -1102,9 +1053,6 @@ if(streamtmp <= parseInt(Streamid,10))
 			break;
 			case "40":
 				$("#s_time_size").val(40);
-			break;
-			case "0":
-				$("#s_time_size").val(0);
 			break;
 			default:
 				$("#s_time_size").val(16);
@@ -1221,9 +1169,6 @@ if(streamtmp <= parseInt(Streamid,10))
 			case "40":
 				$("#s_text_size").val(40);
 			break;
-			case "0":
-				$("#s_text_size").val(0);
-			break;
 			default:
 				$("#s_text_size").val(16);
 			break;
@@ -1333,7 +1278,7 @@ if(streamtmp <= parseInt(Streamid,10))
 					
 	var ID = parseInt(streamid);
 	Streamid = ID;		
-    //if (window.ActiveXObject) {
+    if (window.ActiveXObject) {
         try {
          
 		    var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
@@ -1364,14 +1309,11 @@ if(streamtmp <= parseInt(Streamid,10))
 			//加载码流信息
 			getsetOsdInfo(streamid);	
 			
-			deleteCookie("StreamIndex_osd");//IE6 cookie 限制 。先删后加
-			setCookie("StreamIndex_osd", Streamid);
-			
         } catch(e) { 
 			alert("控件加载失败！请尝试手动加载控件！");
             return;
         }
-    //}			
+    }			
  }
  
  function displayCVBS()
@@ -1379,65 +1321,35 @@ if(streamtmp <= parseInt(Streamid,10))
  }
  	function LoadImg(name,password,ip,port)
 	{
-
-		while(true)
+		//debugger;
+    	if (window.ActiveXObject)
 		{
-//			parent.StartimeVideo();
-			if(parent.VideoAuth == 1)
+        	try
 			{
-				break;
-			}
-			if(parent.VideoAuth == 0)
-			{
-				alert("没有视频预览权限！");
-				return;
-			}
-			else if(parent.VideoAuth == -1)
-			{
-				//alert("StartimeVideo");
-				parent.sleep(500);
-				//parent.StartimeVideo();
-				parent.StartimeVideo();	
-				//alert("获取视频预览权限失败！")
-				//return;	
-			}
+         
+		    	var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+				activeX.SetLoginInfo(name, password, ip, port);
 			
-		}
-	//debugger;
-    //if (window.ActiveXObject) {
-			if(typeof(parent.NetPlay) == "undefined" ||parent.NetPlay == null || isNaN(parent.NetPlay)||parent.NetPlay == "")
+			if(typeof(parent.NetPlay) == "undefined" ||parent.NetPlay == null || isNaN(parent.NetPlay))
 			{
-				//alert("getLocalSet");
-				parent.getLocalSet();
+				parent.NetPlay = 10;
 			}
-        try {
- 
-		    var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
-			activeX.SetLoginInfo(name, password, ip, port);
-			activeX.SetVideoBuffer(0,parseInt(parent.NetPlay));	
-			//activeX.SetOCXType(0);
-			activeX.Play();
-		
-			
-//			   							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("视频预览：LoadImg end---" + h+":"+m+":"+s + ":" +ss);
-//						f.WriteBlankLines(1);
-//						f.Close();
-        } catch(e) { 
-			//alert(e.message);
-			alert("控件未加载，请手动加载控件！");
-            return;
-        }
-    //}
-	
-
-	}
+			activeX.SetVideoBuffer(0,parseInt(parent.NetPlay));
+				//activeX.SetCapturePath("C:\\Program Data\\IPC\\Image");
+				//activeX.SetRecordPath("E:\\");
+				//activeX.SetCapturePath("E:\\");
+				//activeX.SetPtzType(0);
+				//activeX.SetStreamId(0);
+				//var str=activeX.AboutBox();
+				activeX.Play();
+        	}
+			catch(e)
+			{ 
+				alert(e.message);
+            	return;
+        	}
+   		}
+    }
 
 //设置OSD毁掉函数
 function sucess_SetShowInfoData(data)
@@ -1464,7 +1376,7 @@ function sucess_SetShowInfoData(data)
  
  
  
-<div class="bit-stream" style="height:70px;">
+<div class="bit-stream">
 <h3 id="honscreendisplay">
                 信息叠加
             </h3>
@@ -1605,13 +1517,12 @@ function sucess_SetShowInfoData(data)
                                             	字体
                                             </div>
                                             <div class="info_s_content_list">
-                                            	<select class="infro_selec" id="s_time_size" style="width:100px;">
+                                            	<select class="infro_selec" id="s_time_size">
                                                 <option value='16'  >最小</option>
 <option value='24'  >小</option>
 <option value='32'  >中</option>
 <option value='40'  selected>大</option>
 <option value='48'  selected>最大</option>
-<option value='0'  selected>自适应</option>
 
                                         		</select>
                                                 <input type="hidden" id="31s0_time_size" />
@@ -1739,13 +1650,13 @@ function sucess_SetShowInfoData(data)
                                             	字体
                                             </div>
                                             <div class="info_s_content_list">
-                                            	<select class="infro_selec" id="s_text_size" style="width:100px;">
+                                            	<select class="infro_selec" id="s_text_size">
                                                 <option value='16'  >最小</option>
 <option value='24'  >小</option>
 <option value='32'  >中</option>
 <option value='40'  selected>大</option>
 <option value='48'  selected>最大</option>
-<option value='0'  selected>自适应</option>
+
 
            		                </select>
                                                 <input type="hidden" id="31s0_text_size" />

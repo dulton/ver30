@@ -1,54 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<style>
-html,body{ margin:0; padding:0; background-color:#242424;
-
-}
-#container {padding:0; width:100%;left:0px;}
-#header { 
-	width:100%;
-	display:block;
-	
-	margin-bottom:4px;
-}
-#mainContent { width:884px;  }
-#sidebar { padding:0; float:right; width:165px;  }
-#content {width:702px;float:left;border:0 none;}/*因为是固定宽度，采用左右浮动方法可有效避免ie 3像素bug*/
-/*#footer { height:60px; }*/
-.fixscr1{height:300px; overflow-y:scroll;
-/*滚动条样式 */
-SCROLLBAR-FACE-COLOR:   #666666;/*滑块颜色*/
-SCROLLBAR-HIGHLIGHT-COLOR:   #ffffff;
-SCROLLBAR-SHADOW-COLOR:   #ffffff;
-SCROLLBAR-3DLIGHT-COLOR:   #000000; 	
-SCROLLBAR-ARROW-COLOR:   #666666;/*箭头颜色*/
-SCROLLBAR-TRACK-COLOR:   #242424; /*滚动条背景色*/
-SCROLLBAR-DARKSHADOW-COLOR:   #ffffff;	
-			}
-.fixscr{
-	height:300px; overflow-y:scroll;
-scrollBar-face-color:#ffffff;  scrollBar-hightLight-color:#ffffff;  scrollBar-3dLight-color:#000000;  scrollBar-darkshadow-color:#ffffff;  scrollBar-shadow-color:#ffffff;  scrollBar-arrow-color:#666666;  scrollBar-track-color:#242424;  scrollBar-base-color:pink; 	
-			}
-.yzwbtn
-{
-	color : #EEEEEE;
-/*cursor:pointer;*/
-width:100px; 
-background-color:#4D4D4D;
-border-color : #4D4D4D;
-}
-.yzwbtncli
-{
-	color : #EEEEEE;
-/*cursor:pointer;*/
-width:100px; 
-background-color:#74A4FF;
-border-color : #4D4D4D;
-}
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0; background-color:#242424}
         </style>
-<link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
         <script type="text/javascript" src="js/jquery-1.7.1.min.js">
         </script>
         <script type="text/javascript" src="js/ui.core.min.js">
@@ -107,16 +65,7 @@ var t;
 			var PTZ_LEFTDOWN = "0x00003024";
 			var PTZ_RIGHTDOWN = "0x00003025";
             //获取码流参数
-            var Streamid = getCookie("StreamIndex_yy");//getQueryString("streamid");
-            if (Streamid == "" || Streamid == null) {
-                Streamid = 0;
-            }
-			var streamtmp = parseInt(parent.StreamShow,10)-1;
-			if(streamtmp <= parseInt(Streamid,10))
-			{
-						Streamid = 0;
-						setCookie("StreamIndex_yy", Streamid);
-			}
+            var Streamid = 0;//getQueryString("streamid");
 			var currentStreamid = Streamid;
 			//预置位下标
 			var PreseIndx = 0;
@@ -132,13 +81,6 @@ var t;
 			//曝光模式
 			var Exposure;
 			
-			//云台预置位上一个按钮ID
-			var yzwBtnLast = "";
-			
-			//视频定时器
-			var VidoeClock;
-			var VideoAuthtmp = -1;
-			
 			//当前预置位状态
 			//var YZWstate = false;
 			
@@ -147,57 +89,25 @@ var t;
 			$(window).bind('unload',function(){
 				 try
 	 			{
-					var activex = document.getElementById("GMIIPCmrWebPlugIn1");
-					if (activex != null && activex != 'null')
-					{
-							if(activex)
-							{
-								activex.StopPlay();
-							}
-					}
+					var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+					activeX.StopPlay();
 	 			}
 				catch(e)
 				{
 					return;
 				}
-// 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						if(!fso.FileExists("d:\\web.txt"))
-//						{
-//							fso.CreateTextFile("d:\\web.txt", true);
-//						}
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("【预览界面已关闭】close---" + h+":"+m+":"+s+":"+ss);
-//						f.WriteBlankLines(1);
-//						f.Close(); 
+				//alert("预览界面关闭!");
 			});
-//  			  $(window).bind('beforeunload',function()
-//			  { 
-//			  	try
-//			  	{
-//					var activex=document.getElementById("GMIIPCmrWebPlugIn1");
-//					if (activex != null && activex != 'null')
-//					{
-//							if(activex)
-//							{activex.Pause();}
-//					}
-//			  }
-//			  catch(e)
-//			  {
-//				  //alert(e.message);
-//			  }
-//	});
 		$(document).ready(function(){
+
+			//界面初始化
+			init();
 // 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						if(!fso.FileExists("d:\\web.txt"))
+//						if(!fso.FileExists("d:\\ocx_test.txt"))
 //						{
-//							fso.CreateTextFile("d:\\web.txt", true);
+//							fso.CreateTextFile("d:\\ocx_test.txt", true);
 //						}
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+//						var f = fso.OpenTextFile("d:\\ocx_test.txt", 8,true,-1);
 //						var Day = new Date();
 //						var h = Day.getHours();
 //						var m = Day.getMinutes();
@@ -206,58 +116,16 @@ var t;
 //						f.WriteLine("【预览界面已显示】Star---" + h+":"+m+":"+s+":"+ss);
 //						f.WriteBlankLines(1);
 //						f.Close(); 
-			//界面初始化
-			init();
 			//判断控件版本
 			if(!ActiveXCtr())
 			{
 				return;
 			}
-			//alert("parent.VideoAuth:"+parent.VideoAuth);
-			//VideoAuthtmp = parent.VideoAuth;
-			//VidoeClock = setTimeout('CheckVideo()',1000);		
-			activeX = document.getElementById("GMIIPCmrWebPlugIn1");
 			
-//			if(parent.UserName = "" || parent.UserName == undefined)
-//			{
-//				parent.UserName = getCookie("gmiwebusername");
-//			}
-//			if(parent.UserPass == "" || parent.UserPass == undefined)
-//			{
-//				parent.UserPass = getCookie("gmiwebpassword");
-//			}
-			if(parent.ip == "")
-			{
-				parent.getip();
-			}
-		   if(parent.port=="" || parent.port == "undefined")
+			activeX = document.getElementById("GMIIPCmrWebPlugIn1");
+		   if(parent.port=="")
 		   {
-//						var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("视频预览：LoadImg begin(cgi)---" + h+":"+m+":"+s + ":" +ss);
-//						f.WriteBlankLines(1);
-//						f.Close();
-			   //alert("y:no:port:"+parent.port);
-			   //alert("getCookie(SdkPort)");
-			   parent.port = getCookie("SdkPort");
-			   if(parent.port == "" || parent.port == "undefined")
-			   {
-				   if(parent.id == "" || parent.id == "undefined")
-				   {
-					  parent.id = getQueryString("id"); 
-				   }
-					GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", getportsuccessfunc);   
-			   }
-			   else
-			   {
-					LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);   
-			   }
-			   
+			   GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", getportsuccessfunc);
 			   function getportsuccessfunc(data)
 				{
 					var PackDate=new UnPackData(data);
@@ -266,11 +134,19 @@ var t;
 						if(PackDate.Content.RetCode=="0")
 						{
 							
-
+/*						var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("视频预览：LoadImg begin(cgi)---" + h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
 						
 								parent.port=PackDate.Content.SDK_Port;
 								LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
-								//LoadImg(parent.UserName,parent.UserPass,parent.ip,parent.port);
 								delete PackDate;
 						}
 					}
@@ -279,35 +155,24 @@ var t;
 		   else
 		   {
 			   
-//			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("视频预览：LoadImg begin---" + h+":"+m+":"+s + ":" +ss);
-//						f.WriteBlankLines(1);
-//						f.Close();
-				//LoadImg(parent.UserName,parent.UserPass,parent.ip,parent.port);
-				//alert("y:y:port:"+parent.port);
+/*			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("视频预览：LoadImg begin---" + h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
+						
 		   		LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+				delete PackDate;
 		   }
 			//debugger;
 			
 
-			//绑定云台按钮事件
-	 		$("input[type=button][name='yzwbtn']").bind("click",
-                function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
-                    var btnid = this.id;
-                    yzwClick(btnid);
-      		});						
+						
 			
          //LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
 		   //------ wk add 获取码流
@@ -322,13 +187,6 @@ var t;
 			if(parent.StreamNum_NLJ != 0)
 			{
 				getMaxStreamNum(false,SessID,AuthId,0);	
-					//设置码流
-		   			$("#radiostream" + Streamid).attr("checked", "checked");
-					if(Streamid>0)
-					{
-						changeStream(Streamid);	
-					}
-					
 			}
 			else
 			{
@@ -352,14 +210,6 @@ var t;
 					
 					//再去获取最大码流和设置界面
 					getMaxStreamNum(false,SessID,AuthId,0);
-					//设置码流
-
-		   			$("#radiostream" + Streamid).attr("checked", "checked");
-					if(Streamid>0)
-					{
-						changeStream(Streamid);	
-					}
-					
 				}
 				delete PackDate;
 			}
@@ -369,21 +219,16 @@ var t;
 		   //根据码流数填充页面元素
            //getMaxStreams();
 		   
+
 		   
 		   //启动录像 停止录像
 				$("#brecord").bind("click",
 				function() {
-				parent.StartimeVideo();
-				if(parent.VideoAuth == 0)
-				{
-					alert("没有权限！");
-					return;
-				}
 					if ($("#bplay").val() == "预览") {
 						alert("当前视频暂停，请开启预览再进行录像。");
 						return;
 					}
-					//if (window.ActiveXObject) {
+					if (window.ActiveXObject) {
 						try {
 
 							
@@ -437,25 +282,19 @@ var t;
 							alert(e);
 							return;
 						}
-					//}
+					}
 				});
 		   
 		   //抓图
 				$("#bcapturePicture").bind("click",
 				function() {
-					parent.StartimeVideo();
-				if(parent.VideoAuth == 0)
-				{
-					alert("没有权限！");
-					return;
-				}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
 						alert("当前视频暂停，抓图失败！");
 						return;	
 					}
-					//if (window.ActiveXObject) {
+					if (window.ActiveXObject) {
 						try {
 
 							//添加保存接口。 //保存路径
@@ -487,54 +326,12 @@ var t;
 							alert(e);
 							return;
 						}
-					//}
+					}
 				});
-		   //3D
-				$("#threeD").bind("click",
-				function() {
-					parent.StartimeVideo();
-				if(parent.VideoAuth == 0)
-				{
-					alert("没有权限！");
-					return;
-				}
-				if(parent.yunydjAuth == false)
-				{
-					alert("没有权限！");
-					return;
-				}
-					//if (window.ActiveXObject) {
-						try {
-
-							var result;
-							var status = $("#threeD").val();
-							if (status == "启动3D") {
- 								//$("#threeD").attr("disabled", "disabled");
-								activeX.Open3DLocaltion(true);
-									$("#threeD").val("关闭3D");
-
-							} else {
-
-								//$("#threeD").attr("disabled", "disabled");
-								activeX.Open3DLocaltion(false);
-									$("#threeD").val("启动3D");
-							}
-
-						} catch(e) {
-							alert(e);
-							return;
-						}
-					//}
-				});	
+				
 				//编码镜像change
 				$("#flip_rotate").bind("change",
 				function() {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var stmp;
 				  	var  content={};
 				  	content.SessionId=parent.id;
@@ -567,14 +364,8 @@ var t;
 					//暂停 预览
 				$("#bplay").bind("click",
 				function() {
-				parent.StartimeVideo();
-				if(parent.VideoAuth == 0)
 
-				{
-					alert("没有权限！");
-					return;
-				}
-					//if (window.ActiveXObject) {
+					if (window.ActiveXObject) {
 						try {
 
 					
@@ -611,24 +402,13 @@ var t;
 							alert(e);
 							return;
 						}
-					//}
+					}
 				});
 
 				//启动话筒
 				$("#btalking").bind("click",
 				function() {
-					parent.StartimeVideo();
-//				if(parent.VideoAuth == 0)
-//				{
-//					alert("没有权限！");
-//					return;
-//				}
-				if(parent.yunydjAuth == false)
-				{
-					alert("没有权限！");
-					return;
-				}
-					//if (window.ActiveXObject) {
+					if (window.ActiveXObject) {
 						try {
 
 							
@@ -680,32 +460,26 @@ var t;
 							alert(e);
 							return;
 						}
-					//}
+					}
 				});
 
 				//启动声音
 				$("#blistening").bind("click",
 				function() {
-					parent.StartimeVideo();
-				if(parent.VideoAuth == 0)
-				{
-					alert("没有权限！");
-					return;
-				}
-					//if (window.ActiveXObject) {
+					if (window.ActiveXObject) {
 						try {
 
 							
 							var status = $("#blistening").val();
-							if (status == "启动监听") {
+							if (status == "启动声音") {
  
 								var result = activeX.OpenSound(true);
  
 								if (result) {
-									$("#blistening").val("关闭监听");
+									$("#blistening").val("关闭声音");
 								} else {
-									$("#blistening").val("启动监听");
-									alert("启动监听失败");
+									$("#blistening").val("启动声音");
+									alert("启动声音失败");
 								}
 							} else {
 								var result = true;
@@ -715,23 +489,22 @@ var t;
 								result=activeX.OpenSound(false);
 
 								if (result) {
-									$("#blistening").val("启动监听");
+									$("#blistening").val("启动声音");
 								} else {
-									$("#blistening").val("关闭监听");
-									alert("关闭监听失败");
+									$("#blistening").val("关闭声音");
+									alert("关闭声音失败");
 								}
 							}
 						} catch(e) {
 							alert(e);
 							return;
 						}
-					//}
+					}
 				});
 //--图像设置
                 //绑定图像设置 展开
                 $("#aimageset").bind("click",
                 function(e) {
-
                     // 收缩
 					//debugger;
                     var evt = e || window.event;
@@ -750,12 +523,7 @@ var t;
 				//亮度增加
                 $("#brightnessadd").bind("click",
                 function(e) {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
+
                     var oldv = $("#01brightness").val();
                     if (oldv < 255) {
                         var newv = parseInt(oldv, 10) + parseInt(1, 10);
@@ -772,12 +540,7 @@ var t;
 				//亮度减弱
                 $("#brightnesssub").bind("click",
                 function(e) {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
+
                     var oldv = $("#01brightness").val();
                     if (oldv > 0) {
                         var newv = parseInt(oldv, 10) - parseInt(1, 10);
@@ -794,12 +557,6 @@ var t;
 				//对比度增加
                 $("#contrastadd").bind("click",
                 function(e) {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}					
                     var oldv = $("#01contrast").val();
                     if (oldv < 255) {
                         var newv = parseInt(oldv, 10) + parseInt(1, 10);
@@ -815,12 +572,6 @@ var t;
 				//对比度减弱
                 $("#contrastsub").bind("click",
                 function(e) {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
                     var oldv = $("#01contrast").val();
                     if (oldv > 0) {
                         var newv = parseInt(oldv, 10) - parseInt(1, 10);
@@ -836,12 +587,6 @@ var t;
 				//锐度减弱
                 $("#sharpnesssub").bind("click",
                 function(e) {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
                     var oldv = $("#01sharpness").val();
                     if (oldv > 0) {
                         var newv = parseInt(oldv, 10) - parseInt(1, 10);
@@ -857,12 +602,6 @@ var t;
 				//锐度增加
                 $("#sharpnessadd").bind("click",
                 function(e) {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
                     var oldv = $("#01sharpness").val();
                     if (oldv < 255) {
                         var newv = parseInt(oldv, 10) + parseInt(1, 10);
@@ -876,12 +615,6 @@ var t;
 				//色彩减弱
                 $("#huesub").bind("click",
                 function(e) {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
                     var oldv = $("#01hue").val();
                     if (oldv > 0) {
                         var newv = parseInt(oldv, 10) - parseInt(1, 10);
@@ -896,12 +629,6 @@ var t;
 				//色彩增加
                 $("#hueadd").bind("click",
                 function(e) {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
                     var oldv = $("#01hue").val();
                     if (oldv < 255) {
                         var newv = parseInt(oldv, 10) + parseInt(1, 10);
@@ -916,12 +643,6 @@ var t;
 				//饱和度增加
                 $("#saturationadd").bind("click",
                 function(e) {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
                     var oldv = $("#01saturation").val();
                     if (oldv < 255) {
                         var newv = parseInt(oldv, 10) + parseInt(1, 10);
@@ -936,12 +657,6 @@ var t;
 				//饱和度减弱
                 $("#saturationsub").bind("click",
                 function(e) {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
                     var oldv = $("#01saturation").val();
                     if (oldv > 0) {
                         var newv = parseInt(oldv, 10) - parseInt(1, 10);
@@ -987,8 +702,7 @@ var t;
                 function(e) {
                     //getPositionInfo(globalStream, $("#PosSel").val(), type, true);
                     //数字云台调用预置位。
-					//var stmp = $("#PosSel").val();
-					var stmp=yzwBtnLast;
+					var stmp = $("#PosSel").val();
 					if(stmp == 0)
 					{
 						stmp = 1;
@@ -1035,8 +749,7 @@ var t;
                 $("#preSet").bind("click",
                 function(e) {
                     //var section = "DPTZ";
-					//var stmp = $("#PosSel").val();
-					var stmp = yzwBtnLast;
+					var stmp = $("#PosSel").val();
 					if(stmp == 0)
 					{
 						stmp = 1;
@@ -1060,8 +773,7 @@ var t;
                 $("#preDel").bind("click",
                 function(e) {
                     if ($("#PosSel").val() != 0) {
-						delPosition(currentStreamid, yzwBtnLast, type);
-                        //delPosition(currentStreamid, $("#PosSel").val(), type); var stmp=yzwBtnLast;
+                        delPosition(currentStreamid, $("#PosSel").val(), type);
                     } else {
                         alert("home 不能删除");
                     }
@@ -1125,16 +837,70 @@ var t;
 
                 });
 				
+            function getPositionInfo(index) {                 
+/*                var section = "";
+                if (type == '1') {
+                    section = "DPTZPRESETS" + Streamid;
+				
+                }
+                if (type == '2') {
+                    section = "PTZPRESETS";
+                }
+				
+				PosSelValue = $("#PosSel").val();*/
+//				var activeXtmp = document.getElementById("GMIIPCmrWebPlugIn1");
+//			   	var st = activeXtmp.GetPresetInfomation(index);
+//				return st;
+				  		var  content={};
+				  		content.SessionId=parent.id;
+				  		content.AuthValue=parent.Authvalue;
+						
+						content.PresetIndex=index;
+				  		contentstr=jsonToString(content);
+						GetAndSet("SysSearchPtzPresetInfo","json",contentstr, succfunGetYZWstate);
+			}
+			//获取预置位状态
+			function succfunGetYZWstate(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						var st = PackDate.Content.Setted;	
+						if(st == "0")//没有设置
+						{
 
+					            $("#preCall").attr("disabled", "disabled");
+                                $("#preCall").css("background", "url(images/btn_57_2.jpg) no-repeat");
+								$("#preDel").attr("disabled", "disabled");
+								$("#preDel").css("background", "url(images/btn_57_2.jpg) no-repeat");
+								
+								$("#preSet").removeAttr("disabled", "disabled");
+                                $("#preSet").css("background", "url(images/btn_57.jpg) no-repeat");
+						}
+						else if(st == "1")//已经设置
+						{
+					            $("#preCall").removeAttr("disabled", "disabled");
+                                $("#preCall").css("background", "url(images/btn_57.jpg) no-repeat");
+								$("#preDel").removeAttr("disabled", "disabled");
+								$("#preDel").css("background", "url(images/btn_57.jpg) no-repeat");
+								
+								$("#preSet").attr("disabled", "disabled");
+								$("#preSet").css("background", "url(images/btn_57_2.jpg) no-repeat");					
+						}
+
+					}
+					else
+					{
+						alert("获取预置位状态失败！");
+					}
+				}
+				delete PackDate;				
+			}
 				//云台控制home
 				$("#home").bind("click",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var a = type;
 					//数字云台
 					if (a == 1) {
@@ -1160,12 +926,6 @@ var t;
 				//云台控制 向上
 				$("#up").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1190,12 +950,6 @@ var t;
 				});
 				$("#rightup").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1219,12 +973,6 @@ var t;
 				});
 				$("#leftup").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1249,12 +997,6 @@ var t;
 				});
 				$("#leftdown").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1279,12 +1021,6 @@ var t;
 				});
 				$("#rightdown").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1386,12 +1122,10 @@ var t;
 						}
 						for(var i=1;i<256;i++)
 						{
-							//PosSelhtml+="<option value='"+i+"'>"+i+"</option>";
-							PosSelhtml+="<input type='button' value=预置位'"+i+"style='cursor:pointer;width:100px;' name='yzwbtn' id ='yzw"+i+"/>";
+							PosSelhtml+="<option value='"+i+"'>"+i+"</option>";
 						}
-						//$("#PosSel").html(PosSelhtml);
-						$("#yzwul").html(PosSelhtml);
-                       
+						$("#PosSel").html(PosSelhtml);
+                        //GetAndSet('get', "PTZ", '', "process", true);
 						if(parent.isLinescanDisabled==1)
 						{
 							$("#home").attr("disabled", "disabled");
@@ -1404,12 +1138,6 @@ var t;
                 });
 				$("#up,#down,#right,#left,#zoomadd,#zoomsub,#focussub,#focusadd,#irissub,#irisadd,#leftup,#leftdown,#rightup,#rightdown").bind("mouseup",
 				function(e) {
-//					parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1550,12 +1278,6 @@ var t;
 				});
 				//下拉菜单
 $("#autoFocusType").bind("change",function(e){
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 	var thisvalue=this.value;
 	$("#autofocus").val(thisvalue);
 	//var poststr = "af_enable="+thisvalue;
@@ -1631,12 +1353,6 @@ function sucess_setJJ(data)
 				//云台控制 向下
 				$("#down").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1662,12 +1378,6 @@ function sucess_setJJ(data)
 				//云台控制 向右
 				$("#right").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1692,12 +1402,6 @@ function sucess_setJJ(data)
 				//云台控制 向左
 				$("#left").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1721,12 +1425,6 @@ function sucess_setJJ(data)
 
 				$("#zoomadd").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1755,12 +1453,6 @@ function sucess_setJJ(data)
 				//变倍 减
 				$("#zoomsub").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1787,12 +1479,6 @@ function sucess_setJJ(data)
 				//光圈加
 				$("#irisadd").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1813,12 +1499,6 @@ function sucess_setJJ(data)
 				//光圈减
 				$("#irissub").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1838,12 +1518,6 @@ function sucess_setJJ(data)
 				//聚焦减
 				$("#focussub").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1864,12 +1538,6 @@ function sucess_setJJ(data)
 				//聚焦加
 				$("#focusadd").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
-					if(parent.YunjingAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
 					var value = $("#bplay").val();
 					if(value == "预览")
 					{
@@ -1912,18 +1580,9 @@ function sucess_setJJ(data)
 			var request;
              function sliderFunction(e,ui,thisid)
 			 {
-				 	var id = thisid;
-                    var value = "";
 				  // $button.css("left", "-" + ui.value + "px")
-				  if(id != "ptz_speed")
-				  {
-					parent.StartimeVideo();
-					if(parent.shipinAuth == false)
-					{
-						alert("没有权限！");
-						return;
-					}
-				  }
+                        var id = thisid;
+                        var value = "";
                         if (id != "ptz_speed") {
                             if (id == "saturation" || id == "contrast" || id == "sharpness") //取值范围 0-255；
                             {
@@ -1939,7 +1598,7 @@ function sucess_setJJ(data)
                                 //value = parseInt(((ui.value - 50) / 100 * 510), 10);
 								value = parseInt((ui.value / 100 * 255), 10);
                             }
-						
+							
                             $("#01" + id + "").val(value);
 							//发送消息
 							//设置Image消息:亮度 对比度  锐度 色度 饱和度
@@ -1959,8 +1618,6 @@ function sucess_setJJ(data)
                                 var poststr = "ptz_hspeed=" + value + "||ptz_vspeed=" + value;
                                 $("#03ptz_hspeed").val(value);
                                 $("#03ptz_vspeed").val(value);
-								setCookie("MoveSpeed", value);
-								
 
                             }
                         }
@@ -1975,73 +1632,52 @@ function sucess_setJJ(data)
 					}
 			 }	
 			function LoadImg(name,password,ip,port) {
-		while(true)
-		{
-			//parent.StartimeVideo();
-			if(parent.VideoAuth == 1)
-			{
-				break;
-			}
-			if(parent.VideoAuth == 0)
-			{
-				alert("没有视频预览权限！");
-				return;
-			}
-			else if(parent.VideoAuth == -1)
-			{
-				//alert("StartimeVideo");
-				parent.sleep(500);
-				//parent.StartimeVideo();
-				parent.StartimeVideo();	
-				//alert("获取视频预览权限失败！");
-				//return;
-			}	
-		}
-//			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("视频预览：LoadImg getAuth end---" + h+":"+m+":"+s + ":" +ss);
-//						f.WriteBlankLines(1);
-//						f.Close();
 	//debugger;
-    //if (window.ActiveXObject) {
-			if(typeof(parent.NetPlay) == "undefined" ||parent.NetPlay == null || isNaN(parent.NetPlay)||parent.NetPlay == "")
+    if (window.ActiveXObject) {
+			if(typeof(parent.NetPlay) == "undefined" ||parent.NetPlay == null || isNaN(parent.NetPlay))
 			{
-				//alert("getLocalSet");
-				parent.getLocalSet();
+				parent.NetPlay = 10;
 			}
         try {
  
 		    var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
 			activeX.SetLoginInfo(name, password, ip, port);
+
+			
+			//activeX.SetCapturePath("C:\\Program Data\\IPC\\Image");
+			//activeX.SetRecordPath("E:\\");
+			//activeX.SetCapturePath("E:\\");
+			//activeX.SetPtzType(0);
+			//activeX.SetStreamId(0);
+			//var str=activeX.AboutBox();
+
+				
 			activeX.SetVideoBuffer(0,parseInt(parent.NetPlay));	
-			//activeX.SetOCXType(0);
+
 			activeX.Play();
+
 			
 			//获取预置点
-			//GetPosEnable();
+			GetPosEnable();
 			
 			
-//			   							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("视频预览：LoadImg end---" + h+":"+m+":"+s + ":" +ss);
-//						f.WriteBlankLines(1);
-//						f.Close();
+/*			   							 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("视频预览：LoadImg end---" + h+":"+m+":"+s + ":" +ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
+						
         } catch(e) { 
 			//alert(e.message);
 			alert("控件未加载，请手动加载控件！");
             return;
         }
-    //}
+    }
 	
 }
 //获取预置点状态
@@ -2173,21 +1809,18 @@ function controlPtz(poststr, poststr2) {
 
 function init() {
 				//默认数字云台
-//						   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("视频预览：init begin---" + h+":"+m+":"+s+":"+ss);
-//						f.WriteBlankLines(1);
-//						f.Close();
+/*						   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("视频预览：init begin---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close();*/
 				//var cameratype=parent.cameratype;
 			
-			//获取视频预览权限
-			//alert("init into!");
-
 				$("#PosSel").val("0");
 				var PosSelhtml = "<option value='0'>home</option>";
 				//if(cameratype==2)//一体机
@@ -2226,25 +1859,10 @@ function init() {
 					//$("#manualfocus").css("display", "block");
 					
 				
-/*					for (var i = 1; i < 256; i++) {
+					for (var i = 1; i < 256; i++) {
 						PosSelhtml += "<option value='" + i + "'>" + i + "</option>";
 					}
-					$("#PosSel").html(PosSelhtml);*/
-					var PosSelhtmlBtn = "<input type=button value='预置位 home' id=0 class=yzwbtn name=yzwbtn />";
-						for(var i=1;i<256;i++)
-						{
-							//PosSelhtml+="<option value='"+i+"'>"+i+"</option>";
-							PosSelhtmlBtn+="<input type=button value=预置位"+i+" class=yzwbtn name=yzwbtn id ="+i+" />";
-						}
-						//$("#PosSel").html(PosSelhtml);
-						$("#yzwul").html(PosSelhtmlBtn);
-						//设置上一个按钮ID
-						yzwBtnLast= "0";
-						//设置分页面板初始状态
-						document.getElementById("focusTab1").style.color = "#FFFFFF";
-                		document.getElementById("focusTable1").style.display = '';				
-
-
+					$("#PosSel").html(PosSelhtml);
 /*					//获取home预置位的状态
 					var type = getPositionInfo(1);
 					if(type == false)//没有设置
@@ -2293,21 +1911,7 @@ function init() {
 				  GetAndSet("GetVideoEncodeMirror","json",contentstr, sucess_GetVideoEncodeMirror);		
 				  		  
 					//-----wk add
-					var value2 = getCookie("MoveSpeed");
-					if(typeof(value2) == "undefined" ||value2 == null || isNaN(value2)||value1 == "")
-					{
-//						parent.getLocalSet();
-//						if(typeof(parent.MoveSpeed) == "undefined" ||parent.MoveSpeed == null || isNaN(parent.MoveSpeed)||parent.MoveSpeed == "" )
-//						{
-//							parent.MoveSpeed = 50;
-//						}
-//
-//						value2 = parent.MoveSpeed;
-
-						value2 = 50;
-						setCookie("MoveSpeed", 50);
-					}
-					var value1 = parseInt((value2 / 100 * 100), 10);
+					var value1 = parseInt((50 / 100 * 100), 10);
 					$("#03ptz_hspeed").val(value1);
                     $("#03ptz_vspeed").val(value1);
 
@@ -2330,16 +1934,17 @@ function init() {
 						$(".detail").css("display", "block");
 						$("#apreposition").css("background", "url(images/sub3.gif) no-repeat 0 3px");
 						
-// 			   			fso = new ActiveXObject("Scripting.FileSystemObject");
-//						f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						Day = new Date();
-//						h = Day.getHours();
-//						m = Day.getMinutes();
-//						s = Day.getSeconds();
-//						ss = Day.getMilliseconds();
-//						f.WriteLine("视频预览：init end---" + h+":"+m+":"+s+":"+ss);
-//						f.WriteBlankLines(1);
-//						f.Close(); 
+/* 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+						var Day = new Date();
+						var h = Day.getHours();
+						var m = Day.getMinutes();
+						var s = Day.getSeconds();
+						var ss = Day.getMilliseconds();
+						f.WriteLine("视频预览：init end---" + h+":"+m+":"+s+":"+ss);
+						f.WriteBlankLines(1);
+						f.Close(); */
+						
 			}
 			//获取镜编码镜像
 			function sucess_GetVideoEncodeMirror(data)
@@ -2471,7 +2076,7 @@ function sucess_GetXJtype(data)
 							$("#divAutoFocusType").css("display","none");
 							//$("#divFocus").css("display","block");
 							$("#focusType").css("display","none");
-
+							
 						}
 						else if(PackDate.Content.AutoFlags == "1")//球机支持
 						{
@@ -2479,7 +2084,6 @@ function sucess_GetXJtype(data)
 							//$("#divFocus").css("display","block");
 							//$("#focusType").css("display","none");
 							//wk add  获取聚焦模式
-
 				  			var  content={};
 				  			content.SessionId=parent.id;
 				  			content.AuthValue=parent.Authvalue;
@@ -2602,7 +2206,7 @@ function changeStream(streamid)
 								result=activeX.OpenSound(false);
 
 								//if (result) {
-									$("#blistening").val("启动监听");
+									$("#blistening").val("启动声音");
 								//} else {
 								//	$("#blistening").val("关闭声音");
 									//alert("关闭声音失败");
@@ -2619,7 +2223,7 @@ function changeStream(streamid)
 				//切换码流
 				var ID = parseInt(streamid);
 				Streamid = ID;		
-    //if (window.ActiveXObject) {
+    if (window.ActiveXObject) {
         try {
          
 		    
@@ -2661,16 +2265,13 @@ function changeStream(streamid)
 				  
 				  GetAndSet("GetVideoEncodeMirror","json",contentstr, sucess_GetVideoEncodeMirror);
 				
-			//记录当前页面码流
-			//var currenturlcookiename = window.location.host + "currenturl";
-			deleteCookie("StreamIndex_yy");//IE6 cookie 限制 。先删后加
-			setCookie("StreamIndex_yy", Streamid);
+			
         } catch(e) { 
 			//alert(e.message);
 			alert("控件加载失败！请尝试手动加载控件！");
             return;
         }
-    //}
+    }
 
 }
 
@@ -2695,16 +2296,6 @@ function StopTime_dj()
 	clearTimeout(t);
 	$("#btalking").removeAttr("disabled", "disabled");
 }
-//sleep
-//function sleep()
-//{
-//	stopsleep();
-//}
-//function stopsleep()
-//{
-//	sleeptmp = 0;
-//	clearTimeout(t);
-//}
 				//设置Image消息:亮度 对比度  锐度 色度 饱和度
 				function SetImage(Brightnes,Contrast,Sharpness,Hue,Saturation)
 				{
@@ -2737,146 +2328,17 @@ function StopTime_dj()
 				{
 					
 				}
-				
-				//云台预置位点击事件
-				function yzwClick(id)
-				{
-					//先打开上一个按钮 yzwBtnLast= "yzw0";
-					$("#"+yzwBtnLast).removeAttr("disabled", "disabled");
-					document.getElementById(yzwBtnLast).className = "yzwbtn";
-					var ids = id;	
-					yzwBtnLast = ids;
-					//alert(ids);
-					$("#"+ids).attr("disabled", "disabled");
-					document.getElementById(ids).className = "yzwbtncli";
-					PreseIndx = ids;
-					if(ids == 0)
-					{
-						ids =1;
-					}
-					//获取当前预置位状态
-                    getPositionInfo(ids);
-				}
-            function getPositionInfo(index) {                 
-				  		var  content={};
-				  		content.SessionId=parent.id;
-				  		content.AuthValue=parent.Authvalue;
-						
-						content.PresetIndex=index;
-				  		contentstr=jsonToString(content);
-						GetAndSet("SysSearchPtzPresetInfo","json",contentstr, succfunGetYZWstate);
-			}
-			//获取预置位状态
-			function succfunGetYZWstate(data)
-			{
-				var PackDate=new UnPackData(data);
-				if(PackDate.Content!=null)
-				{
-					if(PackDate.Content.RetCode=="0")
-					{
-						var st = PackDate.Content.Setted;	
-						if(st == "0")//没有设置
-						{
-
-					            $("#preCall").attr("disabled", "disabled");
-                                $("#preCall").css("background", "url(images/btn_57_2.jpg) no-repeat");
-								$("#preDel").attr("disabled", "disabled");
-								$("#preDel").css("background", "url(images/btn_57_2.jpg) no-repeat");
-								
-								$("#preSet").removeAttr("disabled", "disabled");
-                                $("#preSet").css("background", "url(images/btn_57.jpg) no-repeat");
-						}
-						else if(st == "1")//已经设置
-						{
-					            $("#preCall").removeAttr("disabled", "disabled");
-                                $("#preCall").css("background", "url(images/btn_57.jpg) no-repeat");
-								$("#preDel").removeAttr("disabled", "disabled");
-								$("#preDel").css("background", "url(images/btn_57.jpg) no-repeat");
-								
-								$("#preSet").attr("disabled", "disabled");
-								$("#preSet").css("background", "url(images/btn_57_2.jpg) no-repeat");					
-						}
-
-					}
-					else
-					{
-						alert("操作无响应，请检查云台设备及机器类型是否正常！");
-					}
-				}
-				delete PackDate;				
-			}
-			//分页切换
-    function getObject(objectId) {
-        if (document.getElementById && document.getElementById(objectId)) {
-            return document.getElementById(objectId);
-        }
-        else if (document.all && document.all(objectId)) {
-            return document.all(objectId);
-        }
-        else if (document.layers && document.layers[objectId]) {
-            return document.layers[objectId];
-        }
-        else {
-            return false;
-        }
-    }
-			//分页切换
-    function focusTab(n) {
-//        var bg1 = "url(images/an-xz2.gif)";
-//        var bg2 = "url(images/an-xz.gif)";
-//        for (var i = 1; i <= 3; i++) {
-//            if (i == n) {
-//                //getObject('focusTab' + i).style.background = bg1;
-//				getObject('focusTab' + i).style.color = "#ffba04";
-//                getObject('focusTable' + i).style.display = '';
-//            }
-//            else {
-//                //getObject('focusTab' + i).style.background = bg2;
-//				getObject('focusTab' + i).style.color = "#FFF";
-//                getObject('focusTable' + i).style.display = 'none';
-//            } 
-//        }
-    }
-	
-			//获取权限计时器
-//			function CheckVideo()
-//			{
-//				clearTimeout(VidoeClock);
-//				if(parent.VideoAuth == VideoAuthtmp)
-//				{
-//					//VidoeClock = setTimeout('CheckVideo()',1000);
-//					return;
-//				}
-//				else
-//				{
-//					VideoAuthtmp = parent.VideoAuth;
-//					if(parent.VideoAuth == 0)
-//					{
-//						//停掉视频
-//						
-//						var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
-//						activeX.StopPlay();
-//						alert("没有视频预览权限！（close）");
-//					}
-//					else if(parent.VideoAuth == 1)
-//					{
-//						//打开视频
-//						LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
-//					}
-//					
-//					//VidoeClock = setTimeout('CheckVideo()',1000);
-//					return;
-//				}
-//			}
 
 	    </script>
-</head>
-
-<body>
-<!--<div class="bit-stream">
+    </head>
+    
+    <body>
+        <div class="bit-stream" >
             <h3 id="hcameraset">
                 视频预览
             </h3>
+<!--        </div>
+        <div class="bit-stream" >-->
             <dl id="streamInfo">
                 <dt id="dstream">
                     码流
@@ -2892,456 +2354,371 @@ function StopTime_dj()
                     </label>
                 </dd>
             </dl>
-</div>
-<div style="width:100%; height:1000px;">
-<div style="width:1102px;">
-
-	<div class="video" id="myvedio">
-    </div>
-    <div  style="width:400px; height:395px;">
-    </div>
-</div>
-</div>-->
-
-<!--<div id="container">-->
-  <div class="bit-stream" style="height:71px;">
-      <h3 id="hcameraset">
-         视频预览
-      </h3>
-      <dl id="streamInfo">
-                <dt id="dstream">
-                    码流
-                </dt>
-                <dd>
-                    <input type="radio" name="bitstream" value="0" id="radiostream0" checked="checked"
-                    />
-                    <label id="1stream">
-                        码流
-                    </label>
-                    <label>
-                        1
-                    </label>
-                </dd>
-      </dl>
-  </div>
-   	<div id="mainContent">
-    	<div id="sidebar">
-        	<div class="rgt">
-            	<p class="type-sel" style="display:none">
-                	<input type="hidden" id="02dptz_zoom" />
-                	<input type="radio" name="type" value="1" id="shuzi" checked/>
-                	<label id="lshuziyt">
-                    	数字云台
-                	</label>
-                	<input type="radio" name="type" value="2" id="jixie" />
-                	<label id="ljixieyt">
-                    	机械云台
-                	</label>
-            	</p>
-            	<div class="type_ajust" id="divZoom" style="display:none">
-                	<div class="top_plus_m">
-                    	<input class="btn7_mouseout" onmouseover="this.className='btn7_mouseover'"
-                    	type="button" onmouseout="this.className='btn7_mouseout'" id="zoomsub"
-                    	/>
-                	</div>
-                	<div class="ajust_kind" id="ddivzoom">
-                    	变倍
-                	</div>
-                	<div class="top_plus_m">
-                    	<input class="btn6_mouseout" onmouseover="this.className='btn6_mouseover'"
-                    	type="button" onmouseout="this.className='btn6_mouseout'" id="zoomadd"
-                    	/>
-                	</div>
-            	</div>
-             	<div class="type_ajust" id="divLight" style="display:none">
-                	<div class="top_plus_m">
-                    	<input class="btn7_mouseout" onmouseover="this.className='btn7_mouseover'"
-                    	type="button" onmouseout="this.className='btn7_mouseout'" id="irissub"
-                    	/>
-                	</div>
-                	<div class="ajust_kind" id="diviris">
-                    	光圈
-                	</div>
-                	<div class="top_plus_m">
-                    	<input class="btn6_mouseout" onmouseover="this.className='btn6_mouseover'"
-                    	type="button" onmouseout="this.className='btn6_mouseout'" id="irisadd"
-                    	/>
-                	</div>
-            	</div>
-             	<div class="type_ajust" id="focusType" style="color:#A0A0A4">
-             		<button id="qjjj" class="btn27" value="聚焦">聚焦</button>
-              		<input type="radio" name="focustype" value="1" id="autofocus" checked/>
-                	<label id="labelauto">
-                   		自动
-                	</label>
-                	<input type="radio" name="focustype" value="0" id="manualfocus" />
-                	<label id="labelmanul">
-                   		手动
-                	</label>
-             	</div>
-            	<div class="type_ajust" id="divFocus" style="display:none">
-                	<div class="top_plus_m">
-                    	<input class="btn7_mouseout" onmouseover="this.className='btn7_mouseover'"
-                    	type="button" onmouseout="this.className='btn7_mouseout'" id="focussub"
-                    	/>
-                	</div>
-                	<div class="ajust_kind"  id="ddivfocus">
-                    	调焦
-                	</div>
-                	<div class="top_plus_m">
-                    	<input class="btn6_mouseout" onmouseover="this.className='btn6_mouseover'"
-                    	type="button" onmouseout="this.className='btn6_mouseout'" id="focusadd"
-                    	/>
-                	</div>
-            	</div>
-             	<div class="type_ajust" id="divAutoFocusType" style="display:none">
-               		<select id="autoFocusType" style="width:150px; height:20px">
-               		<option value="1">全自动模式</option>
-               		<option value="2">自动聚焦锁定模式</option>
-               		</select>
-            	</div>
-             	          
-            	<div class="sjiant" style="display:none" id="pantilt">
-                	<table width="90" height="90px" border="0" cellpadding="0" cellspacing="0"
-                		align="center" style="margin-top:6px">
-                    	<tr>
-                        	<td width="30px" height="30px"><input class="btn_mouseout_1" onmouseover="this.className='btn_mouseover_1'"
-                            	type="button" onmouseout="this.className='btn_mouseout_1'" id="leftup" style="display:block" />             
-                        	</td>
-                        	<td width="30px">
-                            	<input class="btn1_mouseout" onmouseover="this.className='btn1_mouseover'"
-                            	type="button" onmouseout="this.className='btn1_mouseout'" id="up" />
-                        	</td>
-                        	<td width="30px"><input class="btn_mouseout_2" onmouseover="this.className='btn_mouseover_2'"
-                            	type="button" onmouseout="this.className='btn_mouseout_2'" id="rightup" style="display:block"/>
-                            
-                        	</td>
-                    	</tr>
-                    	<tr>
-                        	<td width="30px" height="30px">
-                            	<input class="btn2_mouseout" onmouseover="this.className='btn2_mouseover'"
-                            	type="button" onmouseout="this.className='btn2_mouseout'" id="left" />
-                        	</td>
-                        	<td width="30px" height="30px">
-                            	<input class="btn3_mouseout" onmouseover="this.className='btn3_mouseover'"
-                            	type="button" onmouseout="this.className='btn3_mouseout'" id="home" />
-                        	</td>
-                        	<td width="30px" height="30px">
-                            	<input class="btn4_mouseout" onmouseover="this.className='btn4_mouseover'"
-                            	type="button" onmouseout="this.className='btn4_mouseout'" id="right" />
-                        	</td>
-                    	</tr>
-                    	<tr>
-                        	<td width="30px" height="30px"><input class="btn_mouseout_3" onmouseover="this.className='btn_mouseover_3'"
-                            	type="button" onmouseout="this.className='btn_mouseout_3'" id="leftdown" style="display:block"/>
-                            
-                        	</td>
-                        	<td width="30px" height="30px">
-                            	<input class="btn5_mouseout" onmouseover="this.className='btn5_mouseover'"
-                            	type="button" onmouseout="this.className='btn5_mouseout'" id="down" />
-                        	</td>
-                        	<td width="30px" height="30px"><input class="btn_mouseout_4" onmouseover="this.className='btn_mouseover_4'"
-                            	type="button" onmouseout="this.className='btn_mouseout_4'" id="rightdown" style="display:block"/>
-                            
-                        	</td>
-                    	</tr>
-                	</table>
-            	</div>
-            	<div class="sjiant" style="padding-top:10px; color:#A0A0A4" id="dptzpan">数字PTZ请使用鼠标操作。<br>鼠标滚轮缩放、左键拖动调整方向
-            	</div>
-            	<div style="clear:both">
-            	</div>
-            	<div class="drag-widget" id="divDrag" style="display:none; padding:10px 0;">
-                	<div style="float:left; color:#999; margin-left:0; width:12px; margin-left:10px;_margin-left:13px;" id="dslow">
-                    	慢
-                    </div>
-                	<div class="drag-bg" style="float:left">
-                    	<input type="hidden" id="03ptz_vspeed" value="30" />
-                    	<input type="hidden" id="03ptz_hspeed" value="30"/>
-                    	<div id="ptz_speed" class="drag-icon">
-                    	</div>
-                	</div>
-                	<div style="float:left; color:#999; width:1px;" id="dquick">
-                    快
-                	</div>
-                </div>
-            	<div style="clear:both;">
-            	</div>
-            	<input type="hidden" id="02dptz_enable" />
-            	<input type="hidden" id="02dptz_source" />
-            	<input type="hidden" id="02dptz_off_x" />
-            	<input type="hidden" id="02dptz_off_y" />
-<!--                <b style="color:#FFF">
-            		云台 雨刷
-            	</b>-->
-<!--                <div style="width:180px; height:20px;"></div>
-                <div style="width:180px; height:22px;margin-left:15px;">
-                	<input type="button" class="btn27" value=""/>
-                    <input type="button" class="btn27" value="雨刷"/>
-                </div>-->
-<!--                <b style="color:#FFF">
-            		云台预置位
-            	</b>-->
-                <br />
-				<!--导航菜单作用80-->
-				<TABLE cellSpacing=0 cellPadding=0 width=180 border=0 bgColor=#ffffff style="margin-left:15px;">
-    			<TBODY>
-        			<TR vAlign=bottom align=middle>
-            			<TD id=focusTab1 onclick=focusTab(1); bgcolor="#666666" 
-                			style="CURSOR: pointer; color:#FFFFFF;" width=180
-                			background=images/an-xz2.gif>云台预置位
-            			</TD>
-<!--            			<TD width=2></TD>
-            			<TD id=focusTab2  onclick=focusTab(2); bgcolor="#666666" 
-                			style="CURSOR: pointer; color:#FFF;" width=50
-                			background=images/an-xz.gif>巡航
-            			</TD>
-            			<TD width=2></TD>
-            			<TD id=focusTab3 onclick=focusTab(3); bgcolor="#666666" 
-                			style="CURSOR: pointer; color:#FFF;" width=50
-                			background=images/an-xz.gif>花样扫描
-            			</TD>-->
-        			</TR>
-    			</TBODY>
-			</TABLE>
+        </div>
+        <div class="video" id="myvedio">
+            <object classid="CLSID:D761DC49-4CDC-458E-ABB6-4F594E9DA1EB" codebase=""
+            width=702 height=395 align="absmiddle" id="GMIIPCmrWebPlugIn1">
             
-            <TABLE cellSpacing=0 cellPadding=0 width=180 border=0>
-            	<TBODY>
-                	<TR>
-                    	<TD>
-                        	<TABLE cellSpacing=0 cellPadding=0 width=180 border=0 style="margin-left:15px;">
-                            	<TBODY>
-                                	<TR>
-                                    	<TD bgColor=#FFFFFF height=1 ></TD>
-                                    </TR>
-                                </TBODY>
-                            </TABLE>
-                        </TD>
-                    </TR>
-                </TBODY>
-            </TABLE>
-                    		<!--每个导航栏目下的详细内容-->
-            			<TABLE id=focusTable1 cellSpacing=0 cellPadding=0 width="100%" border=0 style="margin-left:15px;">
-                			<TBODY>
-                    			<TR vAlign=top align=left>
-                        			<TD class=blue>
-                						<div class="fixscr">
-                							<ul id="yzwul">
-                    							<input type="button" value="预置位 home" id="0" class="yzwbtn" name="yzwbtn"/>
-                    						</ul>
-               							</div>
-                    					<input type="button" id="preCall" value="调用" disabled="disabled" class="btn24"
-                    					style="background:url(images/btn_57_2.jpg) no-repeat">
-                    					</input>
-										<!--                </p>
-                						<p>-->
-                    					<input type="button" id="preSet" value="设置" disabled="disabled" class="btn24"
-                    					style="background:url(images/btn_57_2.jpg) no-repeat">
-                    					</input>
-                    					<input type="button" id="preDel" value="删除" disabled="disabled" class="btn24"
-                    					style="background:url(images/btn_57_2.jpg) no-repeat">
-                    					</input>
-                        			</TD>
-                    			</TR>
-                			</TBODY>
-            			</TABLE>
-                        
-            			<TABLE id=focusTable2 style="DISPLAY: none;margin-left:15px;" cellSpacing=0 cellPadding=0 width=122 border=0>
-                			<TBODY>
-                    			<TR vAlign=top align=left>
-                        			<TD class=blue>
-                            			巡航<BR>
-                        			</TD>
-                    			</TR>
-                			</TBODY>
-            			</TABLE>
-                        
-            			<TABLE id=focusTable3 style="DISPLAY: none;margin-left:15px;" cellSpacing=0 cellPadding=0 width=122 border=0>
-                			<TBODY>
-                    			<TR vAlign=top align=left>
-                        			<TD class=blue>
-                            			花样扫描<BR>
-
-                        			</TD>
-                    			</TR>
-                			</TBODY>
-           	 			</TABLE>
-
-
+            </object>
+    </div>
+        <div class="rgt" >
+            <p class="type-sel" style="display:none">
+                <input type="hidden" id="02dptz_zoom" />
+                <input type="radio" name="type" value="1" id="shuzi" checked/>
+                <label id="lshuziyt">
+                    数字云台
+                </label>
+                <input type="radio" name="type" value="2" id="jixie" />
+                <label id="ljixieyt">
+                    机械云台
+                </label>
+            </p>
+            <div class="type_ajust" id="divZoom" style="display:none">
+                <div class="top_plus_m">
+                    <input class="btn7_mouseout" onmouseover="this.className='btn7_mouseover'"
+                    type="button" onmouseout="this.className='btn7_mouseout'" id="zoomsub"
+                    />
+                </div>
+                <div class="ajust_kind" id="ddivzoom">
+                    变倍
+                </div>
+                <div class="top_plus_m">
+                    <input class="btn6_mouseout" onmouseover="this.className='btn6_mouseover'"
+                    type="button" onmouseout="this.className='btn6_mouseout'" id="zoomadd"
+                    />
+                </div>
+            </div>
+             <div class="type_ajust" id="divLight" style="display:none">
+                <div class="top_plus_m">
+                    <input class="btn7_mouseout" onmouseover="this.className='btn7_mouseover'"
+                    type="button" onmouseout="this.className='btn7_mouseout'" id="irissub"
+                    />
+                </div>
+                <div class="ajust_kind" id="diviris">
+                    光圈
+                </div>
+                <div class="top_plus_m">
+                    <input class="btn6_mouseout" onmouseover="this.className='btn6_mouseover'"
+                    type="button" onmouseout="this.className='btn6_mouseout'" id="irisadd"
+                    />
+                </div>
+            </div>
+            
+             <div class="type_ajust" id="focusType" style="color:#A0A0A4">
+             <button id="qjjj" class="btn27" value="聚焦">聚焦</button>
+              <input type="radio" name="focustype" value="1" id="autofocus" checked/>
+                <label id="labelauto">
+                   自动
+                </label>
+                <input type="radio" name="focustype" value="0" id="manualfocus" />
+                <label id="labelmanul">
+                   手动
+                </label>
+             </div>
+            <div class="type_ajust" id="divFocus" style="display:none">
+                <div class="top_plus_m">
+                    <input class="btn7_mouseout" onmouseover="this.className='btn7_mouseover'"
+                    type="button" onmouseout="this.className='btn7_mouseout'" id="focussub"
+                    />
+                </div>
+                <div class="ajust_kind"  id="ddivfocus">
+                    调焦
+                </div>
+                <div class="top_plus_m">
+                    <input class="btn6_mouseout" onmouseover="this.className='btn6_mouseover'"
+                    type="button" onmouseout="this.className='btn6_mouseout'" id="focusadd"
+                    />
+                </div>
+            </div>
+             <div class="type_ajust" id="divAutoFocusType" style="display:none">
+               <select id="autoFocusType" style="width:150px; height:20px">
+               <option value="1">全自动模式</option>
+               <option value="2">自动聚焦锁定模式</option>
+               </select>
+            </div>
+           
+            <div class="sjiant" style="display:none" id="pantilt">
+                <table width="90" height="90px" border="0" cellpadding="0" cellspacing="0"
+                align="center" style="margin-top:6px">
+                    <tr>
+                        <td width="30px" height="30px"><input class="btn_mouseout_1" onmouseover="this.className='btn_mouseover_1'"
+                            type="button" onmouseout="this.className='btn_mouseout_1'" id="leftup" style="display:block" />             
+                        </td>
+                        <td width="30px">
+                            <input class="btn1_mouseout" onmouseover="this.className='btn1_mouseover'"
+                            type="button" onmouseout="this.className='btn1_mouseout'" id="up" />
+                        </td>
+                        <td width="30px"><input class="btn_mouseout_2" onmouseover="this.className='btn_mouseover_2'"
+                            type="button" onmouseout="this.className='btn_mouseout_2'" id="rightup" style="display:block"/>
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30px" height="30px">
+                            <input class="btn2_mouseout" onmouseover="this.className='btn2_mouseover'"
+                            type="button" onmouseout="this.className='btn2_mouseout'" id="left" />
+                        </td>
+                        <td width="30px" height="30px">
+                            <input class="btn3_mouseout" onmouseover="this.className='btn3_mouseover'"
+                            type="button" onmouseout="this.className='btn3_mouseout'" id="home" />
+                        </td>
+                        <td width="30px" height="30px">
+                            <input class="btn4_mouseout" onmouseover="this.className='btn4_mouseover'"
+                            type="button" onmouseout="this.className='btn4_mouseout'" id="right" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30px" height="30px"><input class="btn_mouseout_3" onmouseover="this.className='btn_mouseover_3'"
+                            type="button" onmouseout="this.className='btn_mouseout_3'" id="leftdown" style="display:block"/>
+                            
+                        </td>
+                        <td width="30px" height="30px">
+                            <input class="btn5_mouseout" onmouseover="this.className='btn5_mouseover'"
+                            type="button" onmouseout="this.className='btn5_mouseout'" id="down" />
+                        </td>
+                        <td width="30px" height="30px"><input class="btn_mouseout_4" onmouseover="this.className='btn_mouseover_4'"
+                            type="button" onmouseout="this.className='btn_mouseout_4'" id="rightdown" style="display:block"/>
+                            
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="sjiant" style="padding-top:10px; color:#A0A0A4" id="dptzpan">数字PTZ请使用鼠标操作。<br>鼠标滚轮缩放、左键拖动调整方向
+            </div>
+            <div style="clear:both">
+            </div>
+            
+            <div class="drag-widget" id="divDrag" style="display:none; padding:10px 0;">
+                <div style="float:left; color:#999; margin-left:0; width:12px; margin-left:10px;_margin-left:13px;" id="dslow">
+                    慢
+                </div>
+                <div class="drag-bg" style="float:left">
+                    <input type="hidden" id="03ptz_vspeed" value="30" />
+                    <input type="hidden" id="03ptz_hspeed" value="30"/>
+                    <div id="ptz_speed" class="drag-icon">
+                    </div>
+                </div>
+                <div style="float:left; color:#999; width:1px;" id="dquick">
+                    快
+                </div>
+            </div>
+            <div style="clear:both;">
+            </div>
+            <input type="hidden" id="02dptz_enable" />
+            <input type="hidden" id="02dptz_source" />
+            <input type="hidden" id="02dptz_off_x" />
+            <input type="hidden" id="02dptz_off_y" />
+            <div class="yuntaishez" style="height:30px;" >
+                <div style="height:22px;float:left;margin-top:0px; _margin-left:5px;">
+                    <a class="btn13" id="apreposition" style="background: url(images/add3.gif) no-repeat 0 3px;">
+                    </a>
+                </div>
+                <div id="dytyzw">云台预置位</div>
+            </div>
+            <div class="detail" style="display:none;">
+                <p>
+                    <select id="PosSel" name="PosSel">
+                        <option value=0 selected>
+                            home
+                        </option>
+                        <option value=1>
+                            1
+                        </option>
+                        <option value=2>
+                            2
+                        </option>
+                        <option value=3>
+                            3
+                        </option>
+                        <option value=4>
+                            4
+                        </option>
+                        <option value=5>
+                            5
+                        </option>
+                        <option value=6>
+                            6
+                        </option>
+                        <option value=7>
+                            7
+                        </option>
+                        <option value=8>
+                            8
+                        </option>
+                        <option value=9>
+                            9
+                        </option>
+                    </select>
+                    <input type="button" id="preCall" value="调用" disabled="disabled" class="btn24"
+                    style="background:url(images/btn_57_2.jpg) no-repeat">
+                    </input>
+                </p>
+                <p>
+                    <input type="button" id="preSet" value="设置" disabled="disabled" class="btn24"
+                    style="background:url(images/btn_57_2.jpg) no-repeat">
+                    </input>
+                    <input type="button" id="preDel" value="删除" disabled="disabled" class="btn24"
+                    style="background:url(images/btn_57_2.jpg) no-repeat">
+                    </input>
+                </p>
             </div>
         </div>
-    		<!--<div id="content">-->
-            <div class="camera_top" style="width:702px;">
-        		<div class="video" id="myvedio">
-            		<object classid="CLSID:D761DC49-4CDC-458E-ABB6-4F594E9DA1EB" codebase=""
-            		width=702 height=395 align="absmiddle" id="GMIIPCmrWebPlugIn1">
-            
-            		</object>
-    			</div>
-                <!--//功能按钮-->
-                <div class="down_main_content">
-                	<div class="left_nav">
-                    	<div class="actions" style="margin-top:10px;">
-                    		<input class="btn22" type="button" id="bplay" value="暂停">
-                    		</input>
-                    		<input class="btn22" type="button" value="启动对讲" id="btalking">
-                    		</input>
-                    		<input class="btn22" type="button" value="启动监听" id="blistening">
-                    		</input>
-                    		<input class="btn22" type="button" id="brecord" value="启动录像">
-                    		</input>
-                    		<input class="btn22" type="button" value="抓图" id="bcapturePicture">
-                    		</input>
-<!--                    		<input class="btn22" type="button" value="启动3D" id="threeD">
-                    		</input>-->
-                    		<input class="btn11" type="button" value="留空" style="visibility:hidden">
-                    		</input>
-                    		<input class="btn22" type="button" value="自动聚焦" id="af_enable" style="display:none">
-                    		</input>
-                            <div id="tipInfo" style="color:#F00; display: none;float:left; width:100px; height:20px;  margin-left:20px; ">
-                            </div>
-                    		<input type="hidden" id="01af_enable" /> 
-							<div class="img-set">
-               				</div>
-                			<div class="actions" id="tipInfo" style="margin-top:10px; color:#F00; display:none">
-                            </div>
-                            <div class="img-set">
-                            	<h4>
-                        		<div style="height:22px;float:left;margin-top:0px;">
-                            		<a class="btn13_1" id="aimageset">
-                           			</a>
-                        		</div>
-                       			<div style="font-size:12px; width:125px; float:left;">
-                            		图像设置 图像翻转
-                        		</div>
-                       			<select id="flip_rotate" name="s0_flip_rotate">
-                            		<option value='0' selected>
-                                		正常
-                            		</option>
-                            		<option value='1'>
-                                		水平镜像
-                            		</option>
-                            		<option value='2'>
-                                		垂直镜像
-                           		 	</option>
-                           			<!-- <option value='4'>
-                           				顺时旋转90度
-                            		</option> -->
-                            		<option value='3'>
-                                		旋转180度
-                           			</option>
-                            		<!--<option value='7'>
-                            			顺时旋转270度
-                            		</option>-->
-                        		</select>
-                        		<input type="hidden" id="04s0_flip_rotate" />
-                        		<input type="hidden" id="04s1_flip_rotate" />
-                        		<input type="hidden" id="04s2_flip_rotate" />
-                        		<input type="hidden" id="04s3_flip_rotate" />
-                        
-                    			</h4>
-                            	<div class="previer_zhankai" style="display:none; width:320px;">
-                                	<dl style="width:300px">
-                            			<dt>
-                                			饱和度
-                            			</dt>
-                                        <dd style="width:250px">
-                                        	<div class="drag-widget">
-                                    			<input type="button" class="sub" id="saturationsub" style="margin-right:10px;">
-                                    			</input>
-                                    			<div class="drag-bg">
-                                        			<div class="drag-icon" id="saturation">
-                                        			</div>
-                                    			</div>
-                                    			<input type="button" class="add" id="saturationadd" style="margin-left:10px;">
-                                    			</input>
-                                    			<input id="01saturation" class="val" readonly="readonly" name="" />
-                                            </div>
-                                        </dd>
-                                    </dl>
-
-                        			<dl style="width:300px">
-                            			<dt>
-                               				亮度
-                            			</dt>
-                            			<dd style="width:250px">
-                                			<div class="drag-widget">
-                                    			<input type="button" class="sub" id="brightnesssub" style="margin-right:10px;">
-                                    			</input>
-                                    			<div class="drag-bg">
-                                        			<div id="brightness" class="drag-icon">
-                                        			</div>
-                                    			</div>
-                                    			<input type="button" class="add" id="brightnessadd" style="margin-left:10px;">
-                                    			</input>
-                                    			<input id="01brightness" class="val" readonly="readonly" name="" />
-                                			</div>
-                            			</dd>
-                        			</dl>
-                        			<dl style="width:300px">
-                            			<dt>
-                                			色度
-                            			</dt>
-                            			<dd style="width:250px">
-                                			<div class="drag-widget">
-                                    			<input type="button" class="sub" id="huesub" style="margin-right:10px;">
-                                    			</input>
-                                    			<div class="drag-bg">
-                                        			<div class="drag-icon" id="hue">
-                                        			</div>
-                                    			</div>
-                                    			<input type="button" class="add" id="hueadd" style="margin-left:10px;">
-                                    			</input>
-                                    			<input id="01hue" class="val" readonly="readonly" name="" />
-                                			</div>
-                            			</dd>
-                        			</dl>
-                        			<dl style="width:300px">
-                            			<dt>
-                                			对比度
-                            			</dt>
-                            			<dd style="width:250px">
-                                			<div class="drag-widget">
-                                    			<input type="button" class="sub" id="contrastsub" style="margin-right:10px;">
-                                    			</input>
-                                    			<div class="drag-bg">
-                                        			<div class="drag-icon" id="contrast">
-                                        			</div>
-                                    			</div>
-                                    			<input type="button" class="add" id="contrastadd" style="margin-left:10px;">
-                                    			</input>
-                                    			<input id="01contrast" class="val" readonly="readonly" name=""/>
-                                			</div>
-                            			</dd>
-                        			</dl>
-                        			<dl style="width:300px">
-                            			<dt>
-                                			锐度
-                            			</dt>
-                            			<dd style="width:250px">
-                                			<div class="drag-widget">
-                                    			<input type="button" class="sub" id="sharpnesssub" style="margin-right:10px;">
-                                    			</input>
-                                    			<div class="drag-bg">
-                                        			<div class="drag-icon" id="sharpness">
-                                        			</div>
-                                    			</div>
-                                    			<input type="button" class="add" id="sharpnessadd" style="margin-left:10px;">
-                                    			</input>
-                                    			<input id="01sharpness" class="val" readonly="readonly" name="" />
-                                			</div>
-                            			</dd>
-                        			</dl>
-
-                                </div>
-                            </div>
+        <div class="down_main_content">
+            <div class="left_nav">
+                <div class="actions" style="margin-top:10px;">
+                    <input class="btn22" type="button" id="bplay" value="暂停">
+                    </input>
+                    <input class="btn22" type="button" value="启动对讲" id="btalking">
+                    </input>
+                    <input class="btn22" type="button" value="启动声音" id="blistening">
+                    </input>
+                    <input class="btn22" type="button" id="brecord" value="启动录像">
+                    </input>
+                    <input class="btn22" type="button" value="抓图" id="bcapturePicture">
+                    </input>
+                    <input class="btn11" type="button" value="留空" style="visibility:hidden">
+                    </input>
+                    <input class="btn22" type="button" value="自动聚焦" id="af_enable" style="display:none">
+                    </input><div id="tipInfo" style="color:#F00; display: none;float:left; width:100px; height:20px;  margin-left:20px; "></div>
+                    <input type="hidden" id="01af_enable" /> 
+                <div class="img-set">
+                </div>
+                <div class="actions" id="tipInfo" style="margin-top:10px; color:#F00; display:none"></div>
+                <div class="img-set">
+                    <h4>
+                        <div style="height:22px;float:left;margin-top:0px;">
+                            <a class="btn13_1" id="aimageset">
+                            </a>
                         </div>
+                        <div style="font-size:12px; width:125px; float:left;">
+                            图像设置 图像翻转
+                        </div>
+                        <select id="flip_rotate" name="s0_flip_rotate">
+                            <option value='0' selected>
+                                正常
+                            </option>
+                            <option value='1'>
+                                水平镜像
+                            </option>
+                            <option value='2'>
+                                垂直镜像
+                            </option>
+                            <!-- <option value='4'>
+                            顺时旋转90度
+                            </option> -->
+                            <option value='3'>
+                                旋转180度
+                            </option>
+                            <!--<option value='7'>
+                            顺时旋转270度
+                            </option>-->
+                        </select>
+                        <input type="hidden" id="04s0_flip_rotate" />
+                        <input type="hidden" id="04s1_flip_rotate" />
+                        <input type="hidden" id="04s2_flip_rotate" />
+                        <input type="hidden" id="04s3_flip_rotate" />
+                        
+                    </h4>
+                    <div class="previer_zhankai" style="display:none; width:320px;">
+                        <dl style="width:300px">
+                            <dt>
+                                饱和度
+                            </dt>
+                            <dd style="width:250px">
+                                <div class="drag-widget">
+                                    <input type="button" class="sub" id="saturationsub" style="margin-right:10px;">
+                                    </input>
+                                    <div class="drag-bg">
+                                        <div class="drag-icon" id="saturation">
+                                        </div>
+                                    </div>
+                                    <input type="button" class="add" id="saturationadd" style="margin-left:10px;">
+                                    </input>
+                                    <input id="01saturation" class="val" readonly="readonly" name="" />
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl style="width:300px">
+                            <dt>
+                                亮度
+                            </dt>
+                            <dd style="width:250px">
+                                <div class="drag-widget">
+                                    <input type="button" class="sub" id="brightnesssub" style="margin-right:10px;">
+                                    </input>
+                                    <div class="drag-bg">
+                                        <div id="brightness" class="drag-icon">
+                                        </div>
+                                    </div>
+                                    <input type="button" class="add" id="brightnessadd" style="margin-left:10px;">
+                                    </input>
+                                    <input id="01brightness" class="val" readonly="readonly" name="" />
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl style="width:300px">
+                            <dt>
+                                色度
+                            </dt>
+                            <dd style="width:250px">
+                                <div class="drag-widget">
+                                    <input type="button" class="sub" id="huesub" style="margin-right:10px;">
+                                    </input>
+                                    <div class="drag-bg">
+                                        <div class="drag-icon" id="hue">
+                                        </div>
+                                    </div>
+                                    <input type="button" class="add" id="hueadd" style="margin-left:10px;">
+                                    </input>
+                                    <input id="01hue" class="val" readonly="readonly" name="" />
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl style="width:300px">
+                            <dt>
+                                对比度
+                            </dt>
+                            <dd style="width:250px">
+                                <div class="drag-widget">
+                                    <input type="button" class="sub" id="contrastsub" style="margin-right:10px;">
+                                    </input>
+                                    <div class="drag-bg">
+                                        <div class="drag-icon" id="contrast">
+                                        </div>
+                                    </div>
+                                    <input type="button" class="add" id="contrastadd" style="margin-left:10px;">
+                                    </input>
+                                    <input id="01contrast" class="val" readonly="readonly" name=""/>
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl style="width:300px">
+                            <dt>
+                                锐度
+                            </dt>
+                            <dd style="width:250px">
+                                <div class="drag-widget">
+                                    <input type="button" class="sub" id="sharpnesssub" style="margin-right:10px;">
+                                    </input>
+                                    <div class="drag-bg">
+                                        <div class="drag-icon" id="sharpness">
+                                        </div>
+                                    </div>
+                                    <input type="button" class="add" id="sharpnessadd" style="margin-left:10px;">
+                                    </input>
+                                    <input id="01sharpness" class="val" readonly="readonly" name="" />
+                                </div>
+                            </dd>
+                        </dl>
                     </div>
                 </div>
-        	</div>
- 		</div>
-<!--</div>-->
+            </div>
+        </div>
+         </div>
+        <div id="mjs:tip" class="tip" style="position:absolute;left:0;top:0;display:none; color:#A00">
+        </div>
+        <div id="debugdiv" style=""></div>
 
+    </body>
 
-</body>
 </html>

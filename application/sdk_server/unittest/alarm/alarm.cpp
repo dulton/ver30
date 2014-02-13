@@ -21,7 +21,6 @@
 #define SYSCODE_GET_ALARM_REQ  1229
 #define SYSCODE_GET_ALARM_RSP  1230
 
-#if 0
 typedef struct tagAlarmInfo
 {
     uint64_t  s_WarningId;
@@ -36,7 +35,6 @@ typedef struct tagAlarmInfo
         uint32_t  s_IoNum;
     } s_ExtraInfo;
 } SysPkgAlarmInfo;
-#endif
 
 #define CHECK_SKIP_SPACE(...)  \
 do\
@@ -78,13 +76,13 @@ SysPkgAlarmInfo* ParseLine(const char* pLine)
         goto fail;
     }
 
-    pAlarmInfo->s_WaringId = strtoull(pCurPtr,&pEndPtr,10);
+    pAlarmInfo->s_WarningId = strtoull(pCurPtr,&pEndPtr,10);
     CHECK_SKIP_SPACE("(%s) not valid for id\n",pCurPtr);
 
-    pAlarmInfo->s_WaringType = strtoul(pCurPtr,&pEndPtr,10);
+    pAlarmInfo->s_WarningType = strtoul(pCurPtr,&pEndPtr,10);
     CHECK_SKIP_SPACE("(%s) not valid for type\n",pCurPtr);
 
-    pAlarmInfo->s_WaringLevel = strtoul(pCurPtr,&pEndPtr,10);
+    pAlarmInfo->s_WarningLevel = strtoul(pCurPtr,&pEndPtr,10);
     CHECK_SKIP_SPACE("(%s) not valid for level\n",pCurPtr);
 
     pAlarmInfo->s_OnOff = strtoul(pCurPtr,&pEndPtr,10);
@@ -114,7 +112,7 @@ SysPkgAlarmInfo* ParseLine(const char* pLine)
         goto fail;
     }
     *pEndPtr = '\0';
-    strncpy((char*)pAlarmInfo->s_DevId,pCurPtr,sizeof(pAlarmInfo->s_DevId));
+    strncpy((char*)pAlarmInfo->s_Devid,pCurPtr,sizeof(pAlarmInfo->s_Devid));
     pCurPtr = pEndPtr+1;
     while(isspace(*pCurPtr))
     {
@@ -147,9 +145,9 @@ fail:
 
 int HostToProtoAlarmInfo(SysPkgAlarmInfo * pAlarmInfo)
 {
-    pAlarmInfo->s_WaringId = HOST_TO_PROTO64(pAlarmInfo->s_WaringId);
-    pAlarmInfo->s_WaringType = HOST_TO_PROTO32(pAlarmInfo->s_WaringType);
-    pAlarmInfo->s_WaringLevel = HOST_TO_PROTO32(pAlarmInfo->s_WaringLevel);
+    pAlarmInfo->s_WarningId = HOST_TO_PROTO64(pAlarmInfo->s_WarningId);
+    pAlarmInfo->s_WarningType = HOST_TO_PROTO32(pAlarmInfo->s_WarningType);
+    pAlarmInfo->s_WarningLevel = HOST_TO_PROTO32(pAlarmInfo->s_WarningLevel);
     pAlarmInfo->s_OnOff = HOST_TO_PROTO32(pAlarmInfo->s_OnOff);
     return 0;
 }
@@ -173,7 +171,6 @@ int SendAlarm(FD_HANDLE handle,int rport,SysPkgAlarmInfo* pAlarmInfo,sessionid_t
     GMI_RESULT gmiret;
     sessionid_t getsesid;
     seqid_t getseqid;
-	DEBUG_INFO("sizeof(SysPkgAttrHeader) %d sizeof(SysPkgAlarmInfo) %d\n",sizeof(SysPkgAttrHeader),sizeof(SysPkgAlarmInfo));
     ret = pPack->AddItem(TYPE_WARNING_INFO,pAlarmInfo,sizeof(*pAlarmInfo));
     if(ret < 0)
     {
@@ -297,12 +294,12 @@ int SendAlarm(FD_HANDLE handle,int rport,SysPkgAlarmInfo* pAlarmInfo,sessionid_t
         goto fail;
     }
 
-    DEBUG_INFO("warningid %lld\n",PROTO_TO_HOST64(pAlarmInfo->s_WaringId));
-    DEBUG_INFO("warningtype %d\n",PROTO_TO_HOST32(pAlarmInfo->s_WaringType));
-    DEBUG_INFO("warninglevel %d\n",PROTO_TO_HOST32(pAlarmInfo->s_WaringLevel));
+    DEBUG_INFO("warningid %lld\n",PROTO_TO_HOST64(pAlarmInfo->s_WarningId));
+    DEBUG_INFO("warningtype %d\n",PROTO_TO_HOST32(pAlarmInfo->s_WarningType));
+    DEBUG_INFO("warninglevel %d\n",PROTO_TO_HOST32(pAlarmInfo->s_WarningLevel));
     DEBUG_INFO("OnOff %d\n",PROTO_TO_HOST32(pAlarmInfo->s_OnOff));
     DEBUG_INFO("Time (%s)\n",pAlarmInfo->s_Time);
-    DEBUG_INFO("devid (%s)\n",pAlarmInfo->s_DevId);
+    DEBUG_INFO("devid (%s)\n",pAlarmInfo->s_Devid);
     DEBUG_INFO("description (%s)\n",pAlarmInfo->s_Description);
 	DEBUG_INFO("Success\n");
 

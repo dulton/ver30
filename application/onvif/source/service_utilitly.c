@@ -254,7 +254,7 @@ GMI_RESULT NET_CheckIPString(char_t *Str)
 
 
 GMI_RESULT Soap_WSSE_Authentication(struct soap *soap_ptr)
-{
+{   
     char_t  PassWord[128];
 
     if ((NULL != soap_ptr->header)
@@ -263,14 +263,14 @@ GMI_RESULT Soap_WSSE_Authentication(struct soap *soap_ptr)
             && (NULL != soap_ptr->header->wsse__Security->UsernameToken->Username)
             && (NULL != soap_ptr->header->wsse__Security->UsernameToken->Password)
             && (0 < strlen(soap_ptr->header->wsse__Security->UsernameToken->Username)))
-    {
+    {    	
         if (0 == strcmp(soap_ptr->header->wsse__Security->UsernameToken->Username,  "admin")
-                || 0 == strcmp(soap_ptr->header->wsse__Security->UsernameToken->Username,  "inc"))
+        	|| 0 == strcmp(soap_ptr->header->wsse__Security->UsernameToken->Username,  "inc"))
         {
             memcpy(PassWord, "admin", sizeof(PassWord));
         }
         else
-        {
+        {        	
             ONVIF_ERROR("Username %s mismatch.........\n", soap_ptr->header->wsse__Security->UsernameToken->Username);
             goto errExit;
         }
@@ -283,9 +283,9 @@ GMI_RESULT Soap_WSSE_Authentication(struct soap *soap_ptr)
         //	goto errExit;
         //}
     }
-
+    
     return GMI_SUCCESS;
-errExit:
+errExit:   
     return GMI_FAIL;
 }
 
@@ -300,65 +300,6 @@ GMI_RESULT ONVIF_Fault(struct soap *soap_ptr, const char *Value1, const char *Va
         return GMI_OUT_OF_MEMORY;
     }
     soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Value = soap_strdup(soap_ptr, "SOAP-ENV:Sender");
-    //fault subcode
-    soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Subcode = (struct SOAP_ENV__Code*)soap_malloc_zero(soap_ptr, (sizeof(struct SOAP_ENV__Code)));
-    if (NULL == soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Subcode)
-    {
-        return GMI_OUT_OF_MEMORY;
-    }
-    soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Subcode->SOAP_ENV__Value = soap_strdup(soap_ptr, Value1);
-    //fault subcode subcode
-    if (NULL != Value2)
-    {
-        soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Subcode->SOAP_ENV__Subcode = (struct SOAP_ENV__Code*)soap_malloc_zero(soap_ptr, (sizeof(struct SOAP_ENV__Code)));
-        if (NULL == soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Subcode->SOAP_ENV__Subcode)
-        {
-            return GMI_OUT_OF_MEMORY;
-        }
-        soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Subcode->SOAP_ENV__Subcode->SOAP_ENV__Value   = soap_strdup(soap_ptr, Value2);
-        soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Subcode->SOAP_ENV__Subcode->SOAP_ENV__Subcode = NULL;
-    }
-    else
-    {
-        soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Subcode->SOAP_ENV__Subcode = NULL;
-    }
-
-    soap_ptr->fault->faultcode = NULL;
-    soap_ptr->fault->faultstring = NULL;
-    soap_ptr->fault->faultactor = NULL;
-    soap_ptr->fault->detail = NULL;
-    //fault reason
-    if (NULL != Reason)
-    {
-        soap_ptr->fault->SOAP_ENV__Reason = (struct SOAP_ENV__Reason *)soap_malloc_zero(soap_ptr, sizeof(struct SOAP_ENV__Reason));
-        if (NULL == soap_ptr->fault->SOAP_ENV__Reason)
-        {
-            return GMI_OUT_OF_MEMORY;
-        }
-        soap_ptr->fault->SOAP_ENV__Reason->SOAP_ENV__Text = soap_strdup(soap_ptr, Reason);
-    }
-    else
-    {
-        soap_ptr->fault->SOAP_ENV__Reason = NULL;
-    }
-    soap_ptr->fault->SOAP_ENV__Node = NULL;
-    soap_ptr->fault->SOAP_ENV__Role = NULL;
-    soap_ptr->fault->SOAP_ENV__Detail = NULL;
-
-    return GMI_SUCCESS;
-}
-
-
-GMI_RESULT ONVIF_FAULT(struct soap *soap_ptr, const char *Object, const char *Value1, const char *Value2, const char *Reason)
-{
-    //fault code
-    soap_ptr->fault = (struct SOAP_ENV__Fault*)soap_malloc_zero(soap_ptr, (sizeof(struct SOAP_ENV__Fault)));
-    soap_ptr->fault->SOAP_ENV__Code = (struct SOAP_ENV__Code*)soap_malloc_zero(soap_ptr, (sizeof(struct SOAP_ENV__Code)));
-    if (NULL == soap_ptr->fault->SOAP_ENV__Code)
-    {
-        return GMI_OUT_OF_MEMORY;
-    }
-    soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Value = soap_strdup(soap_ptr, Object);
     //fault subcode
     soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Subcode = (struct SOAP_ENV__Code*)soap_malloc_zero(soap_ptr, (sizeof(struct SOAP_ENV__Code)));
     if (NULL == soap_ptr->fault->SOAP_ENV__Code->SOAP_ENV__Subcode)

@@ -4,7 +4,6 @@
 #include "gmi_system_headers.h"
 #include "config_file_manager.h"
 #include "sys_env_types.h"
-#include "gmi_media_ctrl.h"
 
 static int16_t  l_ExposureGainMaxTable[] = {30, 36, 42, 48, 54, 60};
 static uint16_t l_ReslutionTable[][2] =
@@ -14,22 +13,7 @@ static uint16_t l_ReslutionTable[][2] =
     {RES_D1_PAL_WIDTH, RES_D1_PAL_HEIGHT},
     {RES_D1_NTSC_WIDTH, RES_D1_NTSC_HEIGHT},
     {RES_CIF_NTSC_WIDTH, RES_CIF_NTSC_HEIGHT},
-    {RES_CIF_PAL_WIDTH, RES_CIF_PAL_HEIGHT},
-    {RES_QCIF_PAL_WIDTH, RES_QCIF_PAL_HEIGHT},
-    {RES_QVGA_WIDTH, RES_QVGA_HEIGHT}
-};
-
-//OSD Font Size Map Table
-static int32_t l_OSD_FontSize[][2] =
-{
-    {RES_1080P_HEIGHT, OSD_FONT_SIZE_BIGNESS},
-    {RES_720P_HEIGHT, OSD_FONT_SIZE_BIG},
-    {RES_D1_PAL_HEIGHT, OSD_FONT_SIZE_MEDIUM},
-    {RES_D1_NTSC_HEIGHT, OSD_FONT_SIZE_MEDIUM},
-    {RES_CIF_PAL_HEIGHT, OSD_FONT_SIZE_SMALLNESS},
-    {RES_CIF_NTSC_HEIGHT, OSD_FONT_SIZE_SMALLNESS},
-    {RES_QCIF_PAL_HEIGHT, OSD_FONT_SIZE_SMALLNESS},
-    {RES_QVGA_HEIGHT, OSD_FONT_SIZE_SMALLNESS}
+    {RES_CIF_PAL_WIDTH, RES_CIF_PAL_HEIGHT}
 };
 
 StreamCenterClient::StreamCenterClient()
@@ -46,7 +30,7 @@ GMI_RESULT StreamCenterClient::Initialize(uint16_t LocalClientPort, uint16_t Loc
 {
     SYS_INFO("%s:%s in.........\n", __FILE__, __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s:%s in.........\n", __FILE__, __func__);
-    //GMI_RESULT Result = GMI_SUCCESS;
+    GMI_RESULT Result = GMI_SUCCESS;
 
     //information
     SYS_INFO("LocalClientPort  = %d\n", LocalClientPort);
@@ -67,11 +51,11 @@ GMI_RESULT StreamCenterClient::Initialize(uint16_t LocalClientPort, uint16_t Loc
     //Result = m_MediaCenter.Initialize(inet_addr("127.0.0.1"), htons(LocalClientPort), SessionBufferSize, inet_addr("127.0.0.1"), htons(LocalServerPort));
     //if (FAILED(Result))
     //{
-    //m_MediaTransport.Deinitialize();
-    //     SYS_ERROR("m_MediaCenter.Initialize failed\n");
-    //     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MediaCenter.Initialize failed\n");
-    //     return Result;
-    // }
+        //m_MediaTransport.Deinitialize();
+   //     SYS_ERROR("m_MediaCenter.Initialize failed\n");
+   //     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MediaCenter.Initialize failed\n");
+   //     return Result;
+   // }
 
     m_ClientPort            = LocalClientPort;
     m_ServerPort            = LocalServerPort;
@@ -85,7 +69,7 @@ GMI_RESULT StreamCenterClient::Initialize(uint16_t LocalClientPort, uint16_t Loc
 
 GMI_RESULT StreamCenterClient::Deinitialize()
 {
-    //GMI_RESULT Result = GMI_SUCCESS;
+    GMI_RESULT Result = GMI_SUCCESS;
 
     SYS_INFO("%s:%s in..........\n", __FILE__, __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s:%s in..........\n", __FILE__, __func__);
@@ -111,77 +95,27 @@ GMI_RESULT StreamCenterClient::Deinitialize()
 }
 
 
-GMI_RESULT StreamCenterClient::GeneralParamSet(General_Param ParamType, void_t *GeneralParamPtr)
-{
-	SYS_INFO("%s:%s in..........\n", __FILE__, __func__);
-	if (NULL == GeneralParamPtr)
-	{
-		SYS_ERROR("GeneralParamPtr is null\n");
-		return GMI_INVALID_PARAMETER;
-	}
-
-	GMI_RESULT Result;
-	int32_t Type = (int32_t)ParamType;
-	
-	switch (Type)
-	{
-	case GEN_PARAM_AUTO:
-		SysPkgComponents SysComponents;
-		GeneralParam_Capability Capability;
-
-		memcpy(&SysComponents, GeneralParamPtr, sizeof(SysPkgComponents));
-		memset(&Capability, 0, sizeof(GeneralParam_Capability));
-		Capability.s_CpuType = (SysCpuIdType)SysComponents.s_CpuId;
-		Capability.s_SensorType = (SysVinIdType)SysComponents.s_SensorId;
-		Capability.s_ZoomLensType = (SysLensIdType)SysComponents.s_ZoomLensId;
-		Capability.s_EncodeBoardType = (SysEncoderBoardIdType)SysComponents.s_BoardId;	
-		Result = GMI_GeneralParamSetConfig(GEN_PARAM_AUTO, (void_t*)&Capability);
-		if (FAILED(Result))
-		{
-			SYS_ERROR("GMI_GeneralParamSetConfig ParamType %d fail, Result = 0x%lx\n", ParamType, Result);
-			return Result;
-		}
-		break;
-	case GEN_PARAM_IRCUT:
-		GeneralParam_Ircut Ircut;
-		memcpy(&Ircut, GeneralParamPtr, sizeof(GeneralParam_Ircut));
-		printf("Ircut->s_AdcMode %d\n", Ircut.s_AdcMode);
-		Result = GMI_GeneralParamSetConfig(GEN_PARAM_IRCUT, (void_t*)&Ircut);
-		if (FAILED(Result))
-		{
-			SYS_ERROR("GMI_GeneralParamSetConfig ParamType %d fail, Result = 0x%lx\n", ParamType, Result);
-			return Result;
-		}
-		break;
-	default:
-		return 	GMI_INVALID_PARAMETER;
-	}
-	SYS_INFO("%s:%s normal out........\n", __FILE__, __func__);
-	return GMI_SUCCESS;
-}
-
-
 GMI_RESULT StreamCenterClient::StartCodec(boolean_t EncodeMode, uint32_t SourceId, uint32_t MediaId, uint32_t MediaType, uint32_t CodecType, void_t *CodecParameter, size_t CodecParameterLength, FD_HANDLE *CodecHandle)
 {
-    SYS_INFO("%s in.......\n", __func__);
-    GMI_RESULT Result = GMI_SUCCESS;
+	SYS_INFO("%s in.......\n", __func__);
+	GMI_RESULT Result = GMI_SUCCESS;
 
-    Result = m_MediaCenter.CreateCodec(EncodeMode, SourceId, MediaId, MediaType, CodecType, CodecParameter, CodecParameterLength, CodecHandle);
-    if (FAILED(Result))
-    {
-        SYS_ERROR("create codec fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
+	Result = m_MediaCenter.CreateCodec(EncodeMode, SourceId, MediaId, MediaType, CodecType, CodecParameter, CodecParameterLength, CodecHandle);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("create codec fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
 
-    Result = m_MediaCenter.StartCodec(*CodecHandle);
-    if (FAILED(Result))
-    {
-        SYS_ERROR("start codec2 fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
+	Result = m_MediaCenter.StartCodec(*CodecHandle);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("start codec2 fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
 
-    SYS_INFO("%s out.......\n", __func__);
-    return Result;
+	SYS_INFO("%s out.......\n", __func__);
+	return Result;
 }
 
 
@@ -330,30 +264,30 @@ GMI_RESULT StreamCenterClient::Start(uint32_t SourceId, uint32_t StreamId, uint3
 
 GMI_RESULT StreamCenterClient::StopCodec(FD_HANDLE& CodecHandle)
 {
-    SYS_INFO("%s in........\n", __func__);
-    if (NULL == CodecHandle)
-    {
-        return GMI_DEVICE_NOT_OPENED;
-    }
+	SYS_INFO("%s in........\n", __func__);
+	if (NULL == CodecHandle)
+	{
+		return GMI_DEVICE_NOT_OPENED;
+	}
 
-    GMI_RESULT Result = GMI_SUCCESS;
+	GMI_RESULT Result = GMI_SUCCESS;
 
-    Result = m_MediaCenter.StopCodec(CodecHandle);
-    if (FAILED(Result))
-    {
-        SYS_ERROR("stop codec2 fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
+	Result = m_MediaCenter.StopCodec(CodecHandle);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("stop codec2 fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
 
-    Result = m_MediaCenter.DestroyCodec(CodecHandle);
-    if (FAILED(Result))
-    {
-        SYS_ERROR("destroy code fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
-    SYS_INFO("%s out.........\n", __func__);
+	Result = m_MediaCenter.DestroyCodec(CodecHandle);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("destroy code fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+	SYS_INFO("%s out.........\n", __func__);
 
-    return Result;
+	return Result;
 }
 
 
@@ -402,12 +336,6 @@ GMI_RESULT StreamCenterClient::Create(uint32_t SourceId, uint32_t StreamId, uint
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s:%s in..........\n", __FILE__, __func__);
     if (MediaType == MEDIA_VIDEO)
     {
-        if (StreamId >= MAX_VIDEO_STREAM_NUM)
-        {
-            SYS_ERROR("streamId %d incorrect\n", StreamId);
-            return GMI_INVALID_PARAMETER;
-        }
-
         VideoEncodeParam *VidEncParam = NULL;
 
         VidEncParam = (VideoEncodeParam*)CodecParameter;
@@ -460,7 +388,6 @@ GMI_RESULT StreamCenterClient::Create(uint32_t SourceId, uint32_t StreamId, uint
         }
 
         *Handle = (FD_HANDLE)MediaHd;
-        memcpy(&m_VideoEncParam[StreamId], VidEncParam, sizeof(VideoEncodeParam));
     }
     else if (MediaType == MEDIA_AUDIO)
     {
@@ -838,7 +765,7 @@ GMI_RESULT StreamCenterClient::CheckVideoEncodeConfiguration(VideoEncodeParam *E
         return GMI_INVALID_PARAMETER;
     }
 
-    if (BIT_VBR == EncParamPtr->s_BitRateType)
+    if (EncParamPtr->s_BitRateType == BIT_VBR)
     {
         if (EncParamPtr->s_BitRateUp == 0)
         {
@@ -847,28 +774,12 @@ GMI_RESULT StreamCenterClient::CheckVideoEncodeConfiguration(VideoEncodeParam *E
             return GMI_INVALID_PARAMETER;
         }
 
-        if (EncParamPtr->s_BitRateDown > EncParamPtr->s_BitRateUp)
+        if (EncParamPtr->s_BitRateDown >= EncParamPtr->s_BitRateUp)
         {
-            SYS_ERROR("BitRateDown %d, BitRateUp %d incorrect\n", EncParamPtr->s_BitRateDown, EncParamPtr->s_BitRateUp);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "BitRateDown %d, BitRateUp %d incorrect\n", EncParamPtr->s_BitRateDown, EncParamPtr->s_BitRateUp);
+            SYS_ERROR("EncParamPtr->s_BitRateDown = %d incorrect\n", EncParamPtr->s_BitRateDown);
+            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "EncParamPtr->s_BitRateDown = %d incorrect\n", EncParamPtr->s_BitRateDown);
             return GMI_INVALID_PARAMETER;
         }
-    }
-    else if (BIT_CBR == EncParamPtr->s_BitRateType)
-    {
-    	if (EncParamPtr->s_BitRateAverage < EncParamPtr->s_BitRateDown
-    	|| EncParamPtr->s_BitRateAverage > EncParamPtr->s_BitRateUp)
-    	{
-    		SYS_ERROR("BitRateAverage %d incorrect, because BitRateDown %d, BitRateUp %d\n", EncParamPtr->s_BitRateAverage, EncParamPtr->s_BitRateDown, EncParamPtr->s_BitRateUp);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "BitRateAverage %d incorrect, because BitRateDown %d, BitRateUp %d\n", EncParamPtr->s_BitRateAverage, EncParamPtr->s_BitRateDown, EncParamPtr->s_BitRateUp);
-            return GMI_INVALID_PARAMETER;
-    	}
-    }
-    else
-    {
-    	SYS_ERROR("BitRateType %d incorrect\n", EncParamPtr->s_BitRateType);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "BitRateType %d incorrect\n", EncParamPtr->s_BitRateType);
-    	return GMI_INVALID_PARAMETER;
     }
 
     if (EncParamPtr->s_Rotate < MIN_VIDEO_ENC_ROTATE
@@ -1276,26 +1187,6 @@ GMI_RESULT StreamCenterClient::CheckOsdConfiguration(VideoOSDParam *OsdParamPtr)
 }
 
 
-GMI_RESULT StreamCenterClient::GetAdaptedOsdFontSize(uint32_t Id, uint8_t *FontSize)
-{
-    uint32_t Row;
-    for (Row = 0; Row < sizeof(l_OSD_FontSize)/(sizeof(l_OSD_FontSize[0][0])*2); Row++)
-    {
-        if (m_VideoEncParam[Id].s_EncodeHeight == l_OSD_FontSize[Row][0])
-        {
-            *FontSize = l_OSD_FontSize[Row][1];
-            break;
-        }
-    }
-
-    if (Row >= sizeof(l_OSD_FontSize)/(sizeof(l_OSD_FontSize[0][0])*2))
-    {
-        *FontSize = OSD_FONT_SIZE_MEDIUM;
-    }
-
-    return GMI_SUCCESS;
-}
-
 GMI_RESULT StreamCenterClient::SetOsdConfiguration(FD_HANDLE Handle,  VideoOSDParam *OsdParamPtr)
 {
     SYS_INFO("%s:%s in..........\n", __FILE__, __func__);
@@ -1308,11 +1199,6 @@ GMI_RESULT StreamCenterClient::SetOsdConfiguration(FD_HANDLE Handle,  VideoOSDPa
         size_t ParamLength = sizeof(VideoOSDParam);
         memcpy(&OsdParam, OsdParamPtr, ParamLength);
         MediaHd = (MediaHandle*)Handle;
-        //font size adapted
-        if (0 == OsdParam.s_TimeDisplay.s_FontStyle)
-        {
-            GetAdaptedOsdFontSize(MediaHd->s_StreamId, &OsdParam.s_TimeDisplay.s_FontStyle);
-        }
 
         SYS_INFO("StreamId    = %d\n", OsdParam.s_StreamId);
         SYS_INFO("DisplayType = %d\n", OsdParam.s_DisplayType);
@@ -1351,12 +1237,6 @@ GMI_RESULT StreamCenterClient::SetOsdConfiguration(FD_HANDLE Handle,  VideoOSDPa
 
         for ( int32_t i = 0; i < 1; ++i )
         {
-            //font size adapted
-            if (0 == OsdParam.s_TextDisplay[i].s_FontStyle)
-            {
-                GetAdaptedOsdFontSize(MediaHd->s_StreamId, &OsdParam.s_TextDisplay[i].s_FontStyle);
-            }
-
             SYS_INFO("TextDisplay[%d].Flag           = %d\n", i, OsdParam.s_TextDisplay[i].s_Flag);
             SYS_INFO("TextDisplay[%d].FontColor      = %d\n", i, OsdParam.s_TextDisplay[i].s_FontColor);
             SYS_INFO("TextDisplay[%d].FontStyle      = %d\n", i, OsdParam.s_TextDisplay[i].s_FontStyle);
@@ -2343,7 +2223,7 @@ GMI_RESULT StreamCenterClient::StartZoom(FD_HANDLE FocusHandle, FD_HANDLE ZoomHa
 
 GMI_RESULT StreamCenterClient::StopZoom(FD_HANDLE FocusHandle, FD_HANDLE ZoomHandle, int32_t *PositionPtr)
 {
-    //int32_t ZoomPosition;
+    int32_t ZoomPosition;
 
     //GMI_RESULT Result = m_MediaCenter.StopZoom(FocusHandle, 0, ZoomHandle, ZOOM_MODE_STOP, &ZoomPosition);
     //if (FAILED(Result))
@@ -2353,7 +2233,7 @@ GMI_RESULT StreamCenterClient::StopZoom(FD_HANDLE FocusHandle, FD_HANDLE ZoomHan
     //    return Result;
     //}
 
-    //*PositionPtr = ZoomPosition;
+    *PositionPtr = ZoomPosition;
 
     return GMI_SUCCESS;
 }

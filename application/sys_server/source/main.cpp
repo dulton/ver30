@@ -1,17 +1,15 @@
-#include "stdio.h"
-#include "stdlib.h"
-#include "log.h"
-#include "daemon.h"
-#include "net_manager.h"
-#include "sys_command_processor.h"
-#include "gmi_system_headers.h"
+
 #include "base_memory_manager.h"
-#include "ipc_fw_v3.x_resource.h"
-#include "gmi_daemon_heartbeat_api.h"
+#include "daemon.h"
 #include "gmi_brdwrapper.h"
 #include "gmi_daemon_heartbeat_api.h"
-#include "sys_info_readonly.h"
-
+#include "gmi_system_headers.h"
+#include "ipc_fw_v3.x_resource.h"
+#include "log.h"
+#include "net_manager.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "sys_command_processor.h"
 
 //system command service object
 static  SafePtr<SysCommandProcessor> l_SysCmdService;
@@ -109,9 +107,7 @@ int main( int32_t argc, char_t *argv[])
     //    SYS_ERROR("NetActivate fail, Result = 0x%lx\n", Result);
     //return -1;
     //}
-	//tmp, guoqiang.lu 14/1/23
-     SysInfoReadInitialize();
-	 
+
     //daemon init
     Result = DaemonRegister();
     if (FAILED(Result))
@@ -170,7 +166,7 @@ int main( int32_t argc, char_t *argv[])
                 return EXIT_FAILURE;
             }
         }
-        GMI_Sleep(5000);
+        GMI_Sleep(1000);
     }
 
     l_SysCmdService->Deinitialize();

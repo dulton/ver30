@@ -69,33 +69,6 @@ body{
 	float:right;
 
 }
-/*wk add for user img*/
-.btn-set-user{
-    border: 0 none;
-    margin-top: 3px;
-    width: 108px;
-    height: 28px;
-	font-weight:bold;
-	background: url(../images/user.jpg);
-    display:block;
-	float:right;
-	color:#fff;
-	cursor : pointer;
-
-}
-.btn-set-view{
-    border: 0 none;
-    margin-top: 3px;
-    width: 108px;
-    height: 28px;
-	font-weight:bold;
-	background: url(../images/seeing.jpg);
-    display:block;
-	float:right;
-	color:#fff;
-	cursor : pointer;
-
-}
 .btn-set{
     margin-right: 3px;
 }

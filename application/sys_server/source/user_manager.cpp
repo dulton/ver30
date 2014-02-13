@@ -129,10 +129,28 @@ GMI_RESULT UserManager::FactoryDefault()
         return Result;
     }
 
-    Result = AddDefaultAdmin();
+    SysPkgUserInfo SysUserInfo;
+    memset(&SysUserInfo, 0, sizeof(SysPkgUserInfo));
+    memcpy(SysUserInfo.s_UserName, GMI_ADMIN_USER_NAME1, sizeof(SysUserInfo.s_UserName));
+    memcpy(SysUserInfo.s_UserPass, GMI_ADMIN_USER_NAME1_PASSWD, sizeof(SysUserInfo.s_UserPass));
+    SysUserInfo.s_UserFlag = 1;
+    Result = UserOperator::SetUser(&SysUserInfo);
     if (FAILED(Result))
     {
-        SYS_ERROR("add admin fail, Result = 0x%lx\n", Result);
+        SYS_ERROR("SetUser '%s' fail, Result = 0x%lx\n", GMI_ADMIN_USER_NAME1, Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetUser fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+
+    memset(&SysUserInfo, 0, sizeof(SysPkgUserInfo));
+    memcpy(SysUserInfo.s_UserName, GMI_ADMIN_USER_NAME2, sizeof(SysUserInfo.s_UserName));
+    memcpy(SysUserInfo.s_UserPass, GMI_ADMIN_USER_NAME2_PASSWD, sizeof(SysUserInfo.s_UserPass));
+    SysUserInfo.s_UserFlag = 1;
+    Result = UserOperator::SetUser(&SysUserInfo);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("SetUser '%s' fail, Result = 0x%lx\n", GMI_ADMIN_USER_NAME2, Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetUser fail, Result = 0x%lx\n", Result);
         return Result;
     }
 

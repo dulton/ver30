@@ -115,7 +115,7 @@ GMI_RESULT RtspServiceImpl::Initialize()
         m_UserAuthDatabase = NULL;
 
         // Create RTSP server
-        m_RTSPServer = RTSPServer::createNew(*m_UsageEnvironment, Configure::GetInstance().GetRtspServicePort(), m_UserAuthDatabase);
+        m_RTSPServer = RTSPServer::createNew(*m_UsageEnvironment, Configure::GetInstance().GetRtspServicePort(), m_UserAuthDatabase, 0);
         if (NULL == m_RTSPServer)
         {
             PRINT_LOG(ERROR, "Failed to create RTSPServer");

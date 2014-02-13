@@ -41,7 +41,6 @@
 		var cspz = false;
 		var lxhf = false;
 		var yhgl = false;
-		var xtwh = false;
 		var Flag = 0;
 		
 		var Authvalue = "";
@@ -68,89 +67,99 @@
 				*/
 				//	$("#username").readOnly = false;
 				//	$("#password").readOnly = false;
-				//默认管理员
-				$("#usertype").val(2);
-				document.getElementById("spyl_comp").click();
-				document.getElementById("rzcx_comp").click();
-				document.getElementById("yjkz_comp").click();
-				document.getElementById("yydj_comp").click();
-				document.getElementById("sptj_comp").click();
-				document.getElementById("cspz_comp").click();
-				document.getElementById("lxhf_comp").click();
-				//document.getElementById("xtwh_comp").click();
-				document.getElementById("yhgl_comp").disabled = true;
-				document.getElementById("xtwh_comp").disabled = true;
-				
 		}
             $(document).ready(function()
 			{
 				init();
-				//用户类型切换事件
-				$("#usertype").bind("change",
-					function() {
-								document.getElementById("spyl_comp").disabled = false;
-								document.getElementById("rzcx_comp").disabled = false;
-								document.getElementById("yjkz_comp").disabled = false;
-								document.getElementById("yydj_comp").disabled = false;
-								document.getElementById("sptj_comp").disabled = false;
-								document.getElementById("cspz_comp").disabled = false;
-								document.getElementById("lxhf_comp").disabled = false;
-								document.getElementById("xtwh_comp").disabled = false;
-								document.getElementById("yhgl_comp").disabled = false;
-								
-								
-								document.getElementById("spyl_comp").checked = false;
-								document.getElementById("rzcx_comp").checked = false;
-								document.getElementById("yjkz_comp").checked = false;
-								document.getElementById("yydj_comp").checked = false;
-								document.getElementById("sptj_comp").checked = false;
-								document.getElementById("cspz_comp").checked = false;
-								document.getElementById("lxhf_comp").checked = false;
-								document.getElementById("yhgl_comp").checked = false;
-								document.getElementById("xtwh_comp").checked = false;
-						var type = $("#usertype").val();
-						
-						switch(type)
-						{
-							case "1":	//管理员
-								document.getElementById("spyl_comp").click();
-								document.getElementById("rzcx_comp").click();
-								document.getElementById("yjkz_comp").click();
-								document.getElementById("yydj_comp").click();
-								document.getElementById("sptj_comp").click();
-								document.getElementById("cspz_comp").click();
-								document.getElementById("lxhf_comp").click();
-								document.getElementById("yhgl_comp").click();
-								document.getElementById("xtwh_comp").click();
-								
-							break;
-							case "2":	//操作员
-								document.getElementById("spyl_comp").click();
-								document.getElementById("rzcx_comp").click();
-								document.getElementById("yjkz_comp").click();
-								document.getElementById("yydj_comp").click();
-								document.getElementById("sptj_comp").click();
-								document.getElementById("cspz_comp").click();
-								document.getElementById("lxhf_comp").click();
-								//document.getElementById("xtwh_comp").click();
-								document.getElementById("yhgl_comp").disabled = true;
-								document.getElementById("xtwh_comp").disabled = true;
-							break;
-							case "3":	//视频浏览
-								document.getElementById("spyl_comp").click();
-								document.getElementById("spyl_comp").disabled = true;
-								document.getElementById("rzcx_comp").disabled = true;
-								document.getElementById("yjkz_comp").disabled = true;
-								document.getElementById("yydj_comp").disabled = true;
-								document.getElementById("sptj_comp").disabled = true;
-								document.getElementById("cspz_comp").disabled = true;
-								document.getElementById("lxhf_comp").disabled = true;
-								document.getElementById("xtwh_comp").disabled = true;
-								document.getElementById("yhgl_comp").disabled = true;
 
-							break;
-						}
-					
+				//绑定权限按钮
+				$("#spyl_comp").bind("click",function(){
+					var ctr = document.getElementById("spyl_comp");
+					if(ctr.checked)
+					{
+						spyl = true;	
+					}
+					else if(!ctr.checked)
+					{
+						spyl = false;
+					}
+					});
+				$("#rzcx_comp").bind("click",function(){
+					var ctr = document.getElementById("rzcx_comp");
+					if(ctr.checked)
+					{
+						rzcx = true;	
+					}
+					else if(!ctr.checked)
+					{
+						rzcx = false;
+					}
+					});
+				$("#yjkz_comp").bind("click",function(){
+					var ctr = document.getElementById("yjkz_comp");
+					if(ctr.checked)
+					{
+						yjkz = true;	
+					}
+					else if(!ctr.checked)
+					{
+						yjkz = false;
+					}
+					});
+				$("#yydj_comp").bind("click",function(){
+					var ctr = document.getElementById("yydj_comp");
+					if(ctr.checked)
+					{
+						yydj = true;	
+					}
+					else if(!ctr.checked)
+					{
+						yydj = false;
+					}
+					});
+				$("#sptj_comp").bind("click",function(){
+					var ctr = document.getElementById("sptj_comp");
+					if(ctr.checked)
+					{
+						sptj = true;	
+					}
+					else if(!ctr.checked)
+					{
+						sptj = false;
+					}
+					});
+				$("#cspz_comp").bind("click",function(){
+					var ctr = document.getElementById("cspz_comp");
+					if(ctr.checked)
+					{
+						cspz = true;	
+					}
+					else if(!ctr.checked)
+					{
+						cspz = false;
+					}
+					});
+				$("#lxhf_comp").bind("click",function(){
+					var ctr = document.getElementById("lxhf_comp");
+					if(ctr.checked)
+					{
+						lxhf = true;	
+					}
+					else if(!ctr.checked)
+					{
+						lxhf = false;
+					}
+					});
+				$("#yhgl_comp").bind("click",function(){
+					var ctr = document.getElementById("yhgl_comp");
+					if(ctr.checked)
+					{
+						yhgl = true;	
+					}
+					else if(!ctr.checked)
+					{
+						yhgl = false;
+					}
 					});
 				//绑定确定按钮
                 $("#submitAdduser").bind("click",
@@ -169,22 +178,6 @@
 						alert("用户名不能为空!");
 						return;
 					}
-					//判断用户名长度
-					if(!parent.UserNameCheck(userName))
-					{
-						alert("用户名请不要超过31字节！");
-						return;
-					}
-					//判断用户名是否存在
-					var usertmp = parent.CheckUser(userName);
-					if(usertmp == false)
-					{
-						alert("该用户已存在!");
-						$("#username").val("");
-						$("#psw").val("");
-						return;
-					}
-					
 					if(userType == null || userType == "")
 					{
 						alert("用户类型不能为空!");
@@ -195,49 +188,8 @@
 						alert("密码不能为空!");
 						return;
 					}
-					//判断密码长度
-					if(!parent.UserNameCheck(userPsw))
-					{
-						alert("密码请不要超过31字节！");
-						return;
-					}
-					var ctr = document.getElementById("spyl_comp");
-					if(ctr.checked){spyl = true;}
-					else if(!ctr.checked){spyl = false;}
 					
-					ctr = document.getElementById("rzcx_comp");
-					if(ctr.checked){rzcx = true;}
-					else if(!ctr.checked){rzcx = false;}
-					
-					ctr = document.getElementById("yjkz_comp");
-					if(ctr.checked){yjkz = true;	}
-					else if(!ctr.checked){yjkz = false;}
-					
-					ctr = document.getElementById("yydj_comp");
-					if(ctr.checked){yydj = true;}
-					else if(!ctr.checked){yydj = false;}
-					
-					ctr = document.getElementById("sptj_comp");
-					if(ctr.checked){sptj = true;}
-					else if(!ctr.checked){sptj = false;}
-					
-					ctr = document.getElementById("cspz_comp");
-					if(ctr.checked){cspz = true;}
-					else if(!ctr.checked){cspz = false;}
-					
-					ctr = document.getElementById("lxhf_comp");
-					if(ctr.checked){lxhf = true;}
-					else if(!ctr.checked){lxhf = false;}
-					
-					ctr = document.getElementById("yhgl_comp");
-					if(ctr.checked){yhgl = true;}
-					else if(!ctr.checked){yhgl = false;}
-					
-					ctr = document.getElementById("xtwh_comp");
-					if(ctr.checked){xtwh = true;}
-					else if(!ctr.checked){xtwh = false;}
-					
-										//基本权限
+					//基本权限
 				  var  content={};
 				  content.SessionId=parent.parent.id;
 				  content.AuthValue=parent.parent.Authvalue;
@@ -248,52 +200,40 @@
 				  content.UserFlag = userType;
 				  //新用户权限
 				  var str = "";
-				  //系统维护
-				  if(xtwh == true){str = "1";}
-				  else if(!xtwh){str = "0";}
+				  //视频预览
+				  if(spyl == true){str = "1";}
+				  else if(!spyl){str = "0";}
 				  
-				  //用户管理
-				  if(yhgl == true){str += "1";}
-				  else if(!yhgl){str += "0";}
-				  
-				  //参数配置
-				  if(cspz == true){str += "1";}
-				  else if(!cspz){str += "0";}
-				  
-				  //语音对讲
-				  if(yydj == true){str += "1";}
-				  else if(!yydj){str += "0";}   
-				 
-				  //日志查询
-				  if(rzcx == true){str += "1";}
-				  else if(!rzcx){str += "0";} 
-				  
-				  //录像回放
-				  if(lxhf == true){str += "1";}
-				  else if(!lxhf){str += "0";}
-				  
-				  //视频调节
-				  if(sptj == true){str += "1";}
-				  else if(!sptj){str += "0";}
-
 				  //云镜控制
 				  if(yjkz == true){str += "1";}
 				  else if(!yjkz){str += "0";}
 				  
-				  //视频预览
-				  if(spyl == true){str += "1";}
-				  else if(!spyl){str += "0";}
+				  //视频调节
+				  if(sptj == true){str += "1";}
+				  else if(!sptj){str += "0";}
+				  //录像回放
+				  if(lxhf == true){str += "1";}
+				  else if(!lxhf){str += "0";}
+				  //日志查询
+				  if(rzcx == true){str += "1";}
+				  else if(!rzcx){str += "0";}
+				  //语音对讲
+				  if(yydj == true){str += "1";}
+				  else if(!yydj){str += "0";}
+				  //参数配置
+				  if(cspz == true){str += "1";}
+				  else if(!cspz){str += "0";}
+				  //用户管理
+				  if(yhgl == true){str += "1";}
+				  else if(!yhgl){str += "0";}
+				  
+				  //补齐后24位
+				  str += "000000000000000000000000";
+				  
+				  str = parseInt(str,2);
 				  
 				  
-				  //补齐后7位
-				  var str1 = "0000000" + str;
-				  
-				  //alert(str1);
-				  var strTmp = parseInt(str1,2);
-				  //alert(strTmp);
-				  
-				  
-				  content.UserLevel = strTmp
+				  content.UserLevel = str;
 				  contentstr=jsonToString(content);
 					//如果是修改用户
 					//Flag = getQueryString("Flag");
@@ -303,11 +243,10 @@
 					//}
 					// if(Flag == 0)//添加用户
 					//{
-						GetAndSet("SetUsers","json",contentstr, sucess_addUser,true);		
+						GetAndSet("SetUsers","json",contentstr, sucess_addUser);		
 					//} 
 				  
-				  		parent.getUser();
-                    	parent.closeframe();
+				  
                 });
 				
 				//绑定取消按钮
@@ -329,8 +268,8 @@
 					{
 						//成功返回
 						alert("修改成功！");
-						//parent.getUser();
-                    	//parent.closeframe();
+						parent.getUser();
+                    	parent.closeframe();
 					}
 					else if(PackDate.Content.RetCode!="0")
 					{
@@ -350,7 +289,10 @@
 					{
 						//成功返回
 						alert("添加成功！");
-
+						parent.getUser();
+						//alert("getUser end");
+                    	parent.closeframe();
+						//alert("closeframe end");
 					}
 					else if(PackDate.Content.RetCode!="0")
 					{
@@ -366,10 +308,10 @@
     
     <body>
         <div id="basic-modal" style="color:#999;">
-<h3 style="width:100%; color:#fff; background-color:#000; margin-top:0;height:28px; line-height:26px; font-size:12px; font-weight:normal; padding-left:10px;font-size : 12pt;">
-                增加用户
+<h3 style="width:100%; color:#fff; background-color:#000; margin-top:0;height:28px; line-height:26px; font-size:12px; font-weight:normal; padding-left:10px;">
+                增加用户：
           </h3>
-        <div style="width:400px; height:400px; margin:0 auto; padding-left:110px; text-align:left;">
+        <div style="width:400px; height:400px; margin:0 auto; padding-left:10px; text-align:left;">
             
             <dl>
                 <dt style="width:200px;">&nbsp;</dt>
@@ -383,9 +325,9 @@
                 <div class="user_list1">用户类型:</div>
                 <div class="user_list1">
                   <select id="usertype" >
-                    <!--<option value='1'> 管理员 </option>-->
+                    <option value='1'> 管理员 </option>
                     <option value='2'> 操作员 </option>
-                    <option value='3'> 观察员 </option>
+                    <option value='3'> 视频预览 </option>
                   </select>
                   </div>
                 </div>
@@ -405,7 +347,8 @@
            </dl> 
           <!--<p>-->
           <div class="user_list3">
-            <input id="spyl_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>视频预览
+            <input id="spyl_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>
+          视频预览
           </div>
           <div class="user_list3">
           <input id="rzcx_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>日志查询</div>
@@ -417,12 +360,10 @@
           <input id="sptj_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>视频调节</div>
           <div class="user_list3">
           <input id="cspz_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>参数配置</div>
-          <div class="user_list3" style="display:none;">
+          <div class="user_list3">
           <input id="lxhf_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>录像回放</div>
           <div class="user_list3">
           <input id="yhgl_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>用户管理</div>
-          <div class="user_list3">
-          <input id="xtwh_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>系统维护</div>
           
 		</div>
        

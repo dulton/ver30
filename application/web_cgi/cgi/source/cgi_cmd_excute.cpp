@@ -10,7 +10,6 @@
 #include "ipc_fw_v3.x_resource.h"
 #include "gmi_daemon_heartbeat_api.h"
 #include "sys_client.h"
-#include "sys_info_readonly.h"
 #include "log.h"
 
 //#define DEBUG_TEST
@@ -100,14 +99,12 @@ GMI_RESULT CgiLogIn(const char_t *FncCmd)
 
         CGI_ERROR("GMI_DaemonInit [%d] Status = %d\n",__LINE__, Status);
 
-
         if (1 == Status)
         {
             uint32_t Authvalue = 0;
             uint16_t OutSessionId = 0;
             uint8_t UserFlag =0;
-            uint16_t SdkPort = 30000;
-#if 0
+
             Result = SysAuthLogin(UserName, Password, atoi(InSessionId), ID_MOUDLE_REST_WEB, &OutSessionId, &UserFlag, &Authvalue);
             if (FAILED(Result))
             {
@@ -116,17 +113,8 @@ GMI_RESULT CgiLogIn(const char_t *FncCmd)
                 break;
             }
 
-#endif
-            Result = SysAuthLoginExt(UserName, Password, atoi(InSessionId), ID_MOUDLE_REST_WEB, &OutSessionId, &UserFlag, &Authvalue, &SdkPort);
-	    if (FAILED(Result))
-	    {
-		RetCode = RETCODE_ERROR;
-		CGI_ERROR("Call SysAuthLogin Error Result = %ld\n",Result);
-		break;
-	    }
-
-            RetFormat = "cgiFncCmd=%s&cgiContentType=%s&Content={\"RetCode\":\"%d\",\"SessionId\":\"%d\",\"UserFlag\":\"%d\",\"Authvalue\":\"%u\",\"SdkPort\":\"%u\"}";
-            fprintf(stdout, RetFormat, FncCmd, CONTENT_TYPE_JSON, RetCode, OutSessionId, UserFlag, Authvalue, SdkPort);
+            RetFormat = "cgiFncCmd=%s&cgiContentType=%s&Content={\"RetCode\":\"%d\",\"SessionId\":\"%d\",\"UserFlag\":\"%d\",\"Authvalue\":\"%u\"}";
+            fprintf(stdout, RetFormat, FncCmd, CONTENT_TYPE_JSON, RetCode, OutSessionId, UserFlag, Authvalue);
 
             GMI_DaemonUnInit(&DaemonData);
             return GMI_SUCCESS;
@@ -3918,13 +3906,19 @@ GMI_RESULT CgiConfigToolIrCutClose(const char_t *FncCmd)
     return GMI_FAIL;
 }
 
-GMI_RESULT CgiConfigToolGetSystemInfo(const char_t *FncCmd)
+GMI_RESULT CgiSysGetLogInfo(const char_t *FncCmd)
 {
-
     char_t *SessionId = WEB_GET_VAR("SessionId");
     const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *SelectMode = WEB_GET_VAR("SelectMode");
+    const char_t *MajorType = WEB_GET_VAR("MajorType");
+    const char_t *MinorType = WEB_GET_VAR("MinorType");
+    const char_t *StartTime = WEB_GET_VAR("StartTime");
+    const char_t *StopTime = WEB_GET_VAR("StopTime");
+    const char_t *Offset = WEB_GET_VAR("Offset");
+    const char_t *MaxNum = WEB_GET_VAR("MaxNum");
     const char_t *RetFormat;
-    char_t	Cmd[CMD_BUFFER_LENTH];
+    char_t  Cmd[CMD_BUFFER_LENTH];
     int32_t RetCode = RETCODE_OK;
     GMI_RESULT Result = GMI_FAIL;
     
@@ -3932,188 +3926,83 @@ GMI_RESULT CgiConfigToolGetSystemInfo(const char_t *FncCmd)
     
     do
     {
-    	if (NULL == SessionId || NULL == AuthValue)
-    	{
-    		RetCode = RETCODE_ERROR;
-    		break;
-    	}
-
-        Result = SysInfoReadInitialize();
-	if (FAILED(Result))
-	{
-		RetCode = RETCODE_ERROR;
-		break;
-	}
-	
-	FD_HANDLE Handle;
-
-	Result = SysInfoOpen(CAPABILITY_AUTO_FILE_NAME, &Handle);
-	if (FAILED(Result))
-	{
-		RetCode = RETCODE_ERROR;
-		break;
-	}
-
-        //read cpu name
-        char_t CpuInfo[32] = "0";
+        if (NULL == SessionId || NULL == AuthValue           \
+            || NULL == SelectMode ||NULL == MajorType    \
+            || NULL == MinorType || NULL == StartTime      \
+            || NULL == StopTime || NULL == Offset              \
+            || NULL == MaxNum)
+        {
+	     CGI_ERROR("CgiSysGetLogInfo start[%d] \n",__LINE__);
+             RetCode = RETCODE_ERROR;
+             break;
+        }
         
-	Result = SysInfoRead(Handle, HW_AUTO_DETECT_INFO_PATH, HW_CPU_KEY, HW_CPU, CpuInfo);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
+        char_t *Buffer = NULL;
+        Buffer = (char_t*)malloc(atoi(MaxNum) * sizeof(SysPkgShowCfg));
+        if(NULL == Buffer)
+        {
+            RetCode = RETCODE_ERROR;
+            Buffer = NULL;
+	    CGI_ERROR("CgiSysGetLogInfo start[%d] \n",__LINE__);
+            break;
+        }
 
-	//read sensor name
-	char_t Sensor[32] = "0";
+        memset(Buffer, 0, atoi(MaxNum)*sizeof(SysPkgShowCfg));
+        SysPkgLogInfo *SysLogInfo;
+        SysLogInfo = (SysPkgLogInfo *)Buffer;
 
-	Result = SysInfoRead(Handle, HW_AUTO_DETECT_INFO_PATH, HW_SENSOR_KEY, HW_SENSOR, Sensor);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
+        SysPkgLogInfoSearch SysLogInfoSearch;
+        SysPkgLogInfoInt SysLogInfoInt;
+        memset(&SysLogInfoSearch, 0, sizeof(SysPkgLogInfoSearch));
+        memset(&SysLogInfoInt, 0, sizeof(SysPkgLogInfoInt));	
 
-        SysInfoClose(Handle);
-	
-	Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
-	if (FAILED(Result))
-	{
-		RetCode = RETCODE_ERROR;
-		break;
-	}
-		
-	//read software version
-	char_t SoftwareVersion[64] = "0";
-#if 0
-	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY,  0, &StreamNum);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
-#endif
+	SysLogInfoSearch.s_SelectMode = atoi(SelectMode);
+	SysLogInfoSearch.s_MajorType = atoi(MajorType);
+        SysLogInfoSearch.s_MinorType = atoi(MinorType);
+        strcpy(SysLogInfoSearch.s_StartTime, StartTime);
+        strcpy(SysLogInfoSearch.s_StopTime, StopTime);
+	SysLogInfoSearch.s_Offset = atoi(Offset);
+        SysLogInfoSearch.s_MaxNum = atoi(MaxNum);
 
-	//read hardware version
-	char_t HardwareVersion[64] = "0";
-	Result = SysInfoRead(Handle, DEVICE_INFO_PATH, DEVICE_HWVER_KEY, "NULL", HardwareVersion);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
-	
-	//read alarm state, true-enable, false-disable
-	boolean_t AlarmEnabled = 0;
-#if 0
-	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY,  0, &StreamNum);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
-#endif
+        Result = SysGetLogInfo(atoi(SessionId), atoi(AuthValue), &SysLogInfoSearch, &SysLogInfoInt, SysLogInfo);
+        if (FAILED(Result))
+        {
+             RetCode = RETCODE_ERROR;
+             if(NULL != Buffer)
+             {
+            	 free(Buffer);
+            	 Buffer = NULL;
+             }
+             break;
+        }
 
-	
-	//read language
-	char_t Language[32] = "0";
-        strcpy(Language, "chinese");
-#if 0
-	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY,	0, &StreamNum);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
-#endif
-	
-	//read GB28181 state, true-enable, false-disable
-	boolean_t GbEnabled = 0;
-#if 0
-	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY,	0, &StreamNum);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
-#endif
+        RetFormat = "%s={\"RetCode\":\"%d\",\"Total\":\"%d\",\"Count\":\"%d\"%s}";
+
+        int32_t Length = 0, i = 0;
+        char_t TmpBuf[16384];
+        memset(TmpBuf, 0, 16384);
+        for (i=0; i < SysLogInfoInt.s_Count; i++)
+        {
+            Length += sprintf(TmpBuf+Length,",\"LogId%d\":\"%llu\",\"MajorType%d\":\"%d\",\"MinorType%d\":\"%d\""
+                             ",\"LogTime%d\":\"%s\",\"UserName%d\":\"%s\",\"RemoteHostIp%d\":\"%s \",\"LogData%d\":\"%s\""
+                             ,i , SysLogInfo[i].s_LogId, i , SysLogInfo[i].s_MajorType, i ,SysLogInfo[i].s_MinorType ,i , SysLogInfo[i].s_LogTime               \
+                             ,i , SysLogInfo[i].s_UserName, i, SysLogInfo[i].s_RemoteHostIp,i , SysLogInfo[i].s_LogData);
+        }
+
+        fprintf(stdout, RetFormat, Cmd, RetCode, SysLogInfoInt.s_Total, SysLogInfoInt.s_Count ,TmpBuf);
+
+        if(NULL != Buffer)
+        {
+            free(Buffer);
+            Buffer = NULL;
+        }
+
+        return GMI_SUCCESS;      
+    }while(0);
     
-        SysInfoClose(Handle);
-
-	Result = SysInfoOpen(CAPABILITY_SW_FILE_NAME, &Handle);
-	if (FAILED(Result))
-	{
-		RetCode = RETCODE_ERROR;
-		break;
-	}
-
-	//read max resolution
-	int32_t Width = 0;
-	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_WIDTH_KEY, 0, &Width);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
-	
-	int32_t Height = 0;
-	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_HEIGHT_KEY, 0, &Height);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
-	
-	//read max stream num
-		int32_t StreamNum = 0;
-	Result = SysInfoRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY,	0, &StreamNum);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
-
-	SysInfoClose(Handle);
-
-
-	Result = SysInfoOpen(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, &Handle);
-	if (FAILED(Result))
-	{
-		RetCode = RETCODE_ERROR;
-		break;
-	}
-
-		//read ircut name
-	char_t IRcut[32] = "0";
-	Result = SysInfoRead(Handle, VIDEO_IRCUT_NAME_PATH, VIDEO_IRCUT_NAME_KEY, "NULL", IRcut);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
-	
-	//read shield name
-	char_t Shield[32] = "0";
-	Result = SysInfoRead(Handle, PTZ_SHIELD_NAME_PATH, PTZ_SHIELD_NAME_KEY, "NULL", Shield);
-	if (FAILED(Result))
-	{
-		SysInfoClose(Handle);
-		break;
-	}
-        SysInfoClose(Handle);
-
-	SysInfoReadDeinitialize();
-
-    	RetFormat = "%s={\"RetCode\":\"%d\",\"CpuInfo\":\"%s\",\"Sensor\":\"%s\",\"IRcut\":\"%s\",\"Shield\":\"%s\",\"Width\":\"%d\",\"Height\":\"%d\",\"StreamNum\":\"%d\",\"SoftwareVersion\":\"%s\",\"HardwareVersion\":\"%s\",\"AlarmEnabled\":\"%d\",\"Language\":\"%s\",\"GbEnabled\":\"%d\"}";
-    	fprintf(stdout, RetFormat, Cmd, RetCode, CpuInfo, Sensor, IRcut, Shield, Width, Height, StreamNum, SoftwareVersion, HardwareVersion, AlarmEnabled, Language, GbEnabled);
-    	return GMI_SUCCESS;
-    
-    } while(0);
-    
-    SysInfoReadDeinitialize();
     RetFormat = "%s={\"RetCode\":\"%d\"}";
     fprintf(stdout, RetFormat, Cmd, RetCode);
     return GMI_FAIL;
-}
 
+}
 

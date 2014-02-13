@@ -164,18 +164,9 @@ typedef struct tagPTZNode
 } PTZ_Node;
 
 
-//PTZ Preset
-typedef struct tagPTZPreset
-{
-    char_t    s_Token[TOKEN_LENGTH];
-    char_t    s_Name[TOKEN_LENGTH];
-    int       s_Index;
-    boolean_t s_Setted;
-} PTZ_Preset;
-
 //func declaration
-GMI_RESULT __tptz__Initialize();
-void __tptz__Deinitialize();
+GMI_RESULT PtzTimeoutProcessStart(void);
+GMI_RESULT PtzTimeoutProcessStop(void);
 
 
 //extern ptz

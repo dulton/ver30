@@ -37,8 +37,8 @@ GMI_LFLAGS              =
 #GMI_LFLAGS             = -g
 
 # Set related modules
-GMI_RELATED_MODULES     = pthread osal log_utils rudp daemon_heartbeat net_manage media_center media ptz_control streaming_pipeline ipc_media_data_dispatch command_pipeline xml2 config sys_info_readonly stream_control rtsp_stream_control
-GMI_RELATED_MODULES    += amba_rtsp media freetype textinsert amp IrCutAe IrCutAdc capability tinyxml img_algo_a5s gmi_brdwrapper Gmi3A asound sqlite3 des rt
+GMI_RELATED_MODULES     = pthread osal log_utils rudp daemon_heartbeat net_manage media_center media ptz_control  streaming_pipeline ipc_media_data_dispatch command_pipeline xml2 config stream_control rtsp_stream_control
+GMI_RELATED_MODULES    += amba_rtsp media freetype textinsert amp IrCutAe IrCutAdc capability tinyxml img_algo_a5s gmi_brdwrapper Gmi3A asound sqlite3 des rt 3dpos
 
 # Set header file path for this module
 GMI_MODULE_INCLUDE_DIR  = ../include
