@@ -4,8 +4,10 @@
 #include "ipc_fw_v3.x_setting.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "sys_env_types.h"
+#include "factory_setting_operation.h"
 #include "gmi_media_ctrl.h"
 #include "gmi_system_headers.h"
+#include "file_lock.h"
 
 
 class ConfigFileManager
@@ -47,7 +49,8 @@ public:
     GMI_RESULT GetAudioEncodeSettings(AudioEncParam *SysAudioEncodeCfgPtr);
     GMI_RESULT GetAudioEncodeSettings(SysPkgAudioEncodeCfg *AudioEncodeCfgPtr);
     GMI_RESULT SetAudioEncodeSettings(SysPkgAudioEncodeCfg *AudioEncodeCfgPtr);
-    
+
+    GMI_RESULT GetFactoryIrcut(GeneralParam_Ircut *Ircut);
     GMI_RESULT GetHwAutoDetectInfo(SysPkgComponents *SysComponents);
     GMI_RESULT GetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr);
     GMI_RESULT SetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr);
@@ -57,6 +60,7 @@ public:
     GMI_RESULT SetSysTimeType(SysPkgDateTimeType *SysDateTimePtr);
     GMI_RESULT SetExternNetworkPort(SysPkgNetworkPort *SysNetworkPortPtr);
     GMI_RESULT GetExternNetworkPort(SysPkgNetworkPort *SysNetworkPortPt);
+    GMI_RESULT GetCapabilities(int32_t CapabilityBufferLength, char_t* Capability, SysPkgXml *SysCapabilities);
     
     GMI_RESULT GetAutoFocusMode(int32_t *FocusModePtr);
     GMI_RESULT SetAutoFocusMode(int32_t FocusMode);   
@@ -80,6 +84,9 @@ private:
     char_t m_ResourceFile[128];
     char_t m_PresetsFile[128];
     GMI_Mutex m_Mutex;
+    CSemaphoreMutex m_SettingFileLock;
+    CSemaphoreMutex m_CapabilityAutoFileLock;
+    FactorySettingOperation m_FactoryOperation;
 };
 
 #endif

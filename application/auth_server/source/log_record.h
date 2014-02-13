@@ -1,14 +1,11 @@
 #ifndef __LOG_RECORD_H__
 #define __LOG_RECORD_H__
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#define LOG_SERVER_OK
 
-#ifndef LOG_SERVER_OK
 enum DebugLogLevel
 {
 	e_DebugLogLevel_Exception	  = 1,// program exception, including real exception case and error
@@ -20,7 +17,7 @@ enum DebugLogLevel
 
 typedef int LogClientTmp;
 	
-extern LogClientTmp *LogClientHdTmp;
+extern LogClientTmp LogClientHdTmp;
 
 void ERR_PRINT_LOG(LogClientTmp *LogClientHd, enum DebugLogLevel PrtLevel, const char *FileName, const char *FuncName, int LineNum, const char *fmt, ...);
 
@@ -38,11 +35,7 @@ void ERR_PRINT_LOG(LogClientTmp *LogClientHd, enum DebugLogLevel PrtLevel, const
 														   	}\
                                                        }while(0)
 #endif
-#else
 
-#define DEBUG_LOG_TMP DEBUG_LOG
-
-#endif
 
 
 #ifdef __cplusplus

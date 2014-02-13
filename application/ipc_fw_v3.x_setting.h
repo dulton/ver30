@@ -30,12 +30,13 @@
 #define GMI_ONVIF_RTSP_CLIENT_DECODE_AUDIO1_RTCP            2011
 
 //capabilities software
-#define CAPABILITY_SW_FILE_NAME                   "/opt/config/capability_sw.xml"
-#define CAPABILITY_AUTO_FILE_NAME                 "/opt/config/capability_auto.xml"
-#define CAPABILITY_CONFIGURABLE_FILE_NAME         "/opt/config/capability_configurable.xml"
-//stream combine
-#define COMBINE_720P_FILE_NAME                    "/opt/config/720p_combine.xml"
-#define COMBINE_1080P_FILE_NAME                   "/opt/config/1080p_combine.xml"
+#define CAPABILITY_SW_FILE_NAME_BAK                "/opt/config/capability_sw.xml.bak"
+#define CAPABILITY_SW_FILE_NAME                    "/opt/config/capability_sw.xml"
+#define CAPABILITY_AUTO_FILE_NAME                  "/opt/config/capability_auto.xml"
+#define CAPABILITY_CONFIGURABLE_FILE_NAME          "/opt/config/capability_configurable.xml"
+//stream combine 
+#define COMBINE_720P_FILE_NAME                     "/opt/config/720p_combine.xml"
+#define COMBINE_1080P_FILE_NAME                    "/opt/config/1080p_combine.xml"
 //limits
 #define LIMITS_FILE_NAME                           "/opt/config/Limits.xml"
 
@@ -70,15 +71,37 @@
 #define GMI_DEFAULT_SETTING_CONFIG_FILE_NAME        "/opt/config/gmi_default_setting.xml"
 #define GMI_FACTORY_SETTING_CONFIG_FILE_NAME        "/opt/config/gmi_factory_setting.xml"
 //hw auto detect info
+#define SENSOR_ID_2715                              "ov2715"
+#define SENSOR_ID_9715                              "ov9715"
+#define SENSOR_ID_IMX122                            "imx122"
+#define SENSOR_ID_34041                             "mn34041pl"
+#define SENSOR_ID_TW9910                            "tw9910"
+#define CPU_ID_A55                                  "A5S_55"
+#define CPU_ID_A66                                  "A5S_66"
+#define CPU_ID_A88                                  "A5S_88"
+#define LENS_NONE                                   "NONE"
+#define LENS_DF003                                  "DF003"
+#define LENS_YB22                                   "YB22"
+#define BOARD_NORMAL                                "NORMAL"
+#define BOARD_LARK                                  "LARK"
+
 //hw value
 #define HW_AUTO_DETECT_INFO_PATH                    "/Capability/"
 #define HW_CPU                                      "A5S_55"
 #define HW_SENSOR                                   "ov9715"
 #define HW_LENS                                     "NONE"
-//hw key
+#define HW_MAINBOARD                                "NORMAL"
+//hw key s_MainBoard
 #define HW_CPU_KEY                                  "CPU"
 #define HW_SENSOR_KEY                               "VideoIn"
 #define HW_LENS_KEY                                 "Lens"
+#define HW_MAINBOARD_KEY                            "MainBoard"
+//software info
+#define CAPABILITY_SW_MEDIA_PATH                    "/Capabilities/Device/Media/"
+#define MAX_PIC_WIDTH_KEY                           "MaxPicWidth"
+#define MAX_PIC_HEIGHT_KEY                          "MaxPicHeight"
+#define MAX_STREAM_NUM_KEY                          "MaxStreamNum"
+
 
 //////////ptz
 #define PTZ_UART_CONFIG_PATH                        "/Config/PTZ/uart_config/"
@@ -96,12 +119,14 @@
 #define PTZ_CURRENT_ZOOM_KEY                        "CurrentZoom"
 #define PTZ_CURRENT_ZOOM                            1
 //speed map
+#define PTZ_SHIELD_NAME_PATH                        "/Config/PTZ/"
+#define PTZ_SHIELD_NAME_KEY                         "Name"
 #define PTZ_SPEED_MAP_PATH                          "/Config/PTZ/Speed/"
 #define PTZ_V_SPEED_KEY                             "VspeedMap%d"
 #define PTZ_H_SPEED_KEY                             "HspeedMap%d"
 
 //ptz presets patrols file
-#define GMI_PTZ_PRESETS_PATROLS_FILE_NAME           "/opt/config/gmi_presets_patrols_setting.xml"
+#define GMI_PTZ_PRESETS_PATROLS_FILE_NAME           "/opt/config/ipc_presets_setting.xml"
 #define PTZ_PRESET_INFO_PATH                        "/Config/PTZ/preset_info/Id%d/"
 #define PTZ_PRESET_INDEX_KEY                        "Index"
 #define PTZ_PRESET_NAME_KEY                         "Name"
@@ -182,14 +207,16 @@
 #define VIDEO_IMAGE_DAY_NIGHT_SCHED_START_TIME      0
 //0~24*3600
 #define VIDEO_IMAGE_DAY_NIGHT_SCHED_END_TIME        0
-typedef enum
+typedef enum 
 {
-    DN_MODE_DAY = 0,
-    DN_MODE_NIGHT,
-    DN_MODE_AUTO,
-    DN_MODE_TIMING
-} DayNightMode;
+	DN_MODE_DAY = 0,
+	DN_MODE_NIGHT,
+	DN_MODE_AUTO,
+	DN_MODE_TIMING
+}DayNightMode;
 
+#define VIDEO_IRCUT_NAME_PATH                       "/Config/IRCUT/"
+#define VIDEO_IRCUT_NAME_KEY                        "Name"
 #define VIDEO_IRCUT_MODE_PATH                       "/Config/IRCUT/Mode/"
 #define VIDEO_IRCUT_MODE                            0
 #define VIDEO_IRCUT_ADC_MODE                        0
@@ -214,10 +241,10 @@ typedef enum
 #define VIDEO_LUX10_DAY_ADJUST_AVG                  230
 typedef enum
 {
-    IRCUT_MODE_AE = 0,
-    IRCUT_MODE_ADC,
-    IRCUT_MODE_AE_EX_INTENSITY
-} IrcutMode;
+	IRCUT_MODE_AE = 0,
+	IRCUT_MODE_ADC,
+	IRCUT_MODE_AE_EX_INTENSITY
+}IrcutMode;
 
 //video image key
 #define VIDEO_SOURCE_IMAGE_EXPOSURE_MODE_KEY        "ExposureMode"
@@ -230,7 +257,7 @@ typedef enum
 #define VIDEO_SOURCE_IMAGE_HUE_KEY                  "Hue"
 #define VIDEO_SOURCE_IMAGE_SHARPNESS_KEY            "Sharpness"
 
-#define VIDEO_IMAGE_ADVANCE_METERING_MODE_KEY       "MeteringMode"
+#define VIDEO_IMAGE_ADVANCE_METERING_MODE_KEY       "MeteringMode"     
 #define VIDEO_IMAGE_ADVANCE_BACKLIGHTCOMP_KEY       "BacklightCompFlag"
 #define VIDEO_IMAGE_ADVANCE_DCIRIS_FLAG_KEY         "DcIrisFlag"
 #define VIDEO_IMAGE_ADVANCE_LOCAL_EXPOSURE_KEY      "LocalExposure"
@@ -306,7 +333,7 @@ typedef enum
 #define VIDEO_ENCODE_1080P_STREAM_BITRATE           4000
 #define VIDEO_ENCODE_1080P_STREAM_BITRATE_UP        8000
 #define VIDEO_ENCODE_1080P_STREAM_BITRATE_DOWN      1000
-#define VIDEO_ENCODE_720P_STREAM_BITRATE            3000
+#define VIDEO_ENCODE_720P_STREAM_BITRATE            2000
 #define VIDEO_ENCODE_720P_STREAM_BITRATE_UP         4000
 #define VIDEO_ENCODE_720P_STREAM_BITRATE_DOWN       1000
 #define VIDEO_ENCODE_576P_STREAM_BITRATE            1500
@@ -371,8 +398,8 @@ typedef enum
 #define OSD_TIME_STYLE                               0
 //0-black, 1-red, 2-blue,3-green,4-yellow,5-magenta,6-cyan,7-white,8-auto(self-adaption according to backgroud,range between white and balck), default-7
 #define OSD_TIME_FONT_COLOR                          7
-//Font size, range 16,24,32,40,48, default 32
-#define OSD_TIME_FONT_STYLE                          32
+//Font size, range 16,24,32,40,48, auto-0, default auto
+#define OSD_TIME_FONT_STYLE                          0
 //0-no-blod, 1-blod, default-0
 #define OSD_TIME_FONT_BLOD                           0
 //0-no-rotate, 1-rotate, default-0
@@ -398,11 +425,11 @@ typedef enum
 //0-black, 1-red, 2-blue,3-green,4-yellow,5-magenta,6-cyan,7-white,8-auto(self-adaption according to backgroud,range between white and balck), default-7
 #define OSD_TEXT_FONT_COLOR                          7
 //0~100
-#define OSD_TEXT_DISPLAY_X                           75
+#define OSD_TEXT_DISPLAY_X                           88
 //0~100
-#define OSD_TEXT_DISPLAY_Y                           85
-//Font size, range 16,24,32,40,48
-#define OSD_TEXT_FONT_STYLE                          24
+#define OSD_TEXT_DISPLAY_Y                           90
+//Font size, range 16,24,32,40,48,auto-0, default auto
+#define OSD_TEXT_FONT_STYLE                          0
 //0~100
 #define OSD_TEXT_DISPLAY_H                           100
 //0~100
@@ -422,7 +449,7 @@ typedef enum
 #define OSD_TIME_DATE_STYLE_KEY                      "DateStyle"
 #define OSD_TIME_STYLE_KEY                           "TimeStyle"
 #define OSD_TIME_FONT_COLOR_KEY                      "TimeFontColor"
-#define OSD_TIME_FONT_STYLE_KEY                      "TimeFontStyle"
+#define OSD_TIME_FONT_STYLE_KEY                      "TimeFontStyle1223"
 #define OSD_TIME_FONT_BLOD_KEY                       "TimeFontBlod"
 #define OSD_TIME_ROTATE_KEY                          "TimeRotate"
 #define OSD_TIME_ITALIC_KEY                          "TimeItalic"
@@ -437,14 +464,14 @@ typedef enum
 #define OSD_TEXT_FONT_COLOR_KEY                      "TextFontColor"
 #define OSD_TEXT_DISPLAY_X_KEY                       "TextDisplayX"
 #define OSD_TEXT_DISPLAY_Y_KEY                       "TextDisplayY"
-#define OSD_TEXT_FONT_STYLE_KEY                      "TextFontStyle"
+#define OSD_TEXT_FONT_STYLE_KEY                      "TextFontStyle1223"
 #define OSD_TEXT_DISPLAY_H_KEY                       "TextDisplayH"
 #define OSD_TEXT_DISPLAY_W_KEY                       "TextDisplayW"
 #define OSD_TEXT_FONT_BLOD_KEY                       "TextFontBlod"
 #define OSD_TEXT_ROTATE_KEY                          "TextRotate"
 #define OSD_TEXT_CONTENT_KEY                         "TextContent"
 
-/////////audio
+/////////audio 
 #define AUDIO_ENCODE_PATH                           "/Config/Audio/Encode/"
 #define AUDIO_ENCODE_TYPE                           1
 #define AUDIO_ENCODE_CHANNEL                        1
@@ -520,7 +547,7 @@ typedef enum
 // hardware monitor config
 #define GMI_HARDWARE_CONFIG_FILE                    "/opt/config/capability_auto.xml"
 #define GMI_HARDWARE_PATH                           "/Capability/"
-#define GMI_DAEMON_CONFIG_FILE                      "/opt/config/gmi_daemon_config.xml"
+#define GMI_DAEMON_CONFIG_FILE                      "/opt/config/ipc_daemon_config.xml"
 #define GMI_DAEMON_PATH                             "/Capability/daemon/"
 
 // log module id, name and debug log level definition
@@ -568,15 +595,6 @@ typedef enum
 #define GMI_LOG_MODULE_SDK_ID                                 14
 #define GMI_LOG_MODULE_SDK_NAME                               "sdk"
 #define GMI_LOG_MODULE_SDK_DEBUG_LOG_LEVEL                    GMI_LOG_MODULE_DEFAULT_DEBUG_LOG_LEVEL
-
-#define LOG_SERVER_CONFIG_SHARE_MEMORY_SIZE                   "share_memory_size"
-#define GMI_LOG_DEFAULT_SHARE_MEMORY_SIZE                     (1024*1024)
-
-#define GMI_LOG_DEFAULT_USER_LOG_FILE_PATH                    "/opt/log/gmi_user.log"
-// 1 indicates e_LogStorageLimitMode_RecordNumber
-#define GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_MODE           1
-#define GMI_LOG_DEFAULT_USER_LOG_STORAGE_LIMIT_PARAMETER      2000
-#define GMI_LOG_DEFAULT_USER_LOG_SHARE_MEMORY_SIZE            (512*1024)
 
 #define GMI_H264_VIDEO_MONITOR_CONFIG_PATH                              "/Config/media_center/h264_video_monitor/"
 #define GMI_H264_VIDEO_MONITOR_CONFIG_ENABLE_KEY_NAME                   "enable"

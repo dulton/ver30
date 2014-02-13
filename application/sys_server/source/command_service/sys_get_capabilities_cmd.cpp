@@ -46,7 +46,6 @@ GMI_RESULT  SysGetCapabilitiesCommandExecutor::Create( ReferrencePtr<BasePacket>
 
 GMI_RESULT  SysGetCapabilitiesCommandExecutor::Execute()
 {
-#define           MESSAGE_LENGTH  16384
     int32_t           MessageCode     = RETCODE_OK;
     GMI_RESULT        Result          = GMI_SUCCESS;
     SystemPacket     *CommandPacket   = (SystemPacket*)m_Reply.GetPtr();
@@ -56,7 +55,7 @@ GMI_RESULT  SysGetCapabilitiesCommandExecutor::Execute()
     int32_t            CapabilityType;
     int32_t            GetCapbilityLen = 0;
     SysPkgXml          SysCapabilities;
-    ReferrencePtr<char_t, DefaultObjectsDeleter> CapabilitiesMessage(BaseMemoryManager::Instance().News<char_t>(MESSAGE_LENGTH));
+    ReferrencePtr<char_t, DefaultObjectsDeleter> CapabilitiesMessage(BaseMemoryManager::Instance().News<char_t>(MAX_MESSAGE_LENGTH));
     if (NULL == CapabilitiesMessage.GetPtr())
     {
         return GMI_OUT_OF_MEMORY;
@@ -82,7 +81,7 @@ GMI_RESULT  SysGetCapabilitiesCommandExecutor::Execute()
 
         memset(&SysCapabilities, 0, sizeof(SysPkgXml));
 
-        Result = m_SystemServiceManager->GetCapabilities(CapabilityType, MESSAGE_LENGTH, CapabilitiesMessage.GetPtr(), &SysCapabilities);
+        Result = m_SystemServiceManager->GetCapabilities(CapabilityType, MAX_MESSAGE_LENGTH, CapabilitiesMessage.GetPtr(), &SysCapabilities);
         if (FAILED(Result))
         {
             MessageCode = RETCODE_ERROR;

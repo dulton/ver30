@@ -47,20 +47,22 @@ typedef int SOCKET;
 
 typedef struct tagScopes
 {
-	tt__ScopeDefinition s_ScopeDefinitionFlag;
-	char_t s_ScopeUrl[64];
-}DevScopes;
+    tt__ScopeDefinition s_ScopeDefinitionFlag;
+    char_t s_ScopeUrl[64];
+} DevScopes;
 
 #define DEFAULT_VALID_SCOPE_NUM    12
 #define DEFAULT_USED_SCOPE_NUM     6
 
 #define ONVIF_MSG_BUF_LEN 4096
 static boolean_t l_ProbeServerStop = false;
-static char_t l_DeviceUuid[100] = {0};
+static char_t    l_DeviceUuid[100] = {0};
+extern uint16_t  g_ONVIF_Port;
+extern uint16_t  g_RTSP_Port;
+extern int32_t   g_ChangeScopes;
 extern enum tt__DiscoveryMode g_DiscoveryMode;
-extern enum xsd__boolean g_LocalAddressFlag;
-extern enum xsd__boolean g_DhcpFlag;
-extern int32_t g_ChangeScopes;
+extern enum xsd__boolean      g_LocalAddressFlag;
+extern enum xsd__boolean      g_DhcpFlag;
 extern DevScopes g_DeviceScopes[DEFAULT_VALID_SCOPE_NUM];
 
 //func delcare
@@ -68,11 +70,11 @@ static void *DevProbeService();
 
 void GetTmpValueAfterReboot()
 {
-	FILE *fp = NULL;
-	char str[128];
+    FILE *fp = NULL;
+    char str[128];
     char head[20];
-	int scopesNum = 0;
-	fp = fopen("/usr/local/bin/onvifTmpFile", "rb+");
+    int scopesNum = 0;
+    fp = fopen("/usr/local/bin/onvifTmpFile", "rb+");
     if (fp)
     {
         while (1)
@@ -89,22 +91,22 @@ void GetTmpValueAfterReboot()
             {
                 sscanf(str , "%*s %d" , (int*)&g_DiscoveryMode);
             }
-			else if (strcmp(head , "LocalAddressFlag") == 0 )
+            else if (strcmp(head , "LocalAddressFlag") == 0 )
             {
                 sscanf(str , "%*s %d" , (int*)&g_LocalAddressFlag);
             }
-			else if (strcmp(head , "DhcpFlag") == 0 )
+            else if (strcmp(head , "DhcpFlag") == 0 )
             {
                 sscanf(str , "%*s %d" , (int*)&g_DhcpFlag);
             }
-			else if (strcmp(head , "ChangeScopes") == 0 )
+            else if (strcmp(head , "ChangeScopes") == 0 )
             {
                 sscanf(str , "%*s %d" , &g_ChangeScopes);
             }
-			else if (strcmp(head , "ScopeUrl") == 0 )
+            else if (strcmp(head , "ScopeUrl") == 0 )
             {
                 sscanf(str , "%*s %s" , g_DeviceScopes[scopesNum+6].s_ScopeUrl);
-				scopesNum++;
+                scopesNum++;
             }
         }
 
@@ -116,7 +118,7 @@ void GetTmpValueAfterReboot()
 
 GMI_RESULT OnvifDevProbeServiceStart(void)
 {
-    THREAD_TYPE TidProbe;   
+    THREAD_TYPE TidProbe;
 
     l_ProbeServerStop = false;
     THREAD_CREATE(&TidProbe, (void*(*)(void*))DevProbeService, (void*)NULL);
@@ -230,7 +232,7 @@ static void *DevProbeService()
     GMI_RESULT Result;
     ulong_t ClientPort   = 0;
     char_t ClientIp[20]  = {0};
-    char_t *MsgBuf       = NULL;   
+    char_t *MsgBuf       = NULL;
     char_t HostIp[20]    = {0};
     char_t *MsgPtr1      = NULL;
     char_t *MsgPtr2      = NULL;
@@ -246,13 +248,15 @@ static void *DevProbeService()
     char_t MessageId[100] = {0};
     char_t MacAddress[64] = {0};
     char_t EthAddr[] = "eth0";
-    uuid_upnp NameSpace_MAC = { /* 6ba7b810-9dad-11d1-80b4-00c04fd430c8 */
-		  0x6ba7b810,
-		  0x9dad,
-		  0x11d1,
-		  0x80, 0xb4, {0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}};
+    uuid_upnp NameSpace_MAC =   /* 6ba7b810-9dad-11d1-80b4-00c04fd430c8 */
+    {
+        0x6ba7b810,
+        0x9dad,
+        0x11d1,
+        0x80, 0xb4, {0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+    };
 
-    pthread_detach(pthread_self());  
+    pthread_detach(pthread_self());
 
     Ret = CreateSsdpSockV4(1, &sockfd);
     if (GMI_FAIL == Ret)
@@ -271,27 +275,27 @@ static void *DevProbeService()
     uuid_create(&uuid);
     uuid_unpack(&uuid, MessageId);
 
-	Result = NET_GetMacInfo(EthAddr, MacAddress);
+    Result = NET_GetMacInfo(EthAddr, MacAddress);
     if (FAILED(Result))
     {
-		memcpy(UuidAddr, "6ba7b810-9dad-11d1-80b4-00c04fd430c8", strlen("6ba7b810-9dad-11d1-80b4-00c04fd430c8"));    
+        memcpy(UuidAddr, "6ba7b810-9dad-11d1-80b4-00c04fd430c8", strlen("6ba7b810-9dad-11d1-80b4-00c04fd430c8"));
     }
-	else
-	{
-		memset(&uuid, 0, sizeof(uuid));
-		uuid_create(&uuid);
-		uuid_create_from_name(&uuid, NameSpace_MAC, (void*)MacAddress, strlen(MacAddress));
-	    uuid_unpack(&uuid, UuidAddr);
-	}
+    else
+    {
+        memset(&uuid, 0, sizeof(uuid));
+        uuid_create(&uuid);
+        uuid_create_from_name(&uuid, NameSpace_MAC, (void*)MacAddress, strlen(MacAddress));
+        uuid_unpack(&uuid, UuidAddr);
+    }
 
-	GetTmpValueAfterReboot();
-	memset(l_DeviceUuid, 0, sizeof(l_DeviceUuid));
-	memcpy(l_DeviceUuid, UuidAddr, strlen(UuidAddr));
-	if (tt__DiscoveryMode__Discoverable == g_DiscoveryMode)
-	{
-		DevStatusVaryNotifyService(TYPE_HELLO);
-	}
-	
+    GetTmpValueAfterReboot();
+    memset(l_DeviceUuid, 0, sizeof(l_DeviceUuid));
+    memcpy(l_DeviceUuid, UuidAddr, strlen(UuidAddr));
+    if (tt__DiscoveryMode__Discoverable == g_DiscoveryMode)
+    {
+        DevStatusVaryNotifyService(TYPE_HELLO);
+    }
+
     ONVIF_INFO("uuidaddr of device = %s \n", UuidAddr);
 
     while (l_ProbeServerStop != true)
@@ -360,12 +364,12 @@ static void *DevProbeService()
 
             memset(MsgBuf, 0, ONVIF_MSG_BUF_LEN);
             get_hostip_by_ip(ClientIp, HostIp);
-            snprintf(MsgBuf, ONVIF_MSG_BUF_LEN - 1, format, UuidAddr, UuidTo, time(NULL), UuidAddr, HostIp, DEFAULT_SERVER_PORT);
+            snprintf(MsgBuf, ONVIF_MSG_BUF_LEN - 1, format, UuidAddr, UuidTo, time(NULL), UuidAddr, HostIp, g_ONVIF_Port);
             sendto(sockfd, (char *)MsgBuf, strlen(MsgBuf), 0, (struct sockaddr *)&RemoteAddr, sizeof(RemoteAddr));
         }
     }
 
-errExit:   
+errExit:
     if (MsgBuf)
     {
         free(MsgBuf);
@@ -383,133 +387,135 @@ errExit:
 
 GMI_RESULT DevStatusVaryNotifyService(int NotifyType)
 {
-	char_t *sendBuf = NULL;
-	char_t HostIP[64] = {0};
-	char_t TmpBuf[512] = {0};
-	SOCKET sockfd = -1;
-	int ret = -1;
-	int option = 0;
-	int randomDelayTime = 0;			
-	int n_i = 0;	
-	int32_t OnvifPort = DEFAULT_SERVER_PORT;		
-	struct ifreq ifr;
-	struct sockaddr_in localSockAddr;
-	struct sockaddr_in remoteSockAddr;
-    const char *helloFormat = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n <SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:wsa=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\" xmlns:wsd=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\" xmlns:dn=\"http://www.onvif.org/ver10/network/wsdl\" > <SOAP-ENV:Header><wsa:MessageID>urn:uuid:%s</wsa:MessageID><wsa:To>urn:schemas-xmlsoap-org:ws:2005:04:discovery</wsa:To><wsa:Action>http://schemas.xmlsoap.org/ws/2005/04/discovery/Hello</wsa:Action></SOAP-ENV:Header><SOAP-ENV:Body><wsd:Hello><wsa:EndpointReference><wsa:Address>urn:uuid:%s</wsa:Address></wsa:EndpointReference><wsd:Types>dn:NetworkVideoTransmitter</wsd:Types><wsd:Scopes>onvif://www.onvif.org/type/video_encoder onvif://www.onvif.org/type/ptz onvif://www.onvif.org/type/audio_encoder onvif://www.onvif.org/hardware/IPCamera onvif://www.onvif.org/location/country/china onvif://www.onvif.org/name/IPC %s</wsd:Scopes><wsd:XAddrs>http://%s:%d/onvif/device_service</wsd:XAddrs><wsd:MetadataVersion>9</wsd:MetadataVersion></wsd:Hello></SOAP-ENV:Body></SOAP-ENV:Envelope>";		
+    char_t *sendBuf = NULL;
+    char_t HostIP[64] = {0};
+    char_t TmpBuf[512] = {0};
+    SOCKET sockfd = -1;
+    int ret = -1;
+    int option = 0;
+    int randomDelayTime = 0;
+    int n_i = 0;
+    int32_t OnvifPort = g_ONVIF_Port;
+    struct ifreq ifr;
+    struct sockaddr_in localSockAddr;
+    struct sockaddr_in remoteSockAddr;
+    const char *helloFormat = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n <SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:wsa=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\" xmlns:wsd=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\" xmlns:dn=\"http://www.onvif.org/ver10/network/wsdl\" > <SOAP-ENV:Header><wsa:MessageID>urn:uuid:%s</wsa:MessageID><wsa:To>urn:schemas-xmlsoap-org:ws:2005:04:discovery</wsa:To><wsa:Action>http://schemas.xmlsoap.org/ws/2005/04/discovery/Hello</wsa:Action></SOAP-ENV:Header><SOAP-ENV:Body><wsd:Hello><wsa:EndpointReference><wsa:Address>urn:uuid:%s</wsa:Address></wsa:EndpointReference><wsd:Types>dn:NetworkVideoTransmitter</wsd:Types><wsd:Scopes>onvif://www.onvif.org/type/video_encoder onvif://www.onvif.org/type/ptz onvif://www.onvif.org/type/audio_encoder onvif://www.onvif.org/hardware/IPCamera onvif://www.onvif.org/location/country/china onvif://www.onvif.org/name/IPC %s</wsd:Scopes><wsd:XAddrs>http://%s:%d/onvif/device_service</wsd:XAddrs><wsd:MetadataVersion>9</wsd:MetadataVersion></wsd:Hello></SOAP-ENV:Body></SOAP-ENV:Envelope>";
     const char *byeFormat = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n <SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:wsa=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\" xmlns:wsd=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\" xmlns:dn=\"http://www.onvif.org/ver10/network/wsdl\"> <SOAP-ENV:Header><wsa:MessageID>urn:uuid:%s</wsa:MessageID><wsa:To>urn:schemas-xmlsoap-org:ws:2005:04:discovery</wsa:To><wsa:Action>http://schemas.xmlsoap.org/ws/2005/04/discovery/Bye</wsa:Action></SOAP-ENV:Header><SOAP-ENV:Body><wsd:Bye><wsa:EndpointReference><wsa:Address>urn:uuid:%s</wsa:Address></wsa:EndpointReference><wsd:Types>dn:NetworkVideoTransmitter</wsd:Types><wsd:Scopes>onvif://www.onvif.org/type/video_encoder onvif://www.onvif.org/type/ptz onvif://www.onvif.org/type/audio_encoder onvif://www.onvif.org/hardware/IPCamera onvif://www.onvif.org/location/country/china onvif://www.onvif.org/name/IPC</wsd:Scopes><wsd:XAddrs>http://%s:%d/onvif/device_service</wsd:XAddrs><wsd:MetadataVersion>9</wsd:MetadataVersion></wsd:Bye></SOAP-ENV:Body></SOAP-ENV:Envelope>";
 
-	ONVIF_INFO("%s in.........\n", __func__);	
-	sendBuf = (char_t *)malloc(ONVIF_MSG_BUF_LEN * sizeof(char_t));
-	if (NULL == sendBuf)
-	{
-		fprintf(stderr, "malloc sendBuf failed!\n");
-		goto errExit;
-	}
-	memset(sendBuf, 0, (ONVIF_MSG_BUF_LEN * sizeof(char_t)));
+    ONVIF_INFO("%s in.........\n", __func__);
+    sendBuf = (char_t *)malloc(ONVIF_MSG_BUF_LEN * sizeof(char_t));
+    if (NULL == sendBuf)
+    {
+        fprintf(stderr, "malloc sendBuf failed!\n");
+        goto errExit;
+    }
+    memset(sendBuf, 0, (ONVIF_MSG_BUF_LEN * sizeof(char_t)));
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-	if(sockfd < 0)
-	{
-		fprintf(stderr, "DevStatusVaryNotifyService error in socket(): %d\n", errno);
-		goto errExit;
-	}
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if(sockfd < 0)
+    {
+        fprintf(stderr, "DevStatusVaryNotifyService error in socket(): %d\n", errno);
+        goto errExit;
+    }
 
-	memset(HostIP, 0, sizeof(HostIP));
-	strcpy(ifr.ifr_name, "eth0");
+    memset(HostIP, 0, sizeof(HostIP));
+    strcpy(ifr.ifr_name, "eth0");
     if (ioctl(sockfd, SIOCGIFADDR, &ifr) < 0)
     {
-       fprintf(stderr, "DevStatusVaryNotifyService error in ioctl(): %d\n", errno);
-	   goto errExit;
+        fprintf(stderr, "DevStatusVaryNotifyService error in ioctl(): %d\n", errno);
+        goto errExit;
     }
-	sprintf(HostIP, "%s", inet_ntoa(((struct sockaddr_in*)&(ifr.ifr_addr))->sin_addr));
-	
-	option = 1;
-    ret = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&option, sizeof(option)); 
-	if(ret < 0)
-	{
-		fprintf(stderr, "DevStatusVaryNotifyService error in setsockopt SO_REUSEADDR: %d\n", errno);
-		goto errExit;
-	}
+    sprintf(HostIP, "%s", inet_ntoa(((struct sockaddr_in*)&(ifr.ifr_addr))->sin_addr));
 
-	option = 1;
-    ret = setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char *)&option, sizeof(option)); 
-	if(ret < 0)
-	{
-		fprintf(stderr, "DevStatusVaryNotifyService error in setsockopt SO_BROADCAST: %d\n", errno);
-		goto errExit;
-	}
+    option = 1;
+    ret = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&option, sizeof(option));
+    if(ret < 0)
+    {
+        fprintf(stderr, "DevStatusVaryNotifyService error in setsockopt SO_REUSEADDR: %d\n", errno);
+        goto errExit;
+    }
 
-	memset(&localSockAddr, 0, sizeof(localSockAddr));
-	localSockAddr.sin_family = AF_INET;
-	localSockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	if(TYPE_HELLO == NotifyType)
-	{
-		localSockAddr.sin_port = htons(3699);
-	}
-	else
-	{
-		localSockAddr.sin_port = htons(3700);
-	}
+    option = 1;
+    ret = setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char *)&option, sizeof(option));
+    if(ret < 0)
+    {
+        fprintf(stderr, "DevStatusVaryNotifyService error in setsockopt SO_BROADCAST: %d\n", errno);
+        goto errExit;
+    }
 
-	ret = bind(sockfd, (struct sockaddr *)&localSockAddr, sizeof(localSockAddr));
-	if(ret < 0)
-	{
-		fprintf(stderr, "DevStatusVaryNotifyService error in bind(): %d\n", errno);
-		goto errExit;
-	}
+    memset(&localSockAddr, 0, sizeof(localSockAddr));
+    localSockAddr.sin_family = AF_INET;
+    localSockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    if(TYPE_HELLO == NotifyType)
+    {
+        localSockAddr.sin_port = htons(3699);
+    }
+    else
+    {
+        localSockAddr.sin_port = htons(3700);
+    }
 
-	remoteSockAddr.sin_family = AF_INET;
-	remoteSockAddr.sin_addr.s_addr = inet_addr( "239.255.255.250" );
-	remoteSockAddr.sin_port = htons(3702);	
-	memset(sendBuf, 0, (ONVIF_MSG_BUF_LEN * sizeof(char_t)));
-	switch(NotifyType)
-	{
-		case TYPE_HELLO:			
-			srand((int)time(0));
-			randomDelayTime = 1+(int)(500.0*rand()/(RAND_MAX+1.0));
-			usleep(randomDelayTime*1000);			
-			GetTmpValueAfterReboot();
-			if (g_ChangeScopes)
-			{
-				memset(TmpBuf, 0, sizeof(TmpBuf));
-				for(n_i = 6; n_i < 12; n_i++)
-				{
-					if(0 != strlen(g_DeviceScopes[n_i].s_ScopeUrl))
-					{						
-                        sprintf(TmpBuf+strlen(TmpBuf), "%s ", g_DeviceScopes[n_i].s_ScopeUrl);
-					}
-				}				
-				snprintf(sendBuf, ONVIF_MSG_BUF_LEN - 1, helloFormat, l_DeviceUuid, l_DeviceUuid, TmpBuf, HostIP, OnvifPort);
-		    }
-			else
-			{
-				snprintf(sendBuf, ONVIF_MSG_BUF_LEN - 1, helloFormat, l_DeviceUuid, l_DeviceUuid, "", HostIP, OnvifPort);
-			}
-			sendto(sockfd, (char *)sendBuf, strlen(sendBuf), 0, (struct sockaddr *)&remoteSockAddr, sizeof(remoteSockAddr));
-			break;
-		case TYPE_BYE:
-			snprintf(sendBuf, ONVIF_MSG_BUF_LEN - 1, byeFormat, l_DeviceUuid, l_DeviceUuid, HostIP, OnvifPort);
-			sendto(sockfd, (char *)sendBuf, strlen(sendBuf), 0, (struct sockaddr *)&remoteSockAddr, sizeof(remoteSockAddr));
-			break;
-		default:
-			fprintf(stderr, "DevStatusVaryNotifyService error in NotifyType\n");
-			break;
-	}
-	fprintf(stderr, "DevStatusVaryNotifyService %d ok\n", NotifyType);
+    ret = bind(sockfd, (struct sockaddr *)&localSockAddr, sizeof(localSockAddr));
+    if(ret < 0)
+    {
+        fprintf(stderr, "DevStatusVaryNotifyService error in bind(): %d\n", errno);
+        goto errExit;
+    }
+
+    remoteSockAddr.sin_family = AF_INET;
+    remoteSockAddr.sin_addr.s_addr = inet_addr( "239.255.255.250" );
+    remoteSockAddr.sin_port = htons(3702);
+    memset(sendBuf, 0, (ONVIF_MSG_BUF_LEN * sizeof(char_t)));
+    switch(NotifyType)
+    {
+    case TYPE_HELLO:
+        srand((int)time(0));
+        randomDelayTime = 1+(int)(500.0*rand()/(RAND_MAX+1.0));
+        usleep(randomDelayTime*1000);
+        GetTmpValueAfterReboot();
+        if (g_ChangeScopes)
+        {
+            memset(TmpBuf, 0, sizeof(TmpBuf));
+            for(n_i = 6; n_i < 12; n_i++)
+            {
+                if(0 != strlen(g_DeviceScopes[n_i].s_ScopeUrl))
+                {
+                    sprintf(TmpBuf+strlen(TmpBuf), "%s ", g_DeviceScopes[n_i].s_ScopeUrl);
+                }
+            }
+            snprintf(sendBuf, ONVIF_MSG_BUF_LEN - 1, helloFormat, l_DeviceUuid, l_DeviceUuid, TmpBuf, HostIP, OnvifPort);
+        }
+        else
+        {
+            snprintf(sendBuf, ONVIF_MSG_BUF_LEN - 1, helloFormat, l_DeviceUuid, l_DeviceUuid, "", HostIP, OnvifPort);
+        }
+        sendto(sockfd, (char *)sendBuf, strlen(sendBuf), 0, (struct sockaddr *)&remoteSockAddr, sizeof(remoteSockAddr));
+        break;
+    case TYPE_BYE:
+        snprintf(sendBuf, ONVIF_MSG_BUF_LEN - 1, byeFormat, l_DeviceUuid, l_DeviceUuid, HostIP, OnvifPort);
+        sendto(sockfd, (char *)sendBuf, strlen(sendBuf), 0, (struct sockaddr *)&remoteSockAddr, sizeof(remoteSockAddr));
+        break;
+    default:
+        fprintf(stderr, "DevStatusVaryNotifyService error in NotifyType\n");
+        break;
+    }
+    fprintf(stderr, "DevStatusVaryNotifyService %d ok\n", NotifyType);
 
 errExit:
-	if(sockfd >= 0)
-	{
-		close(sockfd);
-		sockfd = -1;
-	}
+    if(sockfd >= 0)
+    {
+        close(sockfd);
+        sockfd = -1;
+    }
 
-	if(NULL != sendBuf)
-	{
-		free(sendBuf);
-		sendBuf = NULL;
-	}
+    if(NULL != sendBuf)
+    {
+        free(sendBuf);
+        sendBuf = NULL;
+    }
 
     ONVIF_INFO("%s normal exit.........\n", __func__);
-	return GMI_SUCCESS;
+    return GMI_SUCCESS;
 }
+
+

@@ -132,6 +132,8 @@ GMI_RESULT CgiConfigToolSetMac(const char_t *FncCmd);
 GMI_RESULT CgiConfigToolTestAFConfigFile(const char_t *FncCmd);
 GMI_RESULT CgiConfigToolIrCutOpen(const char_t *FncCmd);
 GMI_RESULT CgiConfigToolIrCutClose(const char_t *FncCmd);
-GMI_RESULT CgiSysGetLogInfo(const char_t *FncCmd);
+
+GMI_RESULT CgiConfigToolGetSystemInfo(const char_t *FncCmd);
+
 
 #endif

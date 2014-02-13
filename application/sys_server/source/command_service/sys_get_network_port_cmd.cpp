@@ -60,6 +60,7 @@ GMI_RESULT  SysGetNetworkPortCommandExecutor::Execute()
         SysNetworkPortTmp.s_RTSP_Port = HOST_TO_NETWORK_UINT(SysNetworkPortTmp.s_RTSP_Port);
         SysNetworkPortTmp.s_SDK_Port  = HOST_TO_NETWORK_UINT(SysNetworkPortTmp.s_SDK_Port);
         SysNetworkPortTmp.s_Upgrade_Port= HOST_TO_NETWORK_UINT(SysNetworkPortTmp.s_Upgrade_Port);
+        SysNetworkPortTmp.s_ONVIF_Port  = HOST_TO_NETWORK_UINT(SysNetworkPortTmp.s_ONVIF_Port);
     }
 
     // Reply

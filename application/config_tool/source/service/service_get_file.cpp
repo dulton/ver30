@@ -32,10 +32,7 @@ ServiceGetFile::~ServiceGetFile()
     ServiceDispatch::GetInstance().Unregister(this);
 
     // Recycle resources of thread, if thread is still running
-    if (IsRunning())
-    {
-        Wait();
-    }
+    Wait();
 }
 
 void_t ServiceGetFile::Execute(GtpTransHandle Handle, IParser * Parser)
@@ -371,12 +368,6 @@ void_t ServiceGetFile::Unbind(GtpTransHandle Handle)
 
     m_TransHandle = GTP_INVALID_HANDLE;
 
-    if (StateReceivingACK())
-    {
-        // Cancel task
-        Application::GetSingleton().CancelDelayTask(ServiceGetFile::OnTimeProc, this);
-    }
-
     // Switch service state to idle
     SwitchState(eIdle);
 
@@ -392,6 +383,10 @@ void_t ServiceGetFile::Unbind(GtpTransHandle Handle)
 
     // Reset md5 engine
     m_MD5Engine.Reset();
+
+    // Cancel delay task and recycle thread
+    Application::GetSingleton().CancelDelayTask(ServiceGetFile::OnTimeProc, this);
+    Wait();
 }
 
 void_t ServiceGetFile::OnTimeProc(void_t * Data)

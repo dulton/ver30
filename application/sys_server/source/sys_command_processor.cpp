@@ -44,9 +44,6 @@
 #include "sys_excute_import_config_file.h"
 #include "sys_process_not_support_cmd.h"
 #include "sys_search_preset_cmd.h"
-#include "sys_get_log_info_cmd.h"
-#include "sys_ptz_3dctrl_cmd.h"
-#include "sys_stop_3a_cmd.h"
 #include "log.h"
 #include "server_command_pipeline_manager.h"
 #include "gmi_system_headers.h"
@@ -304,12 +301,10 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s in..........\n", __func__);
     GMI_RESULT Result = GMI_SUCCESS;
 
-#if 1
-    SafePtr<SysPtzCtrlCommandExecutor> PtzCtrlCommandExecutor( BaseMemoryManager::Instance().New<SysPtzCtrlCommandExecutor>());
+    SafePtr<SysPtzCtrlCommandExecutor> PtzCtrlCommandExecutor( BaseMemoryManager::Instance().New<SysPtzCtrlCommandExecutor>() );
     if (NULL == PtzCtrlCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PtzCtrlCommandExecutor new fail\n");
-        SYS_ERROR("PtzCtrlCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = PtzCtrlCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -325,28 +320,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
         return Result;
     }
-
-    SafePtr<SysPtz3DCtrlCommandExecutor> Ptz3DCtrlCommandExecutor( BaseMemoryManager::Instance().New<SysPtz3DCtrlCommandExecutor>() );
-    if (NULL == Ptz3DCtrlCommandExecutor.GetPtr())
-    {
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Ptz3DCtrlCommandExecutor new fail\n");
-        SYS_ERROR("Ptz3DCtrlCommandExecutor new fail\n");
-        return GMI_OUT_OF_MEMORY;
-    }
-    Result = Ptz3DCtrlCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
-    if (FAILED(Result))
-    {
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetParameter fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
-    Result = m_CommandPipeline->RegisterCommandExecutor(Ptz3DCtrlCommandExecutor);
-    if (FAILED(Result))
-    {
-        SYS_ERROR("RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
-    #endif
 
     SafePtr<SysGetSysCfgCommandExecutor> GetSysCfgCommandExecutor( BaseMemoryManager::Instance().New<SysGetSysCfgCommandExecutor>() );
     if (NULL == GetSysCfgCommandExecutor.GetPtr())
@@ -374,7 +347,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SystemCtrlCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SystemCtrlCommandExecutor new fail\n");
-        SYS_ERROR("SystemCtrlCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SystemCtrlCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -395,7 +367,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetIpInfoCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetIpInfoCommandExecutor new fail\n");
-        SYS_ERROR("GetIpInfoCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetIpInfoCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -416,7 +387,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetIpInfoCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetIpInfoCommandExecutor new fail\n");
-        SYS_ERROR("SetIpInfoCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetIpInfoCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -437,7 +407,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetEncodeConfigCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetEncodeConfigCommandExecutor new fail\n");
-        SYS_ERROR("GetEncodeConfigCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetEncodeConfigCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -458,7 +427,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetEncodeConfigCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetEncodeConfigCommandExecutor new fail\n");
-        SYS_ERROR("SetEncodeConfigCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetEncodeConfigCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -479,7 +447,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetImagingCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetImagingCommandExecutor new fail\n");
-        SYS_ERROR("GetImagingCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetImagingCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -500,7 +467,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetImagingCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetImagingCommandExecutor new fail\n");
-        SYS_ERROR("SetImagingCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetImagingCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -521,7 +487,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetVideoSourceCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetVideoSourceCommandExecutor new fail\n");
-        SYS_ERROR("GetVideoSourceCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetVideoSourceCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -542,7 +507,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetVideoSourceCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetVideoSourceCommandExecutor new fail\n");
-        SYS_ERROR("SetVideoSourceCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetVideoSourceCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -563,7 +527,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetTimeCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetTimeCommandExecutor new fail\n");
-        SYS_ERROR("GetTimeCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetTimeCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -584,7 +547,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetTimeCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetTimeCommandExecutor new fail\n");
-        SYS_ERROR("SetTimeCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetTimeCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -605,7 +567,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == ForceIdrCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "ForceIdrCommandExecutor new fail\n");
-        SYS_ERROR("ForceIdrCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = ForceIdrCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -626,7 +587,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetSystemConfigCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetSystemConfigCommandExecutor new fail\n");
-        SYS_ERROR("SetSystemConfigCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetSystemConfigCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -647,7 +607,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetShowInfoCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetShowInfoCommandExecutor new fail\n");
-        SYS_ERROR("GetShowInfoCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetShowInfoCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -668,7 +627,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetShowInfoCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetShowInfoCommandExecutor new fail\n");
-        SYS_ERROR("SetShowInfoCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetShowInfoCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -689,7 +647,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetUserInfoCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetUserInfoCommandExecutor new fail\n");
-        SYS_ERROR("GetUserInfoCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetUserInfoCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -710,7 +667,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetUserInfoCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetUserInfoCommandExecutor new fail\n");
-        SYS_ERROR("SetUserInfoCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetUserInfoCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -731,7 +687,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == DelUserInfoCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "DelUserInfoCommandExecutor new fail\n");
-        SYS_ERROR("DelUserInfoCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = DelUserInfoCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -752,7 +707,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetNetworkPortCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetNetworkPortCommandExecutor new fail\n");
-        SYS_ERROR("GetNetworkPortCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetNetworkPortCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -773,7 +727,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetNetworkPortCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetNetworkPortCommandExecutor new fail\n");
-        SYS_ERROR("SetNetworkPortCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetNetworkPortCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -794,7 +747,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetAdvancedImagingCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetAdvancedImagingCommandExecutor new fail\n");
-        SYS_ERROR("GetAdvancedImagingCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetAdvancedImagingCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -815,7 +767,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetAdvancedImagingCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetAdvancedImagingCommandExecutor new fail\n");
-        SYS_ERROR("SetAdvancedImagingCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetAdvancedImagingCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -836,7 +787,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetCapabilitiesCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetCapabilitiesCommandExecutor new fail\n");
-        SYS_ERROR("GetCapabilitiesCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetCapabilitiesCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -857,7 +807,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetWorkStateCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetWorkStateCommandExecutor new fail\n");
-        SYS_ERROR("GetWorkStateCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetWorkStateCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -878,7 +827,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetFocusConfigCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetFocusConfigCommandExecutor new fail\n");
-        SYS_ERROR("GetFocusConfigCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetFocusConfigCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -899,7 +847,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetFocusConfigCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetFocusConfigCommandExecutor new fail\n");
-        SYS_ERROR("SetFocusConfigCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetFocusConfigCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -920,7 +867,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetWhiteBalanceCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetWhiteBalanceCommandExecutor new fail\n");
-        SYS_ERROR("GetWhiteBalanceCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetWhiteBalanceCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -941,7 +887,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetWhiteBalanceCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetWhiteBalanceCommandExecutor new fail\n");
-        SYS_ERROR("SetWhiteBalanceCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetWhiteBalanceCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -962,7 +907,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetDaynightCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetDaynightCommandExecutor new fail\n");
-        SYS_ERROR("GetDaynightCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetDaynightCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -983,7 +927,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetDaynightCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetDaynightCommandExecutor new fail\n");
-        SYS_ERROR("SetDaynightCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetDaynightCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -1004,7 +947,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == StartAudioDecodeCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetDaynightCommandExecutor new fail\n");
-        SYS_ERROR("SetDaynightCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = StartAudioDecodeCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -1025,7 +967,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == StopAudioDecodeCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetDaynightCommandExecutor new fail\n");
-        SYS_ERROR("SetDaynightCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = StopAudioDecodeCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -1046,7 +987,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetAudioEncodeCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetDaynightCommandExecutor new fail\n");
-        SYS_ERROR("SetDaynightCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetAudioEncodeCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -1067,7 +1007,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetPresetInfoCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetDaynightCommandExecutor new fail\n");
-        SYS_ERROR("SetDaynightCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetPresetInfoCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -1088,7 +1027,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetPresetInfoCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetDaynightCommandExecutor new fail\n");
-        SYS_ERROR("SetDaynightCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetPresetInfoCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -1109,7 +1047,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == GetEncStreamCombineCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetEncStreamCombineCommandExecutor new fail\n");
-        SYS_ERROR("GetEncStreamCombineCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = GetEncStreamCombineCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -1130,7 +1067,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SetEncStreamCombineCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetEncStreamCombineCommandExecutor new fail\n");
-        SYS_ERROR("SetEncStreamCombineCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SetEncStreamCombineCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -1151,7 +1087,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == ExcuteImportConfigFileCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "ExcuteImportConfigFileCommandExecutor new fail\n");
-        SYS_ERROR("ExcuteImportConfigFileCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = ExcuteImportConfigFileCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -1172,7 +1107,6 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
     if (NULL == SearchPresetCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SearchPresetCommandExecutor new fail\n");
-        SYS_ERROR("SearchPresetCommandExecutor new fail\n");
         return GMI_OUT_OF_MEMORY;
     }
     Result = SearchPresetCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
@@ -1189,53 +1123,10 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
         return Result;
     }
 
-    SafePtr<SysGetLogInfoCommandExecutor> GetLogInfoCommandExecutor(BaseMemoryManager::Instance().New<SysGetLogInfoCommandExecutor>());
-    if (NULL == GetLogInfoCommandExecutor.GetPtr())
-    {
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SearchPresetCommandExecutor new fail\n");
-        SYS_ERROR("SearchPresetCommandExecutor new fail\n");
-        return GMI_OUT_OF_MEMORY;
-    }
-    Result = GetLogInfoCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
-    if (FAILED(Result))
-    {
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetParameter fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
-    Result = m_CommandPipeline->RegisterCommandExecutor(GetLogInfoCommandExecutor);
-    if (FAILED(Result))
-    {
-        SYS_ERROR("RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
-
-    SafePtr<SysStop3ACommandExecutor> Stop3ACommandExecutor(BaseMemoryManager::Instance().New<SysStop3ACommandExecutor>());
-    if (NULL == Stop3ACommandExecutor.GetPtr())
-    {
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SearchPresetCommandExecutor new fail\n");
-        SYS_ERROR("SearchPresetCommandExecutor new fail\n");
-        return GMI_OUT_OF_MEMORY;
-    }
-    Result = Stop3ACommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
-    if (FAILED(Result))
-    {
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetParameter fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
-    Result = m_CommandPipeline->RegisterCommandExecutor(Stop3ACommandExecutor);
-    if (FAILED(Result))
-    {
-        SYS_ERROR("RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
-
     SafePtr<SysProcessNotSupportCommandExecutor> ProcessNotSupportCommandExecutor(BaseMemoryManager::Instance().New<SysProcessNotSupportCommandExecutor>() );
     if (NULL == ProcessNotSupportCommandExecutor.GetPtr())
     {
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "ProcessNotSupportCommandExecutor new fail\n");
-        SYS_ERROR();
         return GMI_OUT_OF_MEMORY;
     }
     Result = ProcessNotSupportCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);

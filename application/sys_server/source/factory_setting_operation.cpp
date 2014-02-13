@@ -1,6 +1,7 @@
 #include "factory_setting_operation.h"
 #include "log.h"
 #include "gmi_config_api.h"
+#include "gmi_media_ctrl.h"
 
 static uint16_t l_ReslutionTable[][2] =
 {
@@ -33,9 +34,6 @@ static uint16_t l_ReslutionTable[][2] =
 #define DEFAULT_TWO_STREAM_COMBINE_NAME   "%dP25fps_576Pfps"
 #define DEFAULT_THREE_STREAM_COMBINE_NAME "%dP25fps_576Pfps_CIF25fps_CIF25fps"
 #define DEFAULT_FOUR_STREAM_COMBINE_NAME  "%dP25fps_576Pfps_CIF25fps_CIF25fps"
-#define MAX_STREAM_NUM_KEY               "MaxStreamNum"
-#define MAX_PIC_WIDTH_KEY                "MaxPicWidth"
-#define MAX_PIC_HEIGHT_KEY               "MaxPicHeight"
 
 //hardware key
 #define SENSOR_ID_2715   "ov2715"
@@ -74,27 +72,27 @@ FactorySettingOperation::~FactorySettingOperation()
 
 GMI_RESULT FactorySettingOperation::Initialize()
 {
-#if 0
+	GMI_RESULT Result = m_FactorySettingFileLock.Create(GMI_FACTORY_SETTING_CONFIG_FILE_NAME_KEY);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("m_FactorySettingFileLock.Create(GMI_FACTORY_SETTING_CONFIG_FILE_NAME_KEY) fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
 
-    GMI_RESULT Result = m_Mutex.Create(NULL);
-    if (FAILED(Result))
-    {
-        SYS_ERROR("m_Mutex.Create error\n");
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_Mutex.Create error\n");
-        return Result;
-    }
-
-    SYS_INFO("GenerateSoftwareCapability start\n");
-    Result = GenerateSoftwareCapability();
-    if (FAILED(Result))
-    {
-        SYS_ERROR("GenerateSoftwareCapability fail, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GenerateSoftwareCapability fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
-    SYS_INFO("GenerateSoftwareCapability end\n");
-#endif
-
+	Result = m_CapabilitySwFileLock.Create(CAPABILITY_SW_FILE_NAME_KEY);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("m_CapabilitySwFileLock.Create(CAPABILITY_SW_FILE_NAME_KEY) fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+	
+	Result = m_CapabilityAutoFileLock.Create(CAPABILITY_AUTO_FILE_NAME_KEY);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("m_CapabilityAutoFileLock.Create(CAPABILITY_AUTO_FILE_NAME_KEY) fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+	
     return GMI_SUCCESS;
 }
 
@@ -109,9 +107,9 @@ GMI_RESULT FactorySettingOperation::Deinitialize()
 //get device info from GMI_FACTORY_SETTING_CONFIG_FILE_NAME
 GMI_RESULT FactorySettingOperation::GetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr)
 {
-	SYS_INFO("%s in .......\n", __func__);
-	boolean_t Exist = false;
-	GMI_RESULT Result = FileIsExist(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, &Exist);
+    SYS_INFO("%s in .......\n", __func__);
+    boolean_t Exist = false;
+    GMI_RESULT Result = FileIsExist(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, &Exist);
     if (FAILED(Result))
     {
         SYS_ERROR("FileIsExist fail,Result = 0x%lx\n",Result);
@@ -123,43 +121,102 @@ GMI_RESULT FactorySettingOperation::GetDeviceInfo(SysPkgDeviceInfo *SysDeviceInf
         SYS_INFO("%s not exist\n", GMI_FACTORY_SETTING_CONFIG_FILE_NAME);
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "%s not exist\n", GMI_FACTORY_SETTING_CONFIG_FILE_NAME);
         return GMI_FAIL;
-    }   
+    }
 
+	m_FactorySettingFileLock.Lock();
     FD_HANDLE  Handle;
     Result = GMI_XmlOpen(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, &Handle);
     if (FAILED(Result))
     {
+    	m_FactorySettingFileLock.Unlock();
         return Result;
     }
 
-	char_t Path[128];
+    char_t Path[128];
     memset(Path, 0, sizeof(Path));
     strcpy(Path, DEVICE_INFO_PATH);
-	Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_NAME_KEY,   DEVICE_NAME,	(char_t*)&(SysDeviceInfoPtr->s_DeviceName),   GMI_CONFIG_READ_ONLY);
-	Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_ID_KEY,	 DEVICE_ID,    (int32_t*)&(SysDeviceInfoPtr->s_DeviceId),	   GMI_CONFIG_READ_ONLY);
-	Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_MODEL_KEY,  DEVICE_MODEL, (char_t*)&(SysDeviceInfoPtr->s_DeviceModel),    GMI_CONFIG_READ_ONLY);
-	Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_MANUFACTUER_KEY, DEVICE_MANUFACTUER, (char_t*)&(SysDeviceInfoPtr->s_DeviceManufactuer), GMI_CONFIG_READ_ONLY);
-	Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_SN_KEY,	 DEVICE_SN,    (char_t*)&(SysDeviceInfoPtr->s_DeviceSerialNum),GMI_CONFIG_READ_ONLY);	
-	Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_HWVER_KEY,  DEVICE_HWVER, (char_t*)&(SysDeviceInfoPtr->s_DeviceHwVer),    GMI_CONFIG_READ_ONLY);
-	if (FAILED(Result))
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_NAME_KEY,   DEVICE_NAME,	(char_t*)&(SysDeviceInfoPtr->s_DeviceName),   GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_ID_KEY,	 DEVICE_ID,    (int32_t*)&(SysDeviceInfoPtr->s_DeviceId),	   GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_MODEL_KEY,  DEVICE_MODEL, (char_t*)&(SysDeviceInfoPtr->s_DeviceModel),    GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_MANUFACTUER_KEY, DEVICE_MANUFACTUER, (char_t*)&(SysDeviceInfoPtr->s_DeviceManufactuer), GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_SN_KEY,	 DEVICE_SN,    (char_t*)&(SysDeviceInfoPtr->s_DeviceSerialNum),GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, DEVICE_HWVER_KEY,  DEVICE_HWVER, (char_t*)&(SysDeviceInfoPtr->s_DeviceHwVer),    GMI_CONFIG_READ_ONLY);
+    if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_FactorySettingFileLock.Unlock();
         return Result;
     }
 
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_FactorySettingFileLock.Unlock();
         return Result;
     }
+    m_FactorySettingFileLock.Unlock();
 
-	SYS_INFO("%s normal out .......\n", __func__);
+    SYS_INFO("%s normal out .......\n", __func__);
     return GMI_SUCCESS;
 }
 
 
 //get ircut mode day night threshold from GMI_FACTORY_SETTING_CONFIG_FILE_NAME
 GMI_RESULT FactorySettingOperation::GetIrCutModeDnThr(int8_t *IrcutMode, int8_t *DayToNightThr, int8_t *NightToDayThr)
+{
+    SYS_INFO("%s in .......\n", __func__);
+    boolean_t Exist = false;
+    GMI_RESULT Result = FileIsExist(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, &Exist);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("FileIsExist fail,Result = 0x%lx\n",Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "FileIsExist fail,Result = 0x%lx\n",Result);
+        return Result;
+    }
+    if (!Exist)
+    {
+        SYS_INFO("%s not exist\n", GMI_FACTORY_SETTING_CONFIG_FILE_NAME);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "%s not exist\n", GMI_FACTORY_SETTING_CONFIG_FILE_NAME);
+        return GMI_FAIL;
+    }
+
+	m_FactorySettingFileLock.Lock();
+    FD_HANDLE  Handle;
+    Result = GMI_XmlOpen(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, &Handle);
+    if (FAILED(Result))
+    {
+    	m_FactorySettingFileLock.Unlock();
+        return Result;
+    }
+
+    char_t Path[128];
+    memset(Path, 0, sizeof(Path));
+    strcpy(Path, VIDEO_IRCUT_MODE_PATH);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_IRCUT_MODE_KEY, VIDEO_IRCUT_MODE, IrcutMode, GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_IRCUT_DAYTONIGHT_THR_KEY, VIDEO_IRCUT_DAYTONIGHT_THR, DayToNightThr, GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_IRCUT_NIGHTTODAY_THR_KEY, VIDEO_IRCUT_NIGHTTODAY_THR, NightToDayThr, GMI_CONFIG_READ_ONLY);
+    if (FAILED(Result))
+    {
+        GMI_XmlFileSave(Handle);
+        m_FactorySettingFileLock.Unlock();
+        return Result;
+    }
+
+    Result = GMI_XmlFileSave(Handle);
+    if (FAILED(Result))
+    {
+    	m_FactorySettingFileLock.Unlock();
+        return Result;
+    }
+    m_FactorySettingFileLock.Unlock();
+
+    SYS_INFO("%s normal out .......\n", __func__);
+    return GMI_SUCCESS;
+}
+
+
+//get ircut
+GMI_RESULT FactorySettingOperation::GetIrcut(GeneralParam_Ircut *Ircut)
 {
 	SYS_INFO("%s in .......\n", __func__);
 	boolean_t Exist = false;
@@ -175,36 +232,62 @@ GMI_RESULT FactorySettingOperation::GetIrCutModeDnThr(int8_t *IrcutMode, int8_t 
         SYS_INFO("%s not exist\n", GMI_FACTORY_SETTING_CONFIG_FILE_NAME);
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "%s not exist\n", GMI_FACTORY_SETTING_CONFIG_FILE_NAME);
         return GMI_FAIL;
-    }   
+    }
 
+	m_FactorySettingFileLock.Lock();
     FD_HANDLE  Handle;
     Result = GMI_XmlOpen(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, &Handle);
     if (FAILED(Result))
     {
+    	m_FactorySettingFileLock.Unlock();
         return Result;
     }
 
-	char_t Path[128];
+    char_t Path[128];
     memset(Path, 0, sizeof(Path));
     strcpy(Path, VIDEO_IRCUT_MODE_PATH);
-    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_IRCUT_MODE_KEY, VIDEO_IRCUT_MODE, IrcutMode, GMI_CONFIG_READ_ONLY);
-    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_IRCUT_DAYTONIGHT_THR_KEY, VIDEO_IRCUT_DAYTONIGHT_THR, DayToNightThr, GMI_CONFIG_READ_ONLY);
-    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_IRCUT_NIGHTTODAY_THR_KEY, VIDEO_IRCUT_NIGHTTODAY_THR, NightToDayThr, GMI_CONFIG_READ_ONLY);
-	if (FAILED(Result))
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_IRCUT_MODE_KEY, VIDEO_IRCUT_MODE, &Ircut->s_IrCutMode, GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_IRCUT_DAYTONIGHT_THR_KEY, VIDEO_IRCUT_DAYTONIGHT_THR, &Ircut->s_DayToNightThr, GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_IRCUT_NIGHTTODAY_THR_KEY, VIDEO_IRCUT_NIGHTTODAY_THR, &Ircut->s_NightToDayThr, GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_IRCUT_IRLIGHT_MODE_KEY, VIDEO_IRCUT_IRLIGHT_MODE, &Ircut->s_IrLightMode, GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_IRCUT_ADC_MODE_KEY, VIDEO_IRCUT_ADC_MODE, &Ircut->s_AdcMode, GMI_CONFIG_READ_ONLY);
+
+    memset(Path, 0, sizeof(Path));
+    strcpy(Path, VIDEO_IRCUT_LUX5_NIGHT_PATH);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX5_NIGHT_MIN_KEY, VIDEO_LUX5_NIGHT_MIN, (int32_t*)&Ircut->s_CalibrationParam[0].s_Min[0], GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX5_NIGHT_MAX_KEY, VIDEO_LUX5_NIGHT_MAX, (int32_t*)&Ircut->s_CalibrationParam[0].s_Max[0], GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX5_NIGHT_AVG_KEY, VIDEO_LUX5_NIGHT_AVG, (int32_t*)&Ircut->s_CalibrationParam[0].s_Avg[0], GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX5_NIGHT_ADJUST_MIN_KEY, VIDEO_LUX5_NIGHT_ADJUST_MIN, (int32_t*)&Ircut->s_CalibrationParam[0].s_Min[1], GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX5_NIGHT_ADJUST_MAX_KEY, VIDEO_LUX5_NIGHT_ADJUST_MAX, (int32_t*)&Ircut->s_CalibrationParam[0].s_Max[1], GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX5_NIGHT_ADJUST_AVG_KEY, VIDEO_LUX5_NIGHT_ADJUST_AVG, (int32_t*)&Ircut->s_CalibrationParam[0].s_Avg[1], GMI_CONFIG_READ_ONLY);
+
+    memset(Path, 0, sizeof(Path));
+    strcpy(Path, VIDEO_IRCUT_LUX10_DAY_PATH);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX10_DAY_MIN_KEY, VIDEO_LUX10_DAY_MIN, (int32_t*)&Ircut->s_CalibrationParam[1].s_Min[0], GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX10_DAY_MAX_KEY, VIDEO_LUX10_DAY_MAX, (int32_t*)&Ircut->s_CalibrationParam[1].s_Max[0], GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX10_DAY_AVG_KEY, VIDEO_LUX10_DAY_AVG, (int32_t*)&Ircut->s_CalibrationParam[1].s_Avg[0], GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX10_DAY_ADJUST_MIN_KEY, VIDEO_LUX10_DAY_ADJUST_MIN, (int32_t*)&Ircut->s_CalibrationParam[1].s_Min[1], GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX10_DAY_ADJUST_MAX_KEY, VIDEO_LUX10_DAY_ADJUST_MAX, (int32_t*)&Ircut->s_CalibrationParam[1].s_Max[1], GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)Path, VIDEO_LUX10_DAY_ADJUST_AVG_KEY, VIDEO_LUX10_DAY_ADJUST_AVG, (int32_t*)&Ircut->s_CalibrationParam[1].s_Avg[1], GMI_CONFIG_READ_ONLY);
+    if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_FactorySettingFileLock.Unlock();
         return Result;
     }
 
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_FactorySettingFileLock.Unlock();
         return Result;
     }
-
-    SYS_INFO("%s normal out .......\n", __func__);
-    return GMI_SUCCESS;
+    m_FactorySettingFileLock.Unlock();
+	
+	SYS_INFO("%s normal out .......\n", __func__);
+	return GMI_SUCCESS;
 }
+
 
 //generate CAPABILITY_SW_FILE_NAME
 GMI_RESULT FactorySettingOperation::GenerateSoftwareCapability()
@@ -264,6 +347,63 @@ GMI_RESULT FactorySettingOperation::GenerateSoftwareCapability()
 }
 
 
+//generate CAPABILITY_SW_FILE_NAME
+GMI_RESULT FactorySettingOperation::GenerateSoftwareCapabilityByHwInfo(void)
+{
+    int32_t MaxStreamNum;
+    int32_t MaxPicWidth;
+    int32_t MaxPicHeight;
+
+    GMI_RESULT Result = GetMaxResByHwInfo(&MaxPicWidth, &MaxPicHeight);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("GetMaxResByHwInfo fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetMaxResByHwInfo fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+    MaxStreamNum = MAX_VIDEO_STREAM_NUM;
+
+    //get stream combine
+    char_t *Combine = NULL;
+    int32_t CombineLen;
+    Result = GetStreamCombine(MaxPicHeight, &Combine, &CombineLen);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("read stream combine fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "read stream combine fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+
+    //write correct stream combine to capability_software.xml
+    Result = WriteStreamCombineToCapSw(Combine, CombineLen);
+    if (FAILED(Result))
+    {
+        BaseMemoryManager::Instance().Deletes<char_t>(Combine);
+        SYS_ERROR("write stream combine to software capability fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "write stream combine to software capability fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+    BaseMemoryManager::Instance().Deletes<char_t>(Combine);
+
+    //add the maxstream maxpicwidth, maxpicheight, this step exec must after "WriteStreamCombineToCapSw"
+    Result = WriteMediaParamToCapSw(MaxStreamNum, MaxPicWidth, MaxPicHeight);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("write media parameter to sofware capability fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "open %s fail,Result = 0x%lx\n", Result);
+        return Result;
+    }
+
+    //mv CAPABILITY_SW_FILE_NAME_BAK to CAPABILITY_SW_FILE_NAME
+    char_t Cmd[128];
+    memset(Cmd, 0, sizeof(Cmd));
+    snprintf(Cmd, sizeof(Cmd), "mv %s %s", CAPABILITY_SW_FILE_NAME_BAK, CAPABILITY_SW_FILE_NAME);
+    system(Cmd);
+
+    return GMI_SUCCESS;
+}
+
+
 //execute import file
 GMI_RESULT FactorySettingOperation::ExcuteImportFile(SysPkgConfigFileInfo *SysConfigFilePtr)
 {
@@ -276,8 +416,8 @@ GMI_RESULT FactorySettingOperation::ExcuteImportFile(SysPkgConfigFileInfo *SysCo
     SYS_INFO("s_Persit         = %d\n", SysConfigFilePtr->s_Persit);
     SYS_INFO("s_Encrypt        = %d\n", SysConfigFilePtr->s_Encrypt);
 
-	SYS_INFO("Import %s\n", SysConfigFilePtr->s_FileTmpPath);
-	boolean_t Exist;
+    SYS_INFO("Import %s\n", SysConfigFilePtr->s_FileTmpPath);
+    boolean_t Exist;
 
     GMI_RESULT Result = FileIsExist(SysConfigFilePtr->s_FileTmpPath, &Exist);
     if (FAILED(Result))
@@ -293,38 +433,116 @@ GMI_RESULT FactorySettingOperation::ExcuteImportFile(SysPkgConfigFileInfo *SysCo
         return GMI_FAIL;
     }
 
-	char_t Cmd[128];
-	memset(Cmd, 0, sizeof(Cmd));
-	snprintf(Cmd, sizeof(Cmd), "mv %s %s", SysConfigFilePtr->s_FileTmpPath, SysConfigFilePtr->s_FileTargetPath);
-	system(Cmd);
-        
-    if (0 == strcmp(CAPABILITY_CONFIGURABLE_FILE_NAME, SysConfigFilePtr->s_FileTargetPath))
-    {    	                
-        Result = GenerateSoftwareCapability();
+    //check capability sofware
+    if (0 == strcmp(CAPABILITY_SW_FILE_NAME, SysConfigFilePtr->s_FileTargetPath))
+    {
+        Result = CheckCapabilitySwFile(SysConfigFilePtr->s_FileTmpPath);
         if (FAILED(Result))
         {
+            SYS_ERROR("check %s fail, Result = 0x%lx\n", SysConfigFilePtr->s_FileTmpPath, Result);
             return Result;
-        }        
+        }
     }
+
+    //mv from /tmp to /opt/config
+    char_t Cmd[128];
+    memset(Cmd, 0, sizeof(Cmd));
+    snprintf(Cmd, sizeof(Cmd), "mv %s %s", SysConfigFilePtr->s_FileTmpPath, SysConfigFilePtr->s_FileTargetPath);
+    system(Cmd);
+
+    //if (0 == strcmp(CAPABILITY_CONFIGURABLE_FILE_NAME, SysConfigFilePtr->s_FileTargetPath))
+    //{
+    //    Result = GenerateSoftwareCapability();
+    //    if (FAILED(Result))
+    //    {
+    //        return Result;
+    //    }
+    //}
 
     //import gmi_factory_setting, capability_sw, capability_configurable, delete gmi_setting
     if (0 == strcmp(CAPABILITY_SW_FILE_NAME, SysConfigFilePtr->s_FileTargetPath)
-        || 0 == strcmp(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, SysConfigFilePtr->s_FileTargetPath)
-        || 0 == strcmp(CAPABILITY_CONFIGURABLE_FILE_NAME, SysConfigFilePtr->s_FileTargetPath))
+            || 0 == strcmp(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, SysConfigFilePtr->s_FileTargetPath)
+            || 0 == strcmp(CAPABILITY_CONFIGURABLE_FILE_NAME, SysConfigFilePtr->s_FileTargetPath))
     {
         //delete user setting when generate capability.
-        memset(Cmd, 0, sizeof(Cmd)); 
+        memset(Cmd, 0, sizeof(Cmd));
         snprintf(Cmd, sizeof(Cmd), "rm -f %s", GMI_SETTING_CONFIG_FILE_NAME);
         system(Cmd);
     }
 
-	if (0 == SysConfigFilePtr->s_Persit)
-	{
-		memset(Cmd, 0, sizeof(Cmd));
-		snprintf(Cmd, sizeof(Cmd), "rm -f %s", SysConfigFilePtr->s_FileTargetPath);
-		system(Cmd);
-	}
-	
+    if (0 == SysConfigFilePtr->s_Persit)
+    {
+        memset(Cmd, 0, sizeof(Cmd));
+        snprintf(Cmd, sizeof(Cmd), "rm -f %s", SysConfigFilePtr->s_FileTargetPath);
+        system(Cmd);
+    }
+
+    return GMI_SUCCESS;
+}
+
+
+GMI_RESULT FactorySettingOperation::CheckCapabilitySwFile(const char_t *FilePath)
+{
+    boolean_t Exist = false;
+    GMI_RESULT Result = FileIsExist(FilePath, &Exist);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("FileIsExist fail,Result = 0x%lx\n",Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "FileIsExist fail,Result = 0x%lx\n",Result);
+        return Result;
+    }
+
+    if (!Exist)
+    {
+        return GMI_FAIL;
+    }
+
+    int MaxPicWidth  = 0;
+    int MaxPicHeight = 0;
+    int MaxStreamNum = 0;
+
+    FD_HANDLE  Handle;
+
+    Result = GMI_XmlOpen(FilePath, &Handle);
+    if (FAILED(Result))
+    {
+        return Result;
+    }
+    Result = GMI_XmlRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY, VIDEO_ENCODE_STREAM_NUM, &MaxStreamNum, GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_WIDTH_KEY,  RES_720P_WIDTH,    &MaxPicWidth,  GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_HEIGHT_KEY, RES_720P_HEIGHT,   &MaxPicHeight, GMI_CONFIG_READ_ONLY);
+    if (FAILED(Result))
+    {
+        GMI_XmlFileSave(Handle);
+        return Result;
+    }
+
+    Result = GMI_XmlFileSave(Handle);
+    if (FAILED(Result))
+    {
+        return Result;
+    }
+
+    if (MaxStreamNum <= 0
+            || MaxStreamNum > MAX_VIDEO_STREAM_NUM)
+    {
+        return GMI_FAIL;
+    }
+
+    int32_t HwMaxPicWidth;
+    int32_t HwMaxPicHeight;
+    Result = GetMaxResByHwInfo(&HwMaxPicWidth, &HwMaxPicHeight);
+    if (FAILED(Result))
+    {
+        return Result;
+    }
+
+    if (MaxPicWidth > HwMaxPicWidth
+            || MaxPicHeight > HwMaxPicHeight)
+    {
+        return GMI_FAIL;
+    }
+
     return GMI_SUCCESS;
 }
 
@@ -332,7 +550,7 @@ GMI_RESULT FactorySettingOperation::ExcuteImportFile(SysPkgConfigFileInfo *SysCo
 //get max stream num, max pic width, max pic height from CAPABILITY_SW_FILE_NAME
 GMI_RESULT FactorySettingOperation::GetVideoMaxCapability(int32_t *MaxStreamNum, int32_t *MaxPicWidth, int32_t *MaxPicHeight)
 {
-	boolean_t Exist = false;
+    boolean_t Exist = false;
     GMI_RESULT Result = FileIsExist(CAPABILITY_SW_FILE_NAME, &Exist);
     if (FAILED(Result))
     {
@@ -340,115 +558,53 @@ GMI_RESULT FactorySettingOperation::GetVideoMaxCapability(int32_t *MaxStreamNum,
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "FileIsExist fail,Result = 0x%lx\n",Result);
         return Result;
     }
-    if (!Exist)//get max streamnum, max picwidth, max picheight from CAPABILITY_AUTO_FILE_NAME when CAPABILITY_SW_FILE_NAME not exist.
+    if (!Exist)//generate software capability accroding to hardware info
     {
-        Result = GetMaxResByHwInfo(MaxPicWidth, MaxPicHeight);
+        Result = GenerateSoftwareCapabilityByHwInfo();
         if (FAILED(Result))
         {
-        	SYS_ERROR("GetMaxResByHwInfo fail, Result = 0x%lx\n", Result);
-        	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetMaxResByHwInfo fail, Result = 0x%lx\n", Result);
-        	return Result;
-        }		
-
-		*MaxStreamNum = VIDEO_ENCODE_STREAM_NUM;  
-#if 0	//mask by guoqiang.12.6.2013	
-		int32_t DefaultCombineNo;
-		switch (*MaxPicHeight)
-		{
-		case RES_1080P_HEIGHT:
-			DefaultCombineNo = VIDEO_ENCODE_1080P_TWOSTREAM_COMBINE_NO;
-			break;
-		case RES_720P_HEIGHT:
-			DefaultCombineNo = VIDEO_ENCODE_720P_TWOSTREAM_COMBINE_NO;
-			break;
-		default:
-			return GMI_NOT_SUPPORT;
-		}
-		
-		char_t Path[100];
-		char_t Name[100];
-	    memset(Path, 0, sizeof(Path));
-	    memset(Name, 0, sizeof(Name));	 
-	    switch (*MaxStreamNum)
-	    {
-	    case 1:
-	        snprintf(Path, sizeof(Path), STREAM_COMBINE_ONE_STREAM_KEY, DefaultCombineNo);
-	        snprintf(Name, sizeof(Name), DEFAULT_ONE_STREAM_COMBINE_NAME, *MaxPicHeight);
-	        break;
-	    case 2:
-	        snprintf(Path, sizeof(Path), STREAM_COMBINE_TWO_STREAM_KEY, DefaultCombineNo);
-	        snprintf(Name, sizeof(Name), DEFAULT_TWO_STREAM_COMBINE_NAME, *MaxPicHeight);
-	        break;
-	    case 3:
-	        snprintf(Path, sizeof(Path), STREAM_COMBINE_THREE_STREAM_KEY, DefaultCombineNo);
-	        snprintf(Name, sizeof(Name), DEFAULT_THREE_STREAM_COMBINE_NAME, *MaxPicHeight);
-	        break;
-	    case 4:
-	        snprintf(Path, sizeof(Path), STREAM_COMBINE_FOUR_STREAM_KEY, DefaultCombineNo);
-	        snprintf(Name, sizeof(Name), DEFAULT_FOUR_STREAM_COMBINE_NAME, *MaxPicHeight);
-	        break;
-	    default:
-	        return GMI_NOT_SUPPORT;
-	    }
-
-		//generate CAPABILITY_SW_FILE_NAME including max streamnum, max picwidth, max picheight		
-		FD_HANDLE  Handle;
-
-	    GMI_RESULT Result = GMI_XmlOpen(CAPABILITY_SW_FILE_NAME, &Handle);
-	    if (FAILED(Result))
-	    {
-	        return Result;
-	    }
-	    
-	    Result = GMI_XmlWrite(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY, (const int32_t)*MaxStreamNum);
-	    Result = GMI_XmlWrite(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_WIDTH_KEY,  (const int32_t)*MaxPicWidth);
-	    Result = GMI_XmlWrite(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_HEIGHT_KEY, (const int32_t)*MaxPicHeight);
-	    Result = GMI_XmlWrite(Handle, (const char_t*)Path, STREAM_COMBINE_NAME_KEY, (const char_t*)Name);
-	    if (FAILED(Result))
-	    {
-	        GMI_XmlFileSave(Handle);
-	        return Result;
-	    }
-
-	    Result = GMI_XmlFileSave(Handle);
-	    if (FAILED(Result))
-	    {
-	        return Result;
-	    }
-#endif	    
-    }  
-    else //get max streamnum, max picwidth, max picheight from CAPABILITY_SW_FILE_NAME
-    {
-	    FD_HANDLE  Handle;
-
-	    GMI_RESULT Result = GMI_XmlOpen(CAPABILITY_SW_FILE_NAME, &Handle);
-	    if (FAILED(Result))
-	    {
-	        return Result;
-	    }
-	    Result = GMI_XmlRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY, VIDEO_ENCODE_STREAM_NUM, MaxStreamNum, GMI_CONFIG_READ_ONLY);
-	    Result = GMI_XmlRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_WIDTH_KEY,  RES_720P_WIDTH,    MaxPicWidth,  GMI_CONFIG_READ_ONLY);
-	    Result = GMI_XmlRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_HEIGHT_KEY, RES_720P_HEIGHT,   MaxPicHeight, GMI_CONFIG_READ_ONLY);
-	    if (FAILED(Result))
-	    {
-	        GMI_XmlFileSave(Handle);
-	        return Result;
-	    }
-
-	    Result = GMI_XmlFileSave(Handle);
-	    if (FAILED(Result))
-	    {
-	        return Result;
-	    }
+            SYS_ERROR("GenerateSoftwareCapabilityByHwInfo fail, Result = 0x%lx\n", Result);
+            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GenerateSoftwareCapabilityByHwInfo fail, Result = 0x%lx\n", Result);
+            return Result;
+        }
     }
+
+    //get max streamnum, max picwidth, max picheight from CAPABILITY_SW_FILE_NAME
+    FD_HANDLE  Handle;
+
+	m_CapabilitySwFileLock.Lock();
+    Result = GMI_XmlOpen(CAPABILITY_SW_FILE_NAME, &Handle);
+    if (FAILED(Result))
+    {
+    	m_CapabilitySwFileLock.Unlock();
+        return Result;
+    }
+    Result = GMI_XmlRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_STREAM_NUM_KEY, VIDEO_ENCODE_STREAM_NUM, MaxStreamNum, GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_WIDTH_KEY,  RES_720P_WIDTH,    MaxPicWidth,  GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, CAPABILITY_SW_MEDIA_PATH, MAX_PIC_HEIGHT_KEY, RES_720P_HEIGHT,   MaxPicHeight, GMI_CONFIG_READ_ONLY);
+    if (FAILED(Result))
+    {
+        GMI_XmlFileSave(Handle);
+        m_CapabilitySwFileLock.Unlock();
+        return Result;
+    }
+
+    Result = GMI_XmlFileSave(Handle);
+    if (FAILED(Result))
+    {
+    	m_CapabilitySwFileLock.Unlock();
+        return Result;
+    }
+    m_CapabilitySwFileLock.Unlock();
 
     return GMI_SUCCESS;
 }
 
+
 //get video params:width,height,framerate from CAPABILITY_SW_FILE_NAME
 GMI_RESULT FactorySettingOperation::GetVideoParams(int32_t StreamNum, int32_t CombineNo, int32_t Res[16][4])
 {
-	boolean_t Exist = false;
+    boolean_t  Exist = false;
     GMI_RESULT Result = FileIsExist(CAPABILITY_SW_FILE_NAME, &Exist);
     if (FAILED(Result))
     {
@@ -456,177 +612,124 @@ GMI_RESULT FactorySettingOperation::GetVideoParams(int32_t StreamNum, int32_t Co
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "FileIsExist fail,Result = 0x%lx\n",Result);
         return Result;
     }
-    
-    if (!Exist) //get every stream resolution framerate accroding to CAPABILITY_AUTO_FILE_NAME
+
+    if (!Exist) //generate software capability accroding to hardware info
     {
-    	int32_t MaxPicWidth;
-    	int32_t MaxPicHeight;
-    	int32_t MaxStreamNum;
-    	
-    	Result = GetVideoMaxCapability(&MaxStreamNum, &MaxPicWidth, &MaxPicHeight);
-    	if (FAILED(Result))
-    	{
-    		SYS_ERROR("GetVideoMaxCapability fail, Result = 0x%lx\n", Result);
-    		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetVideoMaxCapability fail, Result = 0x%lx\n", Result);
-    		return Result;
-    	}
-
-    	if (StreamNum > MaxStreamNum)
-    	{
-    		SYS_ERROR("StreamNum %d error, but MaxStreamNum is %d\n", StreamNum, MaxStreamNum);
-    		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "StreamNum %d error, but MaxStreamNum is %d\n", StreamNum, MaxStreamNum);
-    		return GMI_INVALID_PARAMETER;
-    	}
-
-    	switch (StreamNum)
-    	{
-    	case 1:
-    		Res[0][0] = MaxPicWidth;
-    		Res[0][1] = MaxPicHeight;
-    		Res[0][2] = VIDEO_ENCODE_STREAM_FRAME_RATE;
-    		break;
-    	case 2:
-    		Res[0][0] = MaxPicWidth;
-    		Res[0][1] = MaxPicHeight;
-    		Res[0][2] = VIDEO_ENCODE_STREAM_FRAME_RATE;
-    		Res[1][0] = RES_D1_PAL_WIDTH;
-    		Res[1][1] = RES_D1_PAL_HEIGHT;
-    		Res[1][2] = VIDEO_ENCODE_STREAM_FRAME_RATE;
-    		break;
-    	case 3:
-    		Res[0][0] = MaxPicWidth;
-    		Res[0][1] = MaxPicHeight;
-    		Res[0][2] = VIDEO_ENCODE_STREAM_FRAME_RATE;
-    		Res[1][0] = RES_D1_PAL_WIDTH;
-    		Res[1][1] = RES_D1_PAL_HEIGHT;
-    		Res[1][2] = VIDEO_ENCODE_STREAM_FRAME_RATE;
-    		Res[2][0] = RES_CIF_PAL_WIDTH;
-    		Res[2][1] = RES_CIF_PAL_HEIGHT;
-    		Res[2][2] = VIDEO_ENCODE_STREAM_FRAME_RATE;
-    		break;
-    	case 4:
-    		Res[0][0] = MaxPicWidth;
-    		Res[0][1] = MaxPicHeight;
-    		Res[0][2] = VIDEO_ENCODE_STREAM_FRAME_RATE;
-    		Res[1][0] = RES_D1_PAL_WIDTH;
-    		Res[1][1] = RES_D1_PAL_HEIGHT;
-    		Res[1][2] = VIDEO_ENCODE_STREAM_FRAME_RATE;
-    		Res[2][0] = RES_CIF_PAL_WIDTH;
-    		Res[2][1] = RES_CIF_PAL_HEIGHT;
-    		Res[2][2] = VIDEO_ENCODE_STREAM_FRAME_RATE;
-    		Res[3][0] = RES_CIF_PAL_WIDTH;
-    		Res[3][1] = RES_CIF_PAL_HEIGHT;
-    		Res[3][2] = VIDEO_ENCODE_STREAM_FRAME_RATE;
-    		break;
-    	default:
-    		return GMI_NOT_SUPPORT;
-    	}
+        Result = GenerateSoftwareCapabilityByHwInfo();
+        if (FAILED(Result))
+        {
+            SYS_ERROR("GenerateSoftwareCapabilityByHwInfo fail, Result = 0x%lx\n", Result);
+            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GenerateSoftwareCapabilityByHwInfo fail, Result = 0x%lx\n", Result);
+            return Result;
+        }
     }
-    else // get every stream resolution framerate from CAPABILITY_SW_FILE_NAME
+
+    // get every stream resolution framerate from CAPABILITY_SW_FILE_NAME
+    char_t Path[100];
+    memset(Path, 0, sizeof(Path));
+    switch (StreamNum)
     {
-	    char_t Path[100];
+    case 1:
+        snprintf(Path, sizeof(Path), STREAM_COMBINE_ONE_STREAM_KEY, CombineNo);
+        break;
+    case 2:
+        snprintf(Path, sizeof(Path), STREAM_COMBINE_TWO_STREAM_KEY, CombineNo);
+        break;
+    case 3:
+        snprintf(Path, sizeof(Path), STREAM_COMBINE_THREE_STREAM_KEY, CombineNo);
+        break;
+    case 4:
+        snprintf(Path, sizeof(Path), STREAM_COMBINE_FOUR_STREAM_KEY, CombineNo);
+        break;
+    default:
+        return GMI_NOT_SUPPORT;
+    }
 
-	    memset(Path, 0, sizeof(Path));
-	    switch (StreamNum)
-	    {
-	    case 1:
-	        snprintf(Path, sizeof(Path), STREAM_COMBINE_ONE_STREAM_KEY, CombineNo);
-	        break;
-	    case 2:
-	        snprintf(Path, sizeof(Path), STREAM_COMBINE_TWO_STREAM_KEY, CombineNo);
-	        break;
-	    case 3:
-	        snprintf(Path, sizeof(Path), STREAM_COMBINE_THREE_STREAM_KEY, CombineNo);
-	        break;
-	    case 4:
-	        snprintf(Path, sizeof(Path), STREAM_COMBINE_FOUR_STREAM_KEY, CombineNo);
-	        break;
-	    default:
-	        return GMI_NOT_SUPPORT;
-	    }
+	m_CapabilitySwFileLock.Lock();
+    FD_HANDLE  Handle;
+    Result = GMI_XmlOpen(CAPABILITY_SW_FILE_NAME, &Handle);
+    if (FAILED(Result))
+    {
+    	m_CapabilitySwFileLock.Unlock();
+        return Result;
+    }
 
-	    FD_HANDLE  Handle;
-	    GMI_RESULT Result = GMI_XmlOpen(CAPABILITY_SW_FILE_NAME, &Handle);
-	    if (FAILED(Result))
-	    {
-	        return Result;
-	    }
+    SYS_INFO("path %s\n", Path);
+    char_t Name[100];
+    memset(Name, 0, sizeof(Name));
+    Result = GMI_XmlRead(Handle, Path, STREAM_COMBINE_NAME_KEY, STREAM_COMBINE_NAME, Name, GMI_CONFIG_READ_ONLY);
+    if (FAILED(Result))
+    {
+        GMI_XmlFileSave(Handle);
+        m_CapabilitySwFileLock.Unlock();
+        return Result;
+    }
 
-	    SYS_INFO("path %s\n", Path);
-	    char_t Name[100];
-	    memset(Name, 0, sizeof(Name));
-	    Result = GMI_XmlRead(Handle, Path, STREAM_COMBINE_NAME_KEY, STREAM_COMBINE_NAME, Name, GMI_CONFIG_READ_ONLY);
-	    if (FAILED(Result))
-	    {
-	        GMI_XmlFileSave(Handle);
-	        return Result;
-	    }
+    Result = GMI_XmlFileSave(Handle);
+    if (FAILED(Result))
+    {
+    	m_CapabilitySwFileLock.Unlock();
+        return Result;
+    }
+    m_CapabilitySwFileLock.Unlock();
 
-	    Result = GMI_XmlFileSave(Handle);
-	    if (FAILED(Result))
-	    {
-	        return Result;
-	    }
+    char_t *NameTmp = NULL;
+    char_t *ResTmp = NULL;
+    char_t *Frames = NULL;
+    uint8_t Nel = 1;
+    int32_t Len = strlen(Name);
+    NameTmp = Name;
+    while (strsep(&NameTmp, "_"))
+    {
+        if (NameTmp)
+        {
+            Nel++;
+        }
+    }
+    if (Nel != StreamNum)
+    {
+        SYS_ERROR("Get StreamNum %d, but RealStreamNum %d\n",  Nel, StreamNum);
+        return GMI_FAIL;
+    }
 
+    uint32_t i = 0;
+    for (NameTmp = Name; NameTmp < (Name+Len);)
+    {
+        ResTmp = Frames = NameTmp;
+        for (NameTmp += strlen(NameTmp); NameTmp < (Name+Len) && !*NameTmp; NameTmp++);
+        char_t *CIF_Ptr = NULL;
+        if (NULL != (CIF_Ptr = strstr(ResTmp, "CIF")))
+        {
+            Res[i][1] = RES_CIF_PAL_HEIGHT;
+            Frames = CIF_Ptr + strlen("CIF");
+            char_t *P = strstr(Frames, "fps");
+            *P = '\0';
+            Res[i][2] = atoi(Frames);
+        }
+        else
+        {
+            ResTmp = strsep(&Frames, "P");
+            if (NULL == Frames)
+            {
+                return GMI_INVALID_OPERATION;
+            }
+            char_t *P = strstr(Frames, "fps");
+            *P = '\0';
+            Res[i][1] = atoi(ResTmp);
+            Res[i][2] = atoi(Frames);
+        }
 
-	    char_t *NameTmp = NULL;
-	    char_t *ResTmp = NULL;
-	    char_t *Frames = NULL;
-	    uint8_t Nel = 1;
-	    int32_t Len = strlen(Name);
-	    NameTmp = Name;
-	    while (strsep(&NameTmp, "_"))
-	    {
-	        if (NameTmp)
-	        {
-	            Nel++;
-	        }
-	    }
-	    if (Nel != StreamNum)
-	    {
-	        SYS_ERROR("Get StreamNum %d, but RealStreamNum %d\n",  Nel, StreamNum);
-	        return GMI_FAIL;
-	    }
-
-	    uint32_t i = 0;
-	    for (NameTmp = Name; NameTmp < (Name+Len);)
-	    {
-	        ResTmp = Frames = NameTmp;
-	        for (NameTmp += strlen(NameTmp); NameTmp < (Name+Len) && !*NameTmp; NameTmp++);
-	        char_t *CIF_Ptr = NULL;
-	        if (NULL != (CIF_Ptr = strstr(ResTmp, "CIF")))
-	        {
-	            Res[i][1] = RES_CIF_PAL_HEIGHT;
-	            Frames = CIF_Ptr + strlen("CIF");
-	            char_t *P = strstr(Frames, "fps");
-	            *P = '\0';
-	            Res[i][2] = atoi(Frames);
-	        }
-	        else
-	        {
-	            ResTmp = strsep(&Frames, "P");
-	            if (NULL == Frames)
-	            {
-	                return GMI_INVALID_OPERATION;
-	            }    
-	            char_t *P = strstr(Frames, "fps");
-	            *P = '\0';
-	            Res[i][1] = atoi(ResTmp);
-	            Res[i][2] = atoi(Frames);
-	        }
-
-	        uint32_t Row;
-	        for (Row = 0; Row < sizeof(l_ReslutionTable)/(sizeof(l_ReslutionTable[0][0])*2); Row++)
-	        {
-	            if (Res[i][1] == l_ReslutionTable[Row][1])
-	            {
-	                Res[i][0] = l_ReslutionTable[Row][0];
-	                break;
-	            }
-	        }
-	        SYS_INFO("[%s]:stream%d width=%d height=%d FrameRate=%d\n", __func__, i, Res[i][0], Res[i][1], Res[i][2]);
-	        i++;
-	    }
+        uint32_t Row;
+        for (Row = 0; Row < sizeof(l_ReslutionTable)/(sizeof(l_ReslutionTable[0][0])*2); Row++)
+        {
+            if (Res[i][1] == l_ReslutionTable[Row][1])
+            {
+                Res[i][0] = l_ReslutionTable[Row][0];
+                break;
+            }
+        }
+        SYS_INFO("[%s]:stream%d width=%d height=%d FrameRate=%d\n", __func__, i, Res[i][0], Res[i][1], Res[i][2]);
+        i++;
     }
 
     return GMI_SUCCESS;
@@ -706,7 +809,7 @@ GMI_RESULT FactorySettingOperation::GetPtzSpeed(char_t HSpeed[10][64], char_t VS
 {
     SYS_INFO("%s in .......\n", __func__);
     if (NULL == HSpeed
-        || NULL == VSpeed)
+            || NULL == VSpeed)
     {
         return GMI_INVALID_PARAMETER;
     }
@@ -724,12 +827,14 @@ GMI_RESULT FactorySettingOperation::GetPtzSpeed(char_t HSpeed[10][64], char_t VS
         SYS_INFO("%s not exist\n", GMI_FACTORY_SETTING_CONFIG_FILE_NAME);
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "%s not exist\n", LIMITS_FILE_NAME);
         return GMI_FAIL;
-    }    
+    }
 
+	m_FactorySettingFileLock.Lock();
     FD_HANDLE  Handle;
     Result = GMI_XmlOpen(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, &Handle);
     if (FAILED(Result))
     {
+    	m_FactorySettingFileLock.Unlock();
         return Result;
     }
 
@@ -744,35 +849,40 @@ GMI_RESULT FactorySettingOperation::GetPtzSpeed(char_t HSpeed[10][64], char_t VS
         memset(HKey, 0, sizeof(HKey));
         sprintf(HKey, PTZ_H_SPEED_KEY, i);
         memset(VKey, 0, sizeof(VKey));
-        sprintf(VKey, PTZ_V_SPEED_KEY, i);      
+        sprintf(VKey, PTZ_V_SPEED_KEY, i);
         Result = GMI_XmlRead(Handle, (const char_t*)PTZSpeedPath, (const char_t*)HKey, Speed, HSpeed[i], GMI_CONFIG_READ_ONLY);
         if (0 == strcmp(Speed, HSpeed[i]))
         {
-        	SYS_ERROR("read HSpeed fail\n");
-        	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "read HSpeed fail\n");
+            SYS_ERROR("read HSpeed fail\n");
+            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "read HSpeed fail\n");
+            m_FactorySettingFileLock.Unlock();
             return GMI_FAIL;
         }
 
         Result = GMI_XmlRead(Handle, (const char_t*)PTZSpeedPath, (const char_t*)VKey, Speed, VSpeed[i], GMI_CONFIG_READ_ONLY);
-        if (0 == strcmp(Speed, VSpeed[i])) 
+        if (0 == strcmp(Speed, VSpeed[i]))
         {
-        	SYS_ERROR("read VSpeed fail\n");
-        	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "read VSpeed fail\n");
+            SYS_ERROR("read VSpeed fail\n");
+            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "read VSpeed fail\n");
+            m_FactorySettingFileLock.Unlock();
             return GMI_FAIL;
         }
-    }    
+    }
 
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_FactorySettingFileLock.Unlock();
         return Result;
     }
 
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_FactorySettingFileLock.Unlock();
         return Result;
     }
+    m_FactorySettingFileLock.Unlock();
 
     SYS_INFO("%s normal out .......\n", __func__);
     return GMI_SUCCESS;
@@ -788,9 +898,11 @@ GMI_RESULT FactorySettingOperation::GetSensorName(char_t SensorName[64])
     char_t     Sensor[64];
     char_t     Lens[64];
 
+	m_CapabilityAutoFileLock.Lock();
     Result = GMI_XmlOpen(CAPABILITY_AUTO_FILE_NAME, &Handle);
     if (FAILED(Result))
     {
+    	m_CapabilityAutoFileLock.Unlock();
         return Result;
     }
 
@@ -801,14 +913,17 @@ GMI_RESULT FactorySettingOperation::GetSensorName(char_t SensorName[64])
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_CapabilityAutoFileLock.Unlock();
         return Result;
     }
 
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_CapabilityAutoFileLock.Unlock();
         return Result;
     }
+    m_CapabilityAutoFileLock.Unlock();
 
     memcpy(SensorName, Sensor, sizeof(Sensor));
 
@@ -825,9 +940,11 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
     char_t     Sensor[64];
     char_t     Lens[64];
 
+	m_CapabilityAutoFileLock.Lock();
     Result = GMI_XmlOpen(CAPABILITY_AUTO_FILE_NAME, &Handle);
     if (FAILED(Result))
     {
+    	m_CapabilityAutoFileLock.Unlock();
         return Result;
     }
 
@@ -838,14 +955,17 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
+        m_CapabilityAutoFileLock.Unlock();
         return Result;
     }
 
     Result = GMI_XmlFileSave(Handle);
     if (FAILED(Result))
     {
+    	m_CapabilityAutoFileLock.Unlock();
         return Result;
     }
+    m_CapabilityAutoFileLock.Unlock();
 
     SYS_INFO("Cpu %s, Sensor %s, Lens %s\n", Cpu, Sensor, Lens);
 
@@ -867,7 +987,7 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
     }
     else if (strcmp(Sensor, SENSOR_ID_TW9910) == 0)
     {
-    	SysComponents->s_SensorId = e_SENSOR_TW9910;
+        SysComponents->s_SensorId = e_SENSOR_TW9910;
     }
     else
     {
@@ -907,39 +1027,39 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
 //get max width max height from CAPABILITY_AUTO_FILE_NAME
 GMI_RESULT FactorySettingOperation::GetMaxResByHwInfo(int32_t *MaxWidthPtr, int32_t *MaxHeightPtr)
 {
-	SysPkgComponents SysComponent;
-	
-	GMI_RESULT Result = GetHwAutoDetectInfo(&SysComponent);
-	if (FAILED(Result))
-	{
-		SYS_ERROR("GetHwAutoDetectInfo fail, Result = 0x%lx\n", Result);
-		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetHwAutoDetectInfo fail, Result = 0x%lx\n", Result);
-		return Result;
-	}
+    SysPkgComponents SysComponent;
 
-	if ((e_CPU_A5S_66 == SysComponent.s_CpuId && e_SENSOR_OV9715 == SysComponent.s_SensorId)
-	    || (e_CPU_A5S_55 == SysComponent.s_CpuId))
-	{
-		*MaxWidthPtr = RES_720P_WIDTH;
-		*MaxHeightPtr= RES_720P_HEIGHT;
-	}
-	else if (e_SENSOR_TW9910 == SysComponent.s_SensorId)
-	{
-		*MaxWidthPtr = RES_D1_PAL_WIDTH;
-		*MaxHeightPtr= RES_D1_PAL_HEIGHT;
-	}
-	else
-	{
-		*MaxWidthPtr = RES_1080P_WIDTH;
-		*MaxHeightPtr= RES_1080P_HEIGHT;
-	}
+    GMI_RESULT Result = GetHwAutoDetectInfo(&SysComponent);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("GetHwAutoDetectInfo fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetHwAutoDetectInfo fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
 
-	return GMI_SUCCESS;
-	
+    if ((e_CPU_A5S_66 == SysComponent.s_CpuId && e_SENSOR_OV9715 == SysComponent.s_SensorId)
+            || (e_CPU_A5S_55 == SysComponent.s_CpuId))
+    {
+        *MaxWidthPtr = RES_720P_WIDTH;
+        *MaxHeightPtr= RES_720P_HEIGHT;
+    }
+    else if (e_SENSOR_TW9910 == SysComponent.s_SensorId)
+    {
+        *MaxWidthPtr = RES_D1_PAL_WIDTH;
+        *MaxHeightPtr= RES_D1_PAL_HEIGHT;
+    }
+    else
+    {
+        *MaxWidthPtr = RES_1080P_WIDTH;
+        *MaxHeightPtr= RES_1080P_HEIGHT;
+    }
+
+    return GMI_SUCCESS;
+
 }
 
 
-//check resolution 
+//check resolution
 GMI_RESULT FactorySettingOperation::CheckVideoReslution(uint16_t Width, uint16_t Height)
 {
     if (Height%4 != 0
@@ -1049,10 +1169,12 @@ GMI_RESULT FactorySettingOperation::WriteMediaParamToCapSw(int32_t MaxStreamNum,
 {
     FD_HANDLE CapSwHd;
 
+	m_CapabilitySwFileLock.Lock();
     //open software capbility
-    GMI_RESULT Result = GMI_XmlOpen(CAPABILITY_SW_FILE_NAME, &CapSwHd);
+    GMI_RESULT Result = GMI_XmlOpen(CAPABILITY_SW_FILE_NAME_BAK, &CapSwHd);
     if (FAILED(Result))
     {
+    	m_CapabilitySwFileLock.Unlock();
         return Result;
     }
 
@@ -1062,14 +1184,17 @@ GMI_RESULT FactorySettingOperation::WriteMediaParamToCapSw(int32_t MaxStreamNum,
     if (FAILED(Result))
     {
         GMI_XmlFileSave(CapSwHd);
+        m_CapabilitySwFileLock.Unlock();
         return Result;
     }
 
     Result = GMI_XmlFileSave(CapSwHd);
     if (FAILED(Result))
     {
+    	m_CapabilitySwFileLock.Unlock();
         return Result;
     }
+    m_CapabilitySwFileLock.Unlock();
 
     return GMI_SUCCESS;
 }
@@ -1157,11 +1282,11 @@ GMI_RESULT FactorySettingOperation::GetStreamCombine(int32_t MaxPicHeight, char_
 
 GMI_RESULT FactorySettingOperation::WriteStreamCombineToCapSw(char_t *Combine,  int32_t CombineLen)
 {
-    int32_t Fd = open(CAPABILITY_SW_FILE_NAME, O_CREAT|O_RDWR);
+    int32_t Fd = open(CAPABILITY_SW_FILE_NAME_BAK, O_CREAT|O_RDWR);
     if (0 > Fd)
     {
-        SYS_ERROR("open %s fail, Fd %d\n", CAPABILITY_SW_FILE_NAME, Fd);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "open %s fail, Fd %d\n", CAPABILITY_SW_FILE_NAME, Fd);
+        SYS_ERROR("open %s fail, Fd %d\n", CAPABILITY_SW_FILE_NAME_BAK, Fd);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "open %s fail, Fd %d\n", CAPABILITY_SW_FILE_NAME_BAK, Fd);
         return GMI_FAIL;
     }
 
@@ -1236,12 +1361,12 @@ GMI_RESULT FactorySettingOperation::WriteStreamCombineToCapSw(char_t *Combine,  
     int32_t TotalLen = CurLen + LeftLen;
 
     //Lock();
-    Fd = open(CAPABILITY_SW_FILE_NAME, O_WRONLY|O_CREAT|O_TRUNC);
+    Fd = open(CAPABILITY_SW_FILE_NAME_BAK, O_WRONLY|O_CREAT|O_TRUNC);
     if (0 > Fd)
     {
         Unlock();
-        SYS_ERROR("open %s fail", CAPABILITY_SW_FILE_NAME);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "open %s fail", CAPABILITY_SW_FILE_NAME);
+        SYS_ERROR("open %s fail", CAPABILITY_SW_FILE_NAME_BAK);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "open %s fail", CAPABILITY_SW_FILE_NAME_BAK);
         return GMI_FAIL;
     }
 
@@ -1249,8 +1374,8 @@ GMI_RESULT FactorySettingOperation::WriteStreamCombineToCapSw(char_t *Combine,  
     if (Ret != TotalLen)
     {
         Unlock();
-        SYS_ERROR("write %s fail, write %d, FileSize %d\n", CAPABILITY_SW_FILE_NAME, Ret, TotalLen);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "write %s fail, write %d, FileSize %d\n", CAPABILITY_SW_FILE_NAME, Ret, TotalLen);
+        SYS_ERROR("write %s fail, write %d, FileSize %d\n", CAPABILITY_SW_FILE_NAME_BAK, Ret, TotalLen);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "write %s fail, write %d, FileSize %d\n", CAPABILITY_SW_FILE_NAME_BAK, Ret, TotalLen);
         return GMI_FAIL;
     }
 

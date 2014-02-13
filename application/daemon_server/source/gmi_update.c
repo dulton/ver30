@@ -24,6 +24,7 @@ modification	:
 #include "ipc_fw_v3.x_setting.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "gmi_config_api.h"
+#include "sys_info_readonly.h"
 
 static int32_t l_SvrFd = -1;
 static int32_t l_iStopTCPServer = 0;
@@ -100,28 +101,38 @@ GMI_RESULT GMI_GetPlatformConfig(const char_t * FileName, const char_t *ItemPath
 
     DAEMON_PRINT_LOG(INFO,"GMI_GetPlatformConfig  Start!! ");
 
-    GMI_RESULT Ret = GMI_FAIL;
-    FD_HANDLE  Handle = NULL;
-    Ret = GMI_XmlOpen(FileName, &Handle);
-    if (FAILED(Ret))
+    GMI_RESULT Result = SysInfoReadInitialize();
+    if (FAILED(Result))
     {
-        DAEMON_PRINT_LOG(ERROR,"GMI_XmlOpen xml file Error!");
-        return Ret;
+        return Result;
     }
 
-    char_t  Key[MIN_BUFFER_LENGTH] = {"0"};
-    char_t  Value[MIN_BUFFER_LENGTH] = {"0"};
+    FD_HANDLE Handle;
+    Result = SysInfoOpen(FileName, &Handle);
+    if (FAILED(Result))
+    {
+        SysInfoReadDeinitialize();
+        return Result;
+    }
 
-    memset(Key, 0 ,sizeof(Key));
-    strcpy(Key, "CPU");
+    char_t	Value[MIN_BUFFER_LENGTH] = {"0"};
     memset(Value, 0 ,sizeof(Value));
-    Ret = GMI_XmlRead(Handle, ItemPath, Key, "A5S_66", Value,GMI_CONFIG_READ_ONLY);
-    if (SUCCEEDED(Ret))
+    Result = SysInfoRead(Handle, ItemPath, HW_CPU_KEY,  "A5S_66", Value);
+    if (FAILED(Result))
+    {
+        SysInfoClose(Handle);
+        SysInfoReadDeinitialize();
+        return Result;
+    }
+    else
     {
         strcpy(Platform,Value);
     }
 
-    return Ret;
+    SysInfoClose(Handle);
+    SysInfoReadDeinitialize();
+
+    return Result;
 }
 
 /*=======================================================

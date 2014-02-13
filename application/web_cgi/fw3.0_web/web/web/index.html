@@ -65,8 +65,12 @@
 			var Authvalue = "";
 			var UserLevel = "";
 			var UpdatePort = "";
+			var UserName = "";
+			var UserPass = "";
 			//设备能力集码流数
 			var StreamNum_NLJ = 0;
+			//当前可显示的码流数
+			var StreamShow = 0;
 			//抓图路径
 			var picpath= "";
 			//录像路径
@@ -77,13 +81,28 @@
 			var pictype="";
 			//网络播放性能
 			var NetPlay = "";//getCookie("frame");
+			//云台速度
+			var MoveSpeed = "";
 
 //			if(typeof(NetPlay) == "undefined" ||NetPlay == null)
 //			{
 //				//设置默认播放模式
 //				NetPlay	= "0";
 //			}
+			//权限变量
+			var VideoAuth = -1;	//视频预览 1
+			var YunjingAuth = true;	//云镜控制 2
+			var yunydjAuth = true;	//语音对讲 3
+			var shipinAuth = true;	//视频调节 4
+			var canspzAuth = true;	//参数配置 5
+			var LogAuth = true;	//日志管理 6
+			var UserAuth = true;	//用户管理 7
+			var sysweihu = true;	//系统维护 8
+			var Recordhf = true;	//录像回放 9
+			var AuthClock = 0;	//权限定时获取
+			var Clock;
 
+	
 
 			//获取本地配置
 			function getLocalSet()
@@ -106,12 +125,13 @@
 					//创建文件
 					fso.CreateTextFile("c:\\Program Data\\config.txt", true);
 					f = fso.OpenTextFile("c:\\Program Data\\config.txt", 2);
-					var stmp = "<recordpath>C:\\Program Data\\IPC\\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>0</netplay>";
+					var stmp = "<recordpath>C:\\Program Data\\IPC\\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>50</netplay>";
 				recordpath = "C:\\Program Data\\IPC\\media\\";
 				picpath = "C:\\Program Data\\IPC\\Image\\";
 				recordtype = "MP4";
 				pictype = "bmp";
 				NetPlay = 50;
+				//MoveSpeed = 50;
 					f.WriteLine(stmp);
 					f.Close();	
 					return;
@@ -128,6 +148,7 @@
 				recordtype = configXmlJson.recordtype;
 				pictype = configXmlJson.pictruetype;
 				NetPlay = configXmlJson.netplay;
+				//MoveSpeed = configXmlJson.movespeed;
 				
  					
 			}
@@ -139,37 +160,51 @@
 				recordtype = getCookie("recordType");//"MP4";
 				pictype = getCookie("picType");//"bmp";
 				NetPlay = getCookie("frame");//"0";	
-				
-
-				
+				//MoveSpeed = getCookie("MoveSpeed");
 			}
-				if(recordpath == "")
+
+				if(typeof(recordpath) == "undefined" ||recordpath == null ||recordpath == "")
 				{
 					recordpath = "C:\\Program Data\\IPC\\media\\";
 				}
-				if(picpath == "")
+				if(typeof(picpath) == "undefined" ||picpath == null ||picpath == "")
 				{
 					picpath = "C:\\Program Data\\IPC\\Image\\";
 				}
-				if(recordtype == "")
+				if(typeof(recordtype) == "undefined" ||recordtype == null ||recordtype == "")
 				{
 					recordtype = "MP4";
 				}
-				if(pictype == "")
+				if(typeof(pictype) == "undefined" ||pictype == null ||pictype == "")
 				{
 					pictype = "bmp";
 				}
-				if(NetPlay=="")
+				if(typeof(NetPlay) == "undefined" ||NetPlay == null || isNaN(NetPlay)||NetPlay == "" )
 				{
 					NetPlay = 50;
 				}
+//				if(typeof(MoveSpeed) == "undefined" ||MoveSpeed == null || isNaN(MoveSpeed)||MoveSpeed == "" )
+//				{
+//					MoveSpeed = 50;
+//				}
 			}
 			//获取Session值
 			id=getQueryString("id");
 			//获取Authvalue值
-			Authvalue=getQueryString("authvalue");
+			Authvalue=getCookie("gmiAuthvalue");//getQueryString("authvalue");
+			if(Authvalue == "" || Authvalue == null)
+			{
+				//alert("权限获取失败！");
+				Authvalue = getCookie("gmiAuthvalue");
+			}
+			
 			//获取身份权限
 			UserLevel = getQueryString("UserFlag");
+			//获取用户名
+			UserName = getCookie("gmiwebusername");
+			UserPass = getCookie("gmiwebpassword");
+//			UserName = getQueryString("gmiwebusername");
+//			UserPass = getQueryString("gmiwebpassword");		
 
 			/*
 			//验证Setion 同步验证
@@ -204,13 +239,33 @@
 				currentsrc="ylanzkai_1.html";
 			}
 			
+
+						
 			$(document).ready(function() {
+
+			//设置权限
+			SetgmiAuthvalue();
+
+			//获取IP
+			getip();
+	
+			//获取beni配置
+			getLocalSet();
+				//获取sdkport
+				port = getCookie("SdkPort");
+				//alert("port:"+port);
+				if(port == "" ||port == "undefined")
+				{
+					GetAndSet("GetNetworkPort","json","{SessionId:"+id+",AuthValue:0}", getportsuccessfunc);	
+				}
+			//first page
+			$("#iframe1").attr("src", currentsrc);
 
 			//判断是否是出错跳转
 			function IFERROR()
 			{
 				var stmp = getQueryString("id");
-				var stmp2 = getQueryString("authvalue");
+				var stmp2 = getCookie("gmiAuthvalue");//getQueryString("authvalue");
 				if(stmp == "0" && stmp2 == "-1")
 				{
 					//出错
@@ -220,6 +275,11 @@
 
 					return;
 				}
+				else
+				{
+					//获取能力集和码流数
+					getStreamNumInfo();
+				}
 			}
 			IFERROR();
 			//获取设备能力集码流数
@@ -227,7 +287,7 @@
 			{
 					GetAndSet("GetCapabilities","xml","{SessionId:"+parent.id+",AuthValue:}"+parent.Authvalue, sucess_getStreamNumNLJ);	
 			}
-			getStreamNumInfo();
+			
 			function sucess_getStreamNumNLJ(data)
 			{
                 var PackDate=new UnPackData(data);
@@ -246,14 +306,15 @@
 			}
 				//var stmp = document.getElementById("vision");
 				//stmp.style.visibility = "hidden";
-				getip();
-				GetAndSet("GetNetworkPort","json","{SessionId:"+id+",AuthValue:0}", getportsuccessfunc);
+				
+				//初始化
+				init();
+
+				
 			 $("#bview").bind("click",
                     function(e) {
-								//deleteCookie(currenturlcookiename);//IE6 cookie 限制 。先删后加。
-                                //setCookie(currenturlcookiename, "ylanzkai_1.html");
-						//$("#iframe1").attr("src", "Temp.html");
-						//sleep(1000);
+								deleteCookie(currenturlcookiename);//IE6 cookie 限制 。先删后加。
+                                setCookie(currenturlcookiename, "ylanzkai_1.html");
                         $("#sideNav").css("visibility", "hidden");
 						$("#bset").css("display","block");
 					    $("#bview").css("display","none");
@@ -262,24 +323,32 @@
                         $("#iframe1").attr("src", "ylanzkai_1.html");
                        
                     });
-			//获取beni配置
-			getLocalSet();
+
+
+			//点击用户
+            $("#user").bind("click",
+            function(e) {
+					setCookie(currenturlcookiename, "user_manag_1.html");
+					//$("#iframe1").attr("src", "user_manag_1.html");	
+					
+					document.getElementById("asystem").click();	
+					document.getElementById("ausermanagement").click();	
+			});
                     $("#bset").bind("click",
                     function(e) {
 
 						
-/*						var fso = new ActiveXObject("Scripting.FileSystemObject");
-						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-						var Day = new Date();
-						var h = Day.getHours();
-						var m = Day.getMinutes();
-						var s = Day.getSeconds();
-						var ss = Day.getMilliseconds();
-						f.WriteLine("设置开始---" + h+":"+m+":"+s + ":" +ss);
-						f.WriteBlankLines(1);
-						f.Close();*/
+//						var fso = new ActiveXObject("Scripting.FileSystemObject");
+//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+//						var Day = new Date();
+//						var h = Day.getHours();
+//						var m = Day.getMinutes();
+//						var s = Day.getSeconds();
+//						var ss = Day.getMilliseconds();
+//						f.WriteLine("设置开始---" + h+":"+m+":"+s + ":" +ss);
+//						f.WriteBlankLines(1);
+//						f.Close();
 						//$("#iframe1").attr("src", "Temp.html");
-						//sleep(1000);
                         if (currentsrc == "ylanzkai_1.html") {
 
 						
@@ -291,20 +360,48 @@
 								
 								//$("#sideNav").css("visibility", "hidden");
 								deleteCookie(currenturlcookiename);//IE6 cookie 限制 。先删后加。
-								setCookie(currenturlcookiename, "camera_1.html");
-								$("#iframe1").attr("src", "camera_1.html");
+								//判断跳转界面
+								if(shipinAuth == true)
+								{
+									setCookie(currenturlcookiename, "camera_1.html");
+									$("#iframe1").attr("src", "camera_1.html");	
+								}
+								else if(canspzAuth == true)
+								{
+									setCookie(currenturlcookiename, "sound_set_1.html");
+									$("#iframe1").attr("src", "sound_set_1.html");		
+								}
+								else if(LogAuth == true)
+								{
+//									setCookie(currenturlcookiename, "log_management.html");
+//									$("#iframe1").attr("src", "log_management.html");
+									setCookie(currenturlcookiename, "system_info_1.html");
+									$("#iframe1").attr("src", "system_info_1.html");	
+								}
+								else if(UserAuth == true)
+								{
+									setCookie(currenturlcookiename, "user_manag_1.html");
+									$("#iframe1").attr("src", "user_manag_1.html");		
+								}
+								else
+								{
+									//跳转至系统信息界面
+									setCookie(currenturlcookiename, "system_info_1.html");
+									$("#iframe1").attr("src", "system_info_1.html");		
+								}
+
                             } else {
 								
-/*						var fso = new ActiveXObject("Scripting.FileSystemObject");
-						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-						var Day = new Date();
-						var h = Day.getHours();
-						var m = Day.getMinutes();
-						var s = Day.getSeconds();
-						var ss = Day.getMilliseconds();
-						f.WriteLine("Set cookie begin---" + h+":"+m+":"+s + ":" +ss);
-						f.WriteBlankLines(1);
-						f.Close();*/
+//						var fso = new ActiveXObject("Scripting.FileSystemObject");
+//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+//						var Day = new Date();
+//						var h = Day.getHours();
+//						var m = Day.getMinutes();
+//						var s = Day.getSeconds();
+//						var ss = Day.getMilliseconds();
+//						f.WriteLine("Set cookie begin---" + h+":"+m+":"+s + ":" +ss);
+//						f.WriteBlankLines(1);
+//						f.Close();
 
 								
                                 
@@ -379,7 +476,7 @@
                 }
 				
 				//出错情况
-				if(parent.id == "0" && parent.Authvalue == "-1")
+				if(id == "0" && Authvalue == "-1")
 				{
                     $("#sideNav").css("visibility", "hidden");
 					$("#bset").css("display","none");
@@ -399,8 +496,10 @@
 						 try
 						 {
 							 	 delete PackDate;
+								 $("#iframe1").attr("src", "");
+								 deleteCookie(currenturlcookiename);
 								 top.location.href="login.html";
-								  window.event.returnValue=false;
+								 //window.event.returnValue=false;
 						 }
 						 catch(e)
 						 {
@@ -500,6 +599,277 @@
 					return; 
 				} 
 			} 
+			
+			//根据权限设置界面
+			function SetgmiAuthvalue()
+			{
+				//alert("Authvalue:"+Authvalue);
+				var AuthvalueTmp = Authvalue;
+				
+				if(AuthvalueTmp == -1 || AuthvalueTmp == "-1")
+				{
+					alert("获取用户权限失败！");
+					return false;
+				}
+				//将十进制数转换为二进制
+				//var userlever="";
+				var answer= "";
+          		if(/\d+/.test(Authvalue))
+				{
+            		while(AuthvalueTmp != 0) {
+              			answer = Math.abs(AuthvalueTmp%2)+answer;
+              			AuthvalueTmp = parseInt(AuthvalueTmp/2);
+            		}
+            		if(answer.length == 0)
+					{
+              			answer = "0";
+						alert("获取用户权限失败！");
+						return false;
+					}
+          		}
+				
+				//低八位为权限
+				///test
+				//answer = "1000000000000000111111111";
+            	var Valuetwo = answer;
+				var ValueStr = String(Valuetwo);	
+				
+				var Value = ValueStr.split("");
+				//alert("answer:"+answer);
+				var length = answer.length;
+				var sss = Value[length-1];
+				//alert("sss:"+sss);
+				if(sss.indexOf("1") == -1)
+				{
+					//没有视频浏览权限
+					VideoAuth = 0;
+				}
+				else
+				{
+					VideoAuth = 1;	
+				}
+				sss = Value[length-2];
+				if(sss.indexOf("1") == -1)
+				{
+					//没有云镜控制权限
+					YunjingAuth = false;
+				}
+				else{YunjingAuth = true;}
+				
+				sss = Value[length-3];
+				if(sss.indexOf("1") == -1)
+				{
+					//没有视频调节权限
+					shipinAuth = false;
+					//$("#avideoset").css("display", "none");
+				}
+				else{shipinAuth = true;}
+				
+				sss = Value[length-4];
+				if(sss.indexOf("1") == -1)
+				{
+					//没有录像回放权限
+					Recordhf = false;
+				}
+				else{Recordhf = true;}
+				
+				sss = Value[length-5];
+				if(sss.indexOf("1") == -1)
+				{
+					//没有日志查询权限
+					//document.getElementById("rzgl").disabled = "none";
+					LogAuth = false;
+					//$("#rzgl").css("display", "none");
+				}
+				else{LogAuth = true;}
+				
+				sss = Value[length-6];
+				if(sss.indexOf("1") == -1)
+				{
+					//没有语音对讲权限
+					yunydjAuth = false;
+				}
+				else{yunydjAuth = true;}
+				
+				sss = Value[length-7];
+				if(sss.indexOf("1") == -1)
+				{
+					//没有参数配置权限
+					canspzAuth = false;
+					//判断是否有视频操作的权限
+					var st = Value[length-3];
+					if(st.indexOf("1") == -1)
+					{
+						//隐藏视频设置
+						shipinAuth = false;
+						//$("#avideoset").css("display", "none");	
+					}
+					else{shipinAuth = true;}
+					
+					//隐藏音频设置
+					//$("#asoundset").css("display", "none");
+					//隐藏网络设置
+					//$("#anetworkset").css("display", "none");
+					//时间日期 adatetime
+					//$("#sjgl").remove();
+				}
+				else{canspzAuth = true;}
+				
+				sss = Value[length-8];
+				if(sss.indexOf("1") == -1)
+				{
+					//没有用户管理权限
+					UserAuth = false;
+					//$("#yhgl").remove();
+				}
+				else{UserAuth = true;}
+				
+				sss = Value[length-9];
+				if(sss.indexOf("1") == -1)
+				{
+					//没有系统维护权限
+					sysweihu = false;
+					//$("#xtwh").remove();
+				}
+				else{sysweihu  = true;}
+				return;
+			}
+			
+			function init()
+			{
+				//设置用户名
+				$("#user").val(SetUsernameShow(UserName));
+				//document.getElementById("user").value = UserName;
+			}
+			//设置显示的用户名
+			function SetUsernameShow(username)
+			{
+				var stmp = "";
+				var lengthuser = username.length;
+				if(lengthuser>=10)
+				{
+					var i = 0;
+					var Value = username.split("");
+					for(i=0;i<8;i++)
+					{
+						stmp += Value[i];
+					}
+					stmp+="...";
+					return stmp;
+				}
+				
+				stmp = username;
+				return stmp;
+			}
+			//获取权限计时器
+			function StartimeVideo()
+			{
+				//clearTimeout(Clock);
+				//alert("StartimeVideo:UserName:"+UserName+"psw:"+UserPass);
+				GetAndSet("LogIn", "json", "{SessionId:0,UserName:"+UserName+",Password:"+UserPass+"}",successAuth,true);
+//					var  content={};
+//					content.SessionId=id;
+//					content.UserName=UserName;	
+//					content.Password=UserPass;	
+//					contentstr=jsonToString(content);
+//                $.ajax({
+//                    url: url,
+//                    data: "cgiFncCmd=LogIn&cgiContentType=json&Content=" + contentstr,
+//                    type: "post",
+//					global: true,
+//					success: function(data) 
+//					{
+//						var PackDate=new UnPackData(data);
+//						if(PackDate.Content!=null)
+//						{
+//							if(PackDate.Content.RetCode=="0")
+//							{
+//								var stmp = PackDate.Content.Authvalue;
+//								if(stmp == Authvalue)
+//								{
+//									//Clock = setTimeout('StartimeVideo()',1000);
+//									delete PackDate;
+//									SetgmiAuthvalue();							
+//
+//								}
+//								else
+//								{
+//									Authvalue = stmp;
+//									SetgmiAuthvalue();
+//									delete PackDate;
+//								}
+//									switch(type)
+//									{
+//										case 1:	//
+//											return VideoAuth;
+//										case 2:
+//											return YunjingAuth;
+//										case 3:
+//											return yunydjAuth;
+//										case 4:
+//											return shipinAuth;
+//										case 5:
+//											return canspzAuth;
+//										case 6:
+//											return LogAuth;
+//										case 7:
+//											return UserAuth;
+//										case 8:
+//											return sysweihu;
+//										case 9:
+//											return Recordhf;
+//									}								
+//							
+//							}
+//							else
+//							{
+//								alert("获取权限失败！");
+//								delete PackDate;
+//								return false;		
+//							}
+//						}
+//					},
+//                    error: function() {
+//								alert("获取权限失败！");
+//								delete PackDate;
+//								return false;	
+//                    }
+//                });
+				//alert("set auth clock");
+			}
+			function successAuth(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						var stmp = PackDate.Content.Authvalue;
+//						if(stmp == Authvalue)
+//						{
+//							//Clock = setTimeout('StartimeVideo()',1000);
+//							delete PackDate;
+//							return;
+//						}
+//						else
+//						{
+							Authvalue = stmp;
+							SetgmiAuthvalue();
+							delete PackDate;
+							return;
+//						}
+					}
+					else
+					{
+						
+						//alert("获取权限失败!");
+						delete PackDate;
+						//Clock = setTimeout('StartimeVideo()',1000);
+						return;	
+					}
+				}
+				
+			}
         </script>
     </head>
     
@@ -518,19 +888,24 @@
                                 视频设置
                             </a>
                           <ul class="level2">
-                                <li>
+                                <li id="xjsz">
                                     <a href="#none" name="camera_1.html" id="acameraset" level="2">
                                         像机设置
                                     </a>
                                 </li>
-                                <li>
+                                <li id="xxdj">
                                     <a href="#none" name="inf_superimposed_1.html" id="aosd" level="2">
                                         信息叠加(OSD)
                                     </a>
                                 </li>
-                                <li>
+                                <li id="spbm">
                                     <a href="#none" name="new_bmbj.html" id="avideocoding" level="2">
                                         视频编码
+                                    </a>
+                                </li>
+                                <li id="yszd" style="display:none">
+                                    <a href="#none" name="private_1.html" id="aprivacy" level="2">
+                                        隐私遮挡
                                     </a>
                                 </li>
                             </ul>
@@ -540,7 +915,7 @@
                                 音频设置
                             </a>
                             <ul class="level2">
-                                <li>
+                                <li id="ypsz">
                                     <a href="#none" name="sound_set_1.html" id="2soundset" level="2">
                                         音频设置
                                     </a>
@@ -552,27 +927,27 @@
                                 网络设置
                             </a>
                             <ul class="level2">
-                                <li>
+                                <li id="lmtxy">
                                     <a href="#none" name="media_pro_1.html" id="amediapro" level="2">
                                         流媒体协议
                                     </a>
                                 </li>
-                                <li>
+                                <li id="ipsz">
                                     <a href="#none" name="ip_set_1.html" id="aipset" level="2">
                                         IP设置
                                     </a>
                                 </li>
-                                <li  style="display:none">
+                                <li  style="display:none" id="txxy">
                                     <a href="#none" name="int_prot_1.html" id="aprotocolset" level="2">
                                         通信协议
                                     </a>
                                 </li>
-                                 <li  style="display:none">
+                                 <li  style="display:none" id="ddnssz">
                                     <a href="#none" name="ddnsSet.html" id="addnsset" level="2">
                                         DDNS设置
                                     </a>
                                 </li>
-                                <li  style="display:none">
+                                <li  style="display:none" id="bjzx">
                                     <a href="#none" name="alarmCenter.html" id="aalarmcenter" level="2">
                                         报警中心
                                     </a>
@@ -584,34 +959,34 @@
                                 事件设置
                             </a>
                             <ul class="level2">
-                                <li>
+                                <li id="ydzc">
                                     <a href="#none" name="motion_detection_1.html" id="adetection" level="2">
                                         移动侦测
                                     </a>
                                 </li>
-                                <li>
+                                <li id="spyc">
                                     <a href="#none" name="video_anomaly_1.html" id="aabnormal" level="2">
                                         视频异常
                                     </a>
                                 </li>
-                                <li>
+                                <li id="bjsr">
                                     <a href="#none" name="ioalarm_sr_1.html" id="aalarminput" level="2">
                                         报警输入
                                     </a>
                                 </li>
-                                <li>
+                                <li id="bjsc">
                                     <a href="#none" name="IO_alarm_1.html" id="aalarmoutput" level="2">
                                         报警输出
                                     </a>
                                 </li>
-                                 <li>
+                                 <li id="sbgz">
                                     <a href="#none" name="devicefailure.html" level="2">
                                         设备故障
                                     </a>
                                 </li>
                             </ul>
                         </li>
-                        <li class="level1"  style="display:none">
+                        <li class="level1"  style="display:none" id="bfsz">
                             <a href="#none" name="protection_setting_1.html" id="adeployment" level="1">
                                 布防设置
                             </a>
@@ -623,7 +998,7 @@
                                 </li>
                             </ul>
                         </li>
-                        <li class="level1"  style="display:none">
+                        <li class="level1"  style="display:none" id="dslx">
                             <a href="#none" name="time_lapse_video_1.html" id="atimervideo" level="1">
                                 定时录像
                             </a>
@@ -635,7 +1010,7 @@
                                 </li>
                             </ul>
                         </li>
-                        <li class="level1"  style="display:none">
+                        <li class="level1"  style="display:none" id="sdkgl">
                             <a href="#none" name="sdcard_m_1.html" id="asdcard" level="1">
                                 SD卡管理
                             </a>
@@ -647,11 +1022,11 @@
                                 </li>
                             </ul>
                         </li>
-                        <li class="level1 last" style="display:none">
+                        <li class="level1 last" id="rzgl" style="display:none">
                             <a href="#none" name="log_management.html" id="alogmanagement" level="1">
                                 日志管理
                             </a>
-                            <ul class="level2">
+                          <ul class="level2" >
                                 <li>
                                     <a href="#none" name="log_management.html" id="2logmanagement" level="2">
                                         日志管理
@@ -664,7 +1039,7 @@
                                 系统管理
                             </a>
                             <ul class="level2">
-                                <li  style="display:none">
+                                <li  style="display:none" id="cksz">
                                     <a href="#none" name="serialset.html" id="aserialset" level="2" >
                                         串口设置
                                     </a>
@@ -674,28 +1049,28 @@
                                         GB28181设置
                                     </a>
                                 </li>
-                                <li>
+                                <li id="yhgl">
                                     <a href="#none" name="user_manag_1.html" id="ausermanagement" level="2">
                                         用户管理
                                     </a>
                                 </li>
-                                <li>
+                                <li id="sjgl">
                                     <a href="#none" name="date_time_1.html" id="adatetime" level="2">
                                         日期时间
                                     </a>
                                 </li>
-                                <li>
+                                <li id="xtwh">
                                     <a href="#none" name="system_maintenance_1.html" id="asysmaintenance"
                                     level="2">
                                         系统维护
                                     </a>
                                 </li>
-                                <li>
+                                <li id="xtxx">
                                     <a href="#none" name="system_info_1.html" id="asysteminfo" level="2">
                                         系统信息
                                     </a>
                                 </li>
-                                 <li>
+                                 <li id="bdsz">
                                     <a href="#none" name="localconfig.html" id="alocalconfig" level="2">
                                         本地设置
                                     </a>
@@ -707,7 +1082,7 @@
                                 帮助
                             </a>
                             <ul class="level2">
-                                <li>
+                                <li id = "syzn">
                                     <a href="#none" name="help_1.html" id="auserguide" level="2">
                                         使用指南
                                     </a>
@@ -740,24 +1115,30 @@
                         </li>
                         
                         <li style="float:right;">
-                        <button class="btn-logout" value="退出" id="bloginout">
+                        <button class="btn-set-user" value="退出" id="bloginout" style="background: url(../images/logout.jpg);">
                                 退出
                             </button>
-                            <button class="btn-set" value="预览" id="bview" style="display:none">
+                            <button class="btn-set-view" value="预览" id="bview" style="display:none">
                                 预览
                             </button>
-                            <button class="btn-set" value="设置" id="bset">
+                            <button class="btn-set-user" value="设置" id="bset" style="background: url(../images/setting.jpg);">
                                 设置
                             </button>
-
-
+                            <input type="button" class="btn-set-user" value="" id="user">
+                                
+                            </button>
+                            
+<!--                            <li class="vision" id="vision">
+                				version：3.0.2.2
+                			</li>-->
+							
                         </li>
                     </ul>
 
-                </div>
+                </div><!--src="ylanzkai_1.html"-->
                 <div class="cnt-wrap" style="background-color:#242424;">
                     <iframe id="iframe1" width="100%" allowtransparency="true"
-                    frameborder="0" src="ylanzkai_1.html" height="100%" class="cnt-wrap_iframe"
+                    frameborder="0"  height="100%" class="cnt-wrap_iframe"
                     style="background-color:#242424">
                     </iframe>
 

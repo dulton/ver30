@@ -75,6 +75,7 @@ GMI_RESULT  SysSetNetworkPortCommandExecutor::Execute()
         SysNetworkPort.s_RTSP_Port = NETWORK_TO_HOST_UINT(SysNetworkPort.s_RTSP_Port);
         SysNetworkPort.s_SDK_Port  = NETWORK_TO_HOST_UINT(SysNetworkPort.s_SDK_Port);
         SysNetworkPort.s_Upgrade_Port= NETWORK_TO_HOST_UINT(SysNetworkPort.s_Upgrade_Port);
+        SysNetworkPort.s_ONVIF_Port  = NETWORK_TO_HOST_UINT(SysNetworkPort.s_ONVIF_Port);
         Result = m_SystemServiceManager->SvrSetNetworkPort(&SysNetworkPort);
         if (FAILED(Result))
         {

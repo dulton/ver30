@@ -257,16 +257,69 @@ GMI_RESULT SystemServiceManager::MiscInitial()
         return GMI_FAIL;
     }
 
-	//user log
-	Result = UserLogQuery::Initialize();
+    //get network port
+    memset(&m_SysNetWorkPort, 0, sizeof(SysPkgNetworkPort));
+    Result = m_ConfigFileManagerPtr->GetExternNetworkPort(&m_SysNetWorkPort);
+    if (FAILED(Result))
+    {
+    	m_BoardManagerPtr = NULL;
+        m_UserManagerPtr->Deinitialize();
+        m_UserManagerPtr = NULL;
+    	SYS_ERROR("get extern network port failed from config file, Result = 0x%lx\n", Result);
+    	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "get extern network port failed from config file, Result = 0x%lx\n", Result);
+    	return Result;
+    }
+
+	//get device info
+	memset(&m_SysDeviceInfo, 0, sizeof(SysPkgDeviceInfo));
+	Result = m_ConfigFileManagerPtr->GetDeviceInfo(&m_SysDeviceInfo);
 	if (FAILED(Result))
 	{
 		m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
         m_UserManagerPtr = NULL;
-        SYS_ERROR("UserLogQuery fail, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "UserLogQuery fail, Result = 0x%lx\n", Result);
-		return GMI_FAIL;
+    	SYS_ERROR("get device info failed from config file, Result = 0x%lx\n", Result);
+    	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "get device info failed from config file, Result = 0x%lx\n", Result);
+		return Result;
+	}
+
+	//get ntp server info
+	memset(&m_SysNtpServerInfo, 0, sizeof(SysPkgNtpServerInfo));
+    Result = m_ConfigFileManagerPtr->GetNtpServerInfo(&m_SysNtpServerInfo);
+    if (FAILED(Result))
+    {
+    	m_BoardManagerPtr = NULL;
+        m_UserManagerPtr->Deinitialize();
+        m_UserManagerPtr = NULL;
+    	SYS_ERROR("get ntp server info fail, Result = 0x%lx\n", Result);
+    	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "get ntp server info fail, Result = 0x%lx\n", Result);
+    	return Result;
+    }
+
+	//get device software capability
+	m_CapabilitiesMessagePtr = BaseMemoryManager::Instance().News<char_t>(MAX_MESSAGE_LENGTH);
+	if (NULL == m_CapabilitiesMessagePtr.GetPtr())
+	{
+		m_BoardManagerPtr = NULL;
+        m_UserManagerPtr->Deinitialize();
+        m_UserManagerPtr = NULL;
+    	SYS_ERROR("m_CapabilitiesMessagePtr new %d fail\n", MAX_MESSAGE_LENGTH);
+    	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_CapabilitiesMessagePtr new %d fail\n", MAX_MESSAGE_LENGTH);
+		return GMI_OUT_OF_MEMORY;
+	}
+
+	memset(m_CapabilitiesMessagePtr.GetPtr(), 0, MAX_MESSAGE_LENGTH);
+	memset(&m_SysCapability, 0, sizeof(SysPkgXml));
+	Result = m_ConfigFileManagerPtr->GetCapabilities(MAX_MESSAGE_LENGTH, m_CapabilitiesMessagePtr.GetPtr(), &m_SysCapability);
+	if (FAILED(Result))
+	{
+		memset(&m_SysCapability, 0, sizeof(SysPkgXml));
+		m_CapabilitiesMessagePtr = NULL;
+		m_BoardManagerPtr = NULL;
+        m_UserManagerPtr->Deinitialize();
+        m_UserManagerPtr = NULL;
+    	SYS_ERROR("GetCapabilities fail, %d\n", MAX_MESSAGE_LENGTH);
+    	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "GetCapabilities fail, %d\n", MAX_MESSAGE_LENGTH);		
 	}
 	
     SYS_INFO("##%s normal out..........\n", __func__);
@@ -279,14 +332,8 @@ GMI_RESULT SystemServiceManager::MiscDeinitial()
 {
     SYS_INFO("%s in..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s in..........\n", __func__);
-	GMI_RESULT Result = UserLogQuery::Deinitialize();
-	if (FAILED(Result))
-	{
-		SYS_ERROR("UserLogQuery::Deinitialize() fail, Result = 0x%lx\n", Result);
-		return Result;
-	}
-	
-    Result = m_BoardManagerPtr->Deinitialize();
+
+    GMI_RESULT Result = m_BoardManagerPtr->Deinitialize();
     if (FAILED(Result))
     {
         SYS_ERROR("m_BoardManagerPtr Deinitialize fail, Result = 0x%lx\n", Result);
@@ -351,6 +398,41 @@ GMI_RESULT SystemServiceManager::OsalResourceDeinitial(void)
 }
 
 
+void_t* SystemServiceManager::MaintainSystemThread(void * Argument)
+{
+	SystemServiceManager *Manager = reinterpret_cast<SystemServiceManager*> (Argument);
+    return Manager->MaintainSystem();
+}
+
+
+void_t* SystemServiceManager::MaintainSystem(void)
+{
+	while (1)
+	{
+		GMI_Sleep(VIDIN_BLOCKED_TIMES*1000);
+		
+		if (m_VidInBlocked)
+		{
+			SYS_ERROR("SetVidInVidOut is blocked, so should reboot\n");
+			DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetVidInVidOut is blocked, so should reboot\n");
+			GMI_RESULT Result = DaemonReboot();
+			if (FAILED(Result))
+			{
+				DaemonReboot();
+			}
+		}
+		else
+		{
+			SYS_INFO("break from MaintainSystem!!!\n");
+			DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "MaintainSystem normal exit!!!\n");
+			break;
+		}
+	}
+	
+	return (void *) GMI_SUCCESS;
+}
+
+
 GMI_RESULT SystemServiceManager::StartStreamMonitor()
 {
     SYS_INFO("%s in..........\n", __func__);
@@ -405,6 +487,7 @@ GMI_RESULT SystemServiceManager::StopStreamMonitor()
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s normal out..........\n", __func__);
     return GMI_SUCCESS;
 }
+
 
 
 GMI_RESULT SystemServiceManager::MediaInitial(void)
@@ -470,7 +553,7 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
         m_ConfigFileManagerPtr->Deinitialize();
         return GMI_OUT_OF_MEMORY;
     }
-    memset(m_VideoStreamTypePtr.GetPtr(), 0, sizeof(int32_t)*MAX_VIDEO_STREAM_NUM);
+    memset(m_VideoStreamTypePtr.GetPtr(), VIDEO_ENCODE_STREAM_TYPE, sizeof(int32_t)*MAX_VIDEO_STREAM_NUM);
 
     //allocate video handle
     m_VideoCodecHandle    = BaseMemoryManager::Instance().News<FD_HANDLE>(MAX_VIDEO_STREAM_NUM);
@@ -510,7 +593,7 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
         return Result;
     }
 
-    for (int32_t Id = 0; Id < m_VideoStreamNum; Id++)
+    for (int32_t Id = 0; Id < MAX_VIDEO_STREAM_NUM; Id++)
     {
         Result = m_ConfigFileManagerPtr->GetVideoStreamType(Id, &((m_VideoStreamTypePtr.GetPtr())[Id]));
         if (FAILED(Result))
@@ -551,12 +634,89 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
         return Result;
     }
 
+    //set general param;
+    SysPkgComponents SysComponents;
+    memset(&SysComponents, 0, sizeof(SysPkgComponents));
+    Result = m_ConfigFileManagerPtr->GetHwAutoDetectInfo(&SysComponents);
+    if (FAILED(Result))
+    {
+    	SYS_ERROR("GetHwAutoDetectInfo fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetHwAutoDetectInfo fail, Result = 0x%lx\n", Result);
+        m_VideoCodecHandle = NULL;
+        m_VideoStreamTypePtr = NULL;
+        m_VideoEncParamPtr = NULL;
+        m_ConfigFileManagerPtr->Deinitialize();
+        return Result;
+    }    
+    
+    Result = m_StreamCenterClientPtr->GeneralParamSet(GEN_PARAM_AUTO, (void_t*)&SysComponents);
+    if (FAILED(Result))
+    {
+    	SYS_ERROR("GeneralParamSet GEN_PARAM_AUTO fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GeneralParamSet GEN_PARAM_AUTO fail, Result = 0x%lx\n", Result);
+        m_VideoCodecHandle = NULL;
+        m_VideoStreamTypePtr = NULL;
+        m_VideoEncParamPtr = NULL;
+        m_ConfigFileManagerPtr->Deinitialize();
+        return Result;
+    }
+
+	GeneralParam_Ircut FacotryIrcut;
+    memset(&FacotryIrcut, 0, sizeof(GeneralParam_Ircut));
+    Result = m_ConfigFileManagerPtr->GetFactoryIrcut(&FacotryIrcut);
+    if (FAILED(Result))
+    {
+    	SYS_ERROR("GetFactoryIrcut fail, Result = 0x%lx. system also start\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "GetFactoryIrcut fail, Result = 0x%lx. system also start\n", Result);        
+    }
+    else
+    {
+	    Result = m_StreamCenterClientPtr->GeneralParamSet(GEN_PARAM_IRCUT, (void_t*)&FacotryIrcut);
+		if (FAILED(Result))
+	    {
+	    	SYS_ERROR("GeneralParamSet GEN_PARAM_IRCUT fail, Result = 0x%lx. system also start\n", Result);
+	        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "GeneralParamSet GEN_PARAM_IRCUT fail, Result = 0x%lx\n. system also start\n", Result);	        
+	    }
+    }
+
+	//14/2/12. guoqiang.lu:it unlikely appears "wait for bootup" that lead to IPC is blocked, when upgrade from FW2.0->FW3.0.
+	//So, we create maintenance thread to monitor this blocked situation.
+	Result = m_MaintainSystemThread.Create(NULL, 0, MaintainSystemThread, this);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("m_MaintainSystemThread.Create fail, Result = 0x%lx\n", Result);
+		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MaintainSystemThread.Create fail, Result = 0x%lx\n", Result);
+		m_StreamCenterClientPtr->Deinitialize();
+        m_StreamCenterClientPtr = NULL;
+        m_VideoCodecHandle = NULL;
+        m_VideoStreamTypePtr = NULL;
+        m_VideoEncParamPtr = NULL;
+        m_ConfigFileManagerPtr->Deinitialize();
+		return Result;
+	}
+	Result = m_MaintainSystemThread.Start();
+	if (FAILED(Result))
+	{
+		SYS_ERROR("m_MaintainSystemThread.Start fail, Result = 0x%lx\n", Result);
+		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_MaintainSystemThread.Create fail, Result = 0x%lx\n", Result);
+		m_StreamCenterClientPtr->Deinitialize();
+        m_StreamCenterClientPtr = NULL;
+        m_VideoCodecHandle = NULL;
+        m_VideoStreamTypePtr = NULL;
+        m_VideoEncParamPtr = NULL;
+        m_ConfigFileManagerPtr->Deinitialize();
+		return Result;
+	}
+
+	int32_t Time1 = TimeStamp();
+	m_VidInBlocked = true;
     //OpenVideoInOutDevice
     Result = m_StreamCenterClientPtr->OpenVideoInOutDevice(0, 0, &m_VideoInOutHandle);
     if (FAILED(Result))
     {
         SYS_ERROR("OpenVideoInOutDevice fail, Result = 0x%lx\n", Result);
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "OpenVideoInOutDevice fail, Result = 0x%lx\n", Result);
+        m_VidInBlocked = false;
         m_StreamCenterClientPtr->Deinitialize();
         m_StreamCenterClientPtr = NULL;
         m_VideoCodecHandle = NULL;
@@ -572,6 +732,7 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
     {
         SYS_ERROR("m_VideoSourcePtr new fail\n");
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_VideoSourcePtr new fail\n");
+        m_VidInBlocked = false;
         m_StreamCenterClientPtr->CloseVideoInOutDevice(m_VideoInOutHandle);
         m_StreamCenterClientPtr->Deinitialize();
         m_StreamCenterClientPtr = NULL;
@@ -591,6 +752,7 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
     {
         SYS_ERROR("GetVideoSourceSettings fail, Result = 0x%lx\n", Result);
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetVideoSourceSettings fail, Result = 0x%lx\n", Result);
+        m_VidInBlocked = false;
         m_VideoSourcePtr = NULL;
         m_StreamCenterClientPtr->CloseVideoInOutDevice(m_VideoInOutHandle);
         m_StreamCenterClientPtr->Deinitialize();
@@ -611,6 +773,7 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
     {
         SYS_ERROR("GetVinVoutConfiguration fail, Result = 0x%lx\n", Result);
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetVinVoutConfiguration fail, Result = 0x%lx\n", Result);
+        m_VidInBlocked = false;
         m_VideoSourcePtr = NULL;
         m_StreamCenterClientPtr->CloseVideoInOutDevice(m_VideoInOutHandle);
         m_StreamCenterClientPtr->Deinitialize();
@@ -622,7 +785,7 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
         m_ConfigFileManagerPtr->Deinitialize();
         return Result;
     }
-
+	
     Vin.s_VinFrameRate     = m_VideoSourcePtr.GetPtr()->s_SrcFps;
     Vin.s_VinMirrorPattern = m_VideoSourcePtr.GetPtr()->s_Mirror;
     Result = m_StreamCenterClientPtr->SetVinVoutConfiguration(m_VideoInOutHandle, &Vin, &Vout);
@@ -630,6 +793,7 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
     {
         SYS_ERROR("SetVinVoutConfiguration fail, Result = 0x%lx\n", Result);
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetVinVoutConfiguration fail, Result = 0x%lx\n", Result);
+        m_VidInBlocked = false;
         m_VideoSourcePtr = NULL;
         m_StreamCenterClientPtr->CloseVideoInOutDevice(m_VideoInOutHandle);
         m_StreamCenterClientPtr->Deinitialize();
@@ -641,6 +805,8 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
         m_ConfigFileManagerPtr->Deinitialize();
         return Result;
     }
+    m_VidInBlocked = false;
+	SYS_INFO("==================>set vidinout waste time %d\n", TimeStamp() - Time1);
 
     //start video
     for (Id = 0; Id < m_VideoStreamNum; Id++)
@@ -1230,85 +1396,6 @@ GMI_RESULT SystemServiceManager::MediaParamUnLoad(void)
 }
 
 
-GMI_RESULT SystemServiceManager::SvrStop3A(void)
-{
-	GMI_RESULT Result = GMI_SUCCESS;
-	
-	if (NULL != m_ZoomHandle)
-	{
-		Result = m_StreamCenterClientPtr->CloseZoomDevice(m_ZoomHandle);
-		if (FAILED(Result))
-		{
-			SYS_ERROR("CloseZoomDevice fail, Result = 0x%lx\n", Result);
-			return Result;
-		}		
-		else
-		{
-			SYS_ERROR("CloseZoomDevice OK\n");
-		}
-		
-		m_ZoomHandle = NULL;
-	}
-	else
-	{
-		SYS_INFO("CloseZoomDevice has done\n");
-	}
-
-	if (NULL != m_AutoFocusHandle)
-	{
-		Result = m_StreamCenterClientPtr->StopAutoFocusDevice(m_AutoFocusHandle);
-		if (FAILED(Result))
-		{
-			SYS_ERROR("StopAutoFocusDevice fail, Result = 0x%lx\n", Result);
-			return Result;
-		}
-		else
-		{
-			SYS_ERROR("StopAutoFocusDevice OK\n");
-		}
-
-		Result = m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);
-		if (FAILED(Result))
-		{
-			SYS_ERROR("CloseAutoFocusDevice fail, Result = 0x%lx\n", Result);
-			return Result;
-		}
-		else
-		{
-			SYS_ERROR("CloseAutoFocusDevice OK\n");
-		}
-
-		m_AutoFocusHandle = NULL; 
-	}
-	else
-	{
-		SYS_INFO("CloseAutoFocusDevice has done\n");
-	}
-
-	if (NULL != m_ImageHandle)
-	{
-		Result = m_StreamCenterClientPtr->CloseImageDevice(m_ImageHandle);
-		if (FAILED(Result))
-		{
-			SYS_ERROR("CloseImageDevice fail, Result = 0x%lx\n", Result);
-			DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "CloseImageDevice fail, Result = 0x%lx\n", Result);
-			return Result;
-		}
-		else
-		{
-			 SYS_ERROR("CloseImageDevice OK\n");
-			 m_ImageHandle = NULL;
-		}
-	}
-	else
-	{
-		SYS_INFO("CloseImageDevice has done\n");
-	}
-
-	return GMI_SUCCESS;
-}
-
-
 GMI_RESULT SystemServiceManager::OsdsInit(int32_t VideoCnt, VideoEncodeParam VideoEncodeParam[], VideoOSDParam VideoOsdParam[])
 {
     GMI_RESULT Result = m_StreamCenterClientPtr->SetOsdConfiguration((m_VideoCodecHandle.GetPtr())[0], &VideoOsdParam[0]);
@@ -1570,7 +1657,7 @@ GMI_RESULT SystemServiceManager::PTZ_Deinitial()
             DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "CloseAutoFocusDevice fail, Result = 0x%lx\n", Result);
         }
 
-        m_AutoFocusHandle = NULL;       
+        m_AutoFocusHandle = NULL;
 
         Result = m_PtzControlPtr->Deinitialize();
         if (FAILED(Result))
@@ -2145,123 +2232,67 @@ GMI_RESULT SystemServiceManager::RecreateVideoCodec(int32_t StreamId, VideoEncod
 {
     SYS_INFO("%s in..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s in..........\n", __func__);
-    if (0 == StreamId) //main stream, must stop and destroy all,and start all stream
+	//1/16/2014, fix the bug that modify the bitrate of substream will result in the third four stream disapperaed.       
+    GMI_RESULT Result = DestroyVideoCodec();
+    if (FAILED(Result))
     {
-        GMI_RESULT Result = DestroyVideoCodec();
-        if (FAILED(Result))
-        {
-            SYS_ERROR("Destroy video all code fail, Result = 0x%lx\n", Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Destroy video all code fail, Result = 0x%lx\n", Result);
-            return Result;
-        }
+        SYS_ERROR("Destroy video all code fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Destroy video all code fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
 
-        //create and start
-        Result = m_StreamCenterClientPtr->Create(0, 0, MEDIA_VIDEO, EncParamPtr->s_EncodeType, true, EncParamPtr, sizeof(VideoEncodeParam), &((m_VideoCodecHandle.GetPtr())[0]));
-        if (GMI_WAIT_TIMEOUT == Result)//miss the error of "TIMEOUT"
-        {
-            SYS_ERROR("Create main video codec timeout, Result = 0x%lx\n", Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "Create main video codec timeout, Result = 0x%lx\n", Result);
-        }
-        else if (FAILED(Result))
-        {
-            SYS_ERROR("Create main video codec fail, Result = 0x%lx\n", Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Create main video codec fail, Result = 0x%lx\n", Result);
-            return Result;
-        }
-
-        int32_t Id;
-        for (Id = 1; Id < m_VideoStreamNum; Id++)
-        {
+    //create and start       
+    int32_t Id;
+    for (Id = 0; Id < m_VideoStreamNum; Id++)
+    {
+    	if (Id == StreamId)
+    	{
+			Result = m_StreamCenterClientPtr->Create(0, Id, MEDIA_VIDEO, EncParamPtr->s_EncodeType, true, EncParamPtr, sizeof(VideoEncodeParam), &((m_VideoCodecHandle.GetPtr())[Id]));
+			if (GMI_WAIT_TIMEOUT == Result)//miss the error of "TIMEOUT"
+			{
+				SYS_ERROR("Create video codec%d timeout, Result = 0x%lx\n", Id, Result);
+                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "Create video codec%d timeout, Result = 0x%lx\n", Id, Result);
+			}				
+    	}
+    	else
+    	{
             Result = m_StreamCenterClientPtr->Create(0, Id, MEDIA_VIDEO, (m_VideoEncParamPtr.GetPtr())[Id].s_EncodeType, true, &((m_VideoEncParamPtr.GetPtr())[Id]), sizeof(VideoEncodeParam), &((m_VideoCodecHandle.GetPtr())[Id]));
             if (GMI_WAIT_TIMEOUT == Result)//miss the error of "TIMEOUT"
             {
                 SYS_ERROR("Create video codec%d timeout, Result = 0x%lx\n", Id, Result);
                 DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "Create video codec%d timeout, Result = 0x%lx\n", Id, Result);
-            }
-            else if (FAILED(Result))
-            {
-                while (Id--)
-                {
-                    m_StreamCenterClientPtr->Destroy((m_VideoCodecHandle.GetPtr())[Id]);
-                }
-                SYS_ERROR("Create codec%d fail, Result = 0x%lx\n", Id, Result);
-                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Create codec%d fail, Result = 0x%lx\n", Id, Result);
-                return Result;
-            }
+            }	          
         }
 
-        for (Id = 0; Id < m_VideoStreamNum; Id++)
-        {
-            Result = m_StreamCenterClientPtr->Start2((m_VideoCodecHandle.GetPtr())[Id]);
-            if (GMI_WAIT_TIMEOUT == Result)//miss the error of "TIMEOUT"
-            {
-                SYS_ERROR("Start2 video codec%d timeout, Result = 0x%lx\n", Id, Result);
-                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "Start2 video codec%d timeout, Result = 0x%lx\n", Id, Result);
-            }
-            else if (FAILED(Result))
-            {
-                while (Id--)
-                {
-                    m_StreamCenterClientPtr->Stop2((m_VideoCodecHandle.GetPtr())[Id]);
-                    m_StreamCenterClientPtr->Destroy((m_VideoCodecHandle.GetPtr())[Id]);
-                }
-                SYS_ERROR("Start2 codec%d fail, Result = 0x%lx\n", Id, Result);
-                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Start2 codec%d fail, Result = 0x%lx\n", Id, Result);
-                return Result;
-            }
-        }
+		if (FAILED(Result) && GMI_WAIT_TIMEOUT != Result)
+		{
+			while (Id--)
+			{
+			    m_StreamCenterClientPtr->Destroy((m_VideoCodecHandle.GetPtr())[Id]);
+			}
+			SYS_ERROR("Create codec%d fail, Result = 0x%lx\n", Id, Result);
+			DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Create codec%d fail, Result = 0x%lx\n", Id, Result);
+			return Result;
+		}
     }
-    else
+
+    for (Id = 0; Id < m_VideoStreamNum; Id++)
     {
-        GMI_RESULT Result = m_StreamCenterClientPtr->Stop2((m_VideoCodecHandle.GetPtr())[StreamId]);
+        Result = m_StreamCenterClientPtr->Start2((m_VideoCodecHandle.GetPtr())[Id]);
         if (GMI_WAIT_TIMEOUT == Result)//miss the error of "TIMEOUT"
         {
-            SYS_ERROR("Stop video codec%d timeout, Result = 0x%lx\n", StreamId, Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "Stop video codec %d timeout, Result = 0x%lx\n", StreamId, Result);
+            SYS_ERROR("Start2 video codec%d timeout, Result = 0x%lx\n", Id, Result);
+            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "Start2 video codec%d timeout, Result = 0x%lx\n", Id, Result);
         }
         else if (FAILED(Result))
         {
-            SYS_ERROR("Stop video codec%d fail, Result = 0x%lx\n", StreamId, Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Stop video codec fail, Result = 0x%lx\n", Result);
-            return Result;
-        }
-
-        Result = m_StreamCenterClientPtr->Destroy((m_VideoCodecHandle.GetPtr())[StreamId]);
-        if (GMI_WAIT_TIMEOUT == Result)//miss the error of "TIMEOUT"
-        {
-            SYS_ERROR("Destroy video codec%d timeout, Result = 0x%lx\n", StreamId, Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "Destroy video codec%d timeout, Result = 0x%lx\n", StreamId, Result);
-        }
-        else if (FAILED(Result))
-        {
-            SYS_ERROR("Destroy video codec%d fail, Result = 0x%lx\n", StreamId, Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Destroy video codec%d fail, Result = 0x%lx\n", StreamId, Result);
-            return Result;
-        }
-
-        //create and start
-        Result = m_StreamCenterClientPtr->Create(0, StreamId, MEDIA_VIDEO, EncParamPtr->s_EncodeType, true, EncParamPtr, sizeof(VideoEncodeParam), &((m_VideoCodecHandle.GetPtr())[StreamId]));
-        if (GMI_WAIT_TIMEOUT == Result)//miss the error of "TIMEOUT"
-        {
-            SYS_ERROR("Create video codec%d timeout, Result = 0x%lx\n", StreamId, Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "Create video codec%d timeout, Result = 0x%lx\n", StreamId, Result);
-        }
-        else if (FAILED(Result))
-        {
-            SYS_ERROR("Create codec%d fail, Result = 0x%lx\n", StreamId, Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Create codec%d fail, Result = 0x%lx\n", StreamId, Result);
-            return Result;
-        }
-        Result = m_StreamCenterClientPtr->Start2((m_VideoCodecHandle.GetPtr())[StreamId]);
-        if (GMI_WAIT_TIMEOUT == Result)//miss the error of "TIMEOUT"
-        {
-            SYS_ERROR("Start2 video codec%d timeout, Result = 0x%lx\n", StreamId, Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "Start2 video codec%d timeout, Result = 0x%lx\n", StreamId, Result);
-        }
-        else if (FAILED(Result))
-        {
-            SYS_ERROR("Start2 codec%d fail, Result = 0x%lx\n", StreamId, Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Start2 codec%d fail, Result = 0x%lx\n", StreamId, Result);
+            while (Id--)
+            {
+                m_StreamCenterClientPtr->Stop2((m_VideoCodecHandle.GetPtr())[Id]);
+                m_StreamCenterClientPtr->Destroy((m_VideoCodecHandle.GetPtr())[Id]);
+            }
+            SYS_ERROR("Start2 codec%d fail, Result = 0x%lx\n", Id, Result);
+            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Start2 codec%d fail, Result = 0x%lx\n", Id, Result);
             return Result;
         }
     }
@@ -2342,7 +2373,13 @@ GMI_RESULT SystemServiceManager::SvrSetVideoEncodeSetting(int32_t StreamId, SysP
     EncParam.s_EncodeQulity    = FloatToInt((float_t)(SysEncodeCfgPtr->s_Quality * 100) / 6);
     EncParam.s_Rotate          = SysEncodeCfgPtr->s_Rotate;
 
-    GMI_RESULT Result;
+    GMI_RESULT Result = m_StreamCenterClientPtr->CheckVideoEncodeConfiguration(&EncParam);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("check video encode param fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+
     GMI_RESULT RetCode = GMI_SUCCESS;
     do
     {
@@ -2367,10 +2404,11 @@ GMI_RESULT SystemServiceManager::SvrSetVideoEncodeSetting(int32_t StreamId, SysP
         }
 
         boolean_t OsdInit = false;
-        //if frameRate and bitrate is changed, need recreate encode
-        if ((BIT_CBR == EncParam.s_BitRateType \
-                && m_VideoEncParamPtr.GetPtr()[StreamId].s_BitRateAverage != EncParam.s_BitRateAverage)
+        //if frameRate  bitrate  bitrateType is changed, need recreate encode
+        if (((BIT_CBR == EncParam.s_BitRateType && m_VideoEncParamPtr.GetPtr()[StreamId].s_BitRateAverage != EncParam.s_BitRateAverage)
                 || m_VideoEncParamPtr.GetPtr()[StreamId].s_FrameRate != EncParam.s_FrameRate)
+                || (BIT_VBR == EncParam.s_BitRateType && m_VideoEncParamPtr.GetPtr()[StreamId].s_BitRateUp != EncParam.s_BitRateUp)
+                || (m_VideoEncParamPtr.GetPtr()[StreamId].s_BitRateType != EncParam.s_BitRateType && (m_VideoEncParamPtr.GetPtr()[StreamId].s_BitRateAverage != EncParam.s_BitRateUp || m_VideoEncParamPtr.GetPtr()[StreamId].s_BitRateUp != EncParam.s_BitRateAverage)))
         {
             Result = RecreateVideoCodec(StreamId, &EncParam);
             if (FAILED(Result))
@@ -2751,24 +2789,24 @@ GMI_RESULT SystemServiceManager::SvrSetVideoEncStreamCombine(SysPkgEncStreamComb
             }
         }
 
-		//create users video codec
-		int32_t Id;
-		for (Id = 0; Id < ToSet_SysEncStreamCombine.s_EnableStreamNum; Id++)
-		{			
-			EncParam[Id].s_Rotate = (m_VideoEncParamPtr.GetPtr())[Id].s_Rotate;//set combine, rotate should keep original.
-		    Result = m_StreamCenterClientPtr->Create(0, Id, MEDIA_VIDEO, EncParam[Id].s_EncodeType, true, &EncParam[Id], sizeof(VideoEncodeParam), &((m_VideoCodecHandle.GetPtr())[Id]));
-	    	if (FAILED(Result))
-		    {
-		    	while (Id--)
-		    	{
-		    		m_StreamCenterClientPtr->Destroy((m_VideoCodecHandle.GetPtr())[Id]);
-		    	}
-		    	pthread_rwlock_unlock(&m_Lock);
-		        SYS_ERROR("Create codec%d fail, Result = 0x%lx\n", Id, Result);
-		        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Create codec%d fail, Result = 0x%lx\n", Id, Result);
-		        return Result;
-		    }
-		}
+        //create users video codec
+        int32_t Id;
+        for (Id = 0; Id < ToSet_SysEncStreamCombine.s_EnableStreamNum; Id++)
+        {
+            EncParam[Id].s_Rotate = (m_VideoEncParamPtr.GetPtr())[Id].s_Rotate;//set combine, rotate should keep original.
+            Result = m_StreamCenterClientPtr->Create(0, Id, MEDIA_VIDEO, EncParam[Id].s_EncodeType, true, &EncParam[Id], sizeof(VideoEncodeParam), &((m_VideoCodecHandle.GetPtr())[Id]));
+            if (FAILED(Result))
+            {
+                while (Id--)
+                {
+                    m_StreamCenterClientPtr->Destroy((m_VideoCodecHandle.GetPtr())[Id]);
+                }
+                pthread_rwlock_unlock(&m_Lock);
+                SYS_ERROR("Create codec%d fail, Result = 0x%lx\n", Id, Result);
+                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "Create codec%d fail, Result = 0x%lx\n", Id, Result);
+                return Result;
+            }
+        }
 
         for (Id = 0; Id < ToSet_SysEncStreamCombine.s_EnableStreamNum; Id++)
         {
@@ -2866,7 +2904,7 @@ GMI_RESULT SystemServiceManager::SvrSetVideoEncStreamCombine(SysPkgEncStreamComb
         SYS_ERROR("SvrGetVideoEncodeSettings fail, Result = 0x%lx\n", Result);
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SvrGetVideoEncodeSettings fail, Result = 0x%lx\n", Result);
         return Result;
-    }
+    }    
 
     //allocate SysPkgAudioEncodeCfg
     ReferrencePtr<SysPkgAudioEncodeCfg>SysAudioEncodeCfgPtr(BaseMemoryManager::Instance().New<SysPkgAudioEncodeCfg>());
@@ -4087,45 +4125,6 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
         }
         else if (SYS_PTZCMD_SETPRESET == PtzCtrlTmp.s_PtzCmd)
         {
-            PT_CtlCmd.s_Cmd = e_PTZ_CMD_SetPreset;
-            PT_CtlCmd.s_CmdParam[0] = PtzCtrlTmp.s_Param[0];
-
-            if (1 > PT_CtlCmd.s_CmdParam[0]
-                    || 256 < PT_CtlCmd.s_CmdParam[0] )
-            {
-                return GMI_INVALID_PARAMETER;
-            }
-
-            Result = m_PtzControlPtr->Control(PTZ_CONTINUE_CONTROL_MODE, &PT_CtlCmd);
-            if (FAILED(Result))
-            {
-                SYS_ERROR("PTZ Control fail, Result = 0x%lx\n", Result);
-                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PTZ Control fail, Result = 0x%lx\n", Result);
-                return Result;
-            }
-
-            int32_t ZoomPos;
-            Result = m_StreamCenterClientPtr->GetZoomPosition(m_ZoomHandle, &ZoomPos);
-            if (FAILED(Result))
-            {
-                SYS_ERROR("GetZoomPosition fail, Result = 0x%lx\n", Result);
-                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetZoomPosition fail, Result = 0x%lx\n", Result);
-                return Result;
-            }
-
-            uint32_t Id = PT_CtlCmd.s_CmdParam[0];
-            sprintf((m_PresetsInfo_InnerPtr.GetPtr())[Id].s_Name, "Preset%d", Id);
-            (m_PresetsInfo_InnerPtr.GetPtr())[Id].s_Index        = Id;
-            (m_PresetsInfo_InnerPtr.GetPtr())[Id].s_Setted       = true;
-            (m_PresetsInfo_InnerPtr.GetPtr())[Id].s_ZoomPosition = ZoomPos;
-            Result = m_ConfigFileManagerPtr->SetPresetsInfo(&((m_PresetsInfo_InnerPtr.GetPtr())[Id]));
-            if (FAILED(Result))
-            {
-                (m_PresetsInfo_InnerPtr.GetPtr())[Id].s_Setted   = false;
-                SYS_ERROR("m_ConfigFileManagerPtr SetPresetsInfo fail, Result = 0x%lx\n", Result);
-                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_ConfigFileManagerPtr SetPresetsInfo fail, Result = 0x%lx\n", Result);
-                return Result;
-            }
         }
         else if (SYS_PTZCMD_GOTOPRESET == PtzCtrlTmp.s_PtzCmd)
         {
@@ -4137,11 +4136,28 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
                 return GMI_INVALID_PARAMETER;
             }
 
-            uint32_t Id = PT_CtlCmd.s_CmdParam[0];
-            int32_t ZoomPos = (m_PresetsInfo_InnerPtr.GetPtr())[Id].s_ZoomPosition;
+            int32_t i;
+            int32_t ZoomPos = 0;
+            uint32_t Index = PT_CtlCmd.s_CmdParam[0];
+            for (i = 0; i < MAX_PRESETS; i++)
+            {
+                if ((m_PresetsInfo_InnerPtr.GetPtr())[i].s_Index == Index)
+                {
+                    ZoomPos = (m_PresetsInfo_InnerPtr.GetPtr())[i].s_ZoomPosition;
+                    break;
+                }
+            }
 
-            if ((m_PresetsInfo_InnerPtr.GetPtr())[Id].s_Setted)
-            {        
+            if ((m_PresetsInfo_InnerPtr.GetPtr())[i].s_Setted)
+            {
+                Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, true);
+                if (FAILED(Result))
+                {
+                    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                    return Result;
+                }
+
                 Result = m_PtzControlPtr->Control(PTZ_CONTINUE_CONTROL_MODE, &PT_CtlCmd);
                 if (FAILED(Result))
                 {
@@ -4156,7 +4172,15 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
                     SYS_ERROR("SetZoomPosition fail, Result = 0x%lx\n", Result);
                     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetZoomPosition fail, Result = 0x%lx\n", Result);
                     return Result;
-                }               
+                }
+
+                Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, false);
+                if (FAILED(Result))
+                {
+                    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                    return Result;
+                }
             }
         }
         else if (SYS_PTZCMD_CLEARPRESET == PtzCtrlTmp.s_PtzCmd)
@@ -4181,9 +4205,17 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
                 return Result;
             }
 
-            uint32_t Id = PT_CtlCmd.s_CmdParam[0];
-            (m_PresetsInfo_InnerPtr.GetPtr())[Id].s_Setted = false;
-            Result = m_ConfigFileManagerPtr->SetPresetsInfo(&((m_PresetsInfo_InnerPtr.GetPtr())[Id]));
+            int32_t  i;
+            uint32_t Index = PT_CtlCmd.s_CmdParam[0];
+            for (i = 0; i < MAX_PRESETS; i++)
+            {
+                if ((m_PresetsInfo_InnerPtr.GetPtr())[i].s_Index == Index)
+                {
+                    (m_PresetsInfo_InnerPtr.GetPtr())[i].s_Setted = false;
+                    break;
+                }
+            }
+            Result = m_ConfigFileManagerPtr->SetPresetsInfo(&((m_PresetsInfo_InnerPtr.GetPtr())[i]));
             if (FAILED(Result))
             {
                 SYS_ERROR("m_ConfigFileManagerPtr SetPresetsInfo fail, Result = 0x%lx\n", Result);
@@ -4244,16 +4276,16 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
                         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "ControlAutoFocus fail, Result = 0x%lx\n", Result);
                         return Result;
                     }
-                }               
+                }
             }
 
-			Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, false);
-			if (FAILED(Result))
-			{
-			    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
-			    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
-			    return Result;
-			}
+            Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, false);
+            if (FAILED(Result))
+            {
+                SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                return Result;
+            }
         }
         else
         {
@@ -4397,7 +4429,7 @@ GMI_RESULT SystemServiceManager::SvrGetPresetInfo(int32_t Index, SysPkgPtzPreset
         }
     }
 
-    if (Id >= MAX_PRESETS)
+    if (Id > MAX_PRESETS)
     {
         SYS_ERROR("index%d not find\n", Index);
         return GMI_NOT_SUPPORT;
@@ -4411,20 +4443,23 @@ GMI_RESULT SystemServiceManager::SvrGetPresetInfo(int32_t Index, SysPkgPtzPreset
 
 GMI_RESULT SystemServiceManager::SvrSetPresetInfo(SysPkgPtzPresetInfo *SysPresetInfoPtr)
 {
+    SYS_INFO("%s in..........\n", __func__);
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s in..........\n", __func__);
+
     if (!m_SupportPtz)
     {
         return GMI_NOT_SUPPORT;
     }
 
-    uint32_t Id = SysPresetInfoPtr->s_PresetIndex & 0xffff;
-    if (0 > Id || 256 < Id )
+    uint32_t Index = SysPresetInfoPtr->s_PresetIndex & 0xffff;
+    if (0 > Index || 256 < Index )
     {
         return GMI_INVALID_PARAMETER;
     }
 
     PtzCtlCmd  PT_CtlCmd;
     PT_CtlCmd.s_Cmd = e_PTZ_CMD_SetPreset;
-    PT_CtlCmd.s_CmdParam[0] = Id;
+    PT_CtlCmd.s_CmdParam[0] = Index;
 
     GMI_RESULT Result = m_PtzControlPtr->Control(PTZ_CONTINUE_CONTROL_MODE, &PT_CtlCmd);
     if (FAILED(Result))
@@ -4437,27 +4472,77 @@ GMI_RESULT SystemServiceManager::SvrSetPresetInfo(SysPkgPtzPresetInfo *SysPreset
     if (FAILED(Result))
     {
         PT_CtlCmd.s_Cmd = e_PTZ_CMD_RmPreset;
-        PT_CtlCmd.s_CmdParam[0] = Id;
+        PT_CtlCmd.s_CmdParam[0] = Index;
         m_PtzControlPtr->Control(PTZ_CONTINUE_CONTROL_MODE, &PT_CtlCmd);
         SYS_ERROR("GetZoomPosition fail, Result = 0x%lx\n", Result);
         return Result;
     }
 
-    strcpy((m_PresetsInfo_InnerPtr.GetPtr())[Id].s_Name, SysPresetInfoPtr->s_PresetName);
-    (m_PresetsInfo_InnerPtr.GetPtr())[Id].s_Index        = Id;
-    (m_PresetsInfo_InnerPtr.GetPtr())[Id].s_Setted       = true;
-    (m_PresetsInfo_InnerPtr.GetPtr())[Id].s_ZoomPosition = ZoomPos;
-    Result = m_ConfigFileManagerPtr->SetPresetsInfo(&((m_PresetsInfo_InnerPtr.GetPtr())[Id]));
-    if (FAILED(Result))
+    //force name
+    if (0 == strlen(SysPresetInfoPtr->s_PresetName))
     {
-        PT_CtlCmd.s_Cmd = e_PTZ_CMD_RmPreset;
-        PT_CtlCmd.s_CmdParam[0] = Id;
-        m_PtzControlPtr->Control(PTZ_CONTINUE_CONTROL_MODE, &PT_CtlCmd);
-        (m_PresetsInfo_InnerPtr.GetPtr())[Id].s_Setted   = false;
-        SYS_ERROR("m_ConfigFileManagerPtr SetPresetsInfo fail, Result = 0x%lx\n", Result);
-        return Result;
+        sprintf(SysPresetInfoPtr->s_PresetName, "%d", Index);
     }
 
+    //overwrite
+    int32_t i;
+    for (i = 0; i < MAX_PRESETS; i++)
+    {
+        if (0 == strcmp((m_PresetsInfo_InnerPtr.GetPtr())[i].s_Name, SysPresetInfoPtr->s_PresetName))
+        {
+            strcpy((m_PresetsInfo_InnerPtr.GetPtr())[i].s_Name, SysPresetInfoPtr->s_PresetName);
+            (m_PresetsInfo_InnerPtr.GetPtr())[i].s_Index        = Index;
+            (m_PresetsInfo_InnerPtr.GetPtr())[i].s_Setted       = true;
+            (m_PresetsInfo_InnerPtr.GetPtr())[i].s_ZoomPosition = ZoomPos;
+            Result = m_ConfigFileManagerPtr->SetPresetsInfo(&((m_PresetsInfo_InnerPtr.GetPtr())[i]));
+            if (FAILED(Result))
+            {
+                PT_CtlCmd.s_Cmd = e_PTZ_CMD_RmPreset;
+                PT_CtlCmd.s_CmdParam[0] = Index;
+                m_PtzControlPtr->Control(PTZ_CONTINUE_CONTROL_MODE, &PT_CtlCmd);
+                (m_PresetsInfo_InnerPtr.GetPtr())[i].s_Setted   = false;
+                SYS_ERROR("m_ConfigFileManagerPtr SetPresetsInfo fail, Result = 0x%lx\n", Result);
+                return Result;
+            }
+            break;
+        }
+    }
+
+    //create new
+    if (i >= MAX_PRESETS)
+    {
+        int32_t j;
+        for (j = 0; j < MAX_PRESETS; j++)
+        {
+            if (!(m_PresetsInfo_InnerPtr.GetPtr())[j].s_Setted)
+            {
+                strcpy((m_PresetsInfo_InnerPtr.GetPtr())[j].s_Name, SysPresetInfoPtr->s_PresetName);
+                (m_PresetsInfo_InnerPtr.GetPtr())[j].s_Index        = Index;
+                (m_PresetsInfo_InnerPtr.GetPtr())[j].s_Setted       = true;
+                (m_PresetsInfo_InnerPtr.GetPtr())[j].s_ZoomPosition = ZoomPos;
+                Result = m_ConfigFileManagerPtr->SetPresetsInfo(&((m_PresetsInfo_InnerPtr.GetPtr())[j]));
+                if (FAILED(Result))
+                {
+                    PT_CtlCmd.s_Cmd = e_PTZ_CMD_RmPreset;
+                    PT_CtlCmd.s_CmdParam[0] = Index;
+                    m_PtzControlPtr->Control(PTZ_CONTINUE_CONTROL_MODE, &PT_CtlCmd);
+                    (m_PresetsInfo_InnerPtr.GetPtr())[j].s_Setted   = false;
+                    SYS_ERROR("m_ConfigFileManagerPtr SetPresetsInfo fail, Result = 0x%lx\n", Result);
+                    return Result;
+                }
+                break;
+            }
+        }
+        if (j >= MAX_PRESETS)
+        {
+            SYS_ERROR("all presets have been setted\n");
+            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "all presets have been setted\n");
+            return GMI_FAIL;
+        }
+    }
+
+    SYS_INFO("%s normal out..........\n", __func__);
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s normal out..........\n", __func__);
     return Result;
 }
 
@@ -4519,7 +4604,7 @@ GMI_RESULT SystemServiceManager::GetVersion(char_t FwVer [64])
     }
     Month++;
 
-    int32_t Milestone = 1;
+    int32_t Milestone = 0;
     int32_t Compiles  = 1;
 
     GMI_RESULT Result = GetCompileNum(&Compiles);
@@ -4790,18 +4875,8 @@ GMI_RESULT SystemServiceManager::SvrGetNtpServerInfo(SysPkgNtpServerInfo *SysNtp
     {
         return GMI_INVALID_PARAMETER;
     }
-
-    pthread_rwlock_rdlock(&m_Lock);
-    memset(SysNtpServerInfoPtr, 0, sizeof(SysPkgNtpServerInfo));
-    GMI_RESULT Result = m_ConfigFileManagerPtr->GetNtpServerInfo(SysNtpServerInfoPtr);
-    if (FAILED(Result))
-    {
-        pthread_rwlock_unlock(&m_Lock);
-        SYS_ERROR("GetNtpServerInfo fail, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetNtpServerInfo fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
-    pthread_rwlock_unlock(&m_Lock);
+    
+	memcpy(SysNtpServerInfoPtr, &m_SysNtpServerInfo, sizeof(SysPkgNtpServerInfo));   
     SYS_INFO("%s normal out..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s normal out..........\n", __func__);
     return GMI_SUCCESS;
@@ -5061,19 +5136,14 @@ GMI_RESULT SystemServiceManager::SvrGetDevinfo(SysPkgDeviceInfo *SysDeviceInfoPt
         return GMI_INVALID_PARAMETER;
     }
 
-    pthread_rwlock_rdlock(&m_Lock);
-    GMI_RESULT Result = m_ConfigFileManagerPtr->GetDeviceInfo(SysDeviceInfoPtr);
+    memcpy(SysDeviceInfoPtr, &m_SysDeviceInfo, sizeof(SysPkgDeviceInfo));
+    GMI_RESULT Result = GetVersion(SysDeviceInfoPtr->s_DeviceFwVer);
     if (FAILED(Result))
     {
-        pthread_rwlock_unlock(&m_Lock);
+    	SYS_ERROR("Get Version fail, Result = 0x%lx\n", Result);
         return Result;
     }
-    Result = GetVersion(SysDeviceInfoPtr->s_DeviceFwVer);
-    if (FAILED(Result))
-    {
-        pthread_rwlock_unlock(&m_Lock);
-        return Result;
-    }
+    
     //sn set to hostname
     if (0 != strlen(SysDeviceInfoPtr->s_DeviceSerialNum))
     {
@@ -5081,8 +5151,7 @@ GMI_RESULT SystemServiceManager::SvrGetDevinfo(SysPkgDeviceInfo *SysDeviceInfoPt
         memset(CmdBuff, 0, sizeof(CmdBuff));
         sprintf(CmdBuff, "hostname %s", SysDeviceInfoPtr->s_DeviceSerialNum);
         system(CmdBuff);
-    }
-    pthread_rwlock_unlock(&m_Lock);
+    }    
 
     SYS_INFO("%s normal out..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s normal out..........\n", __func__);
@@ -5105,7 +5174,8 @@ GMI_RESULT SystemServiceManager::SvrSetDeviceInfo(SysPkgDeviceInfo *SysDeviceInf
     {
         pthread_rwlock_unlock(&m_Lock);
         return Result;
-    }   
+    }
+    memcpy(&m_SysDeviceInfo, SysDeviceInfoPtr, sizeof(SysPkgDeviceInfo));
     pthread_rwlock_unlock(&m_Lock);
     SYS_INFO("%s normal out..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s normal out..........\n", __func__);
@@ -5196,6 +5266,21 @@ GMI_RESULT SystemServiceManager::SvrSetUser(SysPkgUserInfo * UserInfoPtr)
     char_t  Key[8];
     char_t  Name[32];
 
+	if (NULL == UserInfoPtr)
+	{
+		SYS_ERROR("user info is null\n");
+		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "user info is null\n");
+		return GMI_INVALID_PARAMETER;
+	}
+	
+	if (sizeof(Name) < strlen(UserInfoPtr->s_UserName)
+		|| LEN_DES_PASSWORD < strlen(UserInfoPtr->s_UserPass))
+	{
+		SYS_ERROR("username %s or userpass %s is too long\n", UserInfoPtr->s_UserName, UserInfoPtr->s_UserPass);
+		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "username %s or userpass %s is too long\n", UserInfoPtr->s_UserName, UserInfoPtr->s_UserPass);
+		return GMI_INVALID_PARAMETER;
+	}
+	
     memset(Name, 0, sizeof(Name));
     sprintf(Name, "eth0");
     memset(Key, 0, sizeof(Key));
@@ -5255,20 +5340,53 @@ GMI_RESULT SystemServiceManager::SvrSetNetworkPort(SysPkgNetworkPort *SysNetwork
 
     if (SysNetworkPort->s_HTTP_Port < 0
             || SysNetworkPort->s_RTSP_Port < 0
-            || SysNetworkPort->s_SDK_Port < 0)
+            || SysNetworkPort->s_SDK_Port < 0
+            || SysNetworkPort->s_ONVIF_Port < 0)
     {
-        SYS_ERROR("SysNetworkPort less than 0\n");
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetExternNetworkPort less than 0\n");
+        SYS_ERROR("SysNetworkPort less than 0, HTTP_Port %d, RTSP_Port %d, SDK_Port %d, ONVIF_Port %d\n", \
+        		SysNetworkPort->s_HTTP_Port, SysNetworkPort->s_RTSP_Port, SysNetworkPort->s_SDK_Port, SysNetworkPort->s_ONVIF_Port);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetExternNetworkPort less than 0, HTTP_Port %d, RTSP_Port %d, SDK_Port %d, ONVIF_Port %d\n", \
+        		SysNetworkPort->s_HTTP_Port, SysNetworkPort->s_RTSP_Port, SysNetworkPort->s_SDK_Port, SysNetworkPort->s_ONVIF_Port);
         return GMI_INVALID_PARAMETER;
     }
 
     if ((SysNetworkPort->s_HTTP_Port == SysNetworkPort->s_RTSP_Port)
             || (SysNetworkPort->s_HTTP_Port == SysNetworkPort->s_SDK_Port)
             || (SysNetworkPort->s_RTSP_Port == SysNetworkPort->s_SDK_Port)
-            || (GMI_ONVIF_SERVER_PORT == SysNetworkPort->s_HTTP_Port)) //temp, ajust onvif port to http port finally.8/14,guoqiang.
+            || (SysNetworkPort->s_ONVIF_Port == SysNetworkPort->s_HTTP_Port)) //temp, ajust onvif port to http port finally.8/14,guoqiang.
     {
-        SYS_ERROR("SysNetworkPort Equal each other\n");
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SysNetworkPort Equal each other\n");
+        SYS_ERROR("SysNetworkPort Equal each other, HTTP_Port %d, RTSP_Port %d, SDK_Port %d, ONVIF_Port %d\n", \
+        		SysNetworkPort->s_HTTP_Port, SysNetworkPort->s_RTSP_Port, SysNetworkPort->s_SDK_Port, SysNetworkPort->s_ONVIF_Port);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SysNetworkPort Equal each other, HTTP_Port %d, RTSP_Port %d, SDK_Port %d, ONVIF_Port %d\n", \
+        		SysNetworkPort->s_HTTP_Port, SysNetworkPort->s_RTSP_Port, SysNetworkPort->s_SDK_Port, SysNetworkPort->s_ONVIF_Port);
+        return GMI_INVALID_PARAMETER;
+    }
+
+    if (SysNetworkPort->s_SDK_Port < 1024
+            || SysNetworkPort->s_SDK_Port > 65500)
+    {
+        SYS_ERROR("SDK port %d incorrect\n", SysNetworkPort->s_SDK_Port);
+        return GMI_INVALID_PARAMETER;
+    }
+
+    if (SysNetworkPort->s_HTTP_Port < 0
+            || SysNetworkPort->s_HTTP_Port > 65535)
+    {
+        SYS_ERROR("HTTP port %d incorrect\n", SysNetworkPort->s_HTTP_Port);
+        return GMI_INVALID_PARAMETER;
+    }
+
+    if (SysNetworkPort->s_Upgrade_Port < 0
+            || SysNetworkPort->s_Upgrade_Port > 65535)
+    {
+        SYS_ERROR("Upgrade port %d incorrect\n", SysNetworkPort->s_Upgrade_Port);
+        return GMI_INVALID_PARAMETER;
+    }
+
+    if (SysNetworkPort->s_ONVIF_Port < 0
+    	|| SysNetworkPort->s_ONVIF_Port > 65535)
+    {
+    	SYS_ERROR("ONVIF port %d incorrect\n", SysNetworkPort->s_ONVIF_Port);
         return GMI_INVALID_PARAMETER;
     }
 
@@ -5281,6 +5399,7 @@ GMI_RESULT SystemServiceManager::SvrSetNetworkPort(SysPkgNetworkPort *SysNetwork
         DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetExternNetworkPort fail, Result = 0x%lx\n", Result);
         return Result;
     }
+    memcpy(&m_SysNetWorkPort, SysNetworkPort, sizeof(SysPkgNetworkPort));
     pthread_rwlock_unlock(&m_Lock);
 
     SYS_INFO("%s normal out..........\n", __func__);
@@ -5292,19 +5411,8 @@ GMI_RESULT SystemServiceManager::SvrSetNetworkPort(SysPkgNetworkPort *SysNetwork
 GMI_RESULT SystemServiceManager::SvrGetNetworkPort(SysPkgNetworkPort *SysNetworkPort)
 {
     SYS_INFO("%s in..........\n", __func__);
-    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s in..........\n", __func__);
-
-    pthread_rwlock_rdlock(&m_Lock);
-    GMI_RESULT Result = m_ConfigFileManagerPtr->GetExternNetworkPort(SysNetworkPort);
-    if (FAILED(Result))
-    {
-        pthread_rwlock_unlock(&m_Lock);
-        SYS_ERROR("GetExternNetworkPort fail, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetExternNetworkPort fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
-    pthread_rwlock_unlock(&m_Lock);
-
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s in..........\n", __func__);   
+    memcpy(SysNetworkPort, &m_SysNetWorkPort, sizeof(SysPkgNetworkPort));    
     SYS_INFO("%s normal out..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s normal out..........\n", __func__);
     return GMI_SUCCESS;
@@ -5407,13 +5515,13 @@ GMI_RESULT SystemServiceManager::SvrSetSystemDefault(int32_t SysCtrlCmd, int32_t
         }
 
         //users
-        Result = m_UserManagerPtr->FactoryDefault();
-        if (FAILED(Result))
-        {
-            SYS_ERROR("FactoryDefault fail, Result = 0x%lx\n", Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "FactoryDefault fail, Result = 0x%lx\n", Result);
-            return Result;
-        }
+        //Result = m_UserManagerPtr->FactoryDefault();
+        //if (FAILED(Result))
+        //{
+        //    SYS_ERROR("FactoryDefault fail, Result = 0x%lx\n", Result);
+        //    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "FactoryDefault fail, Result = 0x%lx\n", Result);
+        //    return Result;
+        //}
 
         //delay reboot
         Result = DaemonReboot(FACTORY_DEFAULT_REBOOT_DELAY_TIMES);
@@ -5444,41 +5552,22 @@ GMI_RESULT SystemServiceManager::GetCapabilities(int32_t CapabilityCategory, int
         return GMI_INVALID_PARAMETER;
     }
 
-    FILE *Fp = NULL;
+	FILE *Fp = NULL;
     Fp = fopen(CAPABILITY_SW_FILE_NAME, "rb");
     if (NULL == Fp)
     {
+    	SYS_ERROR("%s not exist\n", CAPABILITY_SW_FILE_NAME);
         return GMI_INVALID_OPERATION;
     }
-
-    fseek(Fp, 0, SEEK_END);
-    int32_t FileSize = ftell(Fp);
-    fseek(Fp, 0, SEEK_SET);
-    int32_t ReadSize = (CapabilityBufferLength >= FileSize ? FileSize : CapabilityBufferLength);
-
-    int32_t Num = fread(Capability, 1, ReadSize, Fp);
-    if (Num != ReadSize)
+    if (NULL != Fp)
     {
-        return GMI_FAIL;
+    	fclose(Fp);
+    	Fp = NULL;
     }
 
-    for (int32_t i = 0; i < Num; i++)
-    {
-        if (Capability[i] == '\t' || Capability[i] == '\n')
-        {
-            Capability[i] = ' ';
-        }
-    }
-
-    //padding
-    int32_t Paddings = 4-Num%4;
-    for (int32_t i = 0; i < Paddings; i++)
-    {
-        Capability[Num + i] = '\0';
-    }
-    Num += Paddings;
-    SysCapabilities->s_ContentLength = Num;
-    SysCapabilities->s_Encrypt = 0;
+	int32_t ReadSize = (CapabilityBufferLength >= m_SysCapability.s_ContentLength ? m_SysCapability.s_ContentLength : CapabilityBufferLength);
+    memcpy(Capability, m_CapabilitiesMessagePtr.GetPtr(), ReadSize);
+    memcpy(SysCapabilities, &m_SysCapability, sizeof(SysPkgXml));   	
 
     SYS_INFO("SysCapabilities->s_ContentLength %d\n", SysCapabilities->s_ContentLength);
     SYS_INFO("%s normal out..........\n", __func__);
@@ -5582,6 +5671,14 @@ GMI_RESULT SystemServiceManager::ExcuteImportConfigFile(SysPkgConfigFileInfo *Sy
 {
     FactorySettingOperation FactoryOperation;
 
-    return FactoryOperation.ExcuteImportFile(SysConfigFilePtr);
+	FactoryOperation.Initialize();
+    GMI_RESULT Result = FactoryOperation.ExcuteImportFile(SysConfigFilePtr);
+    if (FAILED(Result))
+    {
+    	FactoryOperation.Deinitialize();
+    	return Result;
+    }
+    FactoryOperation.Deinitialize();
+    return Result;
 }
 

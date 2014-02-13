@@ -22,10 +22,7 @@ ServiceSetConfig::~ServiceSetConfig()
     ServiceDispatch::GetInstance().Unregister(this);
 
     // Recycle resources of thread, if thread is still running
-    if (IsRunning())
-    {
-        Wait();
-    }
+    Wait();
 }
 
 void_t ServiceSetConfig::Execute(GtpTransHandle Handle, IParser * Parser)
@@ -278,6 +275,10 @@ void_t ServiceSetConfig::Unbind(GtpTransHandle Handle)
     }
 
     m_TransHandle = GTP_INVALID_HANDLE;
+
+    // Cancel delay task and recycle thread
+    Application::GetSingleton().CancelDelayTask(ServiceSetConfig::OnTimeProc, this);
+    Wait();
 }
 
 void_t ServiceSetConfig::OnTimeProc(void_t * Data)

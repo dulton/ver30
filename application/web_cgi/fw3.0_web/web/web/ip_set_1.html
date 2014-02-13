@@ -97,6 +97,17 @@
 					
 				}
 			}
+function openDialogWin()
+{
+    var result = window.open ('test2.html', 'newwindow', 'height=100px, width=280px, top=0, left=0, toolbar=no, menubar=no, scrollbars=no, resizable=no,location=n o, status=no');//window.showModalDialog("test2.html","","dialogHeight:100px;dialogWidth:280px;status:no; help:no;scroll:no");
+    if (result == "Open")
+        window.alert("You clicked Open!");
+    else if (result == "Save")
+        window.alert("You clicked Save!");
+    else
+        window.alert("Cancel");
+                
+}
             $(document).ready(function() {
                 // 调用模版也方法
                 parent.innerCallMe(true);
@@ -132,7 +143,14 @@
                 //取消
                 $("#reset").bind("click",
                 function(e) {
-                   GetAndSet("GetIpInfo","json","{SessionId:"+parent.id+",AuthValue:0}", "successfunc");
+							//判断权限
+							parent.StartimeVideo();
+							if(parent.canspzAuth == false)
+							{
+								alert("没有权限！");
+								return;
+							}
+                   GetAndSet("GetIpInfo","json","{SessionId:"+parent.id+",AuthValue:0}", successfunc);
                     //去除红色边框
                     for (var i = 0; i < isvalid.length; i++) {
                         $("#" + isvalid[i]).css("border", "1px solid black");
@@ -143,6 +161,13 @@
 				//点击确定
                 $("#submit").bind("click",
                 function(e) {
+							//判断权限
+							parent.StartimeVideo();
+							if(parent.canspzAuth == false)
+							{
+								alert("没有权限！");
+								return;
+							}
                     if (isvalid.length == 0) {
 						//IP地址
 						var ipaddr = $("#40ip_addr").val();
@@ -167,7 +192,31 @@
 								ipSet(ipType);
 								return;
 							}
-                            isconfirmIP = MyVbconfirm2();
+							//判断IE版本
+							var IeVesion1 = navigator.userAgent;
+							if(IeVesion1.indexOf("rv:11.0") != -1)
+							{
+								var ssss =confirm("是否检查IP冲突？");
+								if(ssss == false)
+								{
+									isconfirmIP = 7;	
+								}
+								else if(ssss == true)
+								{
+									isconfirmIP = 6;
+								}
+								else 
+								{
+									return;
+								}
+								
+								
+							}
+							else
+							{
+								isconfirmIP = MyVbconfirm2();	
+							}
+                            
                         
 						//检测IP冲突
                         if (isconfirmIP == 6) {
@@ -353,6 +402,17 @@ function StopTimewk()
 				 //startclock();
 				 //开始计时
 				 //StarTimewk();
+
+                
+            }
+			//设置IP成功
+			function success_SetIpAdrr(data)
+			{
+					var PackDate=new UnPackData(data);
+						if(PackDate.Content!=null)
+						{
+							if(PackDate.Content.RetCode=="0")
+							{
 								//成功返回
                                 //$.modal.defaults.closeClass = "modalC",
                                 $('#basic-modal-content').modal({
@@ -367,18 +427,7 @@ function StopTimewk()
 
                                 );
 
-                                startclock();
-                
-            }
-			//设置IP成功
-			function success_SetIpAdrr(data)
-			{
-					var PackDate=new UnPackData(data);
-						if(PackDate.Content!=null)
-						{
-							if(PackDate.Content.RetCode=="0")
-							{
-								
+                                startclock();	
 							
 							}
 							else if(PackDate.Content.RetCode!="0")

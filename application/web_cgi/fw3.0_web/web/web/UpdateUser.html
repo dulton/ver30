@@ -41,235 +41,124 @@
 		var cspz = false;
 		var lxhf = false;
 		var yhgl = false;
+		var xtwh = false;
 		var Flag = 0;
 		
 		var Authvalue = "";
-		
+		var userpsw = "";	//用户密码
 
-		//加载用户信息函数
-		function LoadUserInfo()
-		{
-			var username = getQueryString("usename");
-			var userlever = getQueryString("userLever");
-			var userflag = getQueryString("useflag"); 
-			var userpsw = getQueryString("usepsw");
-			
-			//显示用户名
-			$("#username").val(username);
-			//$("#username").val("111");
-			//用户类型
-			if(userflag == "管理员")
-			{
-				$("#usertype").val(1);	
-			}
-			else if(userflag == "操作员")
-			{
-				$("#usertype").val(2);		
-			}
-			else if(userflag == "视频预览")
-			{
-				$("#usertype").val(3);		
-			}
-			//$("#usertype").val(userflag);
-			//密码
-			$("#psw").val(userpsw);
-			
-			//解析userlever
-          	var answer = "";
-			var Valuetwo;
-			var ValueStr = "";
-          	if(/\d+/.test(userlever))
-			{
-            	while(userlever != 0) {
-              		answer = Math.abs(userlever%2)+answer;
-              		userlever = parseInt(userlever/2);
-            	}
-            	if(answer.length == 0)
-				{
-              		answer = "0";
-				}
 
-          	}
-			else 
-			{
-						$("#spyl_comp").checked = false;
-						$("#rzcx_comp").checked = false;
-						$("#yjkz_comp").checked = false;
-						$("#yydj_comp").checked = false;
-						$("#sptj_comp").checked = false;
-						$("#cspz_comp").checked = false;
-						$("#lxhf_comp").checked = false;
-						$("#yhgl_comp").checked = false;
-						//取高八位
-            			Valuetwo = answer;
-						ValueStr = String(Valuetwo);
-						//判断用户管理权限
-						if(ValueStr[0] != "1")
-						{
-							document.getElementById("spyl_comp").checked = true;
-							//$("#spyl_comp").checked = true;
-						}
-						if(ValueStr[1] != "1")
-						{
-							document.getElementById("yjkz_comp").checked = true;
-							//$("#yjkz_comp").checked = true;
-						}
-						if(ValueStr[2] != "1")
-						{
-							document.getElementById("sptj_comp").checked = true;
-							//$("#sptj_comp").checked = true;
-						}
-						if(ValueStr[3] != "1")
-						{
-							document.getElementById("lxhf_comp").checked = true;
-							//$("#lxhf_comp").checked = true;
-						}
-						if(ValueStr[4] != "1")
-						{
-							document.getElementById("rzcx_comp").checked = true;
-							//$("#rzcx_comp").checked = true;
-						}
-						if(ValueStr[5] != "1")
-						{
-							document.getElementById("yydj_comp").checked = true;
-							//$("#yydj_comp").checked = true;
-						}
-						if(ValueStr[6] != "1")
-						{
-							document.getElementById("cspz_comp").checked = true;
-							//$("#cspz_comp").checked = true;
-						}
-						if(ValueStr[7] != "1")
-						{
-							document.getElementById("yhgl_comp").checked = true;
-							//$("#yhgl_comp").checked = true;
-						}
-          	}
-		}
-		//初始化函数
-		function init()
-		{
-				//获取参数
-				//debugger;
-				//Flag = getQueryString("Flag");
-				//if(Flag == 0)//添加用户
-				//{
-				//	$("#username").readOnly = false;
-				//	$("#password").readOnly = false;
-				//}
-				//else if(Flag == 1)//修改用户
-				//{
-					//$("#username").readOnly = true;
-
-					$("#username").attr("disabled", "disabled");
-					//加载用户信息
-					LoadUserInfo();
-				//}	
-		}
             $(document).ready(function()
 			{
 				init();
-
-				//绑定权限按钮
-				$("#spyl_comp").bind("click",function(){
-					var ctr = document.getElementById("spyl_comp");
-					if(ctr.checked)
-					{
-						spyl = true;	
-					}
-					else if(!ctr.checked)
-					{
-						spyl = false;
-					}
+				//用户类型切换事件
+				$("#usertype").bind("change",
+					function() {
+								document.getElementById("spyl_comp").disabled = false;
+								document.getElementById("rzcx_comp").disabled = false;
+								document.getElementById("yjkz_comp").disabled = false;
+								document.getElementById("yydj_comp").disabled = false;
+								document.getElementById("sptj_comp").disabled = false;
+								document.getElementById("cspz_comp").disabled = false;
+								document.getElementById("lxhf_comp").disabled = false;
+								document.getElementById("xtwh_comp").disabled = false;
+								document.getElementById("yhgl_comp").disabled = false;
+								
+								document.getElementById("spyl_comp").checked = false;
+								document.getElementById("rzcx_comp").checked = false;
+								document.getElementById("yjkz_comp").checked = false;
+								document.getElementById("yydj_comp").checked = false;
+								document.getElementById("sptj_comp").checked = false;
+								document.getElementById("cspz_comp").checked = false;
+								document.getElementById("lxhf_comp").checked = false;
+								document.getElementById("yhgl_comp").checked = false;
+								document.getElementById("xtwh_comp").checked = false;
+						var type = $("#usertype").val();
+						
+						switch(type)
+						{
+							case "1":	//管理员
+								document.getElementById("spyl_comp").click();
+								document.getElementById("rzcx_comp").click();
+								document.getElementById("yjkz_comp").click();
+								document.getElementById("yydj_comp").click();
+								document.getElementById("sptj_comp").click();
+								document.getElementById("cspz_comp").click();
+								document.getElementById("lxhf_comp").click();
+								document.getElementById("yhgl_comp").click();
+								document.getElementById("xtwh_comp").click();
+							break;
+							case "2":	//操作员
+								document.getElementById("spyl_comp").click();
+								document.getElementById("rzcx_comp").click();
+								document.getElementById("yjkz_comp").click();
+								document.getElementById("yydj_comp").click();
+								document.getElementById("sptj_comp").click();
+								document.getElementById("cspz_comp").click();
+								document.getElementById("lxhf_comp").click();
+								//document.getElementById("xtwh_comp").click();
+								document.getElementById("yhgl_comp").disabled = true;
+								document.getElementById("xtwh_comp").disabled = true;
+							break;
+							case "3":	//视频浏览
+								document.getElementById("spyl_comp").click();
+								document.getElementById("spyl_comp").disabled = true;
+								document.getElementById("rzcx_comp").disabled = true;
+								document.getElementById("yjkz_comp").disabled = true;
+								document.getElementById("yydj_comp").disabled = true;
+								document.getElementById("sptj_comp").disabled = true;
+								document.getElementById("cspz_comp").disabled = true;
+								document.getElementById("lxhf_comp").disabled = true;
+								document.getElementById("xtwh_comp").disabled = true;
+								document.getElementById("yhgl_comp").disabled = true;
+							break;
+						}
+					
 					});
-				$("#rzcx_comp").bind("click",function(){
-					var ctr = document.getElementById("rzcx_comp");
-					if(ctr.checked)
-					{
-						rzcx = true;	
-					}
-					else if(!ctr.checked)
-					{
-						rzcx = false;
-					}
+					//psw 焦点事件	
+					$("#psw").focus(function ()
+					{ 
+						$("#psw").val(""); 
 					});
-				$("#yjkz_comp").bind("click",function(){
-					var ctr = document.getElementById("yjkz_comp");
-					if(ctr.checked)
-					{
-						yjkz = true;	
-					}
-					else if(!ctr.checked)
-					{
-						yjkz = false;
-					}
-					});
-				$("#yydj_comp").bind("click",function(){
-					var ctr = document.getElementById("yydj_comp");
-					if(ctr.checked)
-					{
-						yydj = true;	
-					}
-					else if(!ctr.checked)
-					{
-						yydj = false;
-					}
-					});
-				$("#sptj_comp").bind("click",function(){
-					var ctr = document.getElementById("sptj_comp");
-					if(ctr.checked)
-					{
-						sptj = true;	
-					}
-					else if(!ctr.checked)
-					{
-						sptj = false;
-					}
-					});
-				$("#cspz_comp").bind("click",function(){
-					var ctr = document.getElementById("cspz_comp");
-					if(ctr.checked)
-					{
-						cspz = true;	
-					}
-					else if(!ctr.checked)
-					{
-						cspz = false;
-					}
-					});
-				$("#lxhf_comp").bind("click",function(){
-					var ctr = document.getElementById("lxhf_comp");
-					if(ctr.checked)
-					{
-						lxhf = true;	
-					}
-					else if(!ctr.checked)
-					{
-						lxhf = false;
-					}
-					});
-				$("#yhgl_comp").bind("click",function(){
-					var ctr = document.getElementById("yhgl_comp");
-					if(ctr.checked)
-					{
-						yhgl = true;	
-					}
-					else if(!ctr.checked)
-					{
-						yhgl = false;
-					}
+					//psw 失去焦点
+					$("#psw").blur(function ()
+					{ 
+						var stmp = $("#psw").val();
+						if(stmp == "")
+						{
+							$("#psw").val("******");
+						}
+						else
+						{
+							userpsw = stmp;
+						}
 					});
 				//绑定确定按钮
                 $("#submitAdduser").bind("click",
                 function(e)
 				{
-
+					//Debugger:
 					//获取用户名
 					var userName = $("#username").val();
 					//获取用户类型
 					var userType = $("#usertype").val();
+					//alert("userType:"+userType);
+
+					//判断是否是管理员
+					if(userType == "1")
+					{
+						//判断是否是当前管理员
+						var username1 = getCookie("gmiwebusername");
+				
+						//alert("username1:"+username1);
+						if(userName != username1)	
+						{
+							alert("不可修改非当前登录管理员信息！");
+							return;
+						}
+					}
 					//获取密码
-					var userPsw = $("#psw").val();
+					//var userPsw = $("#psw").val();
 					if(userName == null || userName == "")
 					{
 						alert("用户名不能为空!");
@@ -280,12 +169,52 @@
 						alert("用户类型不能为空!");
 						return;
 					}
-					if(userPsw == null || userPsw == "")
+					if(userpsw == null || userpsw == "")
 					{
 						alert("密码不能为空!");
 						return;
 					}
+					//判断密码长度
+					if(!parent.UserNameCheck(userpsw))
+					{
+						alert("密码请不要超过31字节！");
+						return;
+					}
+					var ctr = document.getElementById("spyl_comp");
+					if(ctr.checked){spyl = true;}
+					else if(!ctr.checked){spyl = false;}
 					
+					ctr = document.getElementById("rzcx_comp");
+					if(ctr.checked){rzcx = true;}
+					else if(!ctr.checked){rzcx = false;}
+					
+					ctr = document.getElementById("yjkz_comp");
+					if(ctr.checked){yjkz = true;	}
+					else if(!ctr.checked){yjkz = false;}
+					
+					ctr = document.getElementById("yydj_comp");
+					if(ctr.checked){yydj = true;}
+					else if(!ctr.checked){yydj = false;}
+					
+					ctr = document.getElementById("sptj_comp");
+					if(ctr.checked){sptj = true;}
+					else if(!ctr.checked){sptj = false;}
+					
+					ctr = document.getElementById("cspz_comp");
+					if(ctr.checked){cspz = true;}
+					else if(!ctr.checked){cspz = false;}
+					
+					ctr = document.getElementById("lxhf_comp");
+					if(ctr.checked){lxhf = true;}
+					else if(!ctr.checked){lxhf = false;}
+					
+					ctr = document.getElementById("yhgl_comp");
+					if(ctr.checked){yhgl = true;}
+					else if(!ctr.checked){yhgl = false;}	
+					
+					ctr = document.getElementById("xtwh_comp");
+					if(ctr.checked){xtwh = true;}
+					else if(!ctr.checked){xtwh = false;}
 					//基本权限
 				  var  content={};
 				  content.SessionId=parent.parent.id;
@@ -293,57 +222,71 @@
 				  
 				  //新用户
 				  content.UserName = $("#username").val();
-				  content.UserPass = $("#psw").val();
+				  content.UserPass = userpsw;
 				  content.UserFlag = userType;
 				  //新用户权限
 				  var str = "";
-				  //视频预览
-				  if(spyl == true){str = "1";}
-				  else if(!spyl){str = "0";}
+				  //系统维护
+				  if(xtwh == true){str = "1";}
+				  else if(!xtwh){str = "0";}
 				  
-				  //云镜控制
-				  if(yjkz == true){str += "1";}
-				  else if(!yjkz){str += "0";}
-				  
-				  //视频调节
-				  if(sptj == true){str += "1";}
-				  else if(!sptj){str += "0";}
-				  //录像回放
-				  if(lxhf == true){str += "1";}
-				  else if(!lxhf){str += "0";}
-				  //日志查询
-				  if(rzcx == true){str += "1";}
-				  else if(!rzcx){str += "0";}
-				  //语音对讲
-				  if(yydj == true){str += "1";}
-				  else if(!yydj){str += "0";}
-				  //参数配置
-				  if(cspz == true){str += "1";}
-				  else if(!cspz){str += "0";}
 				  //用户管理
 				  if(yhgl == true){str += "1";}
 				  else if(!yhgl){str += "0";}
 				  
-				  //补齐后24位
-				  str += "000000000000000000000000";
+				  //参数配置
+				  if(cspz == true){str += "1";}
+				  else if(!cspz){str += "0";}
 				  
-				  str = parseInt(str,2);
+				  //语音对讲
+				  if(yydj == true){str += "1";}
+				  else if(!yydj){str += "0";}   
+				 
+				  //日志查询
+				  if(rzcx == true){str += "1";}
+				  else if(!rzcx){str += "0";} 
+				  
+				  //录像回放
+				  if(lxhf == true){str += "1";}
+				  else if(!lxhf){str += "0";}
+				  
+				  //视频调节
+				  if(sptj == true){str += "1";}
+				  else if(!sptj){str += "0";}
+
+				  //云镜控制
+				  if(yjkz == true){str += "1";}
+				  else if(!yjkz){str += "0";}
+				  
+				  //视频预览
+				  if(spyl == true){str += "1";}
+				  else if(!spyl){str += "0";}
 				  
 				  
-				  content.UserLevel = str;
+				  //补齐后7位
+				  //alert(str);
+				  var str1 = "0000000" + str;
+				  
+				  //alert(str1);
+				  var strTmp = parseInt(str1,2);
+				  //alert(strTmp);
+				  
+				  
+				  content.UserLevel = strTmp;
 				  contentstr=jsonToString(content);
 					//如果是修改用户
 					//Flag = getQueryString("Flag");
 					//if(Flag == 1)
 					//{
-						GetAndSet("ModifyUsers","json",contentstr, sucess_UpdateUser);
+						GetAndSet("ModifyUsers","json",contentstr, sucess_UpdateUser,true);
 					//}
 					//else if(Flag == 0)//添加用户
 					//{
 					//	GetAndSet("SetUsers","json",contentstr, sucess_addUser);		
 					//} 
 				  
-				  
+				  		parent.getUser();
+                    	parent.closeframe();
                 });
 				
 				//绑定取消按钮
@@ -365,8 +308,7 @@
 					{
 						//成功返回
 						alert("修改成功！");
-						parent.getUser();
-                    	parent.closeframe();
+
 					}
 					else if(PackDate.Content.RetCode!="0")
 					{
@@ -376,53 +318,238 @@
 				}
 				delete PackDate;	
 			}
-			//回调函数
-			function sucess_addUser(data)
+		//加载用户信息函数
+		function LoadUserInfo()
+		{
+			//Debugger:
+			var username = getQueryString("usename");
+			var userlever = getQueryString("userLever");
+			var userflag = getQueryString("useflag"); 
+			userpsw = getQueryString("usepsw");
+			
+			//alert("userlever:"+userlever);
+			
+			//显示用户名
+			$("#username").val(username);
+			//$("#username").val("111");
+			//用户类型
+			//alert("userflag:"+userflag);
+			if(userflag == "管理员")
 			{
-				var PackDate=new UnPackData(data);
-				if(PackDate.Content!=null)
-				{
-					if(PackDate.Content.RetCode=="0")
-					{
-						//成功返回
-						alert("添加成功！");
-						parent.getUser();
-                    	parent.closeframe();
-					}
-					else if(PackDate.Content.RetCode!="0")
-					{
-						//错误返回
-						alert("添加失败!");	
-					}
-				}	
-				delete PackDate;
+				var PosSelhtml = "<option value='1'>管理员</option>";
+				$("#usertype").html(PosSelhtml);
+				
+				$("#usertype").val(1);	
+				document.getElementById("usertype").disabled = true;
+				//判断是否是当前管理员
+				var username1 = getCookie("gmiwebusername");
+					document.getElementById("spyl_comp").disabled = true;
+					document.getElementById("rzcx_comp").disabled = true;
+					document.getElementById("yjkz_comp").disabled = true;
+					document.getElementById("yydj_comp").disabled = true;
+					document.getElementById("sptj_comp").disabled = true;
+					document.getElementById("cspz_comp").disabled = true;
+					document.getElementById("lxhf_comp").disabled = true;
+					document.getElementById("xtwh_comp").disabled = true;
+					document.getElementById("yhgl_comp").disabled = true;		
+				if(username != username1)
+				{		
+					document.getElementById("psw").disabled = true;	
+				}
+
 			}
+			else if(userflag == "操作员")
+			{
+				$("#usertype").val(2);
+				document.getElementById("yhgl_comp").disabled = true;
+				document.getElementById("xtwh_comp").disabled = true;
+			}
+			else if(userflag == "观察员")
+			{
+				$("#usertype").val(3);	
+				document.getElementById("spyl_comp").disabled = true;
+				document.getElementById("rzcx_comp").disabled = true;
+				document.getElementById("yjkz_comp").disabled = true;
+				document.getElementById("yydj_comp").disabled = true;
+				document.getElementById("sptj_comp").disabled = true;
+				document.getElementById("cspz_comp").disabled = true;
+				document.getElementById("lxhf_comp").disabled = true;
+				document.getElementById("xtwh_comp").disabled = true;
+				document.getElementById("yhgl_comp").disabled = true;	
+			}
+			//$("#usertype").val(userflag);
+			//密码
+			//$("#psw").val(userpsw);
+			$("#psw").val("******");
+			
+			//解析userlever
+          	var answer = "";
+			var Valuetwo;
+			var ValueStr = "";
+			//alert("userlever:"+userlever);
+          	if(/\d+/.test(userlever))
+			{
+            	while(userlever != 0) {
+              		answer = Math.abs(userlever%2)+answer;
+              		userlever = parseInt(userlever/2);
+            	}
+            	if(answer.length == 0)
+				{
+              		answer = "0";
+					alert("获取用户权限失败！");
+					return;
+				}
+				//alert("answer:"+answer);
+          	}
+				switch(answer.length)
+				{
+					case 1:
+						answer = "00000000"+answer;
+					break;
+					case 2:
+						answer = "0000000"+answer;
+					break;
+					case 3:
+						answer = "000000"+answer;
+					break;
+					case 4:
+						answer = "00000"+answer;
+					break;
+					case 5:
+						answer = "0000"+answer;
+					break;
+					case 6:
+						answer = "000"+answer;
+					break;
+					case 7:
+						answer = "00"+answer;
+					break;
+					case 8:
+						answer = "0"+answer;
+					break;
+				}
+						$("#spyl_comp").checked = false;
+						$("#rzcx_comp").checked = false;
+						$("#yjkz_comp").checked = false;
+						$("#yydj_comp").checked = false;
+						$("#sptj_comp").checked = false;
+						$("#cspz_comp").checked = false;
+						$("#lxhf_comp").checked = false;
+						$("#yhgl_comp").checked = false;
+						$("#xtwh_comp").checked = false;
+						
+            			Valuetwo = answer;
+						ValueStr = String(Valuetwo);
+						//alert("ValueStr:"+ValueStr);
+
+						var Value = ValueStr.split("");
+
+						//判断视频预览权限
+						var sss = Value[8];
+						if(sss.indexOf("1") != -1)
+						//if(Value[7] != "1")
+						{
+							document.getElementById("spyl_comp").checked = true;
+							//$("#spyl_comp").checked = true;
+						}
+						sss = Value[7];
+						if(sss.indexOf("1") != -1)
+						{
+							document.getElementById("yjkz_comp").checked = true;
+							//$("#yjkz_comp").checked = true;
+						}
+						sss = Value[6];
+						if(sss.indexOf("1") != -1)
+						{
+							document.getElementById("sptj_comp").checked = true;
+							//$("#sptj_comp").checked = true;
+						}
+						sss = Value[5];
+						if(sss.indexOf("1") != -1)
+						{
+							document.getElementById("lxhf_comp").checked = true;
+							//$("#lxhf_comp").checked = true;
+						}
+						sss = Value[4];
+						if(sss.indexOf("1") != -1)
+						{
+							document.getElementById("rzcx_comp").checked = true;
+							//$("#rzcx_comp").checked = true;
+						}
+						sss = Value[3];
+						if(sss.indexOf("1") != -1)
+						{
+							document.getElementById("yydj_comp").checked = true;
+							//$("#yydj_comp").checked = true;
+						}
+						sss = Value[2];
+						if(sss.indexOf("1") != -1)
+						{
+							document.getElementById("cspz_comp").checked = true;
+							//$("#cspz_comp").checked = true;
+						}
+						sss = Value[1];
+						if(sss.indexOf("1") != -1)
+						{
+							document.getElementById("yhgl_comp").checked = true;
+							//$("#yhgl_comp").checked = true;
+						}
+						//判断系统维护权限
+						sss = Value[0];
+						if(sss.indexOf("1") != -1)
+						//if(Value[7] != "1")
+						{
+							document.getElementById("xtwh_comp").checked = true;
+						}
+						//alert("show over!");
+
+		}
+		//初始化函数
+		function init()
+		{
+				//获取参数
+				//debugger;
+				//Flag = getQueryString("Flag");
+				//if(Flag == 0)//添加用户
+				//{
+				//	$("#username").readOnly = false;
+				//	$("#password").readOnly = false;
+				//}
+				//else if(Flag == 1)//修改用户
+				//{
+					//$("#username").readOnly = true;
+
+					$("#username").attr("disabled", "disabled");
+					//加载用户信息
+					LoadUserInfo();
+				//}	
+		}
 
         </script>
     </head>
     
     <body>
         <div id="basic-modal" style="color:#999;">
-<h3 style="width:100%; color:#fff; background-color:#000; margin-top:0;height:28px; line-height:26px; font-size:12px; font-weight:normal; padding-left:10px;">
-                修改用户：
+<h3 style="width:100%; color:#fff; background-color:#000; margin-top:0;height:28px; line-height:26px; font-size:12px; font-weight:normal; padding-left:10px;font-size : 12pt;">
+                修改用户
           </h3>
-        <div style="width:400px; height:400px; margin:0 auto; padding-left:10px;">
+        <div style="width:400px; height:400px; margin:0 auto; padding-left:110px; text-align:left;">
             
             <dl>
                 <dt style="width:200px;">&nbsp;</dt>
                 	<div style="width:90%">
                 <div class="user_list">
                 <div class="user_list1">用户名：</div>
-                  <div class="user_list1"><input type="text" id="username" readonly="readonly"></input></div>
+                  <div class="user_list1"><input type="text" id="username" disabled="disabled"></input></div>
                 
                 </div>
                 <div class="user_list">
                 <div class="user_list1">用户类型:</div>
                 <div class="user_list1">
                   <select id="usertype" >
-                    <option value='1'> 管理员 </option>
+                    <!--<option value='1'> 管理员 </option>-->
                     <option value='2'> 操作员 </option>
-                    <option value='3'> 视频预览 </option>
+                    <option value='3'> 观察员 </option>
                   </select>
                   </div>
                 </div>
@@ -442,9 +569,7 @@
             </dl>
           <!--<p>-->
           <div class="user_list3">
-            <input id="spyl_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>
-          视频预览
-          </div>
+            <input id="spyl_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>视频预览 </div>
           <div class="user_list3"><input id="rzcx_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>日志查询</div>
           <div class="user_list3">
 		  <input id="yjkz_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>云镜控制</div>
@@ -454,10 +579,12 @@
           <input id="sptj_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>视频调节</div>
           <div class="user_list3">
           <input id="cspz_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>参数配置</div>
-          <div class="user_list3">
+          <div class="user_list3" style="display:none;">
           <input id="lxhf_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>录像回放</div>
           <div class="user_list3">
           <input id="yhgl_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>用户管理</div>
+<div class="user_list3">
+          <input id="xtwh_comp" name="" type="checkbox" style="border:0 none; width:30px;"/>系统维护</div>
           
 		</div>
           

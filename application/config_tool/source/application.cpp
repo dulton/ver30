@@ -66,8 +66,7 @@ GMI_RESULT Application::Start()
         return GMI_ALREADY_OPERATED;
     }
 
-    GMI_RESULT        RetVal   = GMI_SUCCESS;
-    PcapSessionHandle PcapHnd  = PCAP_SESSION_INVALID_HANDLE;
+    GMI_RESULT RetVal = GMI_SUCCESS;
 
     do
     {
@@ -87,55 +86,12 @@ GMI_RESULT Application::Start()
             break;
         }
 
-        // Create pcap handle
-        PcapHnd = PcapSessionOpen(m_Interface, m_TimedOut);
-        if (PCAP_SESSION_INVALID_HANDLE == PcapHnd)
-        {
-            PRINT_LOG(ERROR, "Failed to open interface %s", m_Interface);
-            RetVal = GMI_FAIL;
-            break;
-        }
-
-        // Create tool protocol handle
-        m_GtpHandle = GtpCreateServerHandle(PcapHnd);
-        if (GTP_INVALID_HANDLE == m_GtpHandle)
-        {
-            PRINT_LOG(ERROR, "Failed to create GTP handle");
-            RetVal = GMI_FAIL;
-            break;
-        }
-
-        // Start heart beat task
-        RetVal = GtpAddDelayTask(m_GtpHandle, Application::HeartBeatTask, this, 0, 0);
-        if (RetVal != GMI_SUCCESS)
-        {
-            PRINT_LOG(ERROR, "Failed to add heart beat task");
-            break;
-        }
-
-        // Set event proc
-        GtpSetSentCallback(m_GtpHandle, ServiceDispatch::OnSentProc, ServiceDispatch::GetInstancePtr());
-        GtpSetRecvCallback(m_GtpHandle, ServiceDispatch::OnRecvProc, ServiceDispatch::GetInstancePtr());
-        GtpSetTransKilledCallback(m_GtpHandle, ServiceDispatch::OnTransactionKilledProc, ServiceDispatch::GetInstancePtr());
-
         // Set the loop flag
         m_Running = true;
 
         // Start main loop
         RetVal = Run();
     } while (0);
-
-    // Release the resource
-    if (m_GtpHandle != GTP_INVALID_HANDLE)
-    {
-        GtpDestroyHandle(m_GtpHandle);
-        m_GtpHandle = GTP_INVALID_HANDLE;
-    }
-
-    if (PcapHnd != PCAP_SESSION_INVALID_HANDLE)
-    {
-        PcapSessionClose(PcapHnd);
-    }
 
     DaemonService::GetInstance().Uninitialize();
     ConfigureService::GetInstance().Uninitialize();
@@ -211,7 +167,7 @@ void_t Application::HeartBeatTask(void_t * Data)
             PRINT_LOG(WARNING, "Process is stopping ...");
         }
     }
-    else
+    else if (App->m_GtpHandle != GTP_INVALID_HANDLE)
     {
         RetVal = GtpAddDelayTask(App->m_GtpHandle, Application::HeartBeatTask, Data, 3, 0);
         if (RetVal != GMI_SUCCESS)
@@ -223,43 +179,108 @@ void_t Application::HeartBeatTask(void_t * Data)
 
 GMI_RESULT Application::Run()
 {
-    GMI_RESULT     RetVal   = GMI_SUCCESS;
-    GtpTransHandle GtpTrans = GTP_INVALID_HANDLE;
+    GMI_RESULT        RetVal   = GMI_SUCCESS;
+    GtpTransHandle    GtpTrans = GTP_INVALID_HANDLE;
+    PcapSessionHandle PcapHnd  = PCAP_SESSION_INVALID_HANDLE;
 
-    // Main loop
     while (IsRunning())
     {
-        // Single step
-        RetVal = GtpDoEvent(m_GtpHandle);
+        // Create pcap handle
+        PcapHnd = PcapSessionOpen(m_Interface, m_TimedOut);
+        if (PCAP_SESSION_INVALID_HANDLE == PcapHnd)
+        {
+            PRINT_LOG(ERROR, "Failed to open interface %s, try again after 1 second", m_Interface);
+
+            GMI_Sleep(1000);
+
+            // Run heart beat task manually
+            HeartBeatTask(this);
+            continue;
+        }
+
+        // Create tool protocol handle
+        m_GtpHandle = GtpCreateServerHandle(PcapHnd);
+        if (GTP_INVALID_HANDLE == m_GtpHandle)
+        {
+            PRINT_LOG(ERROR, "Failed to create GTP handle");
+            RetVal = GMI_FAIL;
+            break;
+        }
+
+        // Start heart beat task
+        RetVal = GtpAddDelayTask(m_GtpHandle, Application::HeartBeatTask, this, 0, 0);
         if (RetVal != GMI_SUCCESS)
         {
-            PRINT_LOG(ERROR, "Failed to do GTP event");
+            PRINT_LOG(ERROR, "Failed to add heart beat task");
+            break;
         }
+
+        // Set event proc
+        GtpSetSentCallback(m_GtpHandle, ServiceDispatch::OnSentProc, ServiceDispatch::GetInstancePtr());
+        GtpSetRecvCallback(m_GtpHandle, ServiceDispatch::OnRecvProc, ServiceDispatch::GetInstancePtr());
+        GtpSetTransKilledCallback(m_GtpHandle, ServiceDispatch::OnTransactionKilledProc, ServiceDispatch::GetInstancePtr());
+
+
+        // Main loop
+        while (IsRunning())
+        {
+            // Single step
+            RetVal = GtpDoEvent(m_GtpHandle);
+            if (RetVal != GMI_SUCCESS)
+            {
+                PRINT_LOG(ERROR, "Failed to do GTP event");
+                break;
+            }
+        }
+
+        if (!IsRunning() && RetVal == GMI_SUCCESS)
+        {
+            do
+            {
+                // Broadcast the offline notification
+                GtpTrans = GtpCreateBroadcastTransHandle(m_GtpHandle);
+                if (GTP_INVALID_HANDLE == GtpTrans)
+                {
+                    PRINT_LOG(ERROR, "Failed to create GTP broadcast transaction handle");
+                    break;
+                }
+
+                if (GtpTransSendData(GtpTrans, l_OffLineNotification,
+                    sizeof(l_OffLineNotification), GTP_DATA_TYPE_UTF8_XML) != GMI_SUCCESS)
+                {
+                    PRINT_LOG(ERROR, "Failed to send off line notification");
+                    break;
+                }
+
+            } while (0);
+
+            // Release the resource
+            if (GtpTrans != GTP_INVALID_HANDLE)
+            {
+                GtpDestroyTransHandle(GtpTrans);
+                GtpTrans = GTP_INVALID_HANDLE;
+            }
+        }
+
+        // Release the resource
+        GtpDestroyHandle(m_GtpHandle);
+        m_GtpHandle = GTP_INVALID_HANDLE;
+
+        PcapSessionClose(PcapHnd);
+        PcapHnd = PCAP_SESSION_INVALID_HANDLE;
     }
 
-    do
+    // Finally, release all the resource
+    if (m_GtpHandle != GTP_INVALID_HANDLE)
     {
-        // Broadcast the offline notification
-        GtpTrans = GtpCreateBroadcastTransHandle(m_GtpHandle);
-        if (GTP_INVALID_HANDLE == GtpTrans)
-        {
-            PRINT_LOG(ERROR, "Failed to create GTP broadcast transaction handle");
-            break;
-        }
+        GtpDestroyHandle(m_GtpHandle);
+        m_GtpHandle = GTP_INVALID_HANDLE;
+    }
 
-        if (GtpTransSendData(GtpTrans, l_OffLineNotification,
-            sizeof(l_OffLineNotification), GTP_DATA_TYPE_UTF8_XML) != GMI_SUCCESS)
-        {
-            PRINT_LOG(ERROR, "Failed to send off line notification");
-            break;
-        }
-
-    } while (0);
-
-    // Release the resource
-    if (GtpTrans != GTP_INVALID_HANDLE)
+    if (PcapHnd != PCAP_SESSION_INVALID_HANDLE)
     {
-        GtpDestroyTransHandle(GtpTrans);
+        PcapSessionClose(PcapHnd);
+        PcapHnd = PCAP_SESSION_INVALID_HANDLE;
     }
 
     return RetVal;

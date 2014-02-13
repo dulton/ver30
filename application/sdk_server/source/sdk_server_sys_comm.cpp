@@ -148,14 +148,12 @@ int SdkServerSysComm::__BindSocket()
     if(sock < 0)
     {
         ret = -errno ? -errno : -1;
-        ERROR_INFO("\n");
         goto fail;
     }
 
     ret  = this->__GetLPort();
     if(ret < 0)
     {
-        ERROR_INFO("\n");
         goto fail;
     }
     this->m_LPort = ret;
@@ -163,7 +161,6 @@ int SdkServerSysComm::__BindSocket()
     ret = this->__GetRPort();
     if(ret < 0)
     {
-        ERROR_INFO("\n");
         goto fail;
     }
     this->m_RPort = ret;
@@ -173,18 +170,15 @@ int SdkServerSysComm::__BindSocket()
     saddr.sin_port = htons(this->m_LPort);
 
     socklen = sizeof(saddr);
-    errno = 0;
     ret = bind(sock,(struct sockaddr*)&saddr,socklen);
     if(ret < 0)
     {
-        ERROR_INFO("could not bind socket %d Error(%d)\n",this->m_LPort,errno);
         goto fail;
     }
 
     ret = this->__SetSocketUnBlock(sock);
     if(ret < 0)
     {
-        ERROR_INFO("\n");
         goto fail;
     }
 
@@ -671,19 +665,19 @@ try_again:
         /*passdown for next write*/
     }
 
-    /*now we put end of timer ,and end of io ,if we have something to write ,we will give it ok*/
+	/*now we put end of timer ,and end of io ,if we have something to write ,we will give it ok*/
     this->__StopWriteIo();
     this->__StopWriteTimer();
-
+	
     if(this->m_pResponse.size() > 0)
     {
         sdk_client_comm_t* pComm=NULL;
         pComm = this->m_pResponse[0];
         this->m_pResponse.erase(this->m_pResponse.begin());
-        if(pComm->m_ServerPort == 0)
-        {
-            pComm->m_ServerPort = this->m_RPort;
-        }
+		if (pComm->m_ServerPort == 0)
+		{
+        	pComm->m_ServerPort = this->m_RPort;
+		}
         pComm->m_LocalPort  = this->m_LPort;
         ret = this->m_pSock->PushData(pComm);
         if(ret < 0)
@@ -745,7 +739,7 @@ int SdkServerSysComm::Start()
     ret = this->__BindSocket();
     if(ret < 0)
     {
-        ERROR_INFO("\n");
+    	ERROR_INFO("\n");
         this->Stop();
         return ret;
     }
@@ -755,7 +749,7 @@ int SdkServerSysComm::Start()
     ret = this->__StartReadIo();
     if(ret < 0)
     {
-        ERROR_INFO("\n");
+    	ERROR_INFO("\n");
         this->Stop();
         return ret;
     }
@@ -764,28 +758,28 @@ int SdkServerSysComm::Start()
 
 int SdkServerSysComm::ResetLongTimeTimer()
 {
-    int ret;
+	int ret;
 
-    if(this->m_InsertReadTimer > 0)
-    {
-        this->__StopReadTimer();
-        ret = this->__StartReadTimer();
-        if(ret < 0)
-        {
-            return ret;
-        }
-    }
+	if (this->m_InsertReadTimer > 0)
+	{
+		this->__StopReadTimer();
+		ret = this->__StartReadTimer();
+		if (ret < 0)
+		{
+			return ret;
+		}
+	}
 
-    if(this->m_InsertWriteTimer > 0)
-    {
-        this->__StopWriteTimer();
-        ret = this->__StartWriteTimer();
-        if(ret < 0)
-        {
-            return ret;
-        }
-    }
+	if (this->m_InsertWriteTimer > 0)
+	{
+		this->__StopWriteTimer();
+		ret = this->__StartWriteTimer();
+		if (ret < 0)
+		{
+			return ret;
+		}
+	}
 
-    return 0;
+	return 0;
 }
 
