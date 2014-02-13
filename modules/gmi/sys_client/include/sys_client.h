@@ -31,6 +31,15 @@ GMI_RESULT SysAuthLogin(char_t  UserName[32],
                         uint8_t  *UserFlagPtr,
                         uint32_t *AuthvaluePtr
                        );
+GMI_RESULT SysAuthLoginExt(char_t  UserName[32],
+                        char_t    UserPasswd[32],
+                        uint16_t  InSessionId,
+                        uint8_t   ModuleId,
+                        uint16_t *OutSessionIdPtr,
+                        uint8_t  *UserFlagPtr,
+                        uint32_t *AuthvaluePtr,
+						uint16_t *SdkPort);		
+GMI_RESULT SysUserAuthCheck(UserAuthRefInfo *InputData, UserAuthResInfo *OutputData, uint16_t LocalAuthRudpPort);
 GMI_RESULT SysAuthLogout(uint16_t SessionId);
 /*************************************************
   *SessionId: after AuthLogin() , get "OutSessionId"

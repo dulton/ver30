@@ -1,9 +1,15 @@
 #include "log.h"
-#include "sys_utilitly_unix.h"
-#include "sys_command_excute.h"
-#include "gmi_system_headers.h"
 #include "auth_center_api.h"
 #include "des.h"
+#include "gmi_system_headers.h"
+//#include "sys_info_readonly.h"
+//#include "ipc_fw_v3.x_resource.h"
+//#include "ipc_fw_v3.x_setting.h"
+#include "sys_client.h"
+#include "sys_env_types.h"
+#include "sys_utilitly_unix.h"
+#include "sys_command_excute.h"
+
 
 #define SINGLEUSERMAXLINK  20
 #define ALLUSERMAXLINK     20
@@ -120,11 +126,106 @@ GMI_RESULT SysAuthLogin(char_t  UserName[32],
     *OutSessionIdPtr = OutputData.s_SessionId;
     *UserFlagPtr     = (uint8_t)((OutputData.s_AuthValue >> 24) & 0xff);
     *AuthvaluePtr    = OutputData.s_AuthValue;
-    //*TimeoutMinPtr   = 30;
-
+    //*TimeoutMinPtr   = 30;	
     return GMI_SUCCESS;
 }
 
+
+GMI_RESULT SysUserAuthCheck(UserAuthRefInfo *InputData, UserAuthResInfo *OutputData, uint16_t LocalAuthRudpPort)
+{
+	return GMI_UserAuthCheck(InputData, OutputData, LocalAuthRudpPort);
+}
+
+
+GMI_RESULT SysAuthLoginExt(char_t  UserName[32],
+                        char_t    UserPasswd[32],
+                        uint16_t  InSessionId,
+                        uint8_t   ModuleId,
+                        uint16_t *OutSessionIdPtr,
+                        uint8_t  *UserFlagPtr,
+                        uint32_t *AuthvaluePtr,
+						uint16_t *SdkPort)
+{
+    char_t RandomNumber[8];
+    UserAuthRefInfo InputData;
+    UserAuthResInfo OutputData;
+
+    if (NULL == UserName
+            || NULL == UserPasswd
+            || NULL == OutSessionIdPtr
+            || NULL == UserFlagPtr
+            || NULL == AuthvaluePtr
+       )
+    {
+        return GMI_INVALID_PARAMETER;
+    }
+
+    srand(time((time_t *)NULL));
+    uint16_t DesKey = (rand()%1000 + 1000);
+
+    memset(&InputData, 0, sizeof(UserAuthRefInfo));
+    memcpy(InputData.s_Username, UserName, 32);
+    InputData.s_DataType             = TYPE_AUTH_LOGIN;
+    InputData.s_UsernameEncType      = TYPE_ENCRYPTION_TEXT;
+    InputData.s_PasswordEncType      = TYPE_ENCRYPTION_DES;
+    InputData.s_SessionId            = InSessionId;
+    InputData.s_SingleUserMaxLinkNum = SINGLEUSERMAXLINK;
+    InputData.s_AllUserMaxLinkNum    = ALLUSERMAXLINK;
+    InputData.s_UserAuthExtDataLen   = 8;
+    InputData.s_MoudleId             = ModuleId;
+    memset(RandomNumber, 0, sizeof(RandomNumber));
+    sprintf(RandomNumber, "%d", DesKey);
+    InputData.s_UserAuthExtData      = RandomNumber;
+
+    //encrypt
+    char_t Passwd[LEN_DES_PASSWORD];
+    int32_t CiperLen;
+
+    memset(Passwd, 0, sizeof(Passwd));
+    strcpy(Passwd, UserPasswd);
+    if (0 > DES_Encrypt(Passwd, sizeof(Passwd), RandomNumber, InputData.s_Password, &CiperLen))
+    {
+        return GMI_FAIL;
+    }
+
+    memset(&OutputData, 0, sizeof(UserAuthResInfo));
+    GMI_RESULT Result = GMI_UserAuthCheck(&InputData, &OutputData, l_LocalAuthRudpPort);
+    if (FAILED(Result))
+    {
+        return Result;
+    }
+
+    *OutSessionIdPtr = OutputData.s_SessionId;
+    *UserFlagPtr     = (uint8_t)((OutputData.s_AuthValue >> 24) & 0xff);
+    *AuthvaluePtr    = OutputData.s_AuthValue;
+    //*TimeoutMinPtr   = 30;
+	
+	//get sdk port
+	//FD_HANDLE Handle;
+    //Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+	//if (FAILED(Result))
+	//{
+	//	return Result;
+	//}
+	
+	//Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_SDK_SERVER_PORT_KEY, GMI_SDK_SERVER_PORT, SdkPort);
+	//if (FAILED(Result))
+	//{
+	//	SysInfoClose(Handle);
+	//	return Result;
+	//}
+	
+	//SysInfoClose(Handle);
+	SysPkgNetworkPort SysNetworkPort;
+	Result = SysGetNetworkPort(1234, 0, &SysNetworkPort);
+	if (FAILED(Result))
+	{	
+		return Result;
+	}
+	*SdkPort = (uint16_t)SysNetworkPort.s_SDK_Port;
+	
+    return GMI_SUCCESS;
+}
 
 GMI_RESULT SysAuthLogout(uint16_t SessionId)
 {

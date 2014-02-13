@@ -1,9 +1,9 @@
 #include "rtsp_server.h"
 
-#include "gmi_config_api.h"
 #include "gmi_media_ctrl.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "ipc_fw_v3.x_setting.h"
+#include "sys_info_readonly.h"
 
 GMI_RtspServer::GMI_RtspServer(void)
     : m_Scheduler( NULL )
@@ -276,7 +276,7 @@ GMI_RESULT GMI_RtspServer::GetServerMulticastAddress( int32_t StreamId, uint32_t
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -284,13 +284,14 @@ GMI_RESULT GMI_RtspServer::GetServerMulticastAddress( int32_t StreamId, uint32_t
 
     //printf( "GMI_RtspServer::GetServerMulticastAddress, Default_MulticastAddress=%x \n", Default_MulticastAddress );
 
-    Result = GMI_XmlRead(Handle, ONVIF_MEDIA_SERVER_RTSP_CONFIG_PATH, MulticastAddressKey, Default_MulticastAddress, &ServerMulticastAddress, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, ONVIF_MEDIA_SERVER_RTSP_CONFIG_PATH, MulticastAddressKey, Default_MulticastAddress, &ServerMulticastAddress );
     if ( FAILED( Result ) )
     {
+		SysInfoClose(Handle);
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -335,7 +336,7 @@ GMI_RESULT GMI_RtspServer::GetServer_RTP_UDP_Port( int32_t StreamId, uint16_t *U
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -343,13 +344,14 @@ GMI_RESULT GMI_RtspServer::GetServer_RTP_UDP_Port( int32_t StreamId, uint16_t *U
 
     //printf( "GMI_RtspServer::GetServer_RTP_UDP_Port, Default_RTP_UDP_Port=%d \n", Default_RTP_UDP_Port );
 
-    Result = GMI_XmlRead(Handle, ONVIF_MEDIA_SERVER_RTSP_CONFIG_PATH, UDPPortKey, Default_RTP_UDP_Port, &Server_RTP_UDP_Port, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, ONVIF_MEDIA_SERVER_RTSP_CONFIG_PATH, UDPPortKey, Default_RTP_UDP_Port, &Server_RTP_UDP_Port );
     if ( FAILED( Result ) )
     {
+		SysInfoClose(Handle);
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -395,7 +397,7 @@ GMI_RESULT GMI_RtspServer::GetServer_RTCP_UDP_Port( int32_t StreamId, uint16_t *
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -403,13 +405,14 @@ GMI_RESULT GMI_RtspServer::GetServer_RTCP_UDP_Port( int32_t StreamId, uint16_t *
 
     //printf( "GMI_RtspServer::GetServer_RTCP_UDP_Port, Default_RTCP_UDP_Port=%d \n", Default_RTCP_UDP_Port );
 
-    Result = GMI_XmlRead(Handle, ONVIF_MEDIA_SERVER_RTSP_CONFIG_PATH, UDPPortKey, Default_RTCP_UDP_Port, &Server_RTCP_UDP_Port, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, ONVIF_MEDIA_SERVER_RTSP_CONFIG_PATH, UDPPortKey, Default_RTCP_UDP_Port, &Server_RTCP_UDP_Port );
     if ( FAILED( Result ) )
     {
+		SysInfoClose(Handle);
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -455,7 +458,7 @@ GMI_RESULT GMI_RtspServer::GetClient_RTP_UDP_Port( int32_t StreamId, uint16_t *U
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -463,13 +466,13 @@ GMI_RESULT GMI_RtspServer::GetClient_RTP_UDP_Port( int32_t StreamId, uint16_t *U
 
     //printf( "GMI_RtspServer::GetClient_RTP_UDP_Port, Default_RTP_UDP_Port=%d \n", Default_RTP_UDP_Port );
 
-    Result = GMI_XmlRead(Handle, ONVIF_MEDIA_SERVER_RTSP_CONFIG_PATH, UDPPortKey, Default_RTP_UDP_Port, &Client_RTP_UDP_Port, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, ONVIF_MEDIA_SERVER_RTSP_CONFIG_PATH, UDPPortKey, Default_RTP_UDP_Port, &Client_RTP_UDP_Port );
     if ( FAILED( Result ) )
     {
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -515,7 +518,7 @@ GMI_RESULT GMI_RtspServer::GetClient_RTCP_UDP_Port( int32_t StreamId, uint16_t *
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -523,13 +526,14 @@ GMI_RESULT GMI_RtspServer::GetClient_RTCP_UDP_Port( int32_t StreamId, uint16_t *
 
     //printf( "GMI_RtspServer::GetClient_RTCP_UDP_Port, Default_RTP_UDP_Port=%d \n", Default_RTCP_UDP_Port );
 
-    Result = GMI_XmlRead(Handle, ONVIF_MEDIA_SERVER_RTSP_CONFIG_PATH, UDPPortKey, Default_RTCP_UDP_Port, &Client_RTCP_UDP_Port, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, ONVIF_MEDIA_SERVER_RTSP_CONFIG_PATH, UDPPortKey, Default_RTCP_UDP_Port, &Client_RTCP_UDP_Port );
     if ( FAILED( Result ) )
     {
+		SysInfoClose(Handle);
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -575,7 +579,7 @@ GMI_RESULT GMI_RtspServer::GetIPCMediaDataDispatchServerPort( int32_t StreamId, 
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -583,13 +587,14 @@ GMI_RESULT GMI_RtspServer::GetIPCMediaDataDispatchServerPort( int32_t StreamId, 
 
     //printf( "GMI_RtspServer::GetIPCMediaDataDispatchServerPort, Default_UDP_Port=%d \n", Default_UDP_Port );
 
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH, UDPPortKey, Default_UDP_Port, &Server_UDP_Port, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH, UDPPortKey, Default_UDP_Port, &Server_UDP_Port );
     if ( FAILED( Result ) )
     {
+		SysInfoClose(Handle);
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -635,7 +640,7 @@ GMI_RESULT GMI_RtspServer::GetIPCMediaDataDispatchClientPort( int32_t StreamId, 
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -643,13 +648,14 @@ GMI_RESULT GMI_RtspServer::GetIPCMediaDataDispatchClientPort( int32_t StreamId, 
 
     //printf( "GMI_RtspServer::GetIPCMediaDataDispatchClientPort, Default_UDP_Port=%d \n", Default_UDP_Port );
 
-    Result = GMI_XmlRead(Handle, ONVIF_MEDIA_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH, UDPPortKey, Default_UDP_Port, &Client_UDP_Port, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, ONVIF_MEDIA_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH, UDPPortKey, Default_UDP_Port, &Client_UDP_Port );
     if ( FAILED( Result ) )
     {
+		SysInfoClose(Handle);
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
         return Result;

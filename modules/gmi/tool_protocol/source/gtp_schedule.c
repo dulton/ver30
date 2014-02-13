@@ -12,8 +12,6 @@
 
 #include "debug.h"
 
-static void_t GetCurrentTime(struct timeval * TvPtr);
-
 #ifdef _WIN32
 typedef union tagTimeStruct
 {
@@ -21,7 +19,7 @@ typedef union tagTimeStruct
     FILETIME  u_FileTime;
 } TimeStruct;
 
-static void_t GetCurrentTime(struct timeval * TvPtr)
+static void_t GMI_GetCurrentTime(struct timeval * TvPtr)
 {
     TimeStruct NowTime;
 
@@ -32,7 +30,7 @@ static void_t GetCurrentTime(struct timeval * TvPtr)
     TvPtr->tv_sec = (long)((NowTime.u_100NSec - 116444736000000000LL) / 10000000LL);
 }
 #else
-static void_t GetCurrentTime(struct timeval * TvPtr)
+static void_t GMI_GetCurrentTime(struct timeval * TvPtr)
 {
     struct timespec NowTime;
 
@@ -99,7 +97,7 @@ GMI_RESULT GtpScheduleAddDelayTask(GtpList * ScheduledList, CbOnSchedule CbFunc,
     Task->s_DeleteMark = false;
 
     // Get current time
-    GetCurrentTime(&Task->s_Timeval);
+    GMI_GetCurrentTime(&Task->s_Timeval);
 
     // Set time up
     Task->s_Timeval.tv_sec += Sec;
@@ -154,7 +152,7 @@ GMI_RESULT GtpScheduleUpdateDelayTask(GtpList * ScheduledList, CbOnSchedule CbFu
     }
 
     // Get current time
-    GetCurrentTime(&Task->s_Timeval);
+    GMI_GetCurrentTime(&Task->s_Timeval);
 
     // Set time up
     Task->s_Timeval.tv_sec += Sec;
@@ -203,7 +201,7 @@ GMI_RESULT GtpScheduleTask(GtpList * ScheduledList)
     }
 
     // Get current time
-    GetCurrentTime(&Now);
+    GMI_GetCurrentTime(&Now);
 
     GTP_LIST_FOR_EACH(Node, ScheduledList)
     {

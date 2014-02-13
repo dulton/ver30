@@ -7,6 +7,7 @@
 #include "ipc_media_data_dispatch.h"
 #include "media_codec_parameter.h"
 #include "share_memory_log_client.h"
+#include "sys_info_readonly.h"
 #include "timer_task_queue.h"
 
 IpcMediaDataDispatchSource::IpcMediaDataDispatchSource(void)
@@ -481,26 +482,27 @@ GMI_RESULT IpcMediaDataDispatchSource::GetServerUDPPort( boolean_t EncodeMode, u
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, GMI_XmlOpen failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, SysInfoOpen failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
     DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetServerUDPPort, Default_UDP_Port=%d \n", Default_UDP_Port );
 
-    Result = GMI_XmlRead(Handle, ConfigPath, KeyName, Default_UDP_Port, &Local_UDP_Port, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, ConfigPath, KeyName, Default_UDP_Port, &Local_UDP_Port );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, GMI_XmlRead failed, function return %x \n", MediaType, (uint32_t) Result );
+		SysInfoClose(Handle);
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, SysInfoRead failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, GMI_XmlFileSave failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetServerUDPPort, SysInfoClose failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
@@ -556,30 +558,31 @@ GMI_RESULT IpcMediaDataDispatchSource::GetClientUDPPort( boolean_t EncodeMode, u
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, GMI_XmlOpen failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, SysInfoOpen failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort, Default_UDP_Port=%d \n", Default_UDP_Port );
+    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort, Default_UDP_Port=%d \n", Default_UDP_Port );
 
-    Result = GMI_XmlRead(Handle, ConfigPath, KeyName, Default_UDP_Port, &Local_UDP_Port, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, ConfigPath, KeyName, Default_UDP_Port, &Local_UDP_Port );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, GMI_XmlRead failed, function return %x \n", MediaType, (uint32_t) Result );
+		SysInfoClose(Handle);
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, SysInfoRead failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, GMI_XmlFileSave failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetClientUDPPort, SysInfoClose failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
-    DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort, Default_UDP_Port=%d, Local_UDP_Port=%d \n", Default_UDP_Port, Local_UDP_Port );
+    DEBUG_LOG( g_DefaultLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetClientUDPPort, Default_UDP_Port=%d, Local_UDP_Port=%d \n", Default_UDP_Port, Local_UDP_Port );
 #endif
 
     *UDP_Port = (uint16_t) Local_UDP_Port;
@@ -595,26 +598,27 @@ GMI_RESULT IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig( boole
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, GMI_XmlOpen failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, SysInfoOpen failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
     DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, DefaultEnable=%d \n", DefaultEnable );
 
-    Result = GMI_XmlRead(Handle, GMI_DECODE_SOURCE_MONITOR_CONFIG_PATH, GMI_DECODE_SOURCE_MONITOR_CONFIG_ENABLE_KEY_NAME, DefaultEnable, &IntEnable, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, GMI_DECODE_SOURCE_MONITOR_CONFIG_PATH, GMI_DECODE_SOURCE_MONITOR_CONFIG_ENABLE_KEY_NAME, DefaultEnable, &IntEnable );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, GMI_XmlRead failed, function return %x \n", (uint32_t) Result );
+		SysInfoClose(Handle);
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, SysInfoRead failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, GMI_XmlFileSave failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceMonitorEnableConfig, SysInfoClose failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
@@ -635,26 +639,27 @@ GMI_RESULT IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval( uint32
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, GMI_XmlOpen failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, SysInfoOpen failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
     DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, DefaultFrameCheckInterval=%d \n", DefaultFrameCheckInterval );
 
-    Result = GMI_XmlRead(Handle, GMI_DECODE_SOURCE_MONITOR_CONFIG_PATH, GMI_DECODE_SOURCE_MONITOR_CONFIG_FRAME_CHECK_INTERVAL_KEY_NAME, DefaultFrameCheckInterval, &FrameCheckInterval, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, GMI_DECODE_SOURCE_MONITOR_CONFIG_PATH, GMI_DECODE_SOURCE_MONITOR_CONFIG_FRAME_CHECK_INTERVAL_KEY_NAME, DefaultFrameCheckInterval, &FrameCheckInterval );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, GMI_XmlRead failed, function return %x \n", (uint32_t) Result );
+		SysInfoClose(Handle);
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, SysInfoRead failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, GMI_XmlFileSave failed, function return %x \n", (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchSource::GetDecodeSourceFrameCheckInterval, SysInfoClose failed, function return %x \n", (uint32_t) Result );
         return Result;
     }
 

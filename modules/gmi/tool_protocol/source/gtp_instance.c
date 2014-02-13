@@ -239,7 +239,15 @@ static GMI_RESULT GtpRecvPacket(GtpInstance * GtpIns)
     {
         // PRINT_LOG(VERBOSE, "Receive timed out");
     }
-    else
+    else if (RetVal == GMI_TRY_AGAIN_ERROR)
+    {
+        // PRINT_LOG(VERBOSE, "Try again");
+    }
+    else if (RetVal == GMI_NOT_ENOUGH_SPACE)
+    {
+        PRINT_LOG(WARNING, "Not enough space to receive data packet");
+    }
+    else 
     {
         PRINT_LOG(ERROR, "Failed to receive data packet");
         return RetVal;

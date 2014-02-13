@@ -17,7 +17,7 @@ diff -Nur live-2013.08.31/build.sh live-gmi-2014.01.16/build.sh
 +
 diff -Nur live-2013.08.31/config.ambarella live-gmi-2014.01.16/config.ambarella
 --- live-2013.08.31/config.ambarella	1970-01-01 08:00:00.000000000 +0800
-+++ live-gmi-2014.01.16/config.ambarella	2014-01-16 12:11:21.000000000 +0800
++++ live-gmi-2014.01.16/config.ambarella	2014-01-16 12:35:50.381083378 +0800
 @@ -0,0 +1,18 @@
 +CROSS_COMPILE?=		/home/syhuang/Desktop/Workspace/ToolChain/arm-2011.09/bin/arm-none-linux-gnueabi-
 +COMPILE_OPTS =		$(INCLUDES) -I. -O2 -DALLOW_RTSP_SERVER_PORT_REUSE -DSOCKLEN_T=socklen_t -DNO_SSTREAM=1 -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64
@@ -37,6 +37,41 @@ diff -Nur live-2013.08.31/config.ambarella live-gmi-2014.01.16/config.ambarella
 +LIBS_FOR_CONSOLE_APPLICATION =
 +LIBS_FOR_GUI_APPLICATION =
 +EXE =
+diff -Nur live-2013.08.31/liveMedia/include/RTSPServer.hh live-gmi-2014.01.16/liveMedia/include/RTSPServer.hh
+--- live-2013.08.31/liveMedia/include/RTSPServer.hh	2013-08-31 17:13:03.000000000 +0800
++++ live-gmi-2014.01.16/liveMedia/include/RTSPServer.hh	2014-01-23 14:19:19.000000000 +0800
+@@ -243,12 +243,13 @@
+     Authenticator fCurrentAuthenticator; // used if access control is needed
+     char* fOurSessionCookie; // used for optional RTSP-over-HTTP tunneling
+     unsigned fBase64RemainderCount; // used for optional RTSP-over-HTTP tunneling (possible values: 0,1,2,3)
++    u_int32_t fOurSessionId;
+   };
+ 
+   // The state of an individual client session (using one or more sequential TCP connections) handled by a RTSP server:
+   class RTSPClientSession {
+   public:
+-    RTSPClientSession(RTSPServer& ourServer, u_int32_t sessionId);
++    RTSPClientSession(RTSPServer& ourServer, RTSPClientConnection& ourConnection, u_int32_t sessionId);
+     virtual ~RTSPClientSession();
+   protected:
+     friend class RTSPServer;
+@@ -286,6 +287,7 @@
+ 
+   protected:
+     RTSPServer& fOurServer;
++    RTSPClientConnection& fOurConnection;
+     u_int32_t fOurSessionId;
+     ServerMediaSession* fOurServerMediaSession;
+     Boolean fIsMulticast, fStreamAfterSETUP;
+@@ -308,7 +310,7 @@
+   // If you subclass "RTSPClientSession", then you must also redefine this virtual function in order
+   // to create new objects of your subclass:
+   virtual RTSPClientSession*
+-  createNewClientSession(u_int32_t sessionId);
++  createNewClientSession(RTSPClientConnection& ourConnection, u_int32_t sessionId);
+ 
+   // An iterator over our "ServerMediaSession" objects:
+   class ServerMediaSessionIterator {
 diff -Nur live-2013.08.31/liveMedia/OnDemandServerMediaSubsession.cpp live-gmi-2014.01.16/liveMedia/OnDemandServerMediaSubsession.cpp
 --- live-2013.08.31/liveMedia/OnDemandServerMediaSubsession.cpp	2013-08-31 17:13:03.000000000 +0800
 +++ live-gmi-2014.01.16/liveMedia/OnDemandServerMediaSubsession.cpp	2014-01-16 12:10:49.000000000 +0800
@@ -77,7 +112,7 @@ diff -Nur live-2013.08.31/liveMedia/RTPInterface.cpp live-gmi-2014.01.16/liveMed
  #endif
 diff -Nur live-2013.08.31/liveMedia/RTSPServer.cpp live-gmi-2014.01.16/liveMedia/RTSPServer.cpp
 --- live-2013.08.31/liveMedia/RTSPServer.cpp	2013-08-31 17:13:03.000000000 +0800
-+++ live-gmi-2014.01.16/liveMedia/RTSPServer.cpp	2014-01-09 14:57:36.000000000 +0800
++++ live-gmi-2014.01.16/liveMedia/RTSPServer.cpp	2014-01-23 14:23:41.000000000 +0800
 @@ -314,6 +314,13 @@
    envir().taskScheduler().turnOffBackgroundReadHandling(fHTTPServerSocket);
    ::closeSocket(fHTTPServerSocket);
@@ -106,7 +141,63 @@ diff -Nur live-2013.08.31/liveMedia/RTSPServer.cpp live-gmi-2014.01.16/liveMedia
    // Delete all server media sessions
    ServerMediaSession* serverMediaSession;
    while ((serverMediaSession = (ServerMediaSession*)fServerMediaSessions->getFirst()) != NULL) {
-@@ -1001,7 +1001,10 @@
+@@ -418,7 +418,7 @@
+ ::RTSPClientConnection(RTSPServer& ourServer, int clientSocket, struct sockaddr_in clientAddr)
+   : fOurServer(ourServer), fIsActive(True),
+     fClientInputSocket(clientSocket), fClientOutputSocket(clientSocket), fClientAddr(clientAddr),
+-    fRecursionCount(0), fOurSessionCookie(NULL) {
++    fRecursionCount(0), fOurSessionCookie(NULL), fOurSessionId(0) {
+   // Add ourself to our 'client connections' table:
+   fOurServer.fClientConnections->Add((char const*)this, this);
+ 
+@@ -432,6 +432,13 @@
+   // Remove ourself from the server's 'client connections' hash table before we go:
+   fOurServer.fClientConnections->Remove((char const*)this);
+ 
++  if (fOurSessionId != 0 ) {
++    char sessionIdStr[RTSP_PARAM_STRING_MAX];
++    sprintf(sessionIdStr, "%08X", fOurSessionId);
++    RTSPServer::RTSPClientSession* clientSession = (RTSPServer::RTSPClientSession*)(fOurServer.fClientSessions->Lookup(sessionIdStr));
++    delete clientSession;
++  }
++
+   if (fOurSessionCookie != NULL) {
+     // We were being used for RTSP-over-HTTP tunneling. Also remove ourselves from the 'session cookie' hash table before we go:
+     fOurServer.fClientConnectionsForHTTPTunneling->Remove(fOurSessionCookie);
+@@ -880,12 +887,14 @@
+       // Handle the specified command (beginning by checking those that don't require session ids):
+       fCurrentCSeq = cseq;
+       if (strcmp(cmdName, "OPTIONS") == 0) {
++#if RTSP_NEED_NOTE_LIVENESS // Added by syhuang
+ 	// If the request included a "Session:" id, and it refers to a client session that's current ongoing, then use this
+ 	// command to indicate 'liveness' on that client session:
+ 	if (sessionIdStr[0] != '\0') {
+ 	  clientSession = (RTSPServer::RTSPClientSession*)(fOurServer.fClientSessions->Lookup(sessionIdStr));
+ 	  if (clientSession != NULL) clientSession->noteLiveness();
+ 	}
++#endif
+ 	handleCmd_OPTIONS();
+       } else if (urlPreSuffix[0] == '\0' && urlSuffix[0] == '*' && urlSuffix[1] == '\0') {
+ 	// The special "*" URL means: an operation on the entire server.  This works only for GET_PARAMETER and SET_PARAMETER:
+@@ -908,8 +917,16 @@
+ 	    sessionId = (u_int32_t)our_random32();
+ 	    sprintf(sessionIdStr, "%08X", sessionId);
+ 	  } while (sessionId == 0 || fOurServer.fClientSessions->Lookup(sessionIdStr) != NULL);
+-	  clientSession = fOurServer.createNewClientSession(sessionId);
++	  clientSession = fOurServer.createNewClientSession(*this, sessionId);
+ 	  fOurServer.fClientSessions->Add(sessionIdStr, clientSession);
++
++	  if (fOurSessionId != 0 && fOurSessionId != sessionId) {
++	    sprintf(sessionIdStr, "%08X", fOurSessionId);
++	    RTSPServer::RTSPClientSession* clientSession = (RTSPServer::RTSPClientSession*)(fOurServer.fClientSessions->Lookup(sessionIdStr));
++	    delete clientSession;
++	  }
++	  fOurSessionId = sessionId;
++
+ 	} else {
+ 	  // The request included a session id.  Make sure it's one that we have already set up:
+ 	  clientSession = (RTSPServer::RTSPClientSession*)(fOurServer.fClientSessions->Lookup(sessionIdStr));
+@@ -1001,7 +1018,10 @@
  #ifdef DEBUG
      fprintf(stderr, "sending response: %s", fResponseBuffer);
  #endif
@@ -118,3 +209,57 @@ diff -Nur live-2013.08.31/liveMedia/RTSPServer.cpp live-gmi-2014.01.16/liveMedia
      
      if (clientSession != NULL && clientSession->fStreamAfterSETUP && strcmp(cmdName, "SETUP") == 0) {
        // The client has asked for streaming to commence now, rather than after a
+@@ -1260,10 +1280,12 @@
+ ////////// RTSPServer::RTSPClientSession implementation //////////
+ 
+ RTSPServer::RTSPClientSession
+-::RTSPClientSession(RTSPServer& ourServer, u_int32_t sessionId)
+-  : fOurServer(ourServer), fOurSessionId(sessionId), fOurServerMediaSession(NULL), fIsMulticast(False), fStreamAfterSETUP(False),
++::RTSPClientSession(RTSPServer& ourServer, RTSPClientConnection& ourConnection, u_int32_t sessionId)
++  : fOurServer(ourServer), fOurConnection(ourConnection), fOurSessionId(sessionId), fOurServerMediaSession(NULL), fIsMulticast(False), fStreamAfterSETUP(False),
+     fTCPStreamIdCount(0), fLivenessCheckTask(NULL), fNumStreamStates(0), fStreamStates(NULL) {
++#if RTSP_NEED_NOTE_LIVENESS // Added by syhuang
+   noteLiveness();
++#endif
+ }
+ 
+ RTSPServer::RTSPClientSession::~RTSPClientSession() {
+@@ -1274,6 +1296,7 @@
+   char sessionIdStr[9];
+   sprintf(sessionIdStr, "%08X", fOurSessionId);
+   fOurServer.fClientSessions->Remove(sessionIdStr);
++  fOurConnection.fOurSessionId = 0;
+ 
+   reclaimStreamStates();
+ 
+@@ -1390,7 +1413,9 @@
+   char const* trackId = urlSuffix; // in the normal case
+   char* concatenatedStreamName = NULL; // in the normal case
+ 
++#if RTSP_NEED_NOTE_LIVENESS // Added by syhuang
+   noteLiveness();
++#endif
+   do {
+     // First, make sure the specified stream name exists:
+     ServerMediaSession* sms = fOurServer.lookupServerMediaSession(streamName);
+@@ -1642,7 +1667,9 @@
+   // Begin by figuring out which of these it is:
+   ServerMediaSubsession* subsession;
+ 
++#if RTSP_NEED_NOTE_LIVENESS // Added by syhuang
+   noteLiveness();
++#endif
+   if (fOurServerMediaSession == NULL) { // There wasn't a previous SETUP!
+     ourClientConnection->handleCmd_notSupported();
+     return;
+@@ -1964,8 +1991,8 @@
+ }
+ 
+ RTSPServer::RTSPClientSession*
+-RTSPServer::createNewClientSession(u_int32_t sessionId) {
+-  return new RTSPClientSession(*this, sessionId);
++RTSPServer::createNewClientSession(RTSPClientConnection& ourConnection, u_int32_t sessionId) {
++  return new RTSPClientSession(*this, ourConnection, sessionId);
+ }
+ 
+ void RTSPServer::RTSPClientSession::noteLiveness() {

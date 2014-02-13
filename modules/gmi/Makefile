@@ -21,6 +21,7 @@ GMI_ITEMS              += media_center
 GMI_ITEMS              += auth_center
 GMI_ITEMS              += stream_control
 GMI_ITEMS              += event_center
+GMI_ITEMS              += sys_info_readonly
 
 # Include item_rules.mk
 include $(GMI_TOPDIR)/build/item_rules.mk

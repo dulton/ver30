@@ -1,10 +1,10 @@
 #include "ipc_media_data_dispatch_handler.h"
 
-#include "gmi_config_api.h"
 #include "gmi_media_ctrl.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "media_codec_parameter.h"
 #include "share_memory_log_client.h"
+#include "sys_info_readonly.h"
 
 IpcMediaDataDispatchHandler::IpcMediaDataDispatchHandler(void)
     : m_MediaDataServer()
@@ -278,26 +278,27 @@ GMI_RESULT IpcMediaDataDispatchHandler::GetUDPPort       ( boolean_t EncodeMode,
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetUDPPort, GMI_XmlOpen failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetUDPPort, SysInfoOpen failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
     DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchHandler::GetUDPPort, Default_UDP_Port=%d \n", Default_UDP_Port );
 
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH, UDPPortKey, Default_UDP_Port, &Local_UDP_Port, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH, UDPPortKey, Default_UDP_Port, &Local_UDP_Port );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetUDPPort, GMI_XmlRead failed, function return %x \n", MediaType, (uint32_t) Result );
+		SysInfoClose(Handle);
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetUDPPort, SysInfoRead failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetUDPPort, GMI_XmlFileSave failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetUDPPort, SysInfoClose failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
@@ -391,26 +392,27 @@ GMI_RESULT IpcMediaDataDispatchHandler::GetShareMemoryKey( boolean_t EncodeMode,
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetShareMemoryKey, GMI_XmlOpen failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetShareMemoryKey, SysInfoOpen failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
     DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchHandler::GetShareMemoryKey, Default_ShareMemoryKey=%d \n", Default_ShareMemoryKey );
 
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH, ShareMemoryKeyName, Default_ShareMemoryKey, &LocalShareMemoryKey, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH, ShareMemoryKeyName, Default_ShareMemoryKey, &LocalShareMemoryKey );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetShareMemoryKey, GMI_XmlRead failed, function return %x \n", MediaType, (uint32_t) Result );
+		SysInfoClose(Handle);
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetShareMemoryKey, SysInfoRead failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetShareMemoryKey, GMI_XmlFileSave failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetShareMemoryKey, SysInfoClose failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
@@ -504,26 +506,27 @@ GMI_RESULT IpcMediaDataDispatchHandler::GetIpcMutexKey   ( boolean_t EncodeMode,
 
 #if defined( __linux__ )
     FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetIpcMutexKey, GMI_XmlOpen failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetIpcMutexKey, SysInfoOpen  failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
     DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, "IpcMediaDataDispatchHandler::GetIpcMutexKey, Default_IpcMutexKey=%d \n", Default_IpcMutexKey );
 
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH, IpcMutexKeyName, Default_IpcMutexKey, &LocalIpcMutexKey, GMI_CONFIG_READ_WRITE );
+    Result = SysInfoRead(Handle, MEDIA_CENTER_SERVER_IPC_MEDIA_DATA_DISPATCH_CONFIG_PATH, IpcMutexKeyName, Default_IpcMutexKey, &LocalIpcMutexKey );
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetIpcMutexKey, GMI_XmlRead failed, function return %x \n", MediaType, (uint32_t) Result );
+		SysInfoClose(Handle);
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetIpcMutexKey, SysInfoRead failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
-    Result = GMI_XmlFileSave(Handle);
+    Result = SysInfoClose(Handle);
     if ( FAILED( Result ) )
     {
-        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetIpcMutexKey, GMI_XmlFileSave failed, function return %x \n", MediaType, (uint32_t) Result );
+        DEBUG_LOG( g_DefaultShareMemoryLogClient, e_DebugLogLevel_Exception, "IpcMediaDataDispatchHandler::GetIpcMutexKey, SysInfoClose failed, function return %x \n", MediaType, (uint32_t) Result );
         return Result;
     }
 
