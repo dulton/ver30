@@ -3,6 +3,7 @@
 #include "gmi_media_ctrl.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "media_codec_parameter.h"
+#include "share_memory_log_client.h"
 #if defined( __linux__ )
 #include "sys_info_readonly.h"
 #endif
