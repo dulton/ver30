@@ -3,7 +3,9 @@
 #include "gmi_brdwrapper.h"
 #include "gmi_config_api.h"
 #include "ipc_fw_v3.x_setting.h"
-#include "share_memory_log_client.h"
+#if defined( __linux__ )
+#include "sys_info_readonly.h"
+#endif
 
 ImageSourceFitler::ImageSourceFitler(void)
     : m_FeedHardwareDog( false )

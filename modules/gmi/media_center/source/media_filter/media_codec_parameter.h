@@ -6,6 +6,7 @@
 #include "media_center_parameter.h"
 
 #define MEDIA_FILTER_MEMORY_POOL_MINIMUM_MEMORY_BLOCK_NUMBER  16
+#define LINUX_SHARE_MEMORY_MAX_SIZE                           (32*1024*1024)
 
 struct MediaSourceParameter
 {

@@ -3,8 +3,9 @@
 #include "gmi_media_ctrl.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "media_codec_parameter.h"
-#include "share_memory_log_client.h"
+#if defined( __linux__ )
 #include "sys_info_readonly.h"
+#endif
 
 IpcMediaDataDispatchHandler::IpcMediaDataDispatchHandler(void)
     : m_MediaDataServer()
@@ -136,6 +137,13 @@ GMI_RESULT IpcMediaDataDispatchHandler::Play()
         ShareMemorySize *= MEDIA_FILTER_MEMORY_POOL_MINIMUM_MEMORY_BLOCK_NUMBER;
     }
     ShareMemorySize /= 2;//500ms buffer
+
+#if defined( __linux__ )
+    if ( LINUX_SHARE_MEMORY_MAX_SIZE < ShareMemorySize )
+    {
+        ShareMemorySize = LINUX_SHARE_MEMORY_MAX_SIZE;
+    }
+#endif
 
     uint32_t ApplicationMediaType = MAKE_MEDIA(m_MediaType, m_CodecType);
     uint32_t ApplicationMediaId = (m_SourceId<<8)+m_MediaId;

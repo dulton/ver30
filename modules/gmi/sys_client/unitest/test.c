@@ -23,6 +23,14 @@ int main()
         	goto errExit;
         }		
 		
+		Result = SysStop3A(1234, 0);
+		if (FAILED(Result))
+		{
+			printf("stop 3A fail\n");
+			goto errExit;
+		}
+		printf("stop 3a OK\n");
+		
 		SysPkgLogInfoSearch SysLogInfoSearch;
 		SysPkgLogInfoInt    SysLogInfoInt;
 		SysPkgLogInfo       *SysLogInfoPtr;
