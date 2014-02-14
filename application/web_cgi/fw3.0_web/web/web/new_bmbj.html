@@ -80,27 +80,33 @@
 			var vbr_min_bps_max ;
 			var vbr_max_bps_min ;
 			var vbr_max_bps_max ;
-			if(parent.isZY)
-			{
-				 cbr_avg_bps_min =  [1000, 128, 500, 200];
-				 cbr_avg_bps_max =  [8000, 1000, 2000, 1000];
-				 vbr_min_bps_min =  [100, 128, 100, 100];
-				 vbr_min_bps_max =  [5000, 1000, 1000, 1000];
-				 vbr_max_bps_min =  [1000, 128, 1000, 100];
-				 vbr_max_bps_max =  [10000, 1000, 5000, 5000];
-
-				var rateItem=[[20,25600000],[19,26947368],[18,28444444],[17,30117647],[16,32000000],[15,34133333],[14,36571428],[13,39384615],[12,42666666],[11,46545454],[10,51200000],[9,56888888],[8,64000000],[7,73142857],[6,85333333],[5,102400000],[4,128000000],[3,170666667],[2,256000000],[1,512000000]];
-			}
-			//非卓杨定制
-			else
-			{
+//			if(parent.isZY)
+//			{
+//				 cbr_avg_bps_min =  [1000, 128, 500, 200];
+//				 cbr_avg_bps_max =  [8000, 1000, 2000, 1000];
+//				 vbr_min_bps_min =  [100, 128, 100, 100];
+//				 vbr_min_bps_max =  [5000, 1000, 1000, 1000];
+//				 vbr_max_bps_min =  [1000, 128, 1000, 100];
+//				 vbr_max_bps_max =  [10000, 1000, 5000, 5000];
+//
+//				var rateItem=[[20,25600000],[19,26947368],[18,28444444],[17,30117647],[16,32000000],[15,34133333],[14,36571428],[13,39384615],[12,42666666],[11,46545454],[10,51200000],[9,56888888],[8,64000000],[7,73142857],[6,85333333],[5,102400000],[4,128000000],[3,170666667],[2,256000000],[1,512000000]];
+//			}
+//			//非卓杨定制
+//			else
+//			{
+//				 cbr_avg_bps_min = [1000, 1000, 500, 200];
+//				 cbr_avg_bps_max = [8000, 8000, 2000, 1000];
+//				 vbr_min_bps_min = [100, 100, 100, 100];
+//				 vbr_min_bps_max = [5000, 5000, 1000, 1000];
+//				 vbr_max_bps_min = [1000, 1000, 1000, 100];
+//				 vbr_max_bps_max = [10000, 10000, 5000, 5000];
 				 cbr_avg_bps_min = [1000, 1000, 500, 200];
 				 cbr_avg_bps_max = [8000, 8000, 2000, 1000];
 				 vbr_min_bps_min = [100, 100, 100, 100];
-				 vbr_min_bps_max = [5000, 5000, 1000, 1000];
-				 vbr_max_bps_min = [1000, 1000, 1000, 100];
-				 vbr_max_bps_max = [10000, 10000, 5000, 5000];
-			}
+				 vbr_min_bps_max = [5000, 5000, 5000, 5000];
+				 vbr_max_bps_min = [100, 100, 100, 100];
+				 vbr_max_bps_max = [10000, 10000, 10000, 10000];
+//			}
 			
             //设置成功 此 +1  两个均成功时提示设置成功
             var isOk = 0;
@@ -364,7 +370,18 @@
 				//确定
                 $("#submit").bind("click",
                 function(e) {
-					
+						//判断权限
+						parent.StartimeVideo();
+						if(parent.shipinAuth == false)
+						{
+							alert("没有权限！");
+							return;
+						}			
+						if (isvalid.length == 0) {;}
+						else
+						{alert("请按照要求输入各项内容");return;}
+						
+						//if()
 						SetStreamType = false;
 						var toutStr = function()
 						{
@@ -380,8 +397,7 @@
 						}
 						popup_window_closefunc = UpdateWindow(toutStr);
 						
-                    if (isvalid.length == 0) {
-					var  content={};
+                    var  content={};
 					content.SessionId=parent.id;
 					content.AuthValue=parent.Authvalue;
 					//视频流类型
@@ -413,17 +429,19 @@
 					
 					contentstr=jsonToString(content);
 					GetAndSet("SetEncodeCfg","json",contentstr, sucess_SetEncodeCfg);
-					
 
-                    } else {
-                        alert("请按照要求输入各项内容");
-                        return;
-                    }
                 });
 				//设置码流组合
 				$("#submit_strem").bind("click",
 					function(e)
 					{
+						//判断权限
+						parent.StartimeVideo();
+						if(parent.shipinAuth == false)
+						{
+							alert("没有权限！");
+							return;
+						}
 						SetStreamType = false;
 						var toutStr = function()
 						{
@@ -451,18 +469,20 @@
 				);
 				function sucess_SetEncodeCfg(data)
 				{
+					SetStreamType = true;
 					var PackDate=new UnPackData(data);
 					if(PackDate.Content!=null)
 					{
 						if(PackDate.Content.RetCode=="0")
 						{
+							
 							alert("视频编码设置成功！");	
-							SetStreamType = true;
+							
 						}
 						else if(PackDate.Content.RetCode!="0")
 						{
 							alert("视频编码设置失败！");
-							SetStreamType = true;
+							
 						}
 					}
 					delete PackDate;
@@ -472,9 +492,16 @@
                 function(e) {
                     var id = this.id;
                     var value = parseInt(this.value, 10);
-                    if (value < cbr_avg_bps_min[mystreamid] || value > cbr_avg_bps_max[mystreamid] || isNaN(value)) {
-                        //getsetStreamInfo('get', mystreamid, '');
-                        alert("请按要求输入：\n当前码流为：码流" + (parseInt(mystreamid, 10) + 1) + "\n平均码率取值范围为：" + cbr_avg_bps_min[mystreamid] + "-" + cbr_avg_bps_max[mystreamid]);
+					//获取做小码率
+					var minValue = $("#s_vbr_min_bps").val();
+					minValue = parseInt(minValue,10);
+					var maxValue = $("#s_vbr_max_bps").val();
+					maxValue = parseInt(maxValue,10);
+                    //if (value < cbr_avg_bps_min[mystreamid] || value > cbr_avg_bps_max[mystreamid] || isNaN(value)) {
+					if(value<minValue || value > maxValue ||isNaN(value)){
+                        //alert("请按要求输入：\n当前码流为：码流" + (parseInt(mystreamid, 10) + 1) + "\n平均码率取值范围为：" + cbr_avg_bps_min[mystreamid] + "-" + cbr_avg_bps_max[mystreamid]);
+						alert("请按要求输入：\n当前码流为：码流" + (parseInt(NowStream, 10) + 1) + "\n平均码率取值范围为：" + minValue + "-" + maxValue);
+
                         this.style.border = "1px solid red";
                         if (!isvalid.contains(id)) {
                             isvalid.push(id);
@@ -487,12 +514,47 @@
                                 isvalid.splice(i, 1); //删除数据
                             }
                         }
-						BitRateAverage[NowStream] =  this.value;
+						
                     }
-					
+					BitRateAverage[NowStream] =  this.value;
                 });
+				//判断平均码流
+				function avgbps()
+				{
+					var id = "s_cbr_avg_bps";
+                    var value = $("#s_cbr_avg_bps").val();
+					value = parseInt(value,10);
+					//获取做小码率
+					var minValue = $("#s_vbr_min_bps").val();
+					minValue = parseInt(minValue,10);
+					var maxValue = $("#s_vbr_max_bps").val();
+					maxValue = parseInt(maxValue,10);
+                    //if (value < cbr_avg_bps_min[mystreamid] || value > cbr_avg_bps_max[mystreamid] || isNaN(value)) {
+					if(value<minValue || value > maxValue ||isNaN(value)){
+                        //alert("请按要求输入：\n当前码流为：码流" + (parseInt(mystreamid, 10) + 1) + "\n平均码率取值范围为：" + cbr_avg_bps_min[mystreamid] + "-" + cbr_avg_bps_max[mystreamid]);
+						alert("请按要求输入：\n当前码流为：码流" + (parseInt(NowStream, 10) + 1) + "\n平均码率取值范围为：" + minValue + "-" + maxValue);
+
+                        document.getElementById(id).style.border = "1px solid red";
+                        if (!isvalid.contains(id)) {
+                            isvalid.push(id);
+                        }
+                    } else {
+                        document.getElementById(id).style.border = "1px solid black";
+
+                        for (var i = 0; i < isvalid.length; i++) {
+                            if (isvalid[i] == id) {
+                                isvalid.splice(i, 1); //删除数据
+                            }
+                        }
+						//BitRateAverage[NowStream] =  this.value;
+                    }					
+				}
+				//最小码率判断
                 $("#s_vbr_min_bps").bind("blur",
                 function(e) {
+					//判断平均码率
+					//avgbps();
+					//判断最小码率
                     var id = this.id;
                     var value = parseInt(this.value, 10);
 					var maxvalue=parseInt($("#s_vbr_max_bps").val(), 10);
@@ -501,44 +563,55 @@
 					{
 						if(value>maxvalue)
 						{
-							 alert("请按要求输入：最小分辨率不能大于最大分辨率。");
+							 alert("请按要求输入：最小码率不能大于最大码率。");
                         this.style.border = "1px solid red";
                         if (!isvalid.contains(id)) {
                             isvalid.push(id);
                         }
+						BitRateDown[NowStream] =  this.value;
 						return;
 						}
-						else {
-                        this.style.border = "1px solid black";
-                        for (var i = 0; i < isvalid.length; i++) {
-                            if (isvalid[i] == id) {
-                                isvalid.splice(i, 1); //删除数据
-                            }
-							if(isvalid[i]=="s_vbr_max_bps")
+						else
+						{
+                        	this.style.border = "1px solid black";
+                        	for (var i = 0; i < isvalid.length; i++)
 							{
-								tempvalue=$("#s_vbr_max_bps").val();
-								if(!(tempvalue < vbr_max_bps_min[mystreamid] || tempvalue > vbr_max_bps_max[mystreamid] || isNaN(tempvalue)))
-			{
-								$("#s_vbr_max_bps").css("border","1px solid black");
-								isvalid.splice(i, 1); //删除数据
-			}
-							}
-                        }
-                    }
+                            	if (isvalid[i] == id)
+								{
+                                	isvalid.splice(i, 1); //删除数据
+                            	}
+								if(isvalid[i]=="s_vbr_max_bps")
+								{
+									tempvalue=$("#s_vbr_max_bps").val();
+									if(!(tempvalue < vbr_max_bps_min[NowStream] || tempvalue > vbr_max_bps_max[NowStream] || isNaN(tempvalue)))
+									{
+										$("#s_vbr_max_bps").css("border","1px solid black");
+										isvalid.splice(i, 1); //删除数据
+									}
+								}
+                        	}
+                    	}
 					}
-                    if (value < vbr_min_bps_min[mystreamid] || value > vbr_min_bps_max[mystreamid] || isNaN(value)) {
+                    if (value < vbr_min_bps_min[NowStream] || value > vbr_min_bps_max[NowStream] || isNaN(value))
+					{
                         //getsetStreamInfo('get', mystreamid, '');
-                        alert("请按要求输入：\n当前码流为：码流" + (parseInt(mystreamid, 10) + 1) + "\n最小码率取值范围为：" + vbr_min_bps_min[mystreamid] + "-" + vbr_min_bps_max[mystreamid]);
+                        alert("请按要求输入：\n当前码流为：码流" + (parseInt(NowStream, 10) + 1) + "\n最小码率取值范围为：" + vbr_min_bps_min[NowStream] + "-" + vbr_min_bps_max[NowStream]);
                         this.style.border = "1px solid red";
-                        if (!isvalid.contains(id)) {
+                        if (!isvalid.contains(id))
+						{
                             isvalid.push(id);
                         }
-					return;
-                    } else {
+						BitRateDown[NowStream] =  this.value;
+						return;	
+                    }
+					else
+					{
                         this.style.border = "1px solid black";
 
-                        for (var i = 0; i < isvalid.length; i++) {
-                            if (isvalid[i] == id) {
+                        for (var i = 0; i < isvalid.length; i++)
+						{
+                            if (isvalid[i] == id)
+							{
                                 isvalid.splice(i, 1); //删除数据
                             }
                         }
@@ -546,8 +619,12 @@
 					
 					BitRateDown[NowStream] =  this.value;
                 });
+				//最大码率判断
                 $("#s_vbr_max_bps").bind("blur",
                 function(e) {
+					//判断平均码率
+					//avgbps();
+					//判断最大码率
                     var id = this.id;
                     var value = parseInt(this.value, 10);
 					var minvalue=parseInt($("#s_vbr_min_bps").val(), 10);
@@ -557,11 +634,12 @@
 						if(value<minvalue)
 						{
 						
-							 alert("请按要求输入：最大分辨率不能小于最小分辨率。");
+							 alert("请按要求输入：最大码率不能小于最小码率。");
                         this.style.border = "1px solid red";
                         if (!isvalid.contains(id)) {
                             isvalid.push(id);
                         }
+						BitRateUp[NowStream] =  this.value;
 						return;
 						}
 						else {
@@ -573,7 +651,7 @@
 							if(isvalid[i]=="s_vbr_min_bps")
 							{
 									tempvalue=$("#s_vbr_min_bps").val();
-								if(!(tempvalue < vbr_min_bps_min[mystreamid] || tempvalue > vbr_min_bps_max[mystreamid] || isNaN(tempvalue)))
+								if(!(tempvalue < vbr_min_bps_min[NowStream] || tempvalue > vbr_min_bps_max[NowStream] || isNaN(tempvalue)))
 			{
 								$("#s_vbr_min_bps").css("border","1px solid black");
 								isvalid.splice(i, 1); //删除数据
@@ -582,13 +660,14 @@
                         }
                     }
 					}
-                    if (value < vbr_max_bps_min[mystreamid] || value > vbr_max_bps_max[mystreamid] || isNaN(value)) {
+                    if (value < vbr_max_bps_min[NowStream] || value > vbr_max_bps_max[NowStream] || isNaN(value)) {
                         //getsetStreamInfo('get', mystreamid, '');
-                        alert("请按要求输入：\n当前码流为：码流" + (parseInt(mystreamid, 10) + 1) + "\n最大码率取值范围为：" + vbr_max_bps_min[mystreamid] + "-" + vbr_max_bps_max[mystreamid]);
+                        alert("请按要求输入：\n当前码流为：码流" + (parseInt(NowStream, 10) + 1) + "\n最大码率取值范围为：" + vbr_max_bps_min[NowStream] + "-" + vbr_max_bps_max[NowStream]);
                         this.style.border = "1px solid red";
                         if (!isvalid.contains(id)) {
                             isvalid.push(id);
                         }
+						BitRateUp[NowStream] =  this.value;
 						return;
                     } else {
                         this.style.border = "1px solid black";
@@ -615,8 +694,10 @@
 						case "0":
 							$("#s_vbr_min_bps").attr("disabled", "disabled");
 							$("#s_vbr_max_bps").attr("disabled", "disabled");
+							$("#s_cbr_avg_bps").removeAttr("disabled", "disabled");
 						break;
 						case "1":
+							$("#s_cbr_avg_bps").attr("disabled", "disabled");
 							$("#s_vbr_min_bps").removeAttr("disabled", "disabled");
 							$("#s_vbr_max_bps").removeAttr("disabled", "disabled");
 						break;
@@ -638,7 +719,14 @@
                 //回复默认值
                 $("#bdefault").bind("click",
                 function(e) {
-                    if (!confirm("恢复默认后，分辨率组合也将恢复默认。\n预置位信息将不可用，事件设置中相关参数也将无效\n确认恢复默认参数吗？")) return;
+					//判断权限
+					parent.StartimeVideo();
+					if(parent.shipinAuth == false)
+					{
+						alert("没有权限！");
+						return;
+					}
+                    if (!confirm("确认恢复默认参数吗？")) return;
 					
 						var outtime = 0;
 						SetStreamType = false;
@@ -671,6 +759,13 @@
 			//恢复码流组合默认、bdefault_strem
                 $("#bdefault_strem").bind("click",
                 function(e) {
+					//判断权限
+					parent.StartimeVideo();
+					if(parent.shipinAuth == false)
+					{
+						alert("没有权限！");
+						return;
+					}
                     if (!confirm("恢复默认后，编码参数也将恢复默认。\n确认恢复默认参数吗？")) return;
 						var outtime = 0;
 						SetStreamType = false;
@@ -719,6 +814,22 @@
 			//设置码流组合SetVideoEncStreamCombine
 			function SetVideoEncStreamCombine()
 			{
+// 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+//						if(!fso.FileExists("d:\\stream.txt"))
+//						{
+//							fso.CreateTextFile("d:\\stream.txt", true);
+//						}
+//						var f = fso.OpenTextFile("d:\\stream.txt", 8,true,-1);
+//						var Day = new Date();
+//						var h = Day.getHours();
+//						var m = Day.getMinutes();
+//						var s = Day.getSeconds();
+//						var ss = Day.getMilliseconds();
+//						f.WriteLine("/************************************/");
+//						f.WriteLine("设置码流组合开始---" + h+":"+m+":"+s+":"+ss);
+//						f.WriteBlankLines(1);
+//						f.Close(); 
+						
 					var  content={};
 					content.SessionId=parent.id;
 					content.AuthValue=parent.Authvalue;	
@@ -729,20 +840,38 @@
 			}
 			function sucess_SetVideoEncStreamCombine(data)
 			{
+					SetStreamType = true;
 					var PackDate=new UnPackData(data);
 					if(PackDate.Content!=null)
 					{
+// 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+//						if(!fso.FileExists("d:\\stream.txt"))
+//						{
+//							fso.CreateTextFile("d:\\stream.txt", true);
+//						}
+//						var f = fso.OpenTextFile("d:\\stream.txt", 8,true,-1);
+//						var Day = new Date();
+//						var h = Day.getHours();
+//						var m = Day.getMinutes();
+//						var s = Day.getSeconds();
+//						var ss = Day.getMilliseconds();
+//						f.WriteLine("设置码流组合结束---" + h+":"+m+":"+s+":"+ss);
+//						f.WriteLine("/************************************/");
+//						f.WriteBlankLines(1);
+//						f.Close(); 
 						if(PackDate.Content.RetCode=="0")
 						{
+
 							alert("码流组合设置成功！");
+							parent.StreamShow = EnableStreamNum;
 							//初始化 码流类型
 							getsetStreamInfo();
-							SetStreamType = true;
+							
 						}
 						else
 						{
 							alert("设置码流组合失败！");
-							SetStreamType = true;
+							
 						}
 					}
 					delete PackDate; 
@@ -1321,7 +1450,7 @@
 								streamhtml += "<option value='" + 4 + "'>" + "辅码流3" + "</option>";
 							}
 							
-
+							//alert("StreamType:"+StreamType[0]+","+StreamType[1]+","+StreamType[2]+","+StreamType[3]);
 							$("#stream_id").html(streamhtml);
 
 							//设置第一条码流
@@ -1495,14 +1624,16 @@
 				$("#gop").val(Gop[index]);
 				//旋转 
 					var stm = $("#s_brc").val();
-					
+
 					switch(stm)
 					{
 						case "0":
 							$("#s_vbr_min_bps").attr("disabled", "disabled");
 							$("#s_vbr_max_bps").attr("disabled", "disabled");
+							$("#s_cbr_avg_bps").removeAttr("disabled", "disabled");
 						break;
 						case "1":
+							$("#s_cbr_avg_bps").attr("disabled", "disabled");
 							$("#s_vbr_min_bps").removeAttr("disabled", "disabled");
 							$("#s_vbr_max_bps").removeAttr("disabled", "disabled");
 						break;
@@ -1515,8 +1646,8 @@
 							$("#s_vbr_max_bps").removeAttr("disabled", "disabled");
 						break;
 						default:
-							$("#s_vbr_min_bps").attr("disabled", "disabled");
-							$("#s_vbr_max_bps").attr("disabled", "disabled");
+//							$("#s_vbr_min_bps").attr("disabled", "disabled");
+//							$("#s_vbr_max_bps").attr("disabled", "disabled");
 						break;
 					}	
 				
@@ -1911,25 +2042,27 @@
 					<div class="camera_top_right_list_wk">
                         <div class="cam_kinds_wk">
                             <b>
-                                帧间隔
+                                I 帧间隔
                             </b>
                         </div>
                         <div class="shuru_wk">
-							<input type="text" id="gop"  class="t_input_wk" disabled="disabled"></input>
+							<input type="text" id="gop"  class="t_input_wk" style="height:18px;"></input>
+                            <input type="hidden" id="20s0_ZHEN" />
+                            <input type="hidden" id="20s1_ZHEN" />
+                            <input type="hidden" id="20s2_ZHEN" />
+                            <input type="hidden" id="20s3_ZHEN" />
                         </div>
                     </div>
                     <div class="camera_top_right_list_wk">
                         <div class="cam_kinds_wk">
                             <b id="bratecontrol">
-                                H.264码率控制
-                                <br>
-                                （Kbps）
+                                码率控制
                             </b>
                         </div>
-                    </div>
-                    <div class="camera_top_right_list_wk">
-                        <div class="cam_kinds_wk">
-                        </div>
+<!--                    </div>-->
+                    <!--<div class="camera_top_right_list_wk">-->
+<!--                        <div class="cam_kinds_wk">
+                        </div>-->
                         <div class="shuru_wk">
                             <select id="s_brc" class="t_input_wk1">
                                 <option value='0' id="optionconstantbit" selected>
@@ -1958,13 +2091,15 @@
                                 平均码率
                             </b>
                         </div>
-                        <div class="shuru_wk">
-                            <input id="s_cbr_avg_bps" maxlength="4" class="t_input_wk"/>
+                        <div class="shuru_wk" style="width:350px;">
+                            <input id="s_cbr_avg_bps" maxlength="4" class="t_input_wk" style="height:18px;"/>
                             <input type="hidden" id="20s0_cbr_avg_bps" />
                             <input type="hidden" id="20s1_cbr_avg_bps" />
                             <input type="hidden" id="20s2_cbr_avg_bps" />
                             <input type="hidden" id="20s3_cbr_avg_bps" />
+                            
                         </div>
+                        （Kbps）
                     </div>
                     <div class="camera_top_right_list_wk">
                         <div class="cam_kinds_wk">
@@ -1972,31 +2107,33 @@
                                 最小码率
                             </b>
                         </div>
-                        <div class="shuru_wk">
-                            <input id="s_vbr_min_bps" disabled="disabled" maxlength="4" class="t_input_wk"/>
+                        <div class="shuru_wk" style="width:350px;">
+                            <input id="s_vbr_min_bps"  maxlength="4" class="t_input_wk" style="height:18px;"/>
                             <input type="hidden" id="20s0_vbr_min_bps" />
                             <input type="hidden" id="20s1_vbr_min_bps" />
                             <input type="hidden" id="20s2_vbr_min_bps" />
                             <input type="hidden" id="20s3_vbr_min_bps" />
                         </div>
+                        （Kbps）
                     </div>
-                    <div class="camera_top_right_list_wk">
+                    <div class="camera_top_right_list_wk" >
                         <div class="cam_kinds_wk">
                             <b id="bmaxbit">
                                 最大码率
                             </b>
                         </div>
-                        <div class="shuru_wk">
-                            <input id="s_vbr_max_bps" disabled="disabled" maxlength="5" class="t_input_wk"/>
+                        <div class="shuru_wk" style="width:350px;">
+                            <input id="s_vbr_max_bps" maxlength="5" class="t_input_wk" style="height:18px;"/>
                             <input type="hidden" id="20s0_vbr_max_bps" />
                             <input type="hidden" id="20s1_vbr_max_bps" />
                             <input type="hidden" id="20s2_vbr_max_bps" />
                             <input type="hidden" id="20s3_vbr_max_bps" />
                         </div>
+                        （Kbps）
                     </div>
 				    
                    
-					<div class="camera_top_right_list_wk">
+<!--					<div class="camera_top_right_list_wk">
                         <div class="cam_kinds_wk">
                             <b>
                                 MJPEG质量
@@ -2030,7 +2167,7 @@
                             <input type="hidden" id="04s4_streamQuality" />
                             <input type="hidden" id="04s5_streamQuality" />
                         </div>
-                    </div>
+                    </div>-->
 <div class="bottom-action">
             <input type="button" id="submit" class="btn3" value="确定" />
             <input type="reset" class="btn3" value="取消" id="reset" />

@@ -42,8 +42,9 @@ function displayDevTime(txt){
 						{
 							var sync_mode = PackDate.Content.Type || 0;
 							$("input[type=radio][name=sync_mode][value=" + sync_mode + "]").attr("checked",true);
-							if(sync_mode == 0)//设置时间
+							if(sync_mode == 0)//设置时间 手动
 							{
+								usr = 0;
 								$("#ntp_addr").attr("disabled","disabled");
 								$("#interval").attr("disabled","disabled");
 								$("#pc_date").removeAttr("disabled","disabled");
@@ -55,6 +56,14 @@ function displayDevTime(txt){
 								$("#pc_time").attr("disabled","disabled");
 								$("#ntp_addr").removeAttr("disabled","disabled");
 								$("#interval").removeAttr("disabled","disabled");
+							}
+							else if(sync_mode == 2)//设置时间 PC
+							{
+								usr = 1;
+								$("#ntp_addr").attr("disabled","disabled");
+								$("#interval").attr("disabled","disabled");
+								$("#pc_date").attr("disabled","disabled");
+								$("#pc_time").attr("disabled","disabled");	
 							}
 
 							//ntp_addr
@@ -154,6 +163,13 @@ $(document).ready(function(){
 	});
 	$('#btn_ok').click(setDateTime);
 	$('#btn_cancel').click(function(){
+	//判断权限
+	parent.StartimeVideo();
+	if(parent.canspzAuth == false)
+	{
+		alert("没有权限！");
+		return;
+	}
 		window.location.reload();
 	});
 	//ip 校验
@@ -312,6 +328,14 @@ function check_manual_time(){ //检查手动输入时间
 }
 
 function setDateTime(){
+	//判断权限
+	parent.StartimeVideo();
+	if(parent.canspzAuth == false)
+	{
+		alert("没有权限！");
+		return;
+	}
+							
 	if (isvalid.length == 0) {
 		
 		          var  content={};
@@ -343,13 +367,21 @@ function setDateTime(){
 						|| isNaN(content.Hour)
 						|| isNaN(content.Minute)
 						|| isNaN(content.Second)
+						
 				 		 )
 				  		{
 							alert("日期和时间请填写正确的格式！");
 							return;  
 				  		}
+					  if(content.Year < 0){alert("年份不合法！");return;}
+					  if(content.Month < 1 || content.Month>12){alert("月份不合法！");return;}
+					  if(content.Day < 1 || content.Day>31){alert("日期不合法！");return;}
+					  if(content.Hour < 0 || content.Hour>=24){alert("时钟不合法！");return;}
+					  if(content.Minute < 0 || content.Minute>=60){alert("分钟不合法！");return;}
+					  if(content.Second < 0 || content.Second>=60){alert("秒钟不合法！");return;}
 					  contentstr=jsonToString(content);
-					  GetAndSet("SetTime","json",contentstr, setTimefunc);
+					  SetTime("SetTime","json",contentstr, setTimefunc,true);
+					  
 				  }
 				  if(sync_mode==1)
 				  {
@@ -396,7 +428,20 @@ function setDateTime(){
 				  }	
 	}
 }
-
+function SetTime(cgiFncCmd, cgiContentType, Content,successfunc,TB)
+{
+    $.ajax({
+        url: url,
+		data: "cgiFncCmd=" + cgiFncCmd + "&cgiContentType=" + cgiContentType + "&Content=" + Content,
+        type: "post",
+        success: function(data) {
+           if(successfunc && typeof successfunc === 'function')
+		   {
+			   successfunc(data);
+		   }
+        },
+    });	
+}
 function setTimefunc(data)
 {
 	var PackDate=new UnPackData(data);

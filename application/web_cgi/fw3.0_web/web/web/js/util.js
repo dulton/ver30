@@ -33,6 +33,7 @@ function GetAndSet(cgiFncCmd, cgiContentType, Content,successfunc,TB) {
 		async: TB,
         beforeSend: function(XMLHttpRequest) {
 //alert(encodeURIComponent("cgiFncCmd=" + cgiFncCmd + "&cgiContentType=" + cgiContentType + "&Content=" + Content));
+//alert("cgiFncCmd=" + cgiFncCmd + "&cgiContentType=" + cgiContentType + "&Content=" + Content);
         },
         complete: function(XMLHttpRequest, textStatus) {
             //ajax 请求结束。失败或成功均调用        
@@ -231,126 +232,10 @@ function createList(index, maskinfo) {
 //预览页面状态
 var isplaying = true;
 var isstreamlive = true;
-/*
-function LoadImg(hostname, streamId) {
-	//debugger;
-	 $(".btn-set", window.top.document)[0].disabled=true;
-	 $(".btn-set", window.top.document)[1].disabled=true;
-    if (window.ActiveXObject) {
-        try {
-            if (typeof(isstreamlive) == 'boolean' && isstreamlive == false) {
-                if (document.getElementById("GMIIPCmrWebPlugIn1")) document.getElementById("GMIIPCmrWebPlugIn1").style.display = "none";
-                //alert("当前码流已关闭.");
-                return;
-            }
-		    var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
-			//activeX.SetUserName(getCookie(oldhost+"gmiusername"),getCookie(oldhost+"gmipassword"));
-				if (activeX.SetRecvType(0)) {
-					
-					activeX.SetHostname(hostname);
-					activeX.SetStreamId(streamId);
-					activeX.ShowStat(1);
-					activeX.ShowDPTZ(0);
-				
-				}
-				else
-				{
-					alert("设置传输协议失败！");
-					location.reload();
-				}
-				if(parent.tport!="")
-			{
-				activeX.SetCmdPort(parent.tport);
-				//成功返回 1
-				//是否硬件加速记录到cookie
-				var isHardwareEnabled=getCookie("isHardwareEnabled");
-				if(isHardwareEnabled==null||isHardwareEnabled==undefined)
-				{
-					setCookie("isHardwareEnabled","1");
-					$("#liIsHardware").css("display","block");
-					var activex = document.getElementById("GMIIPCmrWebPlugIn1");		
-					activex.SetAcceleration(true);
-					$("#isHardwareEnabled").val("1");
-				}
-				var i = activeX.Play();
-				
-				setBuffer(streamId);//设置buffer
-			
-				
-			}
-			else
-			{
-				$.ajax({
-                    url: url,
-                    data: "Request=get&Section=PROTOINFO&exsection= 0&postDataStr=" + encodeURIComponent("||"),
-                    type: "post",
-                    success: function(data) {
-                        //alert(data);
-                        var data2 = data.replace("\n", "");
-                        data2 = $.trim(data2);
-                        var result = data2.split('&');
-                        var Request;
-                        var Section;
-                        var Flag;
-                        var Info;
-                        if (result.length != 4) {
-                            alert("返回数据解析错误");
-                            return;
-                        } else {
-                            Request = result[0];
-                            Section = result[1];
-                            Flag = result[2];
-                            Info = result[3];
-                            //alert(Info);
-                            if (Flag == 0) {
-								var index=Info.indexOf("camera_server_port");
-								parent.tport=Info.substring(index).split("||")[0].split("=")[1];
-							    activeX.SetCmdPort(parent.tport);
-								//是否硬件加速记录到cookie
-								var isHardwareEnabled=getCookie("isHardwareEnabled");
-								if(isHardwareEnabled==null||isHardwareEnabled==undefined)
-								{
-									setCookie("isHardwareEnabled","1");
-									$("#liIsHardware").css("display","block");
-									var activex = document.getElementById("GMIIPCmrWebPlugIn1");		
-									activex.SetAcceleration(true);
-									$("#isHardwareEnabled").val("1");
-								}
-								//成功返回 1
-								var i = activeX.Play();
-								if(i!=1)
-								{
-									location.reload();
-								}
-								setBuffer(streamId);//设置buffer
-								
-								
-                            }
-                        }
-                    },
-                    error: function() {
-                        	if(isAlertUrlError)
-			                               {
-                                           //   alert("util.js-->GetAndSet()--调用ajax 出错！\n");
-			                               }
-                    }
-                });
-			}
-				
-			
-        } catch(e) {
-            location.reload();
-			//alert(e);
-            return;
-        }
-    }
-	$(".btn-set", window.top.document)[0].disabled=false;
-	$(".btn-set", window.top.document)[1].disabled=false;
-}*/
 //视频遮挡加载控件方法
 function LoadMaskActiveX(hostname, streamId) {
 
-    if (window.ActiveXObject) {
+    //if (window.ActiveXObject) {
         if (typeof(isstreamlive) == 'boolean' && isstreamlive == false) {
             if ($("GMIIPCmrWebPlugIn1")) $("GMIIPCmrWebPlugIn1").style.display = "none";
             //alert("当前码流已关闭.");
@@ -445,11 +330,11 @@ function LoadMaskActiveX(hostname, streamId) {
             alert(e);
             return;
         }
-    }
+    //}
 }
 
 function OnLoadMotionDetectActiveX(hostname, streamId) {
-    if (window.ActiveXObject) {
+    //if (window.ActiveXObject) {
         try {
             if (typeof(isstreamlive) == 'boolean' && isstreamlive == false) {
                 if ($("GMIIPCmrWebPlugIn1")) $("GMIIPCmrWebPlugIn1").style.display = "none";
@@ -545,7 +430,7 @@ function OnLoadMotionDetectActiveX(hostname, streamId) {
             alert(e);
             return;
         }
-    }
+    //}
 }
 //0-255 验证
 function checkValue(value) {
@@ -687,7 +572,7 @@ function changeStream_util(streamId, hostname) {
         //activex.SetStreamId(streamid);
       //activex.Play();
     //切换动作结束
-    if (window.ActiveXObject) {
+    //if (window.ActiveXObject) {
         try {
 
             var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
@@ -720,7 +605,7 @@ function changeStream_util(streamId, hostname) {
             alert("changeStream_util"+e);
             return;
         }
-    }
+   // }
 
 }
 
@@ -942,8 +827,8 @@ function maxStreamsStyle(maxStreams,webindex)
 		}
 
 	}
-	 var streamid=getQueryString("streamid");
-	 $("#radiostream" + streamid).attr("checked", "checked");
+//	 var streamid=getQueryString("streamid");
+//	 $("#radiostream" + streamid).attr("checked", "checked");
 	//绑定事件
 	 $("input[type=radio][name='bitstream']").bind("click",
                 function(e) {
@@ -1000,8 +885,8 @@ function maxStreamsStyle(maxStreams,webindex)
 			break;
 		}
 	}
-	 var streamid=getQueryString("streamid");
-	 $("#radiostream" + streamid).attr("checked", "checked");
+//	 var streamid=getQueryString("streamid");
+//	 $("#radiostream" + streamid).attr("checked", "checked");
 	//绑定事件
 	 $("input[type=radio][name='bitstream']").bind("click",
                 function(e) {
@@ -1063,7 +948,7 @@ function getMaxStreamNum(onlyData,SessionId,AuthValue,webindex)
 		content.AuthValue=AuthValue;
 
 		contentstr=jsonToString(content);
-		GetAndSet("GetEncodeStreamNum","json",contentstr, sucess_getStream);
+		GetAndSet("GetEncodeStreamNum","json",contentstr, sucess_getStream,true);
 //	}	
 }
 //3.0获取码流数目成功函数
@@ -1093,6 +978,7 @@ function sucess_getStream(data)
 						//提取码流数目
 						var num = PackDate.Content.StreamNum;
 						parent.maxStreams = num;
+						parent.StreamShow = num;
 						//
 						//默认是ylanzkai_1.html
 						maxStreamsStyle(num,0);
@@ -1185,7 +1071,7 @@ function setBuffer(streamId)
                     url: url,
                     data: "Request=get&Section=" + section + "&exsection= 0&postDataStr=" + encodeURIComponent(postDataStr + "||"),
                     type: "post",
-                    success: function(data) {
+						success: function(data) {
                         //alert(data);
                         var data2 = data.replace("\n", "");
                         data2 = $.trim(data2);
@@ -1601,7 +1487,7 @@ function parseXml(fileRoute)
         }
 	});
 	*/
-         st = "<xml version='1.0' encoding='utf-8'><FileVersion><Platform name=win32><PreviewOCX.ocx>1,0,0,7</PreviewOCX.ocx><GIPCQuartz.dll>2,5,4,20629</GIPCQuartz.dll><GIPCPlayer.dll>2,5,4,30621</GIPCPlayer.dll><GIPCamera.dll>3,0,0,30918</GIPCamera.dll></Platform></FileVersion>"; 
+         st = "<xml version='1.0' encoding='utf-8'><FileVersion><Platform name=win32><PreviewOCX.ocx>1,0,0,9</PreviewOCX.ocx><GIPCQuartz.dll>2,5,4,20629</GIPCQuartz.dll><GIPCPlayer.dll>2,5,4,30621</GIPCPlayer.dll><GIPCamera.dll>3,0,0,30918</GIPCamera.dll></Platform></FileVersion>"; 
 	return st;
 }
 /*************************************************
@@ -1687,6 +1573,7 @@ function UpdateTips()
 		var activeX = document.getElementById("GMIIPCmrWebPlugIn1");
 		if(activeX == null)
 		{
+			//alert("activeX == null");
 			return false;
 		}
 		//检测控件是否正确安装
@@ -1702,7 +1589,21 @@ function UpdateTips()
 		//}
 
 		var xmlDoc=parseXml("/xml/version.xml");
-		var szXml = xmlToStr(xmlDoc);
+		var szXml;
+		//获取IE版本
+		var IeVesion = navigator.appVersion;
+		var IeVesion1 = navigator.userAgent;
+//		if(IeVesion1.indexOf("rv:11.0") != -1
+//		||IeVesion1.indexOf("MSIE 10.0") != -1
+//		||IeVesion1.indexOf("MSIE 9.0") != -1)
+//		{
+	szXml = "<xml version='1.0' encoding='utf-8'><FileVersion><Platform name=win32><PreviewOCX.ocx>1,0,0,9</PreviewOCX.ocx><GIPCQuartz.dll>2,5,4,20629</GIPCQuartz.dll><GIPCPlayer.dll>2,5,4,30621</GIPCPlayer.dll><GIPCamera.dll>3,0,0,30918</GIPCamera.dll></Platform></FileVersion>";
+//		}
+//		else
+//		{
+//			szXml = xmlToStr(xmlDoc);	
+//		}
+		
 		var bRes = -2;
 		try
 		{
@@ -1722,6 +1623,7 @@ function UpdateTips()
 			//比PC版本高 设备高一点
 			else if(bRes == 1)
 			{
+				//alert("Update!");
 				return false;	
 			}
 			

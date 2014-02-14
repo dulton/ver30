@@ -42,7 +42,7 @@
 				{
 					fso.CreateTextFile("c:\\Program Data\\config.txt", true);
 					f = fso.OpenTextFile("c:\\Program Data\\config.txt", 2);
-					var stmp = "<recordpath>C:\\Program Data\\IPC\\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>0</netplay>";
+					var stmp = "<recordpath>C:\\Program Data\\IPC\\media\\</recordpath><pictruepath>C:\\Program Data\\IPC\\Image\\</pictruepath><recordtype>MP4</recordtype><pictruetype>bmp</pictruetype><netplay>50</netplay><movespeed>50</movespeed>";
 					f.WriteLine(stmp);
 					f.Close();
 					return stmp;
@@ -65,6 +65,8 @@
 	        TranslatePage(lang);
         }
 		$(document).ready(function(){
+				//权限
+				//Authority();
 			    // 调用模版也方法
 				 parent.innerCallMe(true); 
 				 //语言初始化
@@ -131,8 +133,6 @@
 //			parent.NetPlay = configXmlJson.netplay;
 			//初始化值结束
 		  $("#submit").bind("click",function(){
-			
-			  
 			  
 			  
 			  try
@@ -275,7 +275,7 @@
 			  });
 		$("#btSelectRecordPath").bind("click",function(){
 			
-			if (window.ActiveXObject) {
+			//if (window.ActiveXObject) {
                         try {
 							var activeX=document.getElementById("filePath");
 							if(activeX!=null)
@@ -295,10 +295,10 @@
 						{}
 						
 						
-			}
+			//}
 			});
 		$("#btSelectPicPath").bind("click",function(){
-			if (window.ActiveXObject) {
+			//if (window.ActiveXObject) {
                         try {
 							var activeX=document.getElementById("filePath");
 							if(activeX!=null)
@@ -316,10 +316,26 @@
 						}
 						catch(e)
 						{}
-			}
+			//}
 			});
 		 });
-
+		//判断权限
+		function Authority()
+		{
+			//如果是观察员
+			//if(parent.UserLevel == 3)
+			parent.StartimeVideo();
+			if(parent.canspzAuth == false)
+			{
+				//$("#submit").attr("disabled", "disabled");
+				//$("#reset").attr("disabled", "disabled");
+				
+//				$("#submit").css("display", "none");
+//				$("#reset").css("display", "none");
+				$("#btSelectRecordPath").css("display", "none");
+				$("#btSelectPicPath").css("display", "none");
+			}
+		}
         </script>
     </head>
     
