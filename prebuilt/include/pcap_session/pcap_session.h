@@ -65,9 +65,11 @@ GMI_RESULT PcapSessionSendTo(PcapSessionHandle Handle, const uint8_t * Buffer,
  * IsBroadcast  : [out] false : Single cast,
  *                      true : Broad cast.
  * MacAddr      : Source of the data stream.
- * Return Value : GMI_SUCCESS      - success,
- *                GMI_WAIT_TIMEOUT - receive timed out,
- *                Other Value      - failed.
+ * Return Value : GMI_SUCCESS          - success,
+ *                GMI_WAIT_TIMEOUT     - receive timed out,
+ *                GMI_TRY_AGAIN_ERROR  - try again,
+ *                GMI_NOT_ENOUGH_SPACE - buffer size is less than length of received data
+ *                Other Value          - failed.
  */
 GMI_RESULT PcapSessionRecvFrom(PcapSessionHandle Handle, uint8_t * Buffer,
     uint32_t * BufferLenPtr, uint8_t MacAddr[MAC_ADDRESS_LENGTH], boolean_t * IsBroadcast);
