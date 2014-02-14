@@ -1,0 +1,1020 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html,body{ margin:0; padding:0;background-color:#242424;}
+        </style>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+      
+        <!--表单分页-->
+       
+        <link rel="stylesheet" type="text/css" media="screen" href="css/jquery-ui-1.8.21.custom.css"
+        />
+        <link rel="stylesheet" type="text/css" media="screen" href="css/ui.jqgrid.css"
+        />
+        <script src="js/jquery-ui-1.8.1.custom.min.js" type="text/javascript">
+        </script>
+        <script src="js/grid.locale-en.js" type="text/javascript">
+        </script>
+        <script src="js/jquery.jqGrid.min.js" type="text/javascript">
+        </script>
+        <link type='text/css' href='css/demo.css' rel='stylesheet' media='screen'
+        />
+         
+        
+       
+        <script src="js/timerset.js" type="text/javascript"></script>
+<script src="js/WdatePicker.js" type="text/javascript">
+        </script>
+        
+        
+        
+        <link type='text/css' href='css/basic.css' rel='stylesheet' media='screen'
+        />
+       <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+         <script type='text/javascript' src='js/jquery.simplemodal.js'>
+        </script>
+        <script>
+		var limitMax=200;//每次查询日志条数上限
+		var lognum = 0;	//档次查询日志总数
+		var logget = 0;	//已获取的日志数
+		 var isvalid = new Array(); //数据无效的数组。每个不合法项的ID 组成的数组。
+            function changeLanguage(lang) {
+                TranslatePage(lang);
+            }
+            var mydata;
+
+            jQuery(document).ready(function() {
+				
+                showTimer('startTime');
+				showTimer('endTime');
+				var today=new Date();
+				$("#startDate").val(today.format("yyyy-MM-dd"));
+				$("#endDate").val(today.DateAdd('d',1).format("yyyy-MM-dd"));
+				$("#startDate").bind("click",function(e){
+					WdatePicker();
+					});
+				$("#endDate").bind("click",function(e){
+					WdatePicker();
+					});
+					bindData("");
+                init();
+                // 调用模版也方法
+                parent.innerCallMe(true);
+                //语言初始化
+                initLang();
+
+				$("#submit").bind("click",function(){
+					if(parent.LogAuth == false)
+					{
+						alert("没有权限！");
+						return;
+					}
+					if (isvalid.length == 0) {
+						bindData("");
+						var startDate=$("#startDate").val()||0;
+						var endDate=$("#endDate").val()||0;
+						var startTime=returnTimer("startTime")||0;
+						var endTime=returnTimer("endTime")||0;
+						var type=$("#typethis").val()||0;
+						var type1 = $("#typeother").val()||0;
+//						if(startDate!="0")
+//						{
+//							startDate=startDate.replace(new RegExp(/(-)/g),'');
+//						}
+//						if(endDate!="0")
+//						{
+//							endDate=endDate.replace(new RegExp(/(-)/g),'');
+//						}
+//						if(startTime!="0")
+//						{
+//							startTime=startTime.replace(new RegExp(/(:)/g),'');
+//							if(startTime[0]=="0")
+//							{
+//								startTime=startTime.substr(1);
+//							}
+//						}
+//						if(endTime!="0")
+//						{
+//							endTime=endTime.replace(new RegExp(/(:)/g),'');
+//							if(endTime[0]=="0")
+//							{
+//								endTime=endTime.substr(1);
+//							}
+//						}
+						jQuery("#list4").jqGrid("clearGridData");
+						//查询日志
+						//setTimeout("queryLog("+startDate+","+endDate+","+startTime+","+endTime+","+type+","+type1+","+0+","+limitMax+")",0);
+						queryLog(startDate,endDate,startTime,endTime,type,type1,0,limitMax);
+						//queryLog(startDate,endDate,startTime,endTime,type,0,100);
+					}
+					else
+					{
+						alert("开始时间不能大于结束时间。");
+					}
+					});
+					
+			//主类型选择
+            jQuery("#typethis").bind("change",
+            function(e) {
+				var stmp = $("#typethis").val();
+				var PosSelhtml = "<option value='0'>全部类型</option>";
+				if(stmp=="0")
+				{
+					
+				}
+				else if(stmp=="1")	//告警日志
+				{
+					PosSelhtml += "<option value='1'>告警输入</option>";
+					PosSelhtml += "<option value='2'>告警输出</option>";
+					PosSelhtml += "<option value='3'>启动移动侦测</option>";
+					PosSelhtml += "<option value='4'>关闭移动侦测</option>";
+					PosSelhtml += "<option value='5'>启动视频遮挡</option>";
+					PosSelhtml += "<option value='6'>关闭视频遮挡</option>";
+					PosSelhtml += "<option value='7'>用户自定义</option>";
+					PosSelhtml += "<option value='8'>扩展IO报警</option>";
+				}
+				else if(stmp=="2")	//异常日志
+				{
+					PosSelhtml += "<option value='33'>视频丢失</option>";
+					PosSelhtml += "<option value='34'>非法访问</option>";
+					PosSelhtml += "<option value='35'>磁盘满</option>";
+					PosSelhtml += "<option value='36'>磁盘错误</option>";
+					PosSelhtml += "<option value='37'>IP冲突</option>";
+					PosSelhtml += "<option value='38'>网络掉线</option>";
+					PosSelhtml += "<option value='39'>录像错误</option>";
+				}
+				else if(stmp =="3")	//操作日志
+				{
+					PosSelhtml += "<option value='65'>登陆</option>";
+					PosSelhtml += "<option value='66'>登出</option>";
+					PosSelhtml += "<option value='67'>启动录像</option>";
+					PosSelhtml += "<option value='68'>停止录像</option>";
+					PosSelhtml += "<option value='69'>启动视频通道传输</option>";
+					PosSelhtml += "<option value='70'>停止视频通道传输</option>";
+					PosSelhtml += "<option value='71'>获取参数</option>";
+					PosSelhtml += "<option value='72'>配置参数</option>";	
+					PosSelhtml += "<option value='73'>获取状态</option>";
+					PosSelhtml += "<option value='74'>布防使能</option>";
+					PosSelhtml += "<option value='75'>布防禁止</option>";
+					PosSelhtml += "<option value='76'>重启</option>";
+					PosSelhtml += "<option value='77'>启动语音对讲</option>";
+					PosSelhtml += "<option value='78'>停止语音对讲</option>";
+					PosSelhtml += "<option value='79'>升级</option>";
+					PosSelhtml += "<option value='80'>根据文件类型，播放或下载文件</option>";
+					PosSelhtml += "<option value='81'>根据时间类型，播放或下载文件</option>";
+					PosSelhtml += "<option value='82'>格式化磁盘</option>";
+					PosSelhtml += "<option value='83'>云台控制</option>";
+					PosSelhtml += "<option value='84'>关机</option>";
+					PosSelhtml += "<option value='85'>锁定文件</option>";
+					PosSelhtml += "<option value='86'>解锁文件</option>";
+					PosSelhtml += "<option value='87'>配置文件导出</option>";
+					PosSelhtml += "<option value='88'>配置文件导入</option>";
+					PosSelhtml += "<option value='89'>录像文件导出</option>";
+					PosSelhtml += "<option value='90'>手动清除报警</option>";
+				}
+				else if(stmp=="4")	//信息日志
+				{
+					PosSelhtml += "<option value='161'>磁盘信息</option>";
+					PosSelhtml += "<option value='162'>智能信息</option>";	
+				}
+				//alert(PosSelhtml);
+				$("#typeother").html(PosSelhtml);
+				$("#typeother").val(0);
+			});
+					//保存日志
+					$("#SaveLog").bind("click",function(e){
+					if(parent.LogAuth == false)
+					{
+						alert("没有权限！");
+						return;
+					}
+/*						//选择文件夹
+						var LogPath = "";
+ 						var objSrc = null;
+						var fso = null;
+						try
+						{
+							objSrc = new ActiveXObject("Shell.Application").BrowseForFolder(0,'请选择日志保存文件夹：',   0,   '');	
+						}
+						catch(e)
+						{
+							alert("打开目录失败！");
+							return;
+						}
+					   
+						if(objSrc != null)
+						{   
+   							LogPath = objSrc.Items().Item().Path; 
+    					}
+						var FileName = LogPath+ "\\"+ $("#type").val()+"-"+$("#typeother").val()+".txt";
+						try
+						{
+							fso = new ActiveXObject("Scripting.FileSystemObject");	
+						}
+						catch(e)
+						{
+							alert("文件读写失败！");
+							return;	
+						}
+ 			   			
+						//判断文件夹是否存在
+//						if(!fso.FolderExists("c:\\GmiIpcLog\\"))
+//						{
+//							//创建
+//							fso.CreateFolder ("c:\\GmiIpcLog\\");
+//						}
+						
+						if(!fso.FileExists(FileName))
+						{
+							fso.CreateTextFile(FileName, true);
+						}
+						var f = fso.OpenTextFile(FileName, 8,true,-1);
+
+						f.WriteLine("【序号】 【日期】 【时间】 【主类型】 【次类型】 【本地用户】 【远程主机】 【摘要】");
+						f.WriteBlankLines(1);
+						f.Close(); */
+     var curTbl = document.getElementById("list4"); 
+	 try
+	 {
+     	var oXL = new ActiveXObject("Excel.Application"); 
+	 	//var ExcelBook = oXL.workbooks.add();
+     	//创建AX对象excel 
+     	var oWB = oXL.Workbooks.Add(); 
+     	//获取workbook对象 
+     	var oSheet = oWB.ActiveSheet; 
+     	//激活当前sheet 
+    	var Lenr = curTbl.rows.length;
+		//添加列名
+		oSheet.Cells(1, 1).value = "序号"; 
+		oSheet.Cells(1, 2).value = "时间日期"; 
+		oSheet.Cells(1, 3).value = "主类型"; 
+		oSheet.Cells(1, 4).value = "次类型"; 
+		oSheet.Cells(1, 5).value = "本地用户"; 
+		oSheet.Cells(1, 6).value = "远程主机"; 
+		oSheet.Cells(1, 7).value = "摘要"; 
+     	//取得表格行数 
+     	for (i = 0; i < Lenr; i++) 
+     	{ 
+         	var Lenc = curTbl.rows(i).cells.length; 
+         	//取得每行的列数 
+         	for (j = 0; j < Lenc; j++) 
+         	{ 
+             	oSheet.Cells(i + 2, j + 1).value = curTbl.rows(i).cells(j).innerText; 
+         	} 
+     	} 
+ 
+
+	 }
+	 catch(e)
+	 {
+		 alert("请确认PC是否安装Excel软件，\r\n并设置'IE -> Internet选项 -> 安全 -> 自定义级别 -> ActiveX控件和插件 -> 对未标记为可安全执行脚本的ActiveX控件初始化并执行脚本（不安全） -> 启用。'\r\n设置完毕后，重启浏览器生效！");
+		 return;
+	 }
+	 	var fileDialog = oXL.FileDialog(2);
+	 	fileDialog .show(); 
+	 	var savePath = fileDialog.SelectedItems(1); 
+	  
+	 	var ss = oWB.SaveAs(savePath); 
+	 	oXL.quit(); // 记得退出 
+	 	if(true == ss){  
+	 		alert("文件已保存!");
+	 	}
+
+					});
+					//清除日志
+					$("#cleanLog").bind("click",function(e){
+					if(parent.LogAuth == false)
+					{
+						alert("没有权限！");
+						return;
+					}
+						 if (!confirm("确定要清除日志吗？")) return;
+						//清除日志
+						DeleteLog();
+						});
+						//清除日志函数
+						function DeleteLog()
+						{
+							var  content={};
+							content.SessionId=parent.id;
+							content.AuthValue=parent.Authvalue;	
+							contentstr=jsonToString(content);
+							//GetAndSet("GetEncodeCfg","json",contentstr, sucess_DeleteLog);	
+						}
+						//清除日志回调函数
+						function sucess_DeleteLog(data)
+						{
+							
+						}
+						$("#startDate,#endDate").bind("blur",function(e){
+							id=this.id;
+							var startDateStr=$("#startDate").val();
+							var startDate=new Date(startDateStr.split("-")[0],startDateStr.split("-")[1],startDateStr.split("-")[2]);
+							var endDateStr=$("#endDate").val();
+							var endDate=new Date(endDateStr.split("-")[0],endDateStr.split("-")[1],endDateStr.split("-")[2]);
+							if(startDate>endDate)
+							{
+								  this.style.border = "1px solid red";
+								if (!isvalid.contains(id)) {
+									isvalid.push(id);
+								}
+							}
+							else
+							{
+								 $("#startDate")[0].style.border = "1px solid black";
+								 $("#endDate")[0].style.border = "1px solid black";
+								for (var i = 0; i < isvalid.length; i++) {
+									if (isvalid[i] == "startDate"||isvalid[i] == "endDate") {
+										isvalid.splice(i, 1); //删除数据
+									}
+								}
+							}
+							});
+							$("input[name='HH'],input[name='MM'],input[name='SS']").bind("blur",function(e){
+								id=this.parentNode.parentNode.parentNode.parentNode.parentNode.id ;
+								var startTime=new Date($("#startDate").val().replace(/[-]/g,"/")+" "+returnTimer("startTime"));
+								var endTime=new Date($("#endDate").val().replace(/[-]/g,"/")+" "+returnTimer("endTime"));
+								if(startTime>endTime)
+								{
+									  $("#"+id)[0].childNodes.item(0).style.border = "1px solid red";
+									if (!isvalid.contains(id)) {
+										isvalid.push(id);
+									}
+								}
+								else
+								{
+										$("#startTime")[0].childNodes.item(0).style.border = "";
+									 $("#endTime")[0].childNodes.item(0).style.border = "";
+									for (var i = 0; i < isvalid.length; i++) {
+										if (isvalid[i] == "startDate"||isvalid[i] == "endDate") {
+											isvalid.splice(i, 1); //删除数据
+										}
+									}
+								}
+								});
+							
+        
+            });
+
+            function bindData(mydata) {
+				//var html=$("#debugdiv").html()+"<p>"+"绑定数据开始："+ new Date().format("yyyy-MM-dd hh:mm:ss:S"); 
+				//$("#debugdiv").html(html);
+                // jQuery("#list4").jqGrid("clearGridData");
+			
+                jQuery("#list4").jqGrid({ //装在数据的table id
+
+                    datatype: "local",
+                    height: 230,
+                    colNames: ['序号', '日期-时间','主类型','次类型','本地用户','远程主机','摘要'],
+                    colModel: [{
+                        name: 'id',
+                        index: 'id',
+						sorttype:"int",
+                        width: 70
+                    },
+                     {
+                        name: 'date',
+                        index: 'date',
+                        width: 180,
+						sorttype:"date",
+                        align: "center"
+                    },
+                    {
+                        name: 'type',
+                        index: 'type',
+                        width: 100,
+                        align: "center"
+                    },
+					//次类型
+                    {
+                        name: 'type1',
+                        index: 'type1',
+                        width: 100,
+                        align: "center"
+                    },
+					{
+                        name: 'user',
+                        index: 'user',
+                        width: 80,
+                        align: "center"
+                    },
+					//远程主机
+					{
+                        name: 'pc',
+                        index: 'pc',
+                        width: 100,
+                        align: "center"
+						
+                    },
+					{
+                        name: 'brief',
+                        index: 'brief',
+                        width: 200,
+                        align: "center"
+                    }
+
+					
+					],
+                    onSelectRow:function(id){
+						var rowDatas = $("#list4").jqGrid('getRowData', id); 
+						$("#logDetail").html(rowDatas.detail);
+						//alert(rowDatas.rowid+"------"+rowDatas.detail);
+						},
+						//翻页
+				onPaging:function(bt)
+					{
+						//alert("fanya");
+					},
+                    viewrecords: true,
+                    //是否显示行数  
+                    pager: "logListPager",
+                    //分页显示的DIVID
+                    rowNum: 20,
+                    //每页20条记录 
+                    rowList: [10, 20, 30,50,100],
+                    //可调整每页显示的记录数    
+                    sortname: "id",
+                    //默认排序的列名 
+                    sortorder: "desc",
+                    //默认排序的顺序
+                    //scroll:true,//鼠标滚动翻页
+                    multiselect: false,
+					loadui:"enable",
+                    caption: "  "
+                });
+                // var mydata=[{name:'test',eventtype:'in',starttime:'2007-10-01',reclength:'1',recsize:'200.00'},{name:'test',eventtype:'in',starttime:'2007-10-01',reclength:'1',recsize:'200.00'}];
+                //alert(mydata);
+				 // mydata=[{order:'1',stime:'2012-12-17',username:'inc',eventtype:'系统事件'}];
+				
+				    var records=$("#list4").jqGrid('getGridParam','records');
+					//alert(new Date().format("yyyy-MM-dd:S"));
+					for (var i = 0; i < mydata.length; i++) {
+						//开始格式化数据
+						mydata[i].date=formatDate(mydata[i].date);
+						mydata[i].time=formatTime(mydata[i].time);
+						mydata[i].type=formatType(mydata[i].type);
+						//结束
+						jQuery("#list4").jqGrid('addRowData', records+ i + 1, mydata[i]);
+					}
+					//alert(new Date().format("yyyy-MM-dd:S"));
+				//jQuery("#list4").jqGrid('addJSONData',mydata);
+                //重新加载。开始分页
+                jQuery("#list4").trigger("reloadGrid");
+				//var html=$("#debugdiv").html()+"<p>"+"绑定数据结束："+ new Date().format("yyyy-MM-dd hh:mm:ss:S"); 
+				//$("#debugdiv").html(html);
+            }
+			function formatDate(datestr)
+			{
+				var res;
+				if(datestr.length!=8)
+				{
+					res=datestr;
+				}
+				else
+				{
+					res=datestr.substr(0,4)+"-"+datestr.substr(4,2)+"-"+datestr.substr(6);
+				}
+				return res;
+			} 
+			function formatTime(timestr)
+			{
+				var res;
+				if(timestr.length==5||timestr.length==6)
+				{
+						if(timestr.length==5)
+					{
+					res="0"+timestr.substr(0,1)+":"+timestr.substr(1,2)+":"+timestr.substr(3);
+					}
+					else
+					{
+						res=timestr.substr(0,2)+":"+timestr.substr(2,2)+":"+timestr.substr(4);
+					}
+				}
+				else
+				{
+					res=timestr;                          
+				}
+				return res;
+			}
+			function formatType(typestr)
+			{
+				var res;
+				switch(typestr)
+				{
+					case "1":
+					res="登录日志";
+					break;
+					case "2":
+					res="报警日志";
+					break;
+					case "4":
+					res="系统日志";
+					break;
+					default:
+					res=typestr;
+					
+				}
+				
+				return res;
+			}
+           function queryLog(startDate,endDate,startTime,endTime,type,type1,startRow,rowLimit)
+		   {
+			   		lognum = 0;
+					logget = 0;
+					//设置按钮不可点击
+					$("#submit").attr("disabled", "disabled");
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					
+					content.SelectMode="0";	
+					content.MajorType=type;
+					content.MinorType=type1;
+					content.StartTime=startDate + " "+startTime;//"2013-12-18 00:00:00";
+					content.StopTime=endDate + " "+endTime;//"2013-12-18 18:00:00";
+					content.Offset="0";
+					content.MaxNum="20";
+					
+					contentstr=jsonToString(content);
+					GetAndSet("SysGetLogInfo","json",contentstr, sucess_QueryLog);	
+		   }
+		   //查询日志毁掉函数
+		   function sucess_QueryLog(data)
+		   {
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						//日志总数
+						lognum = PackDate.Content.Total;
+						//当前日志数
+						var numtmp = PackDate.Content.Count;
+						numtmp = parseInt(numtmp,10);
+						logget += numtmp;
+						
+						//添加到列表
+						for(var i=1;i<=PackDate.Content.Count;i++)
+						{
+							//序号 日期-时间 主类型 次类型 本地用户 远程用户 摘要
+							var type = "";	//主类型
+							var type1 = "全部类型";	//次类型
+							switch(i)
+							{
+								case 1:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime0,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName0,
+									pc:PackDate.Content.RemoteHostIp0,
+									brief:PackDate.Content.LogData0
+									});
+								break;
+								case 2:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime1,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName1,
+									pc:PackDate.Content.RemoteHostIp1,
+									brief:PackDate.Content.LogData1
+									});
+								break;
+								case 3:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime2,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName2,
+									pc:PackDate.Content.RemoteHostIp2,
+									brief:PackDate.Content.LogData2
+									});
+								break;
+								case 4:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime3,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName3,
+									pc:PackDate.Content.RemoteHostIp3,
+									brief:PackDate.Content.LogData3
+									});
+								break;
+								case 5:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime4,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName4,
+									pc:PackDate.Content.RemoteHostIp4,
+									brief:PackDate.Content.LogData4
+									});
+								break;
+								case 6:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime5,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName5,
+									pc:PackDate.Content.RemoteHostIp5,
+									brief:PackDate.Content.LogData5
+									});
+								break;
+								case 7:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime6,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName6,
+									pc:PackDate.Content.RemoteHostIp6,
+									brief:PackDate.Content.LogData6
+									});
+								break;
+								case 8:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime7,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName7,
+									pc:PackDate.Content.RemoteHostIp7,
+									brief:PackDate.Content.LogData7
+									});
+								break;
+								case 9:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime8,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName8,
+									pc:PackDate.Content.RemoteHostIp8,
+									brief:PackDate.Content.LogData8
+									});
+								break;
+								case 10:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime9,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName9,
+									pc:PackDate.Content.RemoteHostIp9,
+									brief:PackDate.Content.LogData9
+									});
+								break;
+								case 11:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime10,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName10,
+									pc:PackDate.Content.RemoteHostIp10,
+									brief:PackDate.Content.LogData10
+									});
+								break;
+								case 12:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime11,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName11,
+									pc:PackDate.Content.RemoteHostIp11,
+									brief:PackDate.Content.LogData11
+									});
+								break;
+								case 13:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime12,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName12,
+									pc:PackDate.Content.RemoteHostIp12,
+									brief:PackDate.Content.LogData12
+									});
+								break;
+								case 14:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime13,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName13,
+									pc:PackDate.Content.RemoteHostIp13,
+									brief:PackDate.Content.LogData13
+									});
+								break;
+								case 15:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime14,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName14,
+									pc:PackDate.Content.RemoteHostIp14,
+									brief:PackDate.Content.LogData14
+									});
+								break;
+								case 16:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime15,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName15,
+									pc:PackDate.Content.RemoteHostIp15,
+									brief:PackDate.Content.LogData15
+									});
+								break;
+								case 17:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime16,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName16,
+									pc:PackDate.Content.RemoteHostIp16,
+									brief:PackDate.Content.LogData16
+									});
+								break;
+								case 18:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime17,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName17,
+									pc:PackDate.Content.RemoteHostIp17,
+									brief:PackDate.Content.LogData17
+									});
+								break;
+								case 19:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime18,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName18,
+									pc:PackDate.Content.RemoteHostIp18,
+									brief:PackDate.Content.LogData18
+									});
+								break;
+								case 20:
+								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
+								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
+								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
+								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
+									jQuery("#list4").jqGrid('addRowData',i+1, {
+									id:i,
+									date:PackDate.Content.LogTime19,
+									type:type,
+									type1:type1,
+									user:PackDate.Content.UserName19,
+									pc:PackDate.Content.RemoteHostIp19,
+									brief:PackDate.Content.LogData19
+									});
+								break;
+							}
+						}
+						
+						
+					}
+					else
+					{
+						alert("获取日志失败！");
+						delete PackDate;
+						$("#submit").removeAttr("disabled", "disabled");
+						return;
+					}
+				} 
+				$("#submit").removeAttr("disabled", "disabled");
+				delete PackDate; 
+		   }
+		   var times=1;//默认获取次数
+		   var myinfo;//查询结果
+		   var timing=0;
+		   function init()
+		   {
+					if(parent.LogAuth == false)
+					{
+						return;
+					}
+					else
+					{
+			   			var startDate=$("#startDate").val()||0;
+						var endDate=$("#endDate").val()||0;
+						var startTime=returnTimer("startTime")||0;
+						var endTime=returnTimer("endTime")||0;
+						var type=$("#typethis").val()||0;
+						var type1 =$("#typeother").val()||0;
+//					if(startDate!="0")
+//					{
+//						startDate=startDate.replace(new RegExp(/(-)/g),'');
+//					}
+//					if(endDate!="0")
+//					{
+//						endDate=endDate.replace(new RegExp(/(-)/g),'');
+//					}
+//					if(startTime!="0")
+//					{
+//						startTime=startTime.replace(new RegExp(/(:)/g),'');
+//						if(startTime[0]=="0")
+//						{
+//							startTime=startTime.substr(1);
+//						}
+//					}
+//					if(endTime!="0")
+//					{
+//						endTime=endTime.replace(new RegExp(/(:)/g),'');
+//						if(endTime[0]=="0")
+//						{
+//							endTime=endTime.substr(1);
+//						}
+//					}
+//					
+					//queryLog(startDate,endDate,startTime,endTime,type,0,500);
+					//setTimeout("queryLog("+startDate+","+endDate+","+startTime+","+endTime+","+type+","+type1+","+0+","+limitMax+")",0);
+						queryLog(startDate,endDate,startTime,endTime,type,type1,0,limitMax);
+					}
+		   }
+        </script>
+    </head>
+    
+    <body>
+        <h3>日志管理</h3>
+        <div class="down_main_content wrap">
+                                    <div class="int_pro_main_list">
+                                    	<div class="motion_det_list_inner_lmt" style="width:80px;">开始时间：</div><div class="int_pro_main_list_inner" style="width:220px; margin-left:0px;"><input class="int_pro_main_list_inner_input Wdate" style="width:100px;" id="startDate" /><div id="startTime"></div></div>
+                                      
+                                    	<div class="motion_det_list_inner_lmt"  style="width:80px;">结束时间：</div><div class="int_pro_main_list_inner" style="width:220px; margin-left:0px;"><input class="int_pro_main_list_inner_input Wdate" style="width:100px;"  id="endDate"/><div id="endTime"></div></div>
+                                       
+                                    </div>
+                                    <div class="int_pro_main_list">
+                                    	<div class="motion_det_list_inner_lmt" style="width:80px;">主类型：</div><div class="int_pro_main_list_inner" style="width:220px; margin-left:0px;">
+                              <select id="typethis" style="height:20px; width:103px;">
+                                <option value='0'>
+                                   全部类型
+                                </option>
+                                <option value='1'>
+                                    告警日志
+                                </option>
+                                <option value='2'>
+                                    异常日志
+                                </option>
+                                <option value='3'>
+                                    操作日志
+                                </option>
+                                <option value='4'>
+                                    信息日志
+                                </option>
+                            </select>
+                            </div>
+                                    	<div class="motion_det_list_inner_lmt" style="width:80px;">次类型：</div><div class="int_pro_main_list_inner" style="width:220px; margin-left:0px;"><select id="typeother" style="height:20px; width:103px;">
+                                <option value='0'>
+                                    全部类型
+                                </option>
+                            </select>
+                            </div>
+                            <div class="int_pro_main_list">
+                            	<div class="motion_det_list_inner_lmt" style="width:80px;">
+                            		<input type="button" class="btn22" style="float:left; "  value="查找" id="submit" />
+                                    </div>
+            				<div class="motion_det_list_inner_lmt" style="width:80px;">
+           		 				<input type="button" class="btn22" style="float:left"  value="清空日志" id="cleanLog" />
+                 				</div>
+            				<div class="motion_det_list_inner_lmt" style="width:80px;">
+           		 				<input type="button" class="btn22" style="float:left"  value="保存日志" id="SaveLog" />
+                 				</div>
+                            </div>
+                  
+                                        
+                                       <div class="int_pro_main_list" style="height:10px;">
+                                    	<div class="motion_det_list_inner_lmt"  style="width:80px; height:10px;"></div><div class="int_pro_main_list_inner" style="width:220px; height:10px; margin-left:0px;"></div>
+                               
+                                    </div>
+            <div class="int_pro_main_list">                 
+             <div class="ip_set_main">
+                <table id="list4">
+                </table>
+                <div id="logListPager">
+                </div>   
+                                  </div>
+                  
+  
+              
+<!--                <fieldset class="motion_det_fil_3" id="dptz" style="height:160px;">
+                    <legend>
+                        日志信息
+                    </legend>
+                    <div style="height:150px;width:700px; word-wrap: break-word" id="logDetail"></div>
+                   
+                </fieldset>-->
+            </div>
+           </div>
+
+        </div>
+         <div id="debugdiv" style=""></div>
+    </body>
+
+</html>
