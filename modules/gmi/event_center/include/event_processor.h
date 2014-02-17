@@ -5,7 +5,9 @@
 class EventProcessor
 {
 protected:
-    EventProcessor( uint32_t EventProcessorId ) : m_Callback( NULL ), m_UserData( NULL ), m_ProcessorId( EventProcessorId ) {}
+    EventProcessor( uint32_t EventProcessorId ) : m_Callback( NULL ), m_UserData( NULL ), m_ProcessorId( EventProcessorId ) 
+	{
+	}
 
     // on usual, Start and Stop do not need to take specail measure, return GMI_SUCCESS simply. but for some case, some thread can be created to execute special task.
     virtual GMI_RESULT Start( const void_t *Parameter, size_t ParameterLength )
@@ -74,11 +76,14 @@ public:
         return m_ProcessorId;
     }
 
+
 protected:
     std::vector<uint32_t>  m_DetectorIds;
     EventCallback          m_Callback;
     void_t                 *m_UserData;
 
 private:
-    uint32_t               m_ProcessorId;
+    uint32_t               m_ProcessorId; 
 };
+
+

@@ -10,6 +10,13 @@ static const char_t *G_EventDetectorTypeName[] =
 	"Human detect",
 };
 
+static const char_t *G_EventStatusTypeName[] =
+{
+	"start",
+	"end",
+};
+
+
 static uint32_t G_EventDetectorTypeNameArraySize = 2;
 
 EventProcessInfoRecord::EventProcessInfoRecord( uint32_t EventProcessorId )
@@ -85,16 +92,23 @@ GMI_RESULT  EventProcessInfoRecord::Notify( uint32_t EventId, enum EventType Typ
     std::vector<uint32_t>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
     for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
     {
-        if ( *DetectorIdIt == EventId )
+        if ( (*DetectorIdIt == EventId) 
+			&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)) 
+			&&(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EventId-1)))) )
         {
-        	if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0))
+        	if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
         	{ 		
-				EventRecodPrt("[%s] tigger!", G_EventDetectorTypeName[EventId-1]);
+				EventRecodPrt("[EventName:%s] tigger %s!", G_EventDetectorTypeName[EventId-1], G_EventStatusTypeName[Type-1]);
         	}
 			else
 			{
-				EventRecodPrt("[%d] tigger!", EventId);
+				EventRecodPrt("[EventId:%d] tigger %d[1-start,2-end]!", EventId, Type);
 			}
+
+			if ( NULL != m_Callback )
+            {
+                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
+            }
         }
     }
 	

@@ -53,10 +53,12 @@ GMI_RESULT  HumanDetect::Start( const void_t *Parameter, size_t ParameterLength 
 
     const struct HumanDetectInfo *Info = (const struct HumanDetectInfo *) Parameter;
     SetCheckTime( Info->s_CheckTime );
+	#if 0
     for ( uint32_t i = 0; i < Info->s_ScheduleTimeNumber; ++i )
     {
         AddScheduleTime( &(Info->s_ScheduleTime[i]) );
     }
+	#endif
 
     m_ThreadWorking  = false;
     m_ThreadExitFlag = false;
@@ -102,9 +104,25 @@ void_t* HumanDetect::DetectEntry()
 
     uint8_t GPIOStatus = 0;
 	int8_t s_GPIOStatus = -1;
+	time_t             CurrTime;
+	struct tm          CurrTm;
+	uint32_t           Curhm;
+	int32_t            CurrDay;
 
     while( !m_ThreadExitFlag )
     {
+    	CurrTime = time(NULL);
+		CurrTm   = *localtime(&CurrTime);
+		CurrDay  = CurrTm.tm_wday;
+		Curhm    = (CurrTm.tm_hour * 60) + CurrTm.tm_min;
+		if(((Curhm < g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[CurrDay].s_StartTime)
+			|| (Curhm > g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[CurrDay].s_EndTime)))
+		{
+			fprintf(stderr, "human detect is not in the ScheduleTime\n");
+			GMI_Sleep(5000);
+			continue;
+		}
+	
         Result = GMI_BrdGetAlarmInput( 0, 0, &GPIOStatus );
 
         if ( GPIOStatus != s_GPIOStatus )

@@ -72,7 +72,9 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, enum EventType Type, void_t *
     std::vector<uint32_t>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
     for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
     {
-        if ( *DetectorIdIt == EventId )
+        if ( (*DetectorIdIt == EventId) 
+			&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)) 
+			&&(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EventId-1)))) )
         {
 #if defined( __linux__ )
             GMI_RESULT Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmInputStatus_Opened : (uint8_t)e_AlarmInputStatus_Closed );
@@ -98,10 +100,12 @@ GMI_RESULT  AlarmOutput::Start( const void_t *Parameter, size_t ParameterLength 
     SetName( Info->s_Name );
     SetWorkMode( (enum AlarmOutputWorkMode) Info->s_WorkMode );
     SetDelayTime( Info->s_DelayTime );
+	#if 0
     for ( uint32_t i = 0; i < Info->s_ScheduleTimeNumber; ++i )
     {
         AddScheduleTime( &(Info->s_ScheduleTime[i]) );
     }
+	#endif
 
     return GMI_SUCCESS;
 }

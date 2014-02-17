@@ -12,6 +12,8 @@
 #define MAKE_DETECTOR_ID(p,i)   ((p<<16)+i)
 #define QUERY_EVENT_PRIORITY(x) (((uint32_t)x)>>16)
 
+
+
 enum EventDetectorType
 {
     e_EventDetectorType_Active = 1,

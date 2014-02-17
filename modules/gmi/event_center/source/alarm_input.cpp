@@ -84,10 +84,12 @@ GMI_RESULT  AlarmInput::Start( const void_t *Parameter, size_t ParameterLength )
     SetName( Info->s_Name );
     SetCheckTime( Info->s_CheckTime );
     SetTriggerType( (enum AlarmInputTriggerType) Info->s_TriggerType );
+	#if 0
     for ( uint32_t i = 0; i < Info->s_ScheduleTimeNumber; ++i )
     {
         AddScheduleTime( &(Info->s_ScheduleTime[i]) );
     }
+	#endif
 
     m_GPIOInputStatus = ( e_AlarmInputTriggerType_UsuallyOpened == Info->s_TriggerType ) ? e_AlarmInputStatus_Opened : e_AlarmInputStatus_Closed;
 
@@ -134,10 +136,26 @@ void_t* AlarmInput::DetectEntry()
     m_ThreadWorking   = true;
 
     uint8_t GPIOStatus = 0;
+	time_t			   CurrTime;
+	struct tm		   CurrTm;
+	uint32_t           Curhm;
+	int32_t 		   CurrDay;
 
     while( !m_ThreadExitFlag )
     {
 #if defined( __linux__ )
+		CurrTime = time(NULL);
+		CurrTm   = *localtime(&CurrTime);
+		CurrDay  = CurrTm.tm_wday;
+		Curhm    = (CurrTm.tm_hour * 60) + CurrTm.tm_min;	
+		if(((Curhm < g_CurStartedEvent[e_AlarmEventType_AlarmInput-1].s_ScheduleTime[CurrDay].s_StartTime)
+			|| (Curhm > g_CurStartedEvent[e_AlarmEventType_AlarmInput-1].s_ScheduleTime[CurrDay].s_EndTime)))
+		{
+			fprintf(stderr, "Alarm input is not in the ScheduleTime\n");
+			GMI_Sleep(5000);
+			continue;
+		}
+		
         Result = GMI_BrdGetAlarmInput( GMI_ALARM_MODE_GPIO, m_InputNumber, &GPIOStatus );
 
         if ( GPIOStatus != (uint8_t) m_GPIOInputStatus )

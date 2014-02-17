@@ -105,9 +105,25 @@ int32_t main( int32_t argc, char_t* argv[] )
         return -1;
     }
 
+	AlarmEventConfigInfo TmpParam;
+	memset(&TmpParam, 0, sizeof(TmpParam));
+	#if 1
+	TmpParam.s_EnableFlag = 1;
+	TmpParam.s_LinkAlarmStrategy = 3;
+	TmpParam.s_ScheduleTime[1].s_StartTime = 0;
+	TmpParam.s_ScheduleTime[1].s_EndTime = 17*60+30;
+	Center.ConfigureAlarmEvent(e_AlarmEventType_AlarmInput, (void_t*)(&TmpParam),sizeof(TmpParam));
+	#endif
+	#if 0
+	TmpParam.s_EnableFlag = 1;
+	TmpParam.s_LinkAlarmStrategy = 2;
+	TmpParam.s_ScheduleTime[1].s_StartTime = 15*60;
+	TmpParam.s_ScheduleTime[1].s_EndTime = 17*60;
+	Center.ConfigureAlarmEvent(e_AlarmEventType_HumanDetect, (void_t*)(&TmpParam),sizeof(TmpParam));
+	#endif
     do
     {
-        GMI_Sleep( 1000 );
+        GMI_Sleep( 5000 );
     }
     while( 1 );
 
