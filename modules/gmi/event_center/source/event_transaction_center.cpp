@@ -378,9 +378,9 @@ GMI_RESULT EventTransactionCenter::StartGPIOAlarmOutput()
         return GMI_OUT_OF_MEMORY;
     }
 
-	for(i=0; i<MAX_NUM_EVENT_TYPE; i++)
+	for(i=1; i<=MAX_NUM_EVENT_TYPE; i++)
 	{
-		if(0 < CheckCurBitValidByStrategyId(i, EVENT_PROCESSOR_ID_ALARM_OUTPUT))
+		//if(0 < CheckCurBitValidByStrategyId(i, EVENT_PROCESSOR_ID_ALARM_OUTPUT))
 		{
 			AlarmOutputProcessor->AddDetectorId( i );
 			printf("AlarmOutputProcessor %d\n", i);
@@ -451,9 +451,9 @@ GMI_RESULT EventTransactionCenter::StartAlarmInfoRecord()
         return GMI_OUT_OF_MEMORY;
     }
 
-	for(i=0; i<MAX_NUM_EVENT_TYPE; i++)
+	for(i=1; i<=MAX_NUM_EVENT_TYPE; i++)
 	{
-		if(0 < CheckCurBitValidByStrategyId(i, EVENT_PROCESSOR_ID_INFO_RECORD))
+		//if(0 < CheckCurBitValidByStrategyId(i, EVENT_PROCESSOR_ID_INFO_RECORD))
 		{
 			AlarmInfoRecordProcessor->AddDetectorId( i );
 			printf("AlarmInfoRecordProcessor %d\n", i);
