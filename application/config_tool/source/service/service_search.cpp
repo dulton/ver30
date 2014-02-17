@@ -167,10 +167,7 @@ ServiceSearch::~ServiceSearch()
     ServiceDispatch::GetInstance().Unregister(this);
 
     // Recycle resources of thread, if thread is still running
-    if (IsRunning())
-    {
-        Wait();
-    }
+    Wait();
 }
 
 void_t ServiceSearch::Execute(GtpTransHandle Handle, IParser * Parser)
@@ -284,17 +281,23 @@ void_t ServiceSearch::Unbind(GtpTransHandle Handle)
     GtpTransSetReferenceInstance(Handle, NULL);
 
     std::vector<GtpTransHandle>::iterator it;
-    for (it = m_TransList.begin(); it != m_TransList.end(); ++ it)
+    for (it = m_TransList.begin(); it != m_TransList.end() && *it != Handle; ++ it);
+
+    if (it == m_TransList.end())
     {
-        if (*it == Handle)
-        {
-            m_TransList.erase(it);
-            return;
-        }
+        PRINT_LOG(ERROR, "This transaction is not attached to service search");
+        DUMP_VARIABLE(Handle);
+        return;
     }
 
-    PRINT_LOG(ERROR, "This transaction is not attached to service search");
-    DUMP_VARIABLE(Handle);
+    m_TransList.erase(it);
+
+    if (m_TransList.size() == 0)
+    {
+        // Cancel delay task and recycle thread
+        Application::GetSingleton().CancelDelayTask(ServiceSearch::OnTimeProc, this);
+        Wait();
+    }
 }
 
 void_t ServiceSearch::OnTimeProc(void_t * Data)
@@ -484,7 +487,11 @@ boolean_t ServiceSearch::NeedUpdate() const
     struct timespec Now = {0, 0};
     clock_gettime(CLOCK_MONOTONIC, &Now);
 
-    if (m_LastUpdateTime.tv_sec + UPDATE_INVALID_SECONDS > Now.tv_sec)
+    if (m_LastUpdateTime.tv_sec == 0 && m_LastUpdateTime.tv_nsec == 0)
+    {
+        return true;
+    }
+    else if (m_LastUpdateTime.tv_sec + UPDATE_INVALID_SECONDS > Now.tv_sec) 
     {
         return false;
     }
