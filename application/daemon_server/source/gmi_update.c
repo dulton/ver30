@@ -36,6 +36,43 @@ static boolean_t l_UpdateFlags = true;
 #define GET_KERNEL_VERSION		"cat /proc/version | grep Number: | awk '{print $3}'"
 #define GET_ROOTFS_VERSION		"cat /etc/version | grep Number: | awk '{print $3}'"
 
+
+GMI_RESULT GMI_GetMacInfo(char_t *EthName, char_t *Mac)
+{
+    int32_t            Sock;
+    struct sockaddr_in Sin;
+    struct ifreq       Ifr;
+
+    if (NULL == Mac)
+    {
+        return GMI_INVALID_PARAMETER;
+    }
+
+    Sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (Sock < 0)
+    {
+        perror("socket");
+        return GMI_FAIL;
+    }
+
+    strncpy(Ifr.ifr_name, EthName, IFNAMSIZ);
+    Ifr.ifr_name[IFNAMSIZ - 1] = 0;
+
+    memcpy(&Sin, &Ifr.ifr_addr, sizeof(Sin));
+    if (ioctl(Sock, SIOCGIFHWADDR, &Ifr) < 0)
+    {
+        perror("ioctl");
+        return GMI_FAIL;
+    }
+
+    sprintf(Mac, "%02x:%02x:%02x:%02x:%02x:%02x", \
+            (uint8_t)Ifr.ifr_hwaddr.sa_data[0], (uint8_t)Ifr.ifr_hwaddr.sa_data[1], (uint8_t)Ifr.ifr_hwaddr.sa_data[2], (uint8_t)Ifr.ifr_hwaddr.sa_data[3], (uint8_t)Ifr.ifr_hwaddr.sa_data[4], (uint8_t)Ifr.ifr_hwaddr.sa_data[5]);
+
+    close(Sock);
+
+    return GMI_SUCCESS;
+}
+
 /*=======================================================
 name				:	GMI_GetVersion
 function			:  Get System SVN version .
@@ -1734,6 +1771,223 @@ long_t GMI_Reboot(long_t CltFd, char_t *szBuffer, long_t CltAddr)
     return Ret;
 }
 
+
+
+
+/*=======================================================
+name				:	GMI_ReportSystemPlatform
+function			:  Report Update list Result
+algorithm implementation	:	no
+global variable			:	no
+parameter declaration		:     no
+return				:    no
+---------------------------------------------------------------
+modification	:
+	date		version		 author 	modification
+	5/3/2013	1.0.0.0.0     minchao.wang         establish
+******************************************************************************/
+GMI_RESULT GMI_DeviceInfoPacket(char_t *Buf, uint16_t *BufLen)
+{
+
+    uint16_t Length = 0;
+    GMI_RESULT Result = GMI_FAIL;
+    char_t Ip[MIN_BUFFER_LENGTH]= {"0"};
+    char_t EthName[MIN_BUFFER_LENGTH] = {"eth0"};
+    char_t Mac[32];
+
+    Result = GMI_GetDeviceIpAddr(Ip, EthName);
+    if (SUCCEEDED(Result))
+    {
+        DAEMON_PRINT_LOG(INFO,"GMI_GetDeviceIpAddr is OK ! ! ");
+    }
+
+    memset(Mac, 0, sizeof(Mac));
+    Result = GMI_GetMacInfo(EthName, Mac);
+    if (FAILED(Result))
+    {
+        DAEMON_PRINT_LOG(INFO,"GMI_GetMacInfo is Fail ! ! ");
+    }
+
+    Result = SysInfoReadInitialize();
+    if (FAILED(Result))
+    {
+        DAEMON_PRINT_LOG(INFO,"SysInfoReadInitialize is Fail ! ! ");
+    }
+
+    FD_HANDLE Handle;
+   
+    Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    if (FAILED(Result))
+    {
+        DAEMON_PRINT_LOG(INFO,"SysInfoOpen is Fail ! ! ");
+    }
+    
+    int32_t RTSP_Port = 554;
+    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_RTSP_SERVER_TCP_PORT_KEY, 554, &RTSP_Port);
+    if (FAILED(Result))
+    {
+	RTSP_Port = 554;
+    }
+
+    int32_t HTTP_Port = 80;
+    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_HTTP_SERVER_PORT_KEY, 80, &HTTP_Port);
+    if (FAILED(Result))
+    {
+	HTTP_Port = 80;
+    }
+
+    int32_t SDK_Port = 30000;
+    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_SDK_SERVER_PORT_KEY, 30000, &SDK_Port);
+    if (FAILED(Result))
+    {
+	SDK_Port = 30000;
+    }
+
+    int32_t Upgrade_Port = 8000;
+    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_DAEMON_UPDATE_SERVER_PORT_KEY, 8000, &Upgrade_Port);
+    if (FAILED(Result))
+    {
+	Upgrade_Port = 8000;
+    }
+
+    char_t Name[64];
+    memset(Name,0,sizeof(Name));
+    Result = SysInfoRead(Handle, DEVICE_INFO_PATH, DEVICE_NAME_KEY, DEVICE_NAME, Name);
+    if (FAILED(Result))
+    {
+	strcpy(Name, DEVICE_NAME);
+    }
+
+    char_t Sn[64];
+    memset(Sn,0,sizeof(Sn));
+    Result = SysInfoRead(Handle, DEVICE_INFO_PATH, DEVICE_SN_KEY, DEVICE_SN, Sn);
+    if (FAILED(Result))
+    {
+	strcpy(Sn, DEVICE_SN);
+    }
+
+    char_t HwVersion[64];
+    memset(HwVersion,0,sizeof(HwVersion));
+    Result = SysInfoRead(Handle, DEVICE_INFO_PATH, DEVICE_HWVER_KEY, DEVICE_HWVER, HwVersion);
+    if (FAILED(Result))
+    {
+	strcpy(HwVersion, DEVICE_HWVER);
+    }
+
+    char_t FwVersion[64];
+    memset(FwVersion,0,sizeof(FwVersion));
+    Result = SysInfoRead(Handle, DEVICE_INFO_PATH, DEVICE_FWVER_KEY, DEVICE_FWVER, FwVersion);
+    if (FAILED(Result))
+    {
+	strcpy(FwVersion, DEVICE_FWVER);
+    }
+
+    SysInfoClose(Handle);
+
+    SysInfoReadDeinitialize();
+
+    Length += sprintf(Buf+Length, "<Response operation=\"Search\" result=\"0\">");
+    Length += sprintf(Buf+Length, "<NetworkInfo>");
+    Length += sprintf(Buf+Length, "<InterfaceList num=\"1\">");
+    Length += sprintf(Buf+Length, "<Interface name=\"eth0\" enable=\"1\" dhcp=\"0\">");
+    Length += sprintf(Buf+Length, "<Address>%s</Address>", Ip);
+    Length += sprintf(Buf+Length, "<Netmask>255.255.0.0</Netmask>");
+    Length += sprintf(Buf+Length, "<Gateway>10.0.0.1</Gateway>");
+    Length += sprintf(Buf+Length, "<MAC>%s</MAC>", Mac);
+    Length += sprintf(Buf+Length, "</Interface>");
+    Length += sprintf(Buf+Length, "</InterfaceList>");
+    Length += sprintf(Buf+Length, "<DNSList num=\"2\">");
+    Length += sprintf(Buf+Length, "<DNS>192.168.1.1</DNS>");
+    Length += sprintf(Buf+Length, "<DNS>%s</DNS>", Ip);
+    Length += sprintf(Buf+Length, "</DNSList>");
+    Length += sprintf(Buf+Length, "</NetworkInfo>");
+    Length += sprintf(Buf+Length, "<DeviceStatus>OnLine</DeviceStatus>");
+    Length += sprintf(Buf+Length, "<DeviceInfo>");
+    Length += sprintf(Buf+Length, "<Name>%s</Name>", Name);
+    Length += sprintf(Buf+Length, "<SN>%s</SN>", Sn);
+    Length += sprintf(Buf+Length, "<HwVersion>%s</HwVersion>", HwVersion);
+    Length += sprintf(Buf+Length, "<FwVersion>%s</FwVersion>", FwVersion);
+    Length += sprintf(Buf+Length, "<LastBootTime>%s</LastBootTime>", "20140211163524");
+    Length += sprintf(Buf+Length, "</DeviceInfo>");
+    Length += sprintf(Buf+Length, "<ServiceList>");
+    Length += sprintf(Buf+Length, "<Service name=\"HTTP\" port=\"%d\"/>", HTTP_Port);
+    Length += sprintf(Buf+Length, "<Service name=\"RTSP\" port=\"%d\"/>", RTSP_Port);
+    Length += sprintf(Buf+Length, "<Service name=\"SDK\" port=\"%d\"/>", SDK_Port);
+    Length += sprintf(Buf+Length, "<Service name=\"Upgrade\" port=\"%d\"/>", Upgrade_Port);
+    Length += sprintf(Buf+Length, "</ServiceList>");
+    Length += sprintf(Buf+Length, "</Response>");
+
+    *BufLen = Length;
+
+    return GMI_SUCCESS;
+}
+
+GMI_RESULT GMI_ReportDeviceInfo(long_t CltFd)
+{
+    if(CltFd < 0)
+    {
+        return GMI_INVALID_PARAMETER;
+    }
+
+    char_t TmpBuffer[2048] = {0};
+    uint16_t TmpLen = 0;
+    uint16_t SendLen = 0;
+    GMI_DeviceInfoPacket(TmpBuffer, &TmpLen);
+
+    UpdateBaseMessage  ResHeader;
+    bzero(&ResHeader, sizeof(UpdateBaseMessage));
+    GMI_MakeMessageHeader(&ResHeader, 0, 0, TmpLen);
+
+    char_t Buffer[2048] = {0};
+    bzero(Buffer, 2048);
+    memcpy(Buffer,&ResHeader,sizeof(UpdateBaseMessage));
+    memcpy(Buffer+sizeof(UpdateBaseMessage), TmpBuffer, TmpLen);
+    SendLen = sizeof(UpdateBaseMessage)+TmpLen;
+    DAEMON_PRINT_LOG(INFO,"TmpBuffer is %s ! ! ",Buffer);
+    if (send(CltFd, Buffer, SendLen, 0) != SendLen)
+    {
+        DAEMON_PRINT_LOG(ERROR,"TCP send  is Error ! ! ");
+        return GMI_FAIL;
+    }
+
+    return GMI_SUCCESS;
+}
+
+/*=========================================================================
+name				:	GMI_GetSystemInform
+function			:  System Update ,PC client Get System hardware
+algorithm implementation	:	no
+global variable			:	no
+parameter declaration		:     CltFd  : Socket Id
+                                                Status : current stats
+                                                schedule    : update file Length
+
+return				:    no
+---------------------------------------------------------------
+modification	:
+	date		version		 author 	modification
+	7/8/2013	1.0.0.0.0     minchao.wang         establish
+******************************************************************************/
+long_t GMI_GetDeviceInfo(long_t CltFd, char_t *szBuffer, long_t CltAddr)
+{
+    if(CltFd < 0)
+    {
+        return GMI_INVALID_PARAMETER;
+    }
+
+    GMI_RESULT Result = GMI_SUCCESS;
+    GMI_DeBugPrint("[%s][%d]GMI_GetSystemPlatform Start",__func__,__LINE__);
+
+    Result = GMI_ReportDeviceInfo(CltFd);
+    if (FAILED(Result))
+    {
+        GMI_DeBugPrint("[%s][%d]GMI_GetSystemPlatform Error",__func__,__LINE__);
+        return Result;
+    }
+
+    return Result;
+}
+
 /*=======================================================
 name				:	GMI_NoSupport
 function			:  Report Cmd not Support
@@ -1909,6 +2163,9 @@ static long_t GMI_ClientService(long_t CltFd, long_t CltAddr)
                 break;
             case GMI_UPDATE_CMD_GET_INFO:
                 GMI_GetSystemPlatform(CltFd, Buffer, CltAddr);
+                break;
+            case GMI_GET_DEVICE_INFO:
+                GMI_GetDeviceInfo(CltFd, Buffer, CltAddr);
                 break;
             default:
                 GMI_NoSupport(CltFd, Buffer, CltAddr);

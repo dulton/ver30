@@ -24,6 +24,7 @@ extern "C" {
 #define GMI_UPDATE_CMD_LIST                        0
 #define GMI_UPDATE_CMD_REBOOT                  1
 #define GMI_UPDATE_CMD_GET_INFO               2
+#define GMI_GET_DEVICE_INFO                         3
 
 #define GMI_UPDATE_CMD_OK                        1
 #define GMI_UPDATE_CMD_ERROR                   0
