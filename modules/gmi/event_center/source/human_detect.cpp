@@ -103,7 +103,7 @@ void_t* HumanDetect::DetectEntry()
     m_ThreadWorking   = true;
 
     uint8_t GPIOStatus = 0;
-	int8_t s_GPIOStatus = -1;
+	int8_t s_GPIOStatus = 0;
 	time_t             CurrTime;
 	struct tm          CurrTm;
 	uint32_t           Curhm;

@@ -87,6 +87,7 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, enum EventType Type, void_t *
             {
                 m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
             }
+			break;
         }
     }
 

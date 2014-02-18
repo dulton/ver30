@@ -112,6 +112,8 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpParam.s_LinkAlarmStrategy = 3;
 	TmpParam.s_ScheduleTime[1].s_StartTime = 0;
 	TmpParam.s_ScheduleTime[1].s_EndTime = 17*60+30;
+	TmpParam.s_ScheduleTime[2].s_StartTime = 0;
+	TmpParam.s_ScheduleTime[2].s_EndTime = 17*60+30;
 	Center.ConfigureAlarmEvent(e_AlarmEventType_AlarmInput, (void_t*)(&TmpParam),sizeof(TmpParam));
 	#endif
 	#if 1
@@ -119,6 +121,8 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpParam.s_LinkAlarmStrategy = 2;
 	TmpParam.s_ScheduleTime[1].s_StartTime = 15*60;
 	TmpParam.s_ScheduleTime[1].s_EndTime = 18*60;
+	TmpParam.s_ScheduleTime[2].s_StartTime = 5*60;
+	TmpParam.s_ScheduleTime[2].s_EndTime = 18*60;
 	Center.ConfigureAlarmEvent(e_AlarmEventType_HumanDetect, (void_t*)(&TmpParam),sizeof(TmpParam));
 	#endif
     do

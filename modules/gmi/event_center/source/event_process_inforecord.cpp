@@ -109,6 +109,7 @@ GMI_RESULT  EventProcessInfoRecord::Notify( uint32_t EventId, enum EventType Typ
             {
                 m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
             }
+			break;
         }
     }
 	
