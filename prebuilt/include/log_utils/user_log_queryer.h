@@ -35,13 +35,13 @@ struct UserLogStorageInfo
 };
 
 // log file meta data
-#define USER_LOG_META_DATA_SIZE        4096
-#define USER_LOG_VALID_META_DATA_SIZE  16
 struct UserLogMetaData
 {
     uint64_t  s_LogNumber;
     uint64_t  s_LatestLogIndex;
 };
+#define USER_LOG_META_DATA_SIZE        4096
+#define USER_LOG_VALID_META_DATA_SIZE  sizeof(struct UserLogMetaData)
 
 class UserLogQueryer
 {
