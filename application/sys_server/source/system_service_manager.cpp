@@ -4284,13 +4284,13 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
 
             if ((m_PresetsInfo_InnerPtr.GetPtr())[i].s_Setted)
             {
-                Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, true);
-                if (FAILED(Result))
-                {
-                    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    return Result;
-                }
+                //Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, true);
+                //if (FAILED(Result))
+                //{
+                //    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                //    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                //    return Result;
+                //}
 
                 Result = m_PtzControlPtr->Control(PTZ_CONTINUE_CONTROL_MODE, &PT_CtlCmd);
                 if (FAILED(Result))
@@ -4308,13 +4308,13 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
                     return Result;
                 }
 
-                Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, false);
-                if (FAILED(Result))
-                {
-                    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    return Result;
-                }
+                //Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, false);
+                //if (FAILED(Result))
+                //{
+                //    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                //    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
+                //    return Result;
+                //}
             }
         }
         else if (SYS_PTZCMD_CLEARPRESET == PtzCtrlTmp.s_PtzCmd)
