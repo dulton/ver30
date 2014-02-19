@@ -91,6 +91,7 @@ static CgiFncHandler WebFncTable[] =
     {"ConfigToolIrCutClose",CgiConfigToolIrCutClose},
 	{"ConfigToolGetSystemInfo",CgiConfigToolGetSystemInfo},
 	{"SysGetLogInfo",CgiSysGetLogInfo},
+    {"SysStop3A",CgiSysStop3A},
     {}
 };
 

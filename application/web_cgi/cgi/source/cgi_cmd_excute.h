@@ -134,5 +134,6 @@ GMI_RESULT CgiConfigToolIrCutOpen(const char_t *FncCmd);
 GMI_RESULT CgiConfigToolIrCutClose(const char_t *FncCmd);
 GMI_RESULT CgiConfigToolGetSystemInfo(const char_t *FncCmd);
 GMI_RESULT CgiSysGetLogInfo(const char_t *FncCmd);
+GMI_RESULT CgiSysStop3A(const char_t *FncCmd);
 
 #endif

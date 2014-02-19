@@ -4150,7 +4150,7 @@ GMI_RESULT CgiSysGetLogInfo(const char_t *FncCmd)
         }
         
         char_t *Buffer = NULL;
-        Buffer = (char_t*)malloc(atoi(MaxNum) * sizeof(SysPkgShowCfg));
+        Buffer = (char_t*)malloc(atoi(MaxNum) * sizeof(SysPkgLogInfo));
         if(NULL == Buffer)
         {
             RetCode = RETCODE_ERROR;
@@ -4159,7 +4159,7 @@ GMI_RESULT CgiSysGetLogInfo(const char_t *FncCmd)
             break;
         }
 
-        memset(Buffer, 0, atoi(MaxNum)*sizeof(SysPkgShowCfg));
+        memset(Buffer, 0, atoi(MaxNum)*sizeof(SysPkgLogInfo));
         SysPkgLogInfo *SysLogInfo;
         SysLogInfo = (SysPkgLogInfo *)Buffer;
 
@@ -4191,8 +4191,8 @@ GMI_RESULT CgiSysGetLogInfo(const char_t *FncCmd)
         RetFormat = "%s={\"RetCode\":\"%d\",\"Total\":\"%d\",\"Count\":\"%d\"%s}";
 
         int32_t Length = 0, i = 0;
-        char_t TmpBuf[16384];
-        memset(TmpBuf, 0, 16384);
+        char_t *TmpBuf = (char_t *)malloc(atoi(MaxNum)*sizeof(SysPkgLogInfo)); 
+	memset(TmpBuf, 0, atoi(MaxNum)*sizeof(SysPkgLogInfo));
         for (i=0; i < SysLogInfoInt.s_Count; i++)
         {
             Length += sprintf(TmpBuf+Length,",\"LogId%d\":\"%llu\",\"MajorType%d\":\"%d\",\"MinorType%d\":\"%d\""
@@ -4208,6 +4208,12 @@ GMI_RESULT CgiSysGetLogInfo(const char_t *FncCmd)
             free(Buffer);
             Buffer = NULL;
         }
+ 
+        if(NULL != TmpBuf)
+        {
+            free(TmpBuf);
+            TmpBuf = NULL;
+        }
 
         return GMI_SUCCESS;      
     }while(0);
@@ -4218,3 +4224,42 @@ GMI_RESULT CgiSysGetLogInfo(const char_t *FncCmd)
 
 }
 
+
+GMI_RESULT CgiSysStop3A(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t	Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+    
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+    
+    do
+    {
+    	if (NULL == SessionId || NULL == AuthValue)
+    	{
+    		RetCode = RETCODE_ERROR;
+    		break;
+    	}
+    
+    Result =  SysStop3A(atoi(SessionId), atoi(AuthValue));
+    if (FAILED(Result))
+    {
+    	RetCode = RETCODE_ERROR;
+    	break;
+    }
+    
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_SUCCESS;
+    
+    } while(0);
+    
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+}
