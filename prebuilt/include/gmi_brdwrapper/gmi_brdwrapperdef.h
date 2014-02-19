@@ -36,6 +36,9 @@ extern "C"
 #define GMI_ALARM_IN_UART_DAY           0
 #define GMI_ALARM_IN_UART_NIGHT        1
 
+//PIR ADC PORT3
+#define GMI_ANALOG_ADC3_PORT         3
+
 //Borad ID define
 //the undefine borad ID
 #define UNKNOWN_BOARD               0xff
