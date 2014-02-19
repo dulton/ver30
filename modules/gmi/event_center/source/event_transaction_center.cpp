@@ -629,6 +629,11 @@ GMI_RESULT EventTransactionCenter::StartGPIOAlarmOutputEx(const void *Parameter,
 		fprintf(stderr, "StartGPIOAlarmOutputEx has done.\n");
 		return GMI_SUCCESS;
 	}
+
+	printf("********Alarm out*******\n");
+	printf("s_DelayTime=%d\n", Info.s_DelayTime);
+	printf("**************************\n\n");
+	
 	int32_t i = 0, j = 0;
     ReferrencePtr<AlarmOutput> AlarmOutputProcessor( BaseMemoryManager::Instance().New<AlarmOutput>( EVENT_PROCESSOR_ID_ALARM_OUTPUT, Info.s_OutputNumber ) );
     if ( NULL == AlarmOutputProcessor.GetPtr() )
@@ -797,10 +802,15 @@ GMI_RESULT EventTransactionCenter::StartHumanDetect()
 
     struct HumanDetectInfo Info;
     Info.s_CheckTime = g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_CheckTime;
-	if(Info.s_CheckTime < 500)
+	if(Info.s_CheckTime < 200)
 	{
-		Info.s_CheckTime = 500;
+		Info.s_CheckTime = 200;
 	}
+	printf("********human detect*******\n");
+	printf("s_CheckTime=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_CheckTime);
+	printf("s_MinSensVal=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_MinSensVal);
+	printf("s_MaxSensVal=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_MaxSensVal);
+	printf("**************************\n\n");
     //Info.s_ScheduleTimeNumber = 1;
     //Info.s_ScheduleTime[0].s_StartTime = 0x106000000000000;//Monday, AM 06:00:00
     //Info.s_ScheduleTime[0].s_EndTime   = 0x112000000000000;//Monday, PM 06:00:00

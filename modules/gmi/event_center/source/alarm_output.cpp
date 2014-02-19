@@ -12,7 +12,9 @@ AlarmOutput::AlarmOutput( uint32_t EventProcessorId, uint32_t Index )
     , m_WorkMode( e_AlarmOutputWorkMode_DelayAutoTrigger )
     , m_DelayTime( 0 )
     , m_ScheduleTimes()
+    , m_OperationLock()
 {
+	memset(m_TriggedTime, 0, sizeof(uint32_t)*MAX_NUM_EVENT_TYPE);
 }
 
 AlarmOutput::~AlarmOutput(void)
@@ -72,8 +74,14 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
     std::vector<struct DetectorInfo>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
 	GMI_RESULT Result = GMI_SUCCESS;
 	int32_t BreakFlag = 0;
+	time_t  CurrTime;
+	CurrTime = time(NULL);
+
+	
+	m_OperationLock.Lock( TIMEOUT_INFINITE );
 	for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
     {
+    	
 		if( ((*DetectorIdIt).s_DetectorId == EventId)
 				&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)) )
 		{
@@ -82,9 +90,11 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 				case EVENT_DETECTOR_ID_ALARM_INPUT:
 					if(0 < (g_CurStartedAlaramIn[Index].s_LinkAlarmStrategy & (1<<(EventId-1))))
 					{
+						
 						Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmInputStatus_Opened : (uint8_t)e_AlarmInputStatus_Closed );
-			            if ( FAILED( Result ) )
+						if ( FAILED( Result ) )
 			            {
+							m_OperationLock.Unlock();
 			                return Result;
 			            }
 			            if ( NULL != m_Callback )
@@ -97,11 +107,13 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 				case EVENT_DETECTOR_ID_HUMAN_DETECT:
 					if(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EventId-1))))
 			        {
-			            GMI_RESULT Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmInputStatus_Opened : (uint8_t)e_AlarmInputStatus_Closed );
-			            if ( FAILED( Result ) )
-			            {
+			            Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, (e_EventType_Start == Type) ? 1 : 0 );
+						if ( FAILED( Result ) )
+			            {	            	
+							m_OperationLock.Unlock();
 			                return Result;
 			            }
+						printf("GMI_ALARM_MODE_LIGHT open\n");
 			            if ( NULL != m_Callback )
 			            {
 			                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
@@ -117,9 +129,11 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 		}
 		if(1 == BreakFlag)
 		{
+			SetTriggedTime(CurrTime, EventId);
 			break;
 		}
     }
+	m_OperationLock.Unlock();
 
     return GMI_SUCCESS;
 }
@@ -138,10 +152,88 @@ GMI_RESULT  AlarmOutput::Start( const void_t *Parameter, size_t ParameterLength 
     }
 	#endif
 
+	GMI_RESULT Result = m_TimerThread.Create( NULL, 0, TimerThread, this );
+    if ( FAILED( Result ) )
+    {
+        AlarmOutput::Stop();
+        return Result;
+    }
+
+    Result = m_TimerThread.Start();
+    if ( FAILED( Result ) )
+    {
+        m_TimerThread.Destroy();
+        AlarmOutput::Stop();
+        return Result;
+    }
+
+	Result = m_OperationLock.Create( NULL );
+    if ( FAILED( Result ) )
+    {
+        m_TimerThread.Destroy();
+        AlarmOutput::Stop();
+        return Result;
+    }
+
     return GMI_SUCCESS;
 }
 
 GMI_RESULT  AlarmOutput::Stop()
 {
+	m_ThreadExitFlag = true;
+    while ( m_ThreadWorking ) GMI_Sleep( 10 );
+    m_TimerThread.Destroy();
+	m_OperationLock.Destroy();
+
     return GMI_SUCCESS;
 }
+
+void_t* AlarmOutput::TimerThread( void_t *Argument )
+{
+    AlarmOutput *TimerOperate = reinterpret_cast<AlarmOutput*> ( Argument );
+    void_t *Return = TimerOperate->TimerEntry();
+    return Return;
+}
+
+void_t* AlarmOutput::TimerEntry()
+{
+    GMI_RESULT Result = GMI_FAIL;
+    m_ThreadWorking   = true;
+
+    //uint8_t GPIOStatus = 0;
+	//int8_t s_GPIOStatus = 0;
+	time_t       CurrTime;
+	int32_t i = 0;
+
+    while( !m_ThreadExitFlag )
+    {
+    	CurrTime = time(NULL);
+		m_OperationLock.Lock( TIMEOUT_INFINITE );
+		for(i=1; i <= MAX_NUM_EVENT_TYPE; i++)
+		{
+			if((GetTriggedTime(i) > 0)
+				&&(CurrTime > (GetTriggedTime(i)+GetDelayTime())))
+			{
+				switch(i)
+				{
+					case EVENT_DETECTOR_ID_HUMAN_DETECT:
+						printf("GMI_ALARM_MODE_LIGHT close\n");
+			            Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, 0 );
+						if ( FAILED( Result ) )
+			            {	            	
+						    fprintf(stderr, "GMI_BrdSetAlarmOutput GMI_ALARM_MODE_LIGHT fail\n");
+			            }
+					break;
+					default:
+						break;
+				}
+				SetTriggedTime(0, i);
+			}
+		}
+		m_OperationLock.Unlock();
+        GMI_Sleep( 1000 );
+    }
+    m_ThreadWorking   = false;
+    return (void_t *) size_t(Result);
+}
+

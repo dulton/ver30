@@ -102,12 +102,13 @@ void_t* HumanDetect::DetectEntry()
     GMI_RESULT Result = GMI_FAIL;
     m_ThreadWorking   = true;
 
-    uint8_t GPIOStatus = 0;
-	int8_t s_GPIOStatus = 0;
-	time_t             CurrTime;
-	struct tm          CurrTm;
-	uint32_t           Curhm;
-	int32_t            CurrDay;
+    //uint8_t GPIOStatus = 0;
+	//int8_t s_GPIOStatus = 0;
+	time_t       CurrTime;
+	struct tm    CurrTm;
+	uint32_t     Curhm;
+	int32_t      CurrDay;
+	int32_t      CurTrigVal = 0;    
 
     while( !m_ThreadExitFlag )
     {
@@ -115,14 +116,16 @@ void_t* HumanDetect::DetectEntry()
 		CurrTm   = *localtime(&CurrTime);
 		CurrDay  = CurrTm.tm_wday;
 		Curhm    = (CurrTm.tm_hour * 60) + CurrTm.tm_min;
+		CurTrigVal = 0xffff;
 		if(((Curhm < g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[CurrDay].s_StartTime)
 			|| (Curhm > g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[CurrDay].s_EndTime)))
 		{
 			fprintf(stderr, "human detect is not in the ScheduleTime\n");
-			GMI_Sleep(5000);
+			GMI_Sleep(2000);
 			continue;
 		}
-	
+
+		#if 0
         Result = GMI_BrdGetAlarmInput( 0, 0, &GPIOStatus );
 
         if ( GPIOStatus != s_GPIOStatus )
@@ -130,6 +133,17 @@ void_t* HumanDetect::DetectEntry()
             s_GPIOStatus = (enum AlarmInputStatus) GPIOStatus;
             m_ProcessCenter->Notify( GetId(), 0, (e_AlarmInputStatus_Opened == s_GPIOStatus) ? e_EventType_Start : e_EventType_End, NULL, 0 );
         }
+		#endif
+
+		Result = GMI_BrdGetAnalogInputValue(GMI_ANALOG_ADC3_PORT, &CurTrigVal);
+		if( SUCCEEDED(Result)
+			&& (CurTrigVal != 0xffff)
+			&& (CurTrigVal > 0)
+			&& (g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_MinSensVal < g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_MaxSensVal)
+			&& ((CurTrigVal < (int32_t)g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_MinSensVal) || (CurTrigVal > (int32_t)g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_MaxSensVal)))
+		{
+            m_ProcessCenter->Notify( GetId(), 0, e_EventType_Start, NULL, 0 );
+		}
 
         GMI_Sleep( GetCheckTime() );
     }

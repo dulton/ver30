@@ -64,7 +64,7 @@ struct AlarmInputInfo
     uint32_t          s_EnableFlag;      //0-disable, 1-enbale
     uint32_t          s_InputNumber;     //range from 0-3
     char_t            s_Name[ALARM_INPUT_MAX_NAME_LENGTH];
-    uint32_t          s_CheckTime;
+    uint32_t          s_CheckTime; //unit:ms
     uint32_t          s_TriggerType;
    	ScheduleTimeInfo  s_ScheduleTime[7]; //7 days of every week 
 	//every bit represents the certain AlarmStrategy;
@@ -90,7 +90,7 @@ struct AlarmOutputInfo
 	uint32_t          s_AlarmStatus;
 	uint32_t          s_WorkMode;
     // s_DelayTime is in second unit
-    uint32_t          s_DelayTime;
+    uint32_t          s_DelayTime; //unit:s
 	ScheduleTimeInfo  s_ScheduleTime[7]; //7 days of every week 
 	uint32_t          s_Reserverd[4];
     //uint32_t          s_ScheduleTimeNumber;
@@ -116,6 +116,8 @@ struct AlarmEventConfigInfo
     //value 0-invalid, value 1-valid
 	uint32_t          s_LinkAlarmStrategy;
 	uint32_t          s_CheckTime;
+	uint32_t          s_MinSensVal; //human detect use
+	uint32_t          s_MaxSensVal; //human detect use
 	uint32_t          s_Reserverd[4];
 };
 
