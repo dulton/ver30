@@ -26,6 +26,9 @@ extern "C"
 #define GMI_ALARM_MODE_I2C    1
 #define GMI_ALARM_MODE_UART    2
 #define GMI_ALARM_MODE_UART_DN    3
+#define GMI_ALARM_MODE_LIGHT          4
+
+
 
 //Alarm in Status
 #define GMI_ALARM_IN_STATUS_HIGHT     1
