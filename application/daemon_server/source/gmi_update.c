@@ -1568,7 +1568,7 @@ long_t GMI_AnalyzeMessage(long_t CltFd, char_t *szBuffer, long_t CltAddr)
         {
             DAEMON_PRINT_LOG(ERROR,"GMI_ReportUpdateNotify is Error ! ! ");
         }
-
+        
     }
     else if (FAILED(Ret))
     {

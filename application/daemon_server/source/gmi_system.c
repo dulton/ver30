@@ -198,6 +198,20 @@ void GMI_ApplicationUpdateQuit(void)
         }
     }
 
+    Tmp=5;
+    if(g_ApplicationOpenFlags->s_ConfigToolOpenFlags)
+    {
+        g_ApplicationQuitFlag->s_ConfigToolQuitFlag = true;
+        while (g_ApplicationQuitFlag->s_ConfigToolQuitFlag)
+        {
+            if(0 == Tmp)
+            {
+                break;
+            }
+            sleep(1);
+            --Tmp;
+        }
+    }
 
     char_t CmdBuffer[128];
     memset(CmdBuffer, 0, sizeof(CmdBuffer));
