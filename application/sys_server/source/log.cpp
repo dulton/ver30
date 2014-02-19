@@ -1,10 +1,16 @@
 #include "gmi_system_headers.h"
-#include "process_utils_headers.h"
 #include "ipc_fw_v3.x_resource.h"
 #include "ipc_fw_v3.x_setting.h"
 #include "log.h"
+#include "process_utils_headers.h"
 #include "share_memory_log_client.h"
+#include "sys_info_readonly.h"
 
+
+#define SYSTEM_SERVER_CONFIG_PATH                "/Config/sys_server/"
+#define SYSTEM_SERVER_CONFIG_LOG_SERVER_PORT     "log_server_port"
+#define SYSTEM_SERVER_CONFIG_LOG_CLIENT_PORT     "log_client_port"
+#define SYSTEM_SERVER_CONFIG_DEBUG_LOG_LEVEL     "debug_log_level"
 
 #ifdef DEBUG_SYS_SERVER
 int        g_LogCount = 0;
@@ -16,66 +22,59 @@ struct tm *pTime;
 char_t     g_Buffer[1024];
 #endif
 
-//LogClient  g_Client;
+ShareMemoryLogClient g_Client;
 
-GMI_RESULT GetMediaCenterServerLogConfig( uint32_t *ModuleId, char_t *ModuleName, char_t *ModulePipeName, long_t *ModulePipeMutexId, char_t *PeerPipeName, long_t *PeerPipeMutexId, char_t *ServerPipeName, long_t *ServerPipeMutexId )
+GMI_RESULT GetSysServerLogConfig( uint32_t *ModuleId, char_t *ModuleName, uint16_t *ServerPort, uint16_t *ClientPort, uint32_t *DebugLogLevel )
 {
     *ModuleId = GMI_LOG_MODULE_CONTROL_CENTER_SERVER_ID;
-#if defined( __linux__ )
-    strcpy( ModuleName, GMI_LOG_MODULE_CONTROL_CENTER_SERVER_NAME );
+    strcpy(ModuleName, GMI_LOG_MODULE_CONTROL_CENTER_SERVER_NAME );
 
-#if 0
-    FD_HANDLE  Handle = NULL;
-    GMI_RESULT Result = GMI_XmlOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
-    if ( FAILED( Result ) )
+    FD_HANDLE  Handle = NULL;    
+    GMI_RESULT Result = SysInfoOpen(GMI_RESOURCE_CONFIG_FILE_NAME, &Handle);
+    if (FAILED(Result))
     {
+    	SYS_ERROR("Result = 0x%lx\n", Result);
         return Result;
     }
-
-    printf( "media center server, GetMediaCenterClientPipeName, Default_MediaCenterClientPipeName=%s \n", LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_NAME );
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_LOG_CLIENT_PIPE_NAME, LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_NAME, ModulePipeName, GMI_CONFIG_READ_ONLY );
-    if ( FAILED( Result ) )
+    
+    int32_t TempServerPort = 0;
+    Result = SysInfoRead(Handle, SYSTEM_SERVER_CONFIG_PATH, SYSTEM_SERVER_CONFIG_LOG_SERVER_PORT, LOG_SERVER_DEFAULT_SERVER_PORT, &TempServerPort);
+    if (FAILED(Result))
     {
+    	SYS_ERROR("Result = 0x%lx\n", Result);
+        SysInfoClose(Handle);
+        return Result;
+    }    
+    *ServerPort = (uint16_t)TempServerPort;
+    
+    int32_t TempClientPort = 0;    
+    Result = SysInfoRead(Handle, SYSTEM_SERVER_CONFIG_PATH, SYSTEM_SERVER_CONFIG_LOG_CLIENT_PORT, LOG_CONTROL_CENTER_DEFAULT_PORT, &TempClientPort);
+    if (FAILED(Result))
+    {
+    	SYS_ERROR("Result = 0x%lx\n", Result);
+        SysInfoClose(Handle);
         return Result;
     }
-    printf( "media center server, GetMediaCenterClientPipeName, Default_MediaCenterClientPipeName=%d, Config_MediaCenterClientPipeName=%d \n", LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_NAME, ModulePipeName );
+    *ClientPort = (uint16_t)TempClientPort;   
+    SysInfoClose(Handle);
 
-    printf( "media center server, GetMediaCenterClientPipeMutexId, Default_MediaCenterClientPipeMutexId=%d \n", LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID );
-    Result = GMI_XmlRead(Handle, MEDIA_CENTER_SERVER_CONFIG_PATH, MEDIA_CENTER_SERVER_CONFIG_LOG_CLIENT_PIPE_MUTEX_ID, LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID, (int32_t *) ModulePipeMutexId, GMI_CONFIG_READ_ONLY );
-    if ( FAILED( Result ) )
+    Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
+    if (FAILED(Result))
     {
+    	SYS_ERROR("Result = 0x%lx\n", Result);
         return Result;
     }
-    printf( "media center server, GetMediaCenterClientPipeMutexId, Default_MediaCenterClientPipeMutexId=%d, Config_MediaCenterClientPipeMutexId=%ld \n", LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID, ModulePipeMutexId );
-
-    Result = GMI_XmlFileSave(Handle);
-    if ( FAILED( Result ) )
+    
+    Result = SysInfoRead(Handle, SYSTEM_SERVER_CONFIG_PATH, SYSTEM_SERVER_CONFIG_DEBUG_LOG_LEVEL, GMI_LOG_MODULE_CONTROL_CENTER_SERVER_DEBUG_LOG_LEVEL, (int32_t *) DebugLogLevel);
+    if (FAILED(Result))
     {
+    	SYS_ERROR("Result = 0x%lx\n", Result);
+        SysInfoClose(Handle);
         return Result;
     }
-#else
-    // strcpy( ModulePipeName, LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_NAME );
-    // *ModulePipeMutexId = LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID;
-
-    // strcpy( PeerPipeName, LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_NAME );
-    // *PeerPipeMutexId = LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID;
-
-    // strcpy( ServerPipeName, LOG_SERVER_DEFAULT_PIPE_NAME);
-    // *ServerPipeMutexId = LOG_SERVER_DEFAULT_PIPE_MUTEX_ID;
-#endif
-
-#elif defined( _WIN32 )
-    strcpy_s( ModuleName,     MAX_PATH_LENGTH, GMI_LOG_MODULE_MEDIA_CENTER_SERVER_NAME );
-
-    strcpy_s( ModulePipeName, MAX_PATH_LENGTH, LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_NAME );
-    *ModulePipeMutexId = LOG_MEDIA_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID;
-
-    strcpy_s( PeerPipeName, MAX_PATH_LENGTH, LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_NAME );
-    *PeerPipeMutexId = LOG_MEDIA_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID;
-
-    strcpy_s( ServerPipeName, MAX_PATH_LENGTH, LOG_SERVER_DEFAULT_PIPE_NAME );
-    *ServerPipeMutexId = LOG_SERVER_DEFAULT_PIPE_MUTEX_ID;
-#endif
+    
+    SysInfoClose(Handle);
+    
     return GMI_SUCCESS;
 }
 
@@ -98,77 +97,40 @@ int LogInitial()
     system(szCmdBuffer);
 
     g_FLogFile2 = open(LOG_FILE2, O_CREAT|O_RDWR);
-#else
+//#else
 
     uint32_t ModuleId = 0;
     char_t   ModuleName[MAX_PATH_LENGTH] = {0};
-    char_t   ModulePipeName[MAX_PATH_LENGTH] = {0};
-    long_t   ModulePipeMutexId = 0;
-    char_t   PeerPipeName[MAX_PATH_LENGTH] = {0};
-    long_t   PeerPipeMutexId = 0;
-    char_t   ServerPipeName[MAX_PATH_LENGTH] = {0};
-    long_t   ServerPipeMutexId = 0;
+    uint16_t ServerPort = 0;
+    uint16_t ClientPort = 0;
+    uint32_t ServerDebugLogLevel = 0;
 
-    GMI_RESULT Result = GetMediaCenterServerLogConfig(&ModuleId, ModuleName, ModulePipeName, &ModulePipeMutexId, PeerPipeName, &PeerPipeMutexId, ServerPipeName, &ServerPipeMutexId );
+    GMI_RESULT Result = GetSysServerLogConfig(&ModuleId, ModuleName, &ServerPort, &ClientPort, &ServerDebugLogLevel);
     if (FAILED(Result))
     {
-        SYS_ERROR("sys server get log client config error \n");
+        SYS_ERROR("sys server get log client config error, Result = 0x%lx\n", Result);
         return Result;
     }
 
-    Result = g_Client.Initialize( ModuleId, ModuleName, ModulePipeName, ModulePipeMutexId, PeerPipeName, PeerPipeMutexId, ServerPipeName, ServerPipeMutexId, GMI_IPC_LOG_FILE_PATH );
+    //debug log config info
+    SYS_INFO("DebugLog Config ModuleId   %u\n", ModuleId);
+    SYS_INFO("DebugLog Config ModuleName %s\n", ModuleName);
+    SYS_INFO("DebugLog Config ServerPort %d\n", ServerPort);
+    SYS_INFO("DebugLog Config ClientPort %d\n", ClientPort);
+    SYS_INFO("DebugLog Config ServerDebugLogLevel %u\n", ServerDebugLogLevel);
+    
+    Result = g_Client.Initialize(ModuleId, ModuleName, ServerPort, ClientPort, GMI_IPC_LOG_FILE_PATH, ServerDebugLogLevel);
     if (FAILED(Result))
     {
         SYS_ERROR("sys server log client initialization error \n");
         return Result;
     }
 
-    g_DefaultLogClient = &g_Client;
+    g_DefaultShareMemoryLogClient  = &g_Client;
 
-    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, " LogInitial successfully... \n" );
+    DEBUG_LOG(g_DefaultShareMemoryLogClient, e_DebugLogLevel_Info, " LogInitial successfully... \n" );
 #endif
     return 0;
 }
 
-
-#if 0
-#include "gmi_system_headers.h"
-#include "process_utils_headers.h"
-#include "ipc_fw_v3.x_resource.h"
-#include "log.h"
-
-#define LOG_CLIENT_MODULE_NAME "SYS_SERVER"
-LogClient g_SysLogClient;
-
-
-GMI_RESULT LogClientInit()
-{
-    char_t ModuleName[64];
-
-    sprintf( ModuleName, "%s", LOG_CLIENT_MODULE_NAME);
-
-    GMI_RESULT Result = g_SysLogClient.Initialize( ModuleName,
-                        LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_NAME,
-                        LOG_CONTROL_CENTER_DEFAULT_CLIENT_PIPE_MUTEX_ID,
-                        LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_NAME,
-                        LOG_CONTROL_CENTER_DEFAULT_PEER_PIPE_MUTEX_ID,
-                        DebugLevel_Info,
-                        ApplicationLevel_Info,
-                        LOG_SERVER_DEFAULT_PIPE_NAME,
-                        LOG_SERVER_DEFAULT_PIPE_MUTEX_ID );
-    if ( FAILED( Result ) )
-    {
-        printf( "Log Client initialization error \n" );
-    }
-
-    return Result;
-}
-
-
-void LogClientUnInit()
-{
-    g_SysLogClient.Deinitialize();
-    return;
-}
-#endif
 

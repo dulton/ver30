@@ -18,7 +18,7 @@ private:
 	GMI_RESULT CheckTime(struct tm* ptTime);
 private:
 	UserLogQueryer m_UserLogQueryer; //object
-	ReferrencePtr<UserLogStorageInfo, DefaultObjectsDeleter> m_UserLogPtr; //log
+	UserLogStorageInfo *m_UserLogPtr;//log
 	uint32_t       m_TotalUserLogNum;  //total log match with query condition
 	uint32_t       m_LeftUserLogNum;
 	SysPkgLogInfoSearch SysLogInfoSearch_Last;//last user query condition

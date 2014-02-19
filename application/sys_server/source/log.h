@@ -74,6 +74,10 @@ do {\
 #define SYS_INFO(format, args...)
 #endif
 
+
+//tmp, 2014/2/18 guoqiang.lu
+#define USER_NAME "admin" 
+
 int LogInitial();
 
 #if 0

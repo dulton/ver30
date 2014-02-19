@@ -1,3 +1,5 @@
+#include "ipc_fw_v3.x_setting.h"
+#include "ipc_fw_v3.x_resource.h"
 #include "user_log_query.h"
 #include "log.h"
 
@@ -14,10 +16,12 @@ UserLogQuery::~UserLogQuery(void)
 
 GMI_RESULT UserLogQuery::Initialize(void)
 {
+	m_UserLogPtr = NULL;
+	
 	UserLogQueryerInitializationParameter Parameter;
 	Parameter.s_SourceType                 = USER_LOG_SOURCE_TYPE_FILE_PATH_REFERENCE;
-    Parameter.s_Source.u_FilePathReference = NULL;
-    Parameter.s_SourceIpcMutexKey          = 0;
+    Parameter.s_Source.u_FilePathReference = GMI_LOG_DEFAULT_USER_LOG_FILE_PATH;
+    Parameter.s_SourceIpcMutexKey          = GMI_USER_LOG_IPC_MUTEX_KEY;
 	
 	GMI_RESULT Result = m_UserLogQueryer.Initialize(&Parameter, sizeof(UserLogQueryerInitializationParameter));
     if (FAILED(Result))
@@ -142,7 +146,18 @@ GMI_RESULT UserLogQuery::SubQuery(int32_t MajorType, int32_t MinorType, char_t S
 	Tv.tv_usec = 0;
 	EndTime    = (uint64_t)Tv.tv_sec << 32 | Tv.tv_usec;
 
-	m_UserLogPtr = NULL;
+	//param 
+	SYS_INFO("Type     %d\n", Type);
+	SYS_INFO("SubType  %d\n", SubType);
+	SYS_INFO("StartTim %s\n", StartTim);
+	SYS_INFO("EndTim   %s\n", EndTim);
+	
+	if (NULL != m_UserLogPtr)
+	{
+		BaseMemoryManager::Instance().Deletes<UserLogStorageInfo>(m_UserLogPtr);
+		m_UserLogPtr = NULL;
+	}
+	
 	//try get user log
     UserLogStorageInfo UserLog;           
     uint32_t UserLogNumber = 1;    
@@ -150,17 +165,19 @@ GMI_RESULT UserLogQuery::SubQuery(int32_t MajorType, int32_t MinorType, char_t S
     //space not enough, then allocate more space to get all user log.
     if (GMI_NOT_ENOUGH_SPACE == Result)
     {        
-        SYS_ERROR("Query fail because not enough space, so allocate more space to get more log, Result = 0x%lx\n", Result);
+        SYS_INFO("Query fail because not enough space, so allocate more space to get more log, Result = 0x%lx\n", Result);
+        SYS_INFO("UserLogNumber %d\n", UserLogNumber);
         m_UserLogPtr = BaseMemoryManager::Instance().News<UserLogStorageInfo>(UserLogNumber);
-        if (NULL == m_UserLogPtr.GetPtr())
+        if (NULL == m_UserLogPtr)
         {
         	SYS_ERROR("allocate user log fail\n");
         	return GMI_OUT_OF_MEMORY;
         }
 
-        Result = m_UserLogQueryer.Query(Type, SubType, StartTime, EndTime, m_UserLogPtr.GetPtr(), &UserLogNumber);
+        Result = m_UserLogQueryer.Query(Type, SubType, StartTime, EndTime, m_UserLogPtr, &UserLogNumber);
         if (FAILED(Result))
         {
+        	BaseMemoryManager::Instance().Deletes<UserLogStorageInfo>(m_UserLogPtr);
         	m_UserLogPtr = NULL;
         	SYS_ERROR("Query user log fail, Result");
         	return Result;	
@@ -181,13 +198,16 @@ GMI_RESULT UserLogQuery::SubQuery(int32_t MajorType, int32_t MinorType, char_t S
     //get single log
     else
     {
-    	m_UserLogPtr = BaseMemoryManager::Instance().News<UserLogStorageInfo>(UserLogNumber);
-        if (NULL == m_UserLogPtr.GetPtr())
-        {
-        	SYS_INFO("allocate user log fail\n");
-        	return GMI_OUT_OF_MEMORY;
-        }
-        memcpy(m_UserLogPtr.GetPtr(), &UserLog, sizeof(UserLogStorageInfo));
+    	if (0 < UserLogNumber)
+    	{
+    		m_UserLogPtr = BaseMemoryManager::Instance().News<UserLogStorageInfo>(UserLogNumber);
+	        if (NULL == m_UserLogPtr)
+	        {
+	        	SYS_INFO("allocate user log fail\n");
+	        	return GMI_OUT_OF_MEMORY;
+	        }
+	        memcpy(m_UserLogPtr, &UserLog, sizeof(UserLogStorageInfo));	
+    	}    	
     	m_TotalUserLogNum = UserLogNumber;
     	m_LeftUserLogNum = m_TotalUserLogNum;
     	SYS_INFO("out %s.......\n", __func__);
@@ -236,16 +256,17 @@ GMI_RESULT UserLogQuery::Query(SysPkgLogInfoSearch *SysLogInfoSearch, SysPkgLogI
 	{		
 		for (int32_t i = 0; i < SyLogInfoInt->s_Count; i++)
 		{
-			SysLogInfo[i].s_LogId     = (m_UserLogPtr.GetPtr())[Offset].s_Index;
-			SysLogInfo[i].s_MajorType = (m_UserLogPtr.GetPtr())[Offset].s_Type;
-			SysLogInfo[i].s_MajorType = (m_UserLogPtr.GetPtr())[Offset].s_Subtype;
+			memset(&SysLogInfo[i], 0, sizeof(SysPkgLogInfo));
+			SysLogInfo[i].s_LogId     = m_UserLogPtr[Offset].s_Index;
+			SysLogInfo[i].s_MajorType = m_UserLogPtr[Offset].s_Type;
+			SysLogInfo[i].s_MinorType = m_UserLogPtr[Offset].s_Subtype;
 			time_t Sec;
-			Sec = (m_UserLogPtr.GetPtr())[Offset].s_LogTime >> 32;
+			Sec = m_UserLogPtr[Offset].s_LogTime >> 32;
 			struct tm *LocalTime = localtime(&Sec);
 			sprintf(SysLogInfo[i].s_LogTime, "%d-%d-%d %d:%d:%d", \
 				LocalTime->tm_year+1900, LocalTime->tm_mon+1, LocalTime->tm_mday, LocalTime->tm_hour, LocalTime->tm_min, LocalTime->tm_sec);
-			strcpy(SysLogInfo[i].s_UserName, (m_UserLogPtr.GetPtr())[Offset].s_UserName);
-			strcpy(SysLogInfo[i].s_LogData, (char_t*)(m_UserLogPtr.GetPtr())[Offset].s_SpecificData);
+			strcpy(SysLogInfo[i].s_UserName, m_UserLogPtr[Offset].s_UserName);
+			strcpy(SysLogInfo[i].s_LogData, (char_t*)m_UserLogPtr[Offset].s_SpecificData);
 			Offset++;
 		}
 

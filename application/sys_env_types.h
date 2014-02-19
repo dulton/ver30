@@ -813,7 +813,7 @@ typedef struct tagLogInfo
     char_t   s_UserName[32];
     char_t   s_RemoteHostIp[32];
 	char_t   s_LogData[128];
-    char_t   s_Reserved[4];
+    char_t   s_Reserved[8];
 }SysPkgLogInfo;
 
 //log info num

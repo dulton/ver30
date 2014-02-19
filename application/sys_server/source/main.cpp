@@ -100,6 +100,9 @@ int main( int32_t argc, char_t *argv[])
     //register exit func
     atexit(Release);
 
+    SysInfoReadInitialize();
+    
+    //log init
     LogInitial();
 
     //net activate
@@ -109,8 +112,6 @@ int main( int32_t argc, char_t *argv[])
     //    SYS_ERROR("NetActivate fail, Result = 0x%lx\n", Result);
     //return -1;
     //}
-	//tmp, guoqiang.lu 14/1/23
-     SysInfoReadInitialize();
 	 
     //daemon init
     Result = DaemonRegister();

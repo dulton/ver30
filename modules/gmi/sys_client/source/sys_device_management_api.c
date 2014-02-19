@@ -1501,25 +1501,28 @@ GMI_RESULT SysGetLogInfo(uint16_t SessionId, uint32_t AuthValue, SysPkgLogInfoSe
         }
 
         SysRspAttrTmpPtr++;
-        for (int32_t i = 0, j = 0; i < SysLogInfoInt->s_Count; i++)
+        if (0 < SysLogInfoInt->s_Count)
         {
-            if (SysRspAttrTmpPtr->s_Type == TYPE_LOGINFO
-                && SysRspAttrTmpPtr->s_AttrLength == sizeof(SysPkgLogInfo))
+            for (int32_t i = 0, j = 0; i < SysLogInfoInt->s_Count; i++)
             {
-                memcpy(&SysLogInfo[j], SysRspAttrTmpPtr->s_Attr, SysRspAttrTmpPtr->s_AttrLength);
-                SysLogInfo[j].s_LogId     = ntohll(SysLogInfo[j].s_LogId);
-                SysLogInfo[j].s_MajorType = ntohl(SysLogInfo[j].s_MajorType);
-                SysLogInfo[j].s_MinorType = ntohl(SysLogInfo[j].s_MinorType);
-                j++;
-                Exist = true;
+                if (SysRspAttrTmpPtr->s_Type == TYPE_LOGINFO
+                    && SysRspAttrTmpPtr->s_AttrLength == sizeof(SysPkgLogInfo))
+                {
+                    memcpy(&SysLogInfo[j], SysRspAttrTmpPtr->s_Attr, SysRspAttrTmpPtr->s_AttrLength);
+                    SysLogInfo[j].s_LogId     = ntohll(SysLogInfo[j].s_LogId);
+                    SysLogInfo[j].s_MajorType = ntohl(SysLogInfo[j].s_MajorType);
+                    SysLogInfo[j].s_MinorType = ntohl(SysLogInfo[j].s_MinorType);
+                    j++;
+                    Exist = true;
+                }
+                SysRspAttrTmpPtr++;
+            }                       
+            
+            if (!Exist)
+            {
+                SYS_CLIENT_ERROR("not found valid data\n");
+                break;
             }
-            SysRspAttrTmpPtr++;
-        }                       
-        
-        if (!Exist)
-        {
-            SYS_CLIENT_ERROR("not found valid data\n");
-            break;
         }
 
         SysGetCmdAttrFree(RspAttrCnt, SysRspAttrPtr);
