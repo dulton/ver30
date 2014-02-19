@@ -115,6 +115,7 @@ struct AlarmEventConfigInfo
     //0-Alarm output,1-Info record,2-...;
     //value 0-invalid, value 1-valid
 	uint32_t          s_LinkAlarmStrategy;
+	uint32_t          s_CheckTime;
 	uint32_t          s_Reserverd[4];
 };
 

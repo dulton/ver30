@@ -796,7 +796,11 @@ GMI_RESULT EventTransactionCenter::StartHumanDetect()
     }
 
     struct HumanDetectInfo Info;
-    Info.s_CheckTime = 1000;
+    Info.s_CheckTime = g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_CheckTime;
+	if(Info.s_CheckTime < 500)
+	{
+		Info.s_CheckTime = 500;
+	}
     //Info.s_ScheduleTimeNumber = 1;
     //Info.s_ScheduleTime[0].s_StartTime = 0x106000000000000;//Monday, AM 06:00:00
     //Info.s_ScheduleTime[0].s_EndTime   = 0x112000000000000;//Monday, PM 06:00:00
