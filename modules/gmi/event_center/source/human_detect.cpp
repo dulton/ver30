@@ -5,8 +5,8 @@
 #include "gmi_brdwrapper.h"
 #endif//__linux__
 
-HumanDetect::HumanDetect( enum EventDetectorType Type, uint32_t EventDetectorId )
-    : EventDetector( Type, EventDetectorId )
+HumanDetect::HumanDetect( enum EventDetectorType Type, uint32_t EventDetectorId, uint32_t Index )
+    : EventDetector( Type, EventDetectorId, Index )
     , m_CheckTime( 1000 )
     , m_ScheduleTimes()
     , m_DetectThread()
@@ -128,7 +128,7 @@ void_t* HumanDetect::DetectEntry()
         if ( GPIOStatus != s_GPIOStatus )
         {
             s_GPIOStatus = (enum AlarmInputStatus) GPIOStatus;
-            m_ProcessCenter->Notify( GetId(), (e_AlarmInputStatus_Opened == s_GPIOStatus) ? e_EventType_Start : e_EventType_End, NULL, 0 );
+            m_ProcessCenter->Notify( GetId(), 0, (e_AlarmInputStatus_Opened == s_GPIOStatus) ? e_EventType_Start : e_EventType_End, NULL, 0 );
         }
 
         GMI_Sleep( GetCheckTime() );

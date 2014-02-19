@@ -27,7 +27,8 @@ GMI_RESULT EventDetectCenter::RegisterEventDetector( ReferrencePtr<EventDetector
     std::vector< ReferrencePtr<EventDetector> >::iterator DetectorIt = m_EventDetectors.begin(), DetectorEnd = m_EventDetectors.end();
     for ( ; DetectorIt != DetectorEnd; ++DetectorIt )
     {
-        if ( Detector->GetId() == (*DetectorIt)->GetId() )
+        if ( (Detector->GetId() == (*DetectorIt)->GetId()) 
+			&& (Detector->GetIndex() == (*DetectorIt)->GetIndex()) )
         {
             return GMI_SUCCESS;
         }
@@ -43,12 +44,13 @@ GMI_RESULT EventDetectCenter::RegisterEventDetector( ReferrencePtr<EventDetector
     return Result;
 }
 
-GMI_RESULT EventDetectCenter::UnregisterEventDetector( uint32_t DectectorId )
+GMI_RESULT EventDetectCenter::UnregisterEventDetector( uint32_t DectectorId, uint32_t Index )
 {
     std::vector< ReferrencePtr<EventDetector> >::iterator DetectorIt = m_EventDetectors.begin(), DetectorEnd = m_EventDetectors.end();
     for ( ; DetectorIt != DetectorEnd; ++DetectorIt )
     {
-        if ( DectectorId == (*DetectorIt)->GetId() )
+        if ( (DectectorId == (*DetectorIt)->GetId())
+			&& (Index == (*DetectorIt)->GetIndex()))
         {
             GMI_RESULT Result = GMI_SUCCESS;
             if ( e_EventDetectorType_Passive == (*DetectorIt)->GetType() )

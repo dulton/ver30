@@ -6,7 +6,7 @@
 class HumanDetect : public EventDetector
 {
 public:
-    HumanDetect( enum EventDetectorType Type, uint32_t EventDetectorId );
+    HumanDetect( enum EventDetectorType Type, uint32_t EventDetectorId, uint32_t Index );
     virtual ~HumanDetect(void);
 
     inline void_t   SetCheckTime( uint32_t Millisecond )

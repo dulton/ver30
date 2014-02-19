@@ -2,7 +2,7 @@
 #include "event_process_center.h"
 
 EventProcessCenter::EventProcessCenter(void)
-    : EventProcessor( 0 )
+    : EventProcessor( 0, 0 )
     , m_InstanceLock()
     , m_OperationLock()
     , m_EventProcessors()
@@ -53,7 +53,8 @@ GMI_RESULT EventProcessCenter::RegisterEventProcessor( ReferrencePtr<EventProces
     std::vector< ReferrencePtr<EventProcessor> >::iterator ProcessorIt = m_EventProcessors.begin(), ProcessorEnd = m_EventProcessors.end();
     for ( ; ProcessorIt != ProcessorEnd; ++ProcessorIt )
     {
-        if ( Processor->GetId() == (*ProcessorIt)->GetId() )
+        if ( (Processor->GetId() == (*ProcessorIt)->GetId())
+			&& (Processor->GetIndex() == (*ProcessorIt)->GetIndex()))
         {
             return GMI_SUCCESS;
         }
@@ -64,12 +65,13 @@ GMI_RESULT EventProcessCenter::RegisterEventProcessor( ReferrencePtr<EventProces
     return GMI_SUCCESS;
 }
 
-GMI_RESULT EventProcessCenter::UnregisterEventProcessor( uint32_t ProcessorId )
+GMI_RESULT EventProcessCenter::UnregisterEventProcessor( uint32_t ProcessorId, uint32_t Index )
 {
     std::vector< ReferrencePtr<EventProcessor> >::iterator ProcessorIt = m_EventProcessors.begin(), ProcessorEnd = m_EventProcessors.end();
     for ( ; ProcessorIt != ProcessorEnd; ++ProcessorIt )
     {
-        if ( ProcessorId == (*ProcessorIt)->GetId() )
+        if ( (ProcessorId == (*ProcessorIt)->GetId())
+		      &&(Index == (*ProcessorIt)->GetIndex()))
         {
             (*ProcessorIt)->Stop();
             m_EventProcessors.erase( ProcessorIt );
@@ -90,7 +92,7 @@ GMI_RESULT EventProcessCenter::Unlock()
     return m_InstanceLock.Unlock();
 }
 
-GMI_RESULT EventProcessCenter::Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength )
+GMI_RESULT EventProcessCenter::Notify( uint32_t EventId, uint32_t Index, enum EventType Type, void_t *Parameter, size_t ParameterLength )
 {
     GMI_RESULT Result = m_OperationLock.Lock( TIMEOUT_INFINITE );
     if ( FAILED( Result ) )
@@ -101,7 +103,7 @@ GMI_RESULT EventProcessCenter::Notify( uint32_t EventId, enum EventType Type, vo
     std::vector< ReferrencePtr<EventProcessor> >::iterator ProcessorIt = m_EventProcessors.begin(), ProcessorEnd = m_EventProcessors.end();
     for ( ; ProcessorIt != ProcessorEnd; ++ProcessorIt )
     {
-        (*ProcessorIt)->Notify( EventId, Type, Parameter, ParameterLength );
+        (*ProcessorIt)->Notify( EventId, Index, Type, Parameter, ParameterLength );
     }
 
     m_OperationLock.Unlock();

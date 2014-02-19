@@ -61,12 +61,17 @@ struct ScheduleTimeInfo
 #define ALARM_INPUT_MAX_NAME_LENGTH  32
 struct AlarmInputInfo
 {
-    uint32_t          s_InputNumber;
+    uint32_t          s_EnableFlag;      //0-disable, 1-enbale
+    uint32_t          s_InputNumber;     //range from 0-3
     char_t            s_Name[ALARM_INPUT_MAX_NAME_LENGTH];
     uint32_t          s_CheckTime;
     uint32_t          s_TriggerType;
-    //uint32_t          s_ScheduleTimeNumber;
-    //ScheduleTimeInfo  s_ScheduleTime[1];
+   	ScheduleTimeInfo  s_ScheduleTime[7]; //7 days of every week 
+	//every bit represents the certain AlarmStrategy;
+    //0-Alarm output,1-Info record,2-...;
+    //value 0-invalid, value 1-valid
+	uint32_t          s_LinkAlarmStrategy;
+	uint32_t          s_Reserverd[4];
 };
 
 enum AlarmOutputWorkMode
@@ -78,11 +83,16 @@ enum AlarmOutputWorkMode
 #define ALARM_OUTPUT_MAX_NAME_LENGTH  32
 struct AlarmOutputInfo
 {
-    uint32_t          s_OutputNumber;
+	uint32_t          s_EnableFlag; //0-disable, 1-enbale
+	uint32_t          s_OutputNumber; //range from 0-3
     char_t            s_Name[ALARM_OUTPUT_MAX_NAME_LENGTH];
-    uint32_t          s_WorkMode;
+	uint32_t          s_NormalStatus;
+	uint32_t          s_AlarmStatus;
+	uint32_t          s_WorkMode;
     // s_DelayTime is in second unit
     uint32_t          s_DelayTime;
+	ScheduleTimeInfo  s_ScheduleTime[7]; //7 days of every week 
+	uint32_t          s_Reserverd[4];
     //uint32_t          s_ScheduleTimeNumber;
     //ScheduleTimeInfo  s_ScheduleTime[1];
 };
@@ -109,12 +119,11 @@ struct AlarmEventConfigInfo
 };
 
 #define  MAX_NUM_EVENT_TYPE       10
-
-extern AlarmEventConfigInfo g_CurStartedEvent[MAX_NUM_EVENT_TYPE];
-
 #define MAX_NUM_GPIO_IN           4
 #define MAX_NUM_GPIO_OUT          4
 
+extern AlarmEventConfigInfo g_CurStartedEvent[MAX_NUM_EVENT_TYPE];
+extern AlarmInputInfo g_CurStartedAlaramIn[MAX_NUM_GPIO_IN];
 
 
 #endif//EVENT_TRANSACTION_HEADER

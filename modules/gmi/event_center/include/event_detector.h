@@ -6,7 +6,7 @@
 class EventDetector
 {
 protected:
-    EventDetector( enum EventDetectorType Type, uint32_t EventDetectorId ) : m_DetectorType( Type ), m_DetectorId( EventDetectorId ), m_Handle( NULL ), m_ProcessCenter() {}
+    EventDetector( enum EventDetectorType Type, uint32_t EventDetectorId, uint32_t Index ) : m_DetectorType( Type ), m_DetectorId( EventDetectorId ), m_Index(Index), m_Handle( NULL ), m_ProcessCenter() {}
 
     // to passive event source, for example, we need to query stauts to know if or not event we concern happen, we use an independent thread to check event, then notify event process center,
     // comparatively speaking, this way is more flexible, but consume more CPU resource.
@@ -45,9 +45,15 @@ public:
         return m_DetectorId;
     }
 
+	inline uint32_t                GetIndex() const
+    {
+        return m_Index;
+    }
+
 private:
     const enum EventDetectorType                                              m_DetectorType;
     const uint32_t                                                            m_DetectorId;
+	const uint32_t                                                            m_Index;
 
 protected:
     FD_HANDLE                                                                 m_Handle;

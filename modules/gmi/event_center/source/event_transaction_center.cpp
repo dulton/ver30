@@ -5,7 +5,8 @@
 #include "event_process_inforecord.h"
 #include "human_detect.h"
 
-AlarmEventConfigInfo g_CurStartedEvent[MAX_NUM_EVENT_TYPE] = {0};
+AlarmEventConfigInfo g_CurStartedEvent[MAX_NUM_EVENT_TYPE];
+AlarmInputInfo g_CurStartedAlaramIn[MAX_NUM_GPIO_IN];
 
 
 int32_t CheckCurBitValid(uint32_t BitPos)
@@ -29,7 +30,6 @@ int32_t CheckCurBitValid(uint32_t BitPos)
 
 int32_t CheckCurBitValidByStrategyId(uint32_t EventId, uint32_t StrategyId)
 {
-	int32_t i = 0;
 	int32_t IsValid = 0;
 	if((EventId < 0) || (EventId > MAX_NUM_EVENT_TYPE-1))
 	{
@@ -51,6 +51,8 @@ size_t EventTransactionCenter::m_IsStartGPIOOutput = 0;
 size_t EventTransactionCenter::m_IsStartInfoRecord = 0;
 
 
+size_t EventTransactionCenter::m_IsStartGPIOInputEx[MAX_NUM_GPIO_IN] = {0};
+size_t EventTransactionCenter::m_IsStartGPIOOutputEx[MAX_NUM_GPIO_OUT] = {0};
 
 
 
@@ -85,6 +87,9 @@ GMI_RESULT EventTransactionCenter::Start( const void_t *Parameter, size_t Parame
         printf( "EventCenter Initialize failed \n" );
         return Result;
     }
+
+	memset(g_CurStartedEvent, 0, sizeof(g_CurStartedEvent[0])*MAX_NUM_EVENT_TYPE);
+	memset(g_CurStartedAlaramIn, 0, sizeof(g_CurStartedAlaramIn[0])*MAX_NUM_GPIO_IN);
 
 	#if 0
 	do
@@ -170,6 +175,7 @@ GMI_RESULT EventTransactionCenter::Stop()
         return Result;
     }
 
+	#if 0
     Result = StopGPIOAlarmInput();
     if ( FAILED( Result ) )
     {
@@ -177,6 +183,18 @@ GMI_RESULT EventTransactionCenter::Stop()
     }
 
     Result = StopGPIOAlarmOutput();
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+	#endif
+	Result = StopGPIOAlarmInputEx(0);
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+
+    Result = StopGPIOAlarmOutputEx(0);
     if ( FAILED( Result ) )
     {
         return Result;
@@ -206,23 +224,83 @@ GMI_RESULT EventTransactionCenter::Stop()
 
 GMI_RESULT EventTransactionCenter::ConfigureGPIOAlarmInput( const void_t *Parameter, size_t ParameterLength )
 {
-    return GMI_NOT_IMPLEMENT;
+	
+    GMI_RESULT Result = GMI_SUCCESS;
+    do
+	{
+		if((NULL == Parameter)
+			|| (sizeof(AlarmInputInfo) > ParameterLength))
+		{
+			fprintf(stderr, "ConfigureAlarmEvent GMI_INVALID_PARAMETER.\n");
+			Result = GMI_INVALID_PARAMETER;
+			break;
+		}
+
+		AlarmInputInfo *InfoPtr = (AlarmInputInfo *)Parameter;
+
+		if((0 > InfoPtr->s_InputNumber)
+	  	|| ((MAX_NUM_GPIO_IN-1) < InfoPtr->s_InputNumber))
+		{
+			fprintf(stderr, "ConfigureGPIOAlarmInput InputNumber %d error.\n", InfoPtr->s_InputNumber);
+			Result = GMI_INVALID_PARAMETER;
+			break;
+		}
+		
+		memcpy(&(g_CurStartedAlaramIn[InfoPtr->s_InputNumber]), (AlarmInputInfo *)Parameter, sizeof(AlarmInputInfo));
+		if(FLAG_EVENT_ENABLE == g_CurStartedAlaramIn[InfoPtr->s_InputNumber].s_EnableFlag)
+		{
+			Result = StartGPIOAlarmInputEx(Parameter, sizeof(AlarmInputInfo));
+					
+		}
+		else
+		{
+			Result = StopGPIOAlarmInputEx(InfoPtr->s_InputNumber);
+					
+		}
+		
+	}while(0);
+
+    return Result;
 }
 
 GMI_RESULT EventTransactionCenter::ConfigureGPIOAlarmOutput( const void_t *Parameter, size_t ParameterLength )
 {
-    return GMI_NOT_IMPLEMENT;
+    GMI_RESULT Result = GMI_SUCCESS;
+	struct AlarmOutputInfo *InfoPtr;
+
+	do
+	{
+		if((sizeof(AlarmOutputInfo) > ParameterLength)
+			|| (NULL == Parameter))
+		{
+			Result = GMI_INVALID_PARAMETER;
+			break;
+		}
+		InfoPtr = (struct AlarmOutputInfo *)Parameter;
+
+		if(FLAG_EVENT_ENABLE == InfoPtr->s_EnableFlag)
+		{
+			StartGPIOAlarmOutputEx(Parameter, sizeof(AlarmOutputInfo));
+		}
+		else
+		{
+			StopGPIOAlarmOutputEx(InfoPtr->s_OutputNumber);
+		}
+	}while(0);
+	
+	
+    return Result;
 }
 
 
-GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType EventType, const void *Parameter, size_t ParamterLength)
+GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType EventType, const void *Parameter, size_t ParameterLength)
 {
 	GMI_RESULT Result = GMI_SUCCESS;
 
 	do
 	{
 		if((NULL == Parameter)
-			|| (0 >= ParamterLength)
+			|| (sizeof(AlarmEventConfigInfo) > ParameterLength)
 			|| ((1 > EventType) && (MAX_NUM_EVENT_TYPE < EventType)))
 		{
 			fprintf(stderr, "ConfigureAlarmEvent GMI_INVALID_PARAMETER.\n");
@@ -234,9 +312,9 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType
 		{
 			switch(EventType)
 			{
-				case e_AlarmEventType_AlarmInput:	
-					Result = StartGPIOAlarmInput();
-					break;
+				//case e_AlarmEventType_AlarmInput:	
+					//Result = StartGPIOAlarmInput();
+					//break;
 				case e_AlarmEventType_HumanDetect:
 					Result = StartHumanDetect();
 					break;
@@ -249,9 +327,9 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType
 		{
 			switch(EventType)
 			{
-				case e_AlarmEventType_AlarmInput:
-					Result = StopGPIOAlarmInput();
-					break;
+				//case e_AlarmEventType_AlarmInput:
+					//Result = StopGPIOAlarmInput();
+					//break;
 				case e_AlarmEventType_HumanDetect:
 					Result = StopHumanDetect();
 					break;
@@ -261,6 +339,7 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType
 			}
 		}
 
+		#if 0
 		//start processor
 		if(0 < CheckCurBitValid(EVENT_PROCESSOR_ID_ALARM_OUTPUT))
 		{
@@ -280,7 +359,7 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType
 				break;
 		    }
 		}
-		
+		#endif
 
 		if(0 < CheckCurBitValid(EVENT_PROCESSOR_ID_INFO_RECORD))
 		{
@@ -306,6 +385,7 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType
     return Result;
 }
 
+#if 0
 GMI_RESULT EventTransactionCenter::StartGPIOAlarmInput()
 {
 	if(1 == m_IsStartGPIOInput)
@@ -344,7 +424,6 @@ GMI_RESULT EventTransactionCenter::StartGPIOAlarmInput()
 	m_IsStartGPIOInput = 1;
     return Result;
 }
-
 GMI_RESULT EventTransactionCenter::StopGPIOAlarmInput()
 {
 	if(0 == m_IsStartGPIOInput)
@@ -361,7 +440,90 @@ GMI_RESULT EventTransactionCenter::StopGPIOAlarmInput()
 
     return Result;
 }
+#endif
 
+GMI_RESULT EventTransactionCenter::StartGPIOAlarmInputEx(const void *Parameter, size_t ParamterLength)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+	
+	if((0 == ParamterLength)
+		|| (NULL == Parameter)
+		|| (ParamterLength < sizeof(struct AlarmInputInfo)))
+	{
+		fprintf(stderr, "StartGPIOAlarmInputEx GMI_INVALID_PARAMETER.\n");
+		Result = GMI_INVALID_PARAMETER;
+		return Result;
+	}
+
+	struct AlarmInputInfo Info;
+	memset(&Info, 0, sizeof(Info));
+	memcpy(&Info, Parameter, sizeof(Info));
+	if((0 > Info.s_InputNumber)
+	  || ((MAX_NUM_GPIO_IN-1) < Info.s_InputNumber))
+	{
+		fprintf(stderr, "StartGPIOAlarmInputEx InputNumber %d error.\n", Info.s_InputNumber);
+		Result = GMI_INVALID_PARAMETER;
+		return Result;
+	}
+
+	if(1 == m_IsStartGPIOInputEx[Info.s_InputNumber])
+	{
+		fprintf(stderr, "StartGPIOAlarmInputEx has done.\n");
+		return GMI_SUCCESS;
+	}
+    ReferrencePtr<AlarmInput> AlarmInputDetector( BaseMemoryManager::Instance().New<AlarmInput>( e_EventDetectorType_Passive, EVENT_DETECTOR_ID_ALARM_INPUT, Info.s_InputNumber ) );
+    if ( NULL == AlarmInputDetector.GetPtr() )
+    {
+        m_Center->Deinitialize();
+        printf( "allocating AlarmInputDetector object failed \n" );
+        return GMI_OUT_OF_MEMORY;
+    }
+
+	if(Info.s_CheckTime < 100)
+	{
+    	Info.s_CheckTime = 100;
+	}
+
+	printf("StartGPIOAlarmInputEx Info.s_InputNumber=%d\n", Info.s_InputNumber);
+    Result = m_Center->RegisterEventDetector( AlarmInputDetector, &Info, sizeof(Info) );
+    if ( FAILED( Result ) )
+    {
+        m_Center->Deinitialize();
+        printf( "EventCenter RegisterEventDetector failed \n" );
+        return Result;
+    }
+	m_IsStartGPIOInputEx[Info.s_InputNumber] = 1;
+    return Result;
+}
+
+GMI_RESULT EventTransactionCenter::StopGPIOAlarmInputEx(size_t InIoIndex)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+	if((0 > InIoIndex)
+	  || ((MAX_NUM_GPIO_IN-1) < InIoIndex))
+	{
+		fprintf(stderr, "StartGPIOAlarmInputEx InIoIndex %d error.\n", InIoIndex);
+		Result = GMI_INVALID_PARAMETER;
+		return Result;
+	}
+	
+	if(0 == m_IsStartGPIOInputEx[InIoIndex])
+	{
+		fprintf(stderr, "StartGPIOAlarmInputEx %d has done.\n", InIoIndex);
+		return GMI_SUCCESS;
+	}
+	printf("StopGPIOAlarmInputEx InIoIndex %d\n", InIoIndex);
+    Result = m_Center->UnregisterEventDetector( EVENT_DETECTOR_ID_ALARM_INPUT, InIoIndex);
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+	m_IsStartGPIOInputEx[InIoIndex] = 0;
+
+    return Result;
+}
+
+#if 0
 GMI_RESULT EventTransactionCenter::StartGPIOAlarmOutput()
 {
 	if(1 == m_IsStartGPIOOutput)
@@ -434,6 +596,114 @@ GMI_RESULT EventTransactionCenter::StopGPIOAlarmOutput()
 
     return Result;
 }
+#endif
+
+GMI_RESULT EventTransactionCenter::StartGPIOAlarmOutputEx(const void *Parameter, size_t ParamterLength)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+	
+	if((0 == ParamterLength)
+		|| (NULL == Parameter)
+		|| (ParamterLength < sizeof(struct AlarmOutputInfo)))
+	{
+		fprintf(stderr, "StartGPIOAlarmOutputEx GMI_INVALID_PARAMETER.\n");
+		Result = GMI_INVALID_PARAMETER;
+		return Result;
+	}
+
+	
+    struct AlarmOutputInfo Info;
+	memset(&Info, 0, sizeof(Info));
+	memcpy(&Info, Parameter, sizeof(Info));
+
+	if((0 > Info.s_OutputNumber)
+	  || ((MAX_NUM_GPIO_OUT-1) < Info.s_OutputNumber))
+	{
+		fprintf(stderr, "StartGPIOAlarmOutputEx OutputNumber %d error.\n", Info.s_OutputNumber);
+		Result = GMI_INVALID_PARAMETER;
+		return Result;
+	}
+	
+	if(1 == m_IsStartGPIOOutputEx[Info.s_OutputNumber])
+	{
+		fprintf(stderr, "StartGPIOAlarmOutputEx has done.\n");
+		return GMI_SUCCESS;
+	}
+	int32_t i = 0, j = 0;
+    ReferrencePtr<AlarmOutput> AlarmOutputProcessor( BaseMemoryManager::Instance().New<AlarmOutput>( EVENT_PROCESSOR_ID_ALARM_OUTPUT, Info.s_OutputNumber ) );
+    if ( NULL == AlarmOutputProcessor.GetPtr() )
+    {
+        m_Center->Deinitialize();
+        printf( "allocating AlarmOutputProcessor object failed \n" );
+        return GMI_OUT_OF_MEMORY;
+    }
+
+	struct DetectorInfo TmpDetectInfo;
+	memset(&TmpDetectInfo, 0, sizeof(TmpDetectInfo));
+	for(i=1; i<=MAX_NUM_EVENT_TYPE; i++)
+	{
+		if(i == e_AlarmEventType_AlarmInput)
+		{
+			for(j=0; j<MAX_NUM_GPIO_IN; j++)
+			{
+				TmpDetectInfo.s_DetectorId = i;
+				TmpDetectInfo.s_Index = j;
+				AlarmOutputProcessor->AddDetectorId( TmpDetectInfo );
+				printf("AlarmOutputProcessor AlarmInput %d %d\n", i, j);
+			}
+		}
+		else
+		{
+			TmpDetectInfo.s_DetectorId = i;
+			TmpDetectInfo.s_Index = 0;
+			AlarmOutputProcessor->AddDetectorId( TmpDetectInfo );
+			printf("AlarmOutputProcessor %d\n", i);
+		}
+	}
+
+    //AlarmOutputProcessor->AddDetectorId( EVENT_DETECTOR_ID_ALARM_INPUT );
+	//AlarmOutputProcessor->AddDetectorId( EVENT_DETECTOR_ID_HUMAN_DETECT);
+
+    AlarmOutputProcessor->SetEventCallback( m_Callback, m_UserData );
+
+    Result = m_Center->RegisterEventProcessor( AlarmOutputProcessor, &Info, sizeof(Info) );
+    if ( FAILED( Result ) )
+    {
+        m_Center->Deinitialize();
+        printf( "EventCenter RegisterEventProcessor failed \n" );
+        return Result;
+    }
+
+	m_IsStartGPIOOutputEx[Info.s_OutputNumber] = 1;
+    return Result;
+}
+
+GMI_RESULT EventTransactionCenter::StopGPIOAlarmOutputEx(size_t OutIoIndex)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+	if((0 > OutIoIndex)
+	  || ((MAX_NUM_GPIO_OUT-1) < OutIoIndex))
+	{
+		fprintf(stderr, "StopGPIOAlarmOutputEx OutIoIndex %d error.\n", OutIoIndex);
+		Result = GMI_INVALID_PARAMETER;
+		return Result;
+	}
+	
+	if(0 == m_IsStartGPIOOutputEx[OutIoIndex])
+	{
+		fprintf(stderr, "StopGPIOAlarmOutputEx %d has done.\n", OutIoIndex);
+		return GMI_SUCCESS;
+	}
+    Result = m_Center->UnregisterEventProcessor( EVENT_PROCESSOR_ID_ALARM_OUTPUT, OutIoIndex );
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+	m_IsStartGPIOOutputEx[OutIoIndex] = 0;
+
+    return Result;
+}
+
 
 GMI_RESULT EventTransactionCenter::StartAlarmInfoRecord()
 {
@@ -442,8 +712,8 @@ GMI_RESULT EventTransactionCenter::StartAlarmInfoRecord()
 		fprintf(stderr, "StartAlarmInfoRecord has done.\n");
 		return GMI_SUCCESS;
 	}
-	int32_t i = 0;
-    ReferrencePtr<EventProcessInfoRecord> AlarmInfoRecordProcessor( BaseMemoryManager::Instance().New<EventProcessInfoRecord>( EVENT_PROCESSOR_ID_INFO_RECORD ) );
+	int32_t i = 0, j = 0;
+    ReferrencePtr<EventProcessInfoRecord> AlarmInfoRecordProcessor( BaseMemoryManager::Instance().New<EventProcessInfoRecord>( EVENT_PROCESSOR_ID_INFO_RECORD, 0 ) );
     if ( NULL == AlarmInfoRecordProcessor.GetPtr() )
     {
         m_Center->Deinitialize();
@@ -451,11 +721,26 @@ GMI_RESULT EventTransactionCenter::StartAlarmInfoRecord()
         return GMI_OUT_OF_MEMORY;
     }
 
+	
+	struct DetectorInfo TmpDetectInfo;
+	memset(&TmpDetectInfo, 0, sizeof(TmpDetectInfo));
 	for(i=1; i<=MAX_NUM_EVENT_TYPE; i++)
 	{
-		//if(0 < CheckCurBitValidByStrategyId(i, EVENT_PROCESSOR_ID_INFO_RECORD))
+		if(i == e_AlarmEventType_AlarmInput)
 		{
-			AlarmInfoRecordProcessor->AddDetectorId( i );
+			for(j=0; j<MAX_NUM_GPIO_IN; j++)
+			{
+				TmpDetectInfo.s_DetectorId = i;
+				TmpDetectInfo.s_Index = j;
+				AlarmInfoRecordProcessor->AddDetectorId( TmpDetectInfo );
+				printf("AlarmInfoRecordProcessor AlarmInput %d %d\n", i, j);
+			}
+		}
+		else
+		{
+			TmpDetectInfo.s_DetectorId = i;
+			TmpDetectInfo.s_Index = 0;
+			AlarmInfoRecordProcessor->AddDetectorId( TmpDetectInfo );
 			printf("AlarmInfoRecordProcessor %d\n", i);
 		}
 	}
@@ -483,7 +768,7 @@ GMI_RESULT EventTransactionCenter::StopAlarmInfoRecord()
 		fprintf(stderr, "StopAlarmInfoRecord has done.\n");
 		return GMI_SUCCESS;
 	}
-    GMI_RESULT Result = m_Center->UnregisterEventProcessor( EVENT_PROCESSOR_ID_INFO_RECORD );
+    GMI_RESULT Result = m_Center->UnregisterEventProcessor( EVENT_PROCESSOR_ID_INFO_RECORD, 0 );
     if ( FAILED( Result ) )
     {
         return Result;
@@ -502,7 +787,7 @@ GMI_RESULT EventTransactionCenter::StartHumanDetect()
 		fprintf(stderr, "StartHumanDetect has done.\n");
 		return GMI_SUCCESS;
 	}
-    ReferrencePtr<HumanDetect> HumanDetector( BaseMemoryManager::Instance().New<HumanDetect>( e_EventDetectorType_Passive, EVENT_DETECTOR_ID_HUMAN_DETECT) );
+    ReferrencePtr<HumanDetect> HumanDetector( BaseMemoryManager::Instance().New<HumanDetect>( e_EventDetectorType_Passive, EVENT_DETECTOR_ID_HUMAN_DETECT, 0) );
     if ( NULL == HumanDetector.GetPtr() )
     {
         m_Center->Deinitialize();
@@ -535,7 +820,7 @@ GMI_RESULT EventTransactionCenter::StopHumanDetect()
 		fprintf(stderr, "StopHumanDetect has done.\n");
 		return GMI_SUCCESS;
 	}
-    GMI_RESULT Result = m_Center->UnregisterEventDetector( EVENT_DETECTOR_ID_HUMAN_DETECT);
+    GMI_RESULT Result = m_Center->UnregisterEventDetector( EVENT_DETECTOR_ID_HUMAN_DETECT, 0);
     if ( FAILED( Result ) )
     {
         return Result;

@@ -9,10 +9,10 @@
 class EventProcessInfoRecord : public EventProcessor
 {
 public:
-    EventProcessInfoRecord( uint32_t EventProcessorId );
+    EventProcessInfoRecord( uint32_t EventProcessorId, uint32_t Index );
     virtual ~EventProcessInfoRecord(void);
 
-    virtual GMI_RESULT Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength );
+    virtual GMI_RESULT Notify( uint32_t EventId, uint32_t Index, enum EventType Type, void_t *Parameter, size_t ParameterLength );
 
 protected:
     virtual GMI_RESULT Start( const void_t *Parameter, size_t ParameterLength );

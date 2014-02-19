@@ -19,15 +19,6 @@ static const char_t *G_EventStatusTypeName[] =
 
 static uint32_t G_EventDetectorTypeNameArraySize = 2;
 
-EventProcessInfoRecord::EventProcessInfoRecord( uint32_t EventProcessorId )
-    : EventProcessor( EventProcessorId )
-{
-}
-
-EventProcessInfoRecord::~EventProcessInfoRecord(void)
-{
-}
-
 void EventRecodPrt(const char *fmt, ...)
 {
 	static pthread_mutex_t LogMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -86,31 +77,64 @@ void EventRecodPrt(const char *fmt, ...)
 	pthread_mutex_unlock(&LogMutex);
 }
 
-
-GMI_RESULT  EventProcessInfoRecord::Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength )
+EventProcessInfoRecord::EventProcessInfoRecord( uint32_t EventProcessorId, uint32_t Index )
+    : EventProcessor( EventProcessorId, Index )
 {
-    std::vector<uint32_t>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
+}
+
+EventProcessInfoRecord::~EventProcessInfoRecord(void)
+{
+}
+
+GMI_RESULT  EventProcessInfoRecord::Notify( uint32_t EventId, uint32_t Index, enum EventType Type, void_t *Parameter, size_t ParameterLength )
+{
+    std::vector<struct DetectorInfo>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
     for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
     {
-        if ( (*DetectorIdIt == EventId) 
-			&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)) 
-			&&(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EventId-1)))) )
-        {
-        	if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
-        	{ 		
-				EventRecodPrt("[EventName:%s] tigger %s!", G_EventDetectorTypeName[EventId-1], G_EventStatusTypeName[Type-1]);
-        	}
-			else
-			{
-				EventRecodPrt("[EventId:%d] tigger %d[1-start,2-end]!", EventId, Type);
-			}
+    	if(EVENT_DETECTOR_ID_ALARM_INPUT == EventId)
+    	{
+	        if ( ((*DetectorIdIt).s_DetectorId == EventId) 
+				&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)) 
+				&&(0 < (g_CurStartedAlaramIn[Index].s_LinkAlarmStrategy & (1<<(EventId-1)))) )
+	        {
+	        	if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
+	        	{ 		
+					EventRecodPrt("[EventName:%s %d] tigger %s!", G_EventDetectorTypeName[EventId-1], Index, G_EventStatusTypeName[Type-1]);
+	        	}
+				else
+				{
+					EventRecodPrt("[EventId:%d] tigger %d[1-start,2-end]!", EventId, Type);
+				}
 
-			if ( NULL != m_Callback )
-            {
-                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
-            }
-			break;
-        }
+				if ( NULL != m_Callback )
+	            {
+	                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
+	            }
+				break;
+	        }
+    	}
+		else
+		{
+			if ( ((*DetectorIdIt).s_DetectorId == EventId) 
+				&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)) 
+				&&(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EventId-1)))) )
+	        {
+	        	if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
+	        	{ 		
+					EventRecodPrt("[EventName:%s] tigger %s!", G_EventDetectorTypeName[EventId-1], G_EventStatusTypeName[Type-1]);
+	        	}
+				else
+				{
+					EventRecodPrt("[EventId:%d] tigger %d[1-start,2-end]!", EventId, Type);
+				}
+
+				if ( NULL != m_Callback )
+	            {
+	                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
+	            }
+				break;
+	        }
+		}
     }
 	
     return GMI_SUCCESS;

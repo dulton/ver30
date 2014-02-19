@@ -5,7 +5,7 @@
 class EventProcessor
 {
 protected:
-    EventProcessor( uint32_t EventProcessorId ) : m_Callback( NULL ), m_UserData( NULL ), m_ProcessorId( EventProcessorId ) 
+    EventProcessor( uint32_t EventProcessorId, uint32_t Index ) : m_Callback( NULL ), m_UserData( NULL ), m_ProcessorId( EventProcessorId ), m_Index( Index ) 
 	{
 	}
 
@@ -36,28 +36,30 @@ public:
         return GMI_SUCCESS;
     }
 
-    virtual GMI_RESULT Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength ) = 0;
+    virtual GMI_RESULT Notify( uint32_t EventId, uint32_t Index, enum EventType Type, void_t *Parameter, size_t ParameterLength ) = 0;
 
-    void_t  AddDetectorId( uint32_t DetectorId )
+    void_t  AddDetectorId( struct DetectorInfo DetectorData )
     {
-        std::vector<uint32_t>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
+        std::vector<struct DetectorInfo>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
         for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
         {
-            if ( DetectorId == *DetectorIdIt )
+            if ( (DetectorData.s_DetectorId == (*DetectorIdIt).s_DetectorId)
+				&& (DetectorData.s_Index == (*DetectorIdIt).s_Index))
             {
                 return;
             }
         }
 
-        m_DetectorIds.push_back( DetectorId );
+        m_DetectorIds.push_back( DetectorData );
     }
 
-    void_t  RemoveDetectId( uint32_t DetectorId )
+    void_t  RemoveDetectId( struct DetectorInfo DetectorData )
     {
-        std::vector<uint32_t>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
+        std::vector<struct DetectorInfo>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
         for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
         {
-            if ( DetectorId == *DetectorIdIt )
+            if ( (DetectorData.s_DetectorId == (*DetectorIdIt).s_DetectorId)
+				&& (DetectorData.s_Index == (*DetectorIdIt).s_Index))
             {
                 m_DetectorIds.erase( DetectorIdIt );
                 return;
@@ -76,14 +78,20 @@ public:
         return m_ProcessorId;
     }
 
+	
+	inline uint32_t GetIndex() const
+	{
+		return m_Index;
+	}
 
 protected:
-    std::vector<uint32_t>  m_DetectorIds;
+    std::vector<struct DetectorInfo>  m_DetectorIds;
     EventCallback          m_Callback;
     void_t                 *m_UserData;
 
 private:
-    uint32_t               m_ProcessorId; 
+    uint32_t               m_ProcessorId;
+	uint32_t               m_Index;
 };
 
 

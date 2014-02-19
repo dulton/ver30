@@ -12,11 +12,11 @@ public:
     GMI_RESULT Deinitialize();
 
     GMI_RESULT RegisterEventProcessor( ReferrencePtr<EventProcessor>& Processor, const void_t *Parameter, size_t ParameterLength );
-    GMI_RESULT UnregisterEventProcessor( uint32_t ProcessorId );
+    GMI_RESULT UnregisterEventProcessor( uint32_t ProcessorId, uint32_t Index );
 
     virtual GMI_RESULT Lock();
     virtual GMI_RESULT Unlock();
-    virtual GMI_RESULT Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength );
+    virtual GMI_RESULT Notify( uint32_t EventId, uint32_t Index, enum EventType Type, void_t *Parameter, size_t ParameterLength );
 
 private:
     GMI_Mutex                                     m_InstanceLock;

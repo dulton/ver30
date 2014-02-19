@@ -88,9 +88,9 @@ GMI_RESULT EventCenter::RegisterEventDetector( ReferrencePtr<EventDetector> Dete
     return m_DetectCenter->RegisterEventDetector( Detector, Parameter, ParameterLength );
 }
 
-GMI_RESULT EventCenter::UnregisterEventDetector( uint32_t DectectorId )
+GMI_RESULT EventCenter::UnregisterEventDetector( uint32_t DectectorId, uint32_t Index )
 {
-    return m_DetectCenter->UnregisterEventDetector( DectectorId );
+    return m_DetectCenter->UnregisterEventDetector( DectectorId, Index );
 }
 
 GMI_RESULT EventCenter::RegisterEventProcessor( ReferrencePtr<EventProcessor> Processor, const void_t *Parameter, size_t ParameterLength )
@@ -98,9 +98,9 @@ GMI_RESULT EventCenter::RegisterEventProcessor( ReferrencePtr<EventProcessor> Pr
     return m_ProcessCenter->RegisterEventProcessor( Processor, Parameter, ParameterLength );
 }
 
-GMI_RESULT EventCenter::UnregisterEventProcessor( uint32_t ProcessorId )
+GMI_RESULT EventCenter::UnregisterEventProcessor( uint32_t ProcessorId, uint32_t Index )
 {
-    return m_ProcessCenter->UnregisterEventProcessor( ProcessorId );
+    return m_ProcessCenter->UnregisterEventProcessor( ProcessorId, Index );
 }
 
 GMI_RESULT EventCenter::Start()

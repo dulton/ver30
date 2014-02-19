@@ -6,7 +6,7 @@
 class AlarmInput : public EventDetector
 {
 public:
-    AlarmInput( enum EventDetectorType Type, uint32_t EventDetectorId );
+    AlarmInput( enum EventDetectorType Type, uint32_t EventDetectorId, uint32_t Index );
     virtual ~AlarmInput(void);
 
     inline void_t  SetInputNumber( uint32_t Number )

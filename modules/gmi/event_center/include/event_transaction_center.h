@@ -20,10 +20,14 @@ public:
 	GMI_RESULT ConfigureAlarmEvent(const enum AlarmEventType EventType, const void *Parameter, size_t ParamterLength);
 
 private:
-    GMI_RESULT StartGPIOAlarmInput();
-    GMI_RESULT StopGPIOAlarmInput();
-    GMI_RESULT StartGPIOAlarmOutput();
-    GMI_RESULT StopGPIOAlarmOutput();
+   // GMI_RESULT StartGPIOAlarmInput();
+   // GMI_RESULT StopGPIOAlarmInput();
+   // GMI_RESULT StartGPIOAlarmOutput();
+   // GMI_RESULT StopGPIOAlarmOutput();
+	GMI_RESULT StartGPIOAlarmInputEx(const void *Parameter, size_t ParamterLength);
+    GMI_RESULT StopGPIOAlarmInputEx(size_t InIoIndex);
+    GMI_RESULT StartGPIOAlarmOutputEx(const void *Parameter, size_t ParamterLength);
+    GMI_RESULT StopGPIOAlarmOutputEx(size_t OutIoIndex);
 	GMI_RESULT StartAlarmInfoRecord();
     GMI_RESULT StopAlarmInfoRecord(); 
 	GMI_RESULT StartHumanDetect();
@@ -38,5 +42,8 @@ private:
 	
 	static size_t               m_IsStartGPIOOutput;
 	static size_t               m_IsStartInfoRecord;
+
+	static size_t               m_IsStartGPIOInputEx[MAX_NUM_GPIO_IN];
+	static size_t               m_IsStartGPIOOutputEx[MAX_NUM_GPIO_OUT];
 	
 };

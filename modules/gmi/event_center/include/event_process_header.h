@@ -26,6 +26,12 @@ enum EventType
     e_EventType_End,
 };
 
+struct DetectorInfo
+{
+	uint32_t s_DetectorId;
+	uint32_t s_Index;
+};
+
 typedef void_t (*EventCallback)( void_t *UserData, uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength );
 
 #endif//EVENT_PROCESS_HEADER

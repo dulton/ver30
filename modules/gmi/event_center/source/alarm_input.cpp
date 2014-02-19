@@ -5,8 +5,8 @@
 #include "gmi_brdwrapper.h"
 #endif//__linux__
 
-AlarmInput::AlarmInput( enum EventDetectorType Type, uint32_t EventDetectorId )
-    : EventDetector( Type, EventDetectorId )
+AlarmInput::AlarmInput( enum EventDetectorType Type, uint32_t EventDetectorId, uint32_t Index )
+    : EventDetector( Type, EventDetectorId, Index )
     , m_InputNumber( 0 )
     , m_Name()
     , m_CheckTime( 1000 )
@@ -148,20 +148,20 @@ void_t* AlarmInput::DetectEntry()
 		CurrTm   = *localtime(&CurrTime);
 		CurrDay  = CurrTm.tm_wday;
 		Curhm    = (CurrTm.tm_hour * 60) + CurrTm.tm_min;	
-		if(((Curhm < g_CurStartedEvent[e_AlarmEventType_AlarmInput-1].s_ScheduleTime[CurrDay].s_StartTime)
-			|| (Curhm > g_CurStartedEvent[e_AlarmEventType_AlarmInput-1].s_ScheduleTime[CurrDay].s_EndTime)))
+		if(((Curhm < g_CurStartedAlaramIn[m_InputNumber].s_ScheduleTime[CurrDay].s_StartTime)
+			|| (Curhm > g_CurStartedAlaramIn[m_InputNumber].s_ScheduleTime[CurrDay].s_EndTime)))
 		{
 			fprintf(stderr, "Alarm input is not in the ScheduleTime\n");
 			GMI_Sleep(5000);
 			continue;
 		}
 		
-        Result = GMI_BrdGetAlarmInput( GMI_ALARM_MODE_GPIO, m_InputNumber, &GPIOStatus );
+        Result = GMI_BrdGetAlarmInput( GMI_ALARM_MODE_GPIO, 0, &GPIOStatus );
 
         if ( GPIOStatus != (uint8_t) m_GPIOInputStatus )
         {
             m_GPIOInputStatus = (enum AlarmInputStatus) GPIOStatus;
-            m_ProcessCenter->Notify( GetId(), (e_AlarmInputStatus_Opened == m_GPIOInputStatus) ? e_EventType_Start : e_EventType_End, NULL, 0 );
+            m_ProcessCenter->Notify( GetId(), m_InputNumber, (e_AlarmInputStatus_Opened == m_GPIOInputStatus) ? e_EventType_Start : e_EventType_End, NULL, 0 );
         }
 #elif defined( _WIN32 ) // only test used
         m_ProcessCenter->Notify( GetId(), e_EventType_Start, NULL, 0 );

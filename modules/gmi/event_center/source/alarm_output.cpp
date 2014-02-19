@@ -5,8 +5,8 @@
 #include "gmi_brdwrapper.h"
 #endif
 
-AlarmOutput::AlarmOutput( uint32_t EventProcessorId )
-    : EventProcessor( EventProcessorId )
+AlarmOutput::AlarmOutput( uint32_t EventProcessorId, uint32_t Index )
+    : EventProcessor( EventProcessorId, Index )
     , m_OutputNumber( 0 )
     , m_Name()
     , m_WorkMode( e_AlarmOutputWorkMode_DelayAutoTrigger )
@@ -67,28 +67,47 @@ GMI_RESULT  AlarmOutput::ListScheduleTime( uint32_t *ItemNumber, ScheduleTimeInf
     return GMI_SUCCESS;
 }
 
-GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength )
+GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventType Type, void_t *Parameter, size_t ParameterLength )
 {
-    std::vector<uint32_t>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
+    std::vector<struct DetectorInfo>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
     for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
     {
-        if ( (*DetectorIdIt == EventId) 
-			&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)) 
-			&&(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EventId-1)))) )
-        {
-#if defined( __linux__ )
-            GMI_RESULT Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmInputStatus_Opened : (uint8_t)e_AlarmInputStatus_Closed );
-            if ( FAILED( Result ) )
-            {
-                return Result;
-            }
-#endif
-            if ( NULL != m_Callback )
-            {
-                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
-            }
-			break;
-        }
+    	if(EVENT_DETECTOR_ID_ALARM_INPUT == EventId)
+    	{
+	        if ( ((*DetectorIdIt).s_DetectorId == EventId)
+				&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)) 
+				&&(0 < (g_CurStartedAlaramIn[Index].s_LinkAlarmStrategy & (1<<(EventId-1)))) )
+	        {
+	            GMI_RESULT Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmInputStatus_Opened : (uint8_t)e_AlarmInputStatus_Closed );
+	            if ( FAILED( Result ) )
+	            {
+	                return Result;
+	            }
+	            if ( NULL != m_Callback )
+	            {
+	                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
+	            }
+				break;
+	        }
+    	}
+		else
+		{
+			if ( ((*DetectorIdIt).s_DetectorId == EventId)
+				&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)) 
+				&&(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EventId-1)))) )
+	        {
+	            GMI_RESULT Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmInputStatus_Opened : (uint8_t)e_AlarmInputStatus_Closed );
+	            if ( FAILED( Result ) )
+	            {
+	                return Result;
+	            }
+	            if ( NULL != m_Callback )
+	            {
+	                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
+	            }
+				break;
+	        }
+		}
     }
 
     return GMI_SUCCESS;

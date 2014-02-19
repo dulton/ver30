@@ -6,7 +6,7 @@
 class AlarmOutput : public EventProcessor
 {
 public:
-    AlarmOutput( uint32_t EventProcessorId );
+    AlarmOutput( uint32_t EventProcessorId, uint32_t Index );
     virtual ~AlarmOutput(void);
 
     inline void_t  SetOutputNumber( uint32_t Number )
@@ -45,7 +45,7 @@ public:
     GMI_RESULT  AddScheduleTime( const ScheduleTimeInfo *Schedule );
     GMI_RESULT  ListScheduleTime( uint32_t *ItemNumber, ScheduleTimeInfo *Schedule );
 
-    virtual GMI_RESULT Notify( uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength );
+    virtual GMI_RESULT Notify( uint32_t EventId, uint32_t Index, enum EventType Type, void_t *Parameter, size_t ParameterLength );
 
 protected:
     virtual GMI_RESULT Start( const void_t *Parameter, size_t ParameterLength );
