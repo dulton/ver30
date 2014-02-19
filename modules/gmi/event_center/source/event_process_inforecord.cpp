@@ -89,52 +89,61 @@ EventProcessInfoRecord::~EventProcessInfoRecord(void)
 GMI_RESULT  EventProcessInfoRecord::Notify( uint32_t EventId, uint32_t Index, enum EventType Type, void_t *Parameter, size_t ParameterLength )
 {
     std::vector<struct DetectorInfo>::iterator DetectorIdIt = m_DetectorIds.begin(), DetectorIdEnd = m_DetectorIds.end();
-    for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
+	int32_t BreakFlag = 0;
+	for ( ; DetectorIdIt != DetectorIdEnd ; ++DetectorIdIt )
     {
-    	if(EVENT_DETECTOR_ID_ALARM_INPUT == EventId)
+    	if(((*DetectorIdIt).s_DetectorId == EventId) 
+				&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)))
     	{
-	        if ( ((*DetectorIdIt).s_DetectorId == EventId) 
-				&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)) 
-				&&(0 < (g_CurStartedAlaramIn[Index].s_LinkAlarmStrategy & (1<<(EventId-1)))) )
-	        {
-	        	if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
-	        	{ 		
-					EventRecodPrt("[EventName:%s %d] tigger %s!", G_EventDetectorTypeName[EventId-1], Index, G_EventStatusTypeName[Type-1]);
-	        	}
-				else
-				{
-					EventRecodPrt("[EventId:%d] tigger %d[1-start,2-end]!", EventId, Type);
-				}
+    		switch(EventId)
+    		{
+    			case EVENT_DETECTOR_ID_ALARM_INPUT:
+					if(0 < (g_CurStartedAlaramIn[Index].s_LinkAlarmStrategy & (1<<(EventId-1))))
+					{
+						if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
+			        	{ 		
+							EventRecodPrt("[EventName:%s %d] tigger %s!", G_EventDetectorTypeName[EventId-1], Index, G_EventStatusTypeName[Type-1]);
+			        	}
+						else
+						{
+							EventRecodPrt("[EventId:%d] tigger %d[1-start,2-end]!", EventId, Type);
+						}
 
-				if ( NULL != m_Callback )
-	            {
-	                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
-	            }
-				break;
-	        }
+						if ( NULL != m_Callback )
+			            {
+			                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
+			            }
+					}
+					
+					BreakFlag = 1;
+					break;
+				case EVENT_DETECTOR_ID_HUMAN_DETECT:
+					if(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EventId-1))))
+					{
+			        	if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
+			        	{ 		
+							EventRecodPrt("[EventName:%s] tigger %s!", G_EventDetectorTypeName[EventId-1], G_EventStatusTypeName[Type-1]);
+			        	}
+						else
+						{
+							EventRecodPrt("[EventId:%d] tigger %d[1-start,2-end]!", EventId, Type);
+						}
+
+						if ( NULL != m_Callback )
+			            {
+			                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
+			            }
+			        }
+					BreakFlag = 1;
+					break;
+				default:
+					break;
+    		}
     	}
-		else
-		{
-			if ( ((*DetectorIdIt).s_DetectorId == EventId) 
-				&& ((0 < EventId) && (EventId <= MAX_NUM_EVENT_TYPE)) 
-				&&(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EventId-1)))) )
-	        {
-	        	if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
-	        	{ 		
-					EventRecodPrt("[EventName:%s] tigger %s!", G_EventDetectorTypeName[EventId-1], G_EventStatusTypeName[Type-1]);
-	        	}
-				else
-				{
-					EventRecodPrt("[EventId:%d] tigger %d[1-start,2-end]!", EventId, Type);
-				}
-
-				if ( NULL != m_Callback )
-	            {
-	                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
-	            }
-				break;
-	        }
-		}
+    	if(1 == BreakFlag)
+    	{
+    		break;
+    	}
     }
 	
     return GMI_SUCCESS;
