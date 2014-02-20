@@ -33,12 +33,8 @@ private:
     ReferrencePtr<EventCenter>  m_Center;
     EventCallback               m_Callback;
     void_t                      *m_UserData;
-	static size_t               m_IsStartGPIOInput;
 	static size_t               m_IsStartHumanDetect;
-	
-	static size_t               m_IsStartGPIOOutput;
 	static size_t               m_IsStartInfoRecord;
-
 	static size_t               m_IsStartGPIOInputEx[MAX_NUM_GPIO_IN];
 	static size_t               m_IsStartGPIOOutputEx[MAX_NUM_GPIO_OUT];
 	

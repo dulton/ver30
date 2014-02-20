@@ -88,7 +88,7 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 			switch(EventId)
 			{
 				case EVENT_DETECTOR_ID_ALARM_INPUT:
-					if(0 < (g_CurStartedAlaramIn[Index].s_LinkAlarmStrategy & (1<<(EventId-1))))
+					if(0 < (g_CurStartedAlarmIn[Index].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1))))
 					{
 						
 						Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmInputStatus_Opened : (uint8_t)e_AlarmInputStatus_Closed );
@@ -105,7 +105,7 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 					BreakFlag = 1;
 					break;
 				case EVENT_DETECTOR_ID_HUMAN_DETECT:
-					if(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EventId-1))))
+					if(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1))))
 			        {
 			            Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, (e_EventType_Start == Type) ? 1 : 0 );
 						if ( FAILED( Result ) )
@@ -208,6 +208,10 @@ void_t* AlarmOutput::TimerEntry()
     while( !m_ThreadExitFlag )
     {
     	CurrTime = time(NULL);
+		if(GetDelayTime() != g_CurStartedAlarmOut[GetOutputNumber()].s_DelayTime)
+		{
+			SetDelayTime(g_CurStartedAlarmOut[GetOutputNumber()].s_DelayTime);
+		}
 		m_OperationLock.Lock( TIMEOUT_INFINITE );
 		for(i=1; i <= MAX_NUM_EVENT_TYPE; i++)
 		{

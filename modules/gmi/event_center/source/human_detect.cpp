@@ -125,6 +125,12 @@ void_t* HumanDetect::DetectEntry()
 			continue;
 		}
 
+		if((GetCheckTime() != g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_CheckTime)
+			&& (g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_CheckTime >= 200))
+		{
+			SetCheckTime(g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_CheckTime);
+		}
+
 		#if 0
         Result = GMI_BrdGetAlarmInput( 0, 0, &GPIOStatus );
 

@@ -6,8 +6,8 @@
 #include "human_detect.h"
 
 AlarmEventConfigInfo g_CurStartedEvent[MAX_NUM_EVENT_TYPE];
-AlarmInputInfo g_CurStartedAlaramIn[MAX_NUM_GPIO_IN];
-
+AlarmInputInfo g_CurStartedAlarmIn[MAX_NUM_GPIO_IN];
+AlarmOutputInfo g_CurStartedAlarmOut[MAX_NUM_GPIO_OUT];
 
 int32_t CheckCurBitValid(uint32_t BitPos)
 {
@@ -44,13 +44,8 @@ int32_t CheckCurBitValidByStrategyId(uint32_t EventId, uint32_t StrategyId)
 }
 
 
-size_t EventTransactionCenter::m_IsStartGPIOInput = 0;
 size_t EventTransactionCenter::m_IsStartHumanDetect = 0;
-
-size_t EventTransactionCenter::m_IsStartGPIOOutput = 0;
 size_t EventTransactionCenter::m_IsStartInfoRecord = 0;
-
-
 size_t EventTransactionCenter::m_IsStartGPIOInputEx[MAX_NUM_GPIO_IN] = {0};
 size_t EventTransactionCenter::m_IsStartGPIOOutputEx[MAX_NUM_GPIO_OUT] = {0};
 
@@ -89,73 +84,9 @@ GMI_RESULT EventTransactionCenter::Start( const void_t *Parameter, size_t Parame
     }
 
 	memset(g_CurStartedEvent, 0, sizeof(g_CurStartedEvent[0])*MAX_NUM_EVENT_TYPE);
-	memset(g_CurStartedAlaramIn, 0, sizeof(g_CurStartedAlaramIn[0])*MAX_NUM_GPIO_IN);
+	memset(g_CurStartedAlarmIn, 0, sizeof(g_CurStartedAlarmIn[0])*MAX_NUM_GPIO_IN);
+	memset(g_CurStartedAlarmOut, 0, sizeof(g_CurStartedAlarmOut[0])*MAX_NUM_GPIO_OUT);
 
-	#if 0
-	do
-	{
-		//start detector
-		if(FLAG_EVENT_ENABLE == g_CurStartedEvent[EVENT_DETECTOR_ID_ALARM_INPUT-1].s_EnableFlag)
-		{
-		    Result = StartGPIOAlarmInput();
-		    if ( FAILED( Result ) )
-		    {
-				IsStartOk = 0;
-				break;
-		    }
-		}
-
-		if(FLAG_EVENT_ENABLE == g_CurStartedEvent[EVENT_DETECTOR_ID_HUMAN_DETECT-1].s_EnableFlag)
-		{
-			Result = StartHumanDetect();
-			if ( FAILED( Result ) )
-			{
-				IsStartOk = 0;
-				break;
-			}
-		}
-
-
-		//start processor
-		if(0 < CheckCurBitValid(EVENT_PROCESSOR_ID_ALARM_OUTPUT))
-		{
-			Result = StartGPIOAlarmOutput();
-		    if ( FAILED( Result ) )
-		    {
-		        IsStartOk = 0;
-				break;
-		    }
-		}
-		
-
-		if(0 < CheckCurBitValid(EVENT_PROCESSOR_ID_INFO_RECORD))
-		{
-			Result = StartAlarmInfoRecord();
-			if ( FAILED( Result ) )
-			{
-				IsStartOk = 0;
-				break;
-			}
-		}
-		
-	    Result = m_Center->Start();
-	    if ( FAILED( Result ) )
-	    {
-	        IsStartOk = 0;
-			break;
-	    }
-	}while(0);
-
-	if(0 == IsStartOk)
-	{
-		StopGPIOAlarmInput();
-	    StopGPIOAlarmOutput();
-		StopHumanDetect();
-		StopAlarmInfoRecord();
-	    m_Center->Deinitialize();
-	    m_Center = NULL;
-	}
-	#endif
 	Result = m_Center->Start();
     if ( FAILED( Result ) )
     {
@@ -241,8 +172,8 @@ GMI_RESULT EventTransactionCenter::ConfigureGPIOAlarmInput( const void_t *Parame
 			break;
 		}
 		
-		memcpy(&(g_CurStartedAlaramIn[InfoPtr->s_InputNumber]), (AlarmInputInfo *)Parameter, sizeof(AlarmInputInfo));
-		if(FLAG_EVENT_ENABLE == g_CurStartedAlaramIn[InfoPtr->s_InputNumber].s_EnableFlag)
+		memcpy(&(g_CurStartedAlarmIn[InfoPtr->s_InputNumber]), (AlarmInputInfo *)Parameter, sizeof(AlarmInputInfo));
+		if(FLAG_EVENT_ENABLE == g_CurStartedAlarmIn[InfoPtr->s_InputNumber].s_EnableFlag)
 		{
 			Result = StartGPIOAlarmInputEx(Parameter, sizeof(AlarmInputInfo));
 					
@@ -272,7 +203,14 @@ GMI_RESULT EventTransactionCenter::ConfigureGPIOAlarmOutput( const void_t *Param
 			break;
 		}
 		InfoPtr = (struct AlarmOutputInfo *)Parameter;
-
+		if((InfoPtr->s_OutputNumber < 0)
+			|| (InfoPtr->s_OutputNumber > (MAX_NUM_GPIO_OUT-1)))
+		{
+			Result = GMI_INVALID_PARAMETER;
+			break;
+		}
+		memcpy(&(g_CurStartedAlarmOut[InfoPtr->s_OutputNumber]), InfoPtr, sizeof(AlarmOutputInfo));
+	
 		if(FLAG_EVENT_ENABLE == InfoPtr->s_EnableFlag)
 		{
 			StartGPIOAlarmOutputEx(Parameter, sizeof(AlarmOutputInfo));
@@ -389,9 +327,9 @@ GMI_RESULT EventTransactionCenter::StartGPIOAlarmInputEx(const void *Parameter, 
         return GMI_OUT_OF_MEMORY;
     }
 
-	if(Info.s_CheckTime < 100)
+	if(Info.s_CheckTime < 200)
 	{
-    	Info.s_CheckTime = 100;
+    	Info.s_CheckTime = 200;
 	}
 
 	printf("StartGPIOAlarmInputEx Info.s_InputNumber=%d\n", Info.s_InputNumber);

@@ -98,7 +98,7 @@ GMI_RESULT  EventProcessInfoRecord::Notify( uint32_t EventId, uint32_t Index, en
     		switch(EventId)
     		{
     			case EVENT_DETECTOR_ID_ALARM_INPUT:
-					if(0 < (g_CurStartedAlaramIn[Index].s_LinkAlarmStrategy & (1<<(EventId-1))))
+					if(0 < (g_CurStartedAlarmIn[Index].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_INFO_RECORD-1))))
 					{
 						if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
 			        	{ 		
@@ -118,7 +118,7 @@ GMI_RESULT  EventProcessInfoRecord::Notify( uint32_t EventId, uint32_t Index, en
 					BreakFlag = 1;
 					break;
 				case EVENT_DETECTOR_ID_HUMAN_DETECT:
-					if(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EventId-1))))
+					if(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_INFO_RECORD-1))))
 					{
 			        	if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
 			        	{ 		

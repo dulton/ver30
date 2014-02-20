@@ -202,7 +202,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MinSensVal = 100;
 		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = 450;
 	}
-	TmpParam.s_LinkAlarmStrategy = 2;
+	TmpParam.s_LinkAlarmStrategy = 3;
 	TmpParam.s_ScheduleTime[0].s_StartTime = 0;
 	TmpParam.s_ScheduleTime[0].s_EndTime = 24*60;
 	TmpParam.s_ScheduleTime[1].s_StartTime = 0;
@@ -221,7 +221,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 	#endif
 
 //	int32_t n=5;
-	while('c' != getchar())
+	while('a' != getchar())
 	{
 		GMI_Sleep(1000);
 	}
@@ -243,6 +243,35 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpParam.s_EnableFlag = 0;
 	
 	Center.ConfigureAlarmEvent(e_AlarmEventType_HumanDetect, (void_t*)(&TmpParam),sizeof(TmpParam));
+
+	while('b' != getchar())
+	{
+		GMI_Sleep(1000);
+	}
+
+	
+	TmpParam.s_EnableFlag = 1;
+	TmpParam.s_CheckTime = 500;
+	TmpParam.s_LinkAlarmStrategy = 2;
+	Center.ConfigureAlarmEvent(e_AlarmEventType_HumanDetect, (void_t*)(&TmpParam),sizeof(TmpParam));
+
+	while('c' != getchar())
+	{
+		GMI_Sleep(1000);
+	}
+	TmpParam.s_LinkAlarmStrategy = 3;
+	Center.ConfigureAlarmEvent(e_AlarmEventType_HumanDetect, (void_t*)(&TmpParam),sizeof(TmpParam));
+	TmpIoOutParam.s_DelayTime = 10;
+
+	Center.ConfigureGPIOAlarmOutput((void_t*)(&TmpIoOutParam),sizeof(TmpIoOutParam));
+
+	while('d' != getchar())
+	{
+		GMI_Sleep(1000);
+	}
+	TmpIoOutParam.s_EnableFlag = 0;
+
+	Center.ConfigureGPIOAlarmOutput((void_t*)(&TmpIoOutParam),sizeof(TmpIoOutParam));
 	
 	while('q' != getchar())
 	{

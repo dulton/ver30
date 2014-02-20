@@ -124,7 +124,7 @@ struct AlarmEventConfigInfo
 
 
 extern AlarmEventConfigInfo g_CurStartedEvent[MAX_NUM_EVENT_TYPE];
-extern AlarmInputInfo g_CurStartedAlaramIn[MAX_NUM_GPIO_IN];
-
+extern AlarmInputInfo g_CurStartedAlarmIn[MAX_NUM_GPIO_IN];
+extern AlarmOutputInfo g_CurStartedAlarmOut[MAX_NUM_GPIO_OUT];
 
 #endif//EVENT_TRANSACTION_HEADER
