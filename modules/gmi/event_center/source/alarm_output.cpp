@@ -90,8 +90,14 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 				case EVENT_DETECTOR_ID_ALARM_INPUT:
 					if(0 < (g_CurStartedAlarmIn[Index].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1))))
 					{
-						
-						Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmInputStatus_Opened : (uint8_t)e_AlarmInputStatus_Closed );
+						if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_NormalStatus)
+						{
+							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmOutputStatus_Closed: (uint8_t)e_AlarmOutputStatus_Opened );
+						}
+						else
+						{
+							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmOutputStatus_Opened: (uint8_t)e_AlarmOutputStatus_Closed);
+						}
 						if ( FAILED( Result ) )
 			            {
 							m_OperationLock.Unlock();

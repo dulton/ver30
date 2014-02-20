@@ -130,8 +130,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 	{
 		TmpIoOutParam.s_DelayTime = 5; //s
 	}
-	TmpIoOutParam.s_NormalStatus = 0;
-	TmpIoOutParam.s_AlarmStatus = 1;
+	TmpIoOutParam.s_NormalStatus = e_AlarmOutputStatus_Closed;
 	TmpIoOutParam.s_ScheduleTime[0].s_StartTime = 0;
 	TmpIoOutParam.s_ScheduleTime[0].s_EndTime = 24*60;
 	TmpIoOutParam.s_ScheduleTime[1].s_StartTime = 0;
@@ -150,16 +149,27 @@ int32_t main( int32_t argc, char_t* argv[] )
 	
 	#endif
 
-	#if 0
+	#if 1
 	AlarmInputInfo TmpIoParam;
 	memset(&TmpIoParam, 0, sizeof(TmpIoParam));
 	TmpIoParam.s_EnableFlag = 1;
 	TmpIoParam.s_InputNumber = 0;
+	TmpIoParam.s_NormalStatus = e_AlarmInputStatus_Closed;
 	strcpy(TmpIoParam.s_Name, "Io input 0");
-	TmpIoParam.s_ScheduleTime[1].s_StartTime = 15*60;
-	TmpIoParam.s_ScheduleTime[1].s_EndTime = 18*60;
-	TmpIoParam.s_ScheduleTime[3].s_StartTime = 5*60;
-	TmpIoParam.s_ScheduleTime[3].s_EndTime = 18*60;
+	TmpIoParam.s_ScheduleTime[0].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[0].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[1].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[1].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[2].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[2].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[3].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[3].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[4].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[4].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[5].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[5].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[6].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[6].s_EndTime = 24*60;
 	TmpIoParam.s_LinkAlarmStrategy = 3;
 	Center.ConfigureGPIOAlarmInput((void_t*)(&TmpIoParam),sizeof(TmpIoParam));
 
@@ -167,10 +177,20 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpIoParam.s_EnableFlag = 1;
 	TmpIoParam.s_InputNumber = 2;
 	strcpy(TmpIoParam.s_Name, "Io input 2");
-	TmpIoParam.s_ScheduleTime[1].s_StartTime = 15*60;
-	TmpIoParam.s_ScheduleTime[1].s_EndTime = 18*60;
-	TmpIoParam.s_ScheduleTime[3].s_StartTime = 5*60;
-	TmpIoParam.s_ScheduleTime[3].s_EndTime = 18*60;
+	TmpIoParam.s_ScheduleTime[0].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[0].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[1].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[1].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[2].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[2].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[3].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[3].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[4].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[4].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[5].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[5].s_EndTime = 24*60;
+	TmpIoParam.s_ScheduleTime[6].s_StartTime = 0;
+	TmpIoParam.s_ScheduleTime[6].s_EndTime = 24*60;
 	TmpIoParam.s_LinkAlarmStrategy = 3;
 	Center.ConfigureGPIOAlarmInput((void_t*)(&TmpIoParam),sizeof(TmpIoParam));
 	#endif

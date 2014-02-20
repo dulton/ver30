@@ -30,18 +30,18 @@ enum AlarmEventType
 };
 
 
-
-enum AlarmInputTriggerType
-{
-    e_AlarmInputTriggerType_UsuallyClosed = 1,
-    e_AlarmInputTriggerType_UsuallyOpened,
-};
-
 enum AlarmInputStatus
 {
     e_AlarmInputStatus_Closed = 0,
     e_AlarmInputStatus_Opened,
 };
+
+enum AlarmOutputStatus
+{
+    e_AlarmOutputStatus_Closed = 0,
+    e_AlarmOutputStatus_Opened,
+};
+
 
 
 enum TimeType
@@ -72,8 +72,8 @@ struct AlarmOutputInfo
 	uint32_t          s_EnableFlag; //0-disable, 1-enbale
 	uint32_t          s_OutputNumber; //range from 0-3
     char_t            s_Name[ALARM_OUTPUT_MAX_NAME_LENGTH];
-	uint32_t          s_NormalStatus;
-	uint32_t          s_AlarmStatus;
+	AlarmOutputStatus s_NormalStatus;
+	//uint32_t          s_AlarmStatus;
 	uint32_t          s_WorkMode;
     uint32_t          s_DelayTime; //unit:second
 	ScheduleTimeInfo  s_ScheduleTime[7]; //7 days of every week 
@@ -86,7 +86,7 @@ struct AlarmInputInfo
     uint32_t          s_InputNumber;     //range from 0-3
     char_t            s_Name[ALARM_INPUT_MAX_NAME_LENGTH];
     uint32_t          s_CheckTime; //unit:ms
-    uint32_t          s_TriggerType;
+    AlarmInputStatus  s_NormalStatus;
    	ScheduleTimeInfo  s_ScheduleTime[7]; //7 days of every week 
 	//every bit represents the certain AlarmStrategy;
     //0-Alarm output,1-Info record,2-...;

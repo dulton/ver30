@@ -33,15 +33,6 @@ public:
         return m_CheckTime;
     }
 
-    inline void_t   SetTriggerType( enum AlarmInputTriggerType Type )
-    {
-        m_TriggerType = Type;
-    }
-    inline enum AlarmInputTriggerType GetTriggerType() const
-    {
-        return m_TriggerType;
-    }
-
     GMI_RESULT  AddScheduleTime( const ScheduleTimeInfo *Schedule );
     GMI_RESULT  ListScheduleTime( uint32_t *ItemNumber, ScheduleTimeInfo *Schedule );
 
@@ -57,7 +48,6 @@ private:
     uint32_t                                m_InputNumber;
     SafePtr<char_t, DefaultObjectsDeleter>  m_Name;
     uint32_t                                m_CheckTime;
-    enum AlarmInputTriggerType              m_TriggerType;
     std::vector<ScheduleTimeInfo>           m_ScheduleTimes;
 
     GMI_Thread             m_DetectThread;
