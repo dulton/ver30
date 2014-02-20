@@ -20,10 +20,6 @@ public:
 	GMI_RESULT ConfigureAlarmEvent(const enum AlarmEventType EventType, const void *Parameter, size_t ParamterLength);
 
 private:
-   // GMI_RESULT StartGPIOAlarmInput();
-   // GMI_RESULT StopGPIOAlarmInput();
-   // GMI_RESULT StartGPIOAlarmOutput();
-   // GMI_RESULT StopGPIOAlarmOutput();
 	GMI_RESULT StartGPIOAlarmInputEx(const void *Parameter, size_t ParamterLength);
     GMI_RESULT StopGPIOAlarmInputEx(size_t InIoIndex);
     GMI_RESULT StartGPIOAlarmOutputEx(const void *Parameter, size_t ParamterLength);

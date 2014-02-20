@@ -178,29 +178,29 @@ int32_t main( int32_t argc, char_t* argv[] )
 	AlarmEventConfigInfo TmpParam;
 	memset(&TmpParam, 0, sizeof(TmpParam));
 	TmpParam.s_EnableFlag = 1;
-	TmpParam.s_CheckTime = 200; //ms
+	TmpParam.s_CheckTime = 400; //ms
 	if((atoi(argv[1]) > 0) && (atoi(argv[1]) < 1000))
 	{
-		TmpParam.s_MinSensVal = atoi(argv[1]);
+		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MinSensVal = atoi(argv[1]);
 	}
 	else
 	{
-		TmpParam.s_MinSensVal = 100;
+		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MinSensVal = 100;
 	}
 	if((atoi(argv[2]) > 0) && (atoi(argv[2]) < 1000))
 	{
-		TmpParam.s_MaxSensVal = atoi(argv[2]);
+		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = atoi(argv[2]);
 	}
 	else
 	{
-		TmpParam.s_MaxSensVal = 450;
+		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = 450;
 	}
 
-	if(TmpParam.s_MinSensVal > TmpParam.s_MaxSensVal)
+	if(TmpParam.s_ExtData.s_HumanDetectExInfo.s_MinSensVal > TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal)
 	{
 		printf("lower limit value bigger than upper limit value, need default value[100,450].\n");
-		TmpParam.s_MinSensVal = 100;
-		TmpParam.s_MaxSensVal = 450;
+		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MinSensVal = 100;
+		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = 450;
 	}
 	TmpParam.s_LinkAlarmStrategy = 2;
 	TmpParam.s_ScheduleTime[0].s_StartTime = 0;
@@ -223,9 +223,9 @@ int32_t main( int32_t argc, char_t* argv[] )
 //	int32_t n=5;
 	while('c' != getchar())
 	{
-		GMI_Sleep(2000);
+		GMI_Sleep(1000);
 	}
-
+	printf("continue...\n");
 	#if 0
 	memset(&TmpIoParam, 0, sizeof(TmpIoParam));
 	TmpIoParam.s_EnableFlag = 0;
@@ -239,11 +239,14 @@ int32_t main( int32_t argc, char_t* argv[] )
 	Center.ConfigureGPIOAlarmInput((void_t*)(&TmpIoParam),sizeof(TmpIoParam));
 	printf("stop alarm input 0\n");
 	#endif
+
+	TmpParam.s_EnableFlag = 0;
 	
+	Center.ConfigureAlarmEvent(e_AlarmEventType_HumanDetect, (void_t*)(&TmpParam),sizeof(TmpParam));
 	
 	while('q' != getchar())
 	{
-		GMI_Sleep(2000);
+		GMI_Sleep(1000);
 	}
 
 	

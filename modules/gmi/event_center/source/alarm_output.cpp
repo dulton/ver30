@@ -217,7 +217,7 @@ void_t* AlarmOutput::TimerEntry()
 				switch(i)
 				{
 					case EVENT_DETECTOR_ID_HUMAN_DETECT:
-						printf("GMI_ALARM_MODE_LIGHT close\n");
+						printf("GMI_ALARM_MODE_LIGHT close[%u]\n", (uint32_t)CurrTime);
 			            Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, 0 );
 						if ( FAILED( Result ) )
 			            {	            	

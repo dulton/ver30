@@ -13,6 +13,16 @@
 #define EVENT_PROCESSOR_ID_INFO_RECORD   2
 
 
+//
+#define ALARM_INPUT_MAX_NAME_LENGTH   32
+#define ALARM_OUTPUT_MAX_NAME_LENGTH  32
+#define FLAG_EVENT_DISABLE            0
+#define FLAG_EVENT_ENABLE             1
+#define MAX_NUM_EVENT_TYPE           10
+#define MAX_NUM_GPIO_IN               4
+#define MAX_NUM_GPIO_OUT              4
+
+
 enum AlarmEventType
 {
     e_AlarmEventType_AlarmInput = 1,
@@ -33,7 +43,7 @@ enum AlarmInputStatus
     e_AlarmInputStatus_Opened,
 };
 
-#if 1
+
 enum TimeType
 {
     e_TimeType_Absolute = 1, // uint64_t can express absolute time
@@ -43,22 +53,33 @@ enum TimeType
     e_TimeType_MonthCycle,   // uint64_t: monthday-hour-minute-second-microsecond, 0xwwhhmmss00xxxxxx
 };
 
+enum AlarmOutputWorkMode
+{
+    e_AlarmOutputWorkMode_DelayAutoTrigger = 1,
+    e_AlarmOutputWorkMode_ManualTrigger,
+};
+
+
 struct ScheduleTimeInfo
 {
     enum TimeType     s_TimeType;
     uint64_t          s_StartTime;
     uint64_t          s_EndTime;
 };
-#else
-struct ScheduleTimeInfo
+
+struct AlarmOutputInfo
 {
-    uint32_t          s_StartTime;
-    uint32_t          s_EndTime;
+	uint32_t          s_EnableFlag; //0-disable, 1-enbale
+	uint32_t          s_OutputNumber; //range from 0-3
+    char_t            s_Name[ALARM_OUTPUT_MAX_NAME_LENGTH];
+	uint32_t          s_NormalStatus;
+	uint32_t          s_AlarmStatus;
+	uint32_t          s_WorkMode;
+    uint32_t          s_DelayTime; //unit:second
+	ScheduleTimeInfo  s_ScheduleTime[7]; //7 days of every week 
+	uint32_t          s_Reserverd[4];
 };
 
-#endif
-
-#define ALARM_INPUT_MAX_NAME_LENGTH  32
 struct AlarmInputInfo
 {
     uint32_t          s_EnableFlag;      //0-disable, 1-enbale
@@ -74,56 +95,33 @@ struct AlarmInputInfo
 	uint32_t          s_Reserverd[4];
 };
 
-enum AlarmOutputWorkMode
+struct HumanDetectData
 {
-    e_AlarmOutputWorkMode_DelayAutoTrigger = 1,
-    e_AlarmOutputWorkMode_ManualTrigger,
+	uint32_t          s_MinSensVal; //human detect use
+	uint32_t          s_MaxSensVal; //human detect use
+	uint32_t          s_Reserved[4];
 };
 
-#define ALARM_OUTPUT_MAX_NAME_LENGTH  32
-struct AlarmOutputInfo
+union UnionExternData
 {
-	uint32_t          s_EnableFlag; //0-disable, 1-enbale
-	uint32_t          s_OutputNumber; //range from 0-3
-    char_t            s_Name[ALARM_OUTPUT_MAX_NAME_LENGTH];
-	uint32_t          s_NormalStatus;
-	uint32_t          s_AlarmStatus;
-	uint32_t          s_WorkMode;
-    // s_DelayTime is in second unit
-    uint32_t          s_DelayTime; //unit:s
-	ScheduleTimeInfo  s_ScheduleTime[7]; //7 days of every week 
-	uint32_t          s_Reserverd[4];
-    //uint32_t          s_ScheduleTimeNumber;
-    //ScheduleTimeInfo  s_ScheduleTime[1];
+    HumanDetectData s_HumanDetectExInfo;
 };
 
-struct HumanDetectInfo
-{
-	uint32_t          s_CheckTime;
-    //uint32_t          s_ScheduleTimeNumber;
-    //ScheduleTimeInfo  s_ScheduleTime[1];
-};
-
-#define FLAG_EVENT_DISABLE  0
-#define FLAG_EVENT_ENABLE   1
 
 struct AlarmEventConfigInfo
 {
-	uint32_t           s_EnableFlag;      //0-disable, 1-enbale
+	uint32_t          s_EnableFlag;      //0-disable, 1-enbale
 	ScheduleTimeInfo  s_ScheduleTime[7]; //7 days of every week 
 	//every bit represents the certain AlarmStrategy;
     //0-Alarm output,1-Info record,2-...;
     //value 0-invalid, value 1-valid
 	uint32_t          s_LinkAlarmStrategy;
 	uint32_t          s_CheckTime;
-	uint32_t          s_MinSensVal; //human detect use
-	uint32_t          s_MaxSensVal; //human detect use
 	uint32_t          s_Reserverd[4];
+	UnionExternData   s_ExtData;
 };
 
-#define  MAX_NUM_EVENT_TYPE       10
-#define MAX_NUM_GPIO_IN           4
-#define MAX_NUM_GPIO_OUT          4
+
 
 extern AlarmEventConfigInfo g_CurStartedEvent[MAX_NUM_EVENT_TYPE];
 extern AlarmInputInfo g_CurStartedAlaramIn[MAX_NUM_GPIO_IN];

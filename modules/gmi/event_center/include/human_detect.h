@@ -3,6 +3,12 @@
 #include "event_detector.h"
 #include "event_transaction_header.h"
 
+struct HumanDetectInfo
+{
+	uint32_t          s_CheckTime;
+};
+
+
 class HumanDetect : public EventDetector
 {
 public:
