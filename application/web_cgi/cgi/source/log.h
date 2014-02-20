@@ -7,7 +7,7 @@
 #include <sys/time.h>
 
 //debug switch
-//#define DEBUG_CGI
+#define DEBUG_CGI
 #ifdef DEBUG_CGI
 extern int        g_LogCount;
 extern FILE      *g_FLogFile1;

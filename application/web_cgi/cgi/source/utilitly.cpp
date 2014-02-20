@@ -438,22 +438,23 @@ GMI_RESULT GMI_CheckAutoFlags(boolean_t *AutoFlags)
     }
     
     char_t  Value[64] = {"0"};
-    Result = SysInfoRead(Handle, HW_AUTO_DETECT_INFO_PATH, HW_LENS_KEY, "DF003", Value);
+    Result = SysInfoRead(Handle, HW_AUTO_DETECT_INFO_PATH, HW_LENS_KEY, "NONE", Value);
     if (FAILED(Result))
     {
+	*AutoFlags = false;
         SysInfoClose(Handle);      
         SysInfoReadDeinitialize();
         return Result;
     }
     else if (SUCCEEDED(Result))
     {
-       if (strcmp("DF003", Value) == 0)
-        {
-            *AutoFlags = true;
-        }
-        else
+       if (strcmp("NONE", Value) == 0)
         {
             *AutoFlags = false;
+        }
+        else if (strcmp("DF003", Value) == 0)
+        {
+            *AutoFlags = true;
         }
     }
 
@@ -493,7 +494,6 @@ GMI_RESULT CheckIpExist(const char_t* InData)
 
     return Result;
 }
-
 
 GMI_RESULT GMI_GetUpdatePort(int32_t  *UpgradePort)
 {
