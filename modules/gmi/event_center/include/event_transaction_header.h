@@ -13,6 +13,12 @@
 #define EVENT_PROCESSOR_ID_INFO_RECORD   2
 
 
+//schedule id 
+#define SCHEDULE_TIME_ID_ALARM_IN        1
+#define SCHEDULE_TIME_ID_ALARM_OUT       2
+#define SCHEDULE_TIME_ID_HUMAN_DETECT    3
+
+
 //
 #define ALARM_INPUT_MAX_NAME_LENGTH   32
 #define ALARM_OUTPUT_MAX_NAME_LENGTH  32
@@ -92,6 +98,10 @@ struct AlarmInputInfo
     //0-Alarm output,1-Info record,2-...;
     //value 0-invalid, value 1-valid
 	uint32_t          s_LinkAlarmStrategy;
+	union 
+    {
+        uint32_t  s_IoNum;
+    }s_LinkAlarmExtInfo;                //when link alarm out, need IO number.
 	uint32_t          s_Reserverd[4];
 };
 
@@ -116,10 +126,38 @@ struct AlarmEventConfigInfo
     //0-Alarm output,1-Info record,2-...;
     //value 0-invalid, value 1-valid
 	uint32_t          s_LinkAlarmStrategy;
+	union 
+    {
+        uint32_t s_IoNum;
+    }s_LinkAlarmExtInfo;                //when link alarm out, need IO number.
 	uint32_t          s_CheckTime;
 	uint32_t          s_Reserverd[4];
 	UnionExternData   s_ExtData;
 };
+
+struct AlarmScheduleTimeInfo
+{
+	uint32_t          s_Index;            //when alarm in/out, need IO number
+	ScheduleTimeInfo  s_ScheduleTime[7]; //7 days of every week 
+	uint8_t           s_Reserved[8];
+};
+
+struct AlarmUploadInf
+{
+    uint64_t s_AlarmId;
+    int32_t  s_AlarmType;
+	int32_t  s_AlarmLevel;
+    int32_t  s_OnOff; //0 for off, 1 for on;
+    uint32_t  s_TimeSec;
+	uint32_t  s_TimeMsec;
+    char_t  s_Description[128];
+    union 
+    {
+        uint32_t s_IoNum;
+    }s_ExtraInfo;
+	uint8_t  s_Reserved[8];
+};
+
 
 
 

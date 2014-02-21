@@ -28,20 +28,6 @@ int32_t CheckCurBitValid(uint32_t BitPos)
 	return IsValid;
 }
 
-int32_t CheckCurBitValidByStrategyId(uint32_t EventId, uint32_t StrategyId)
-{
-	int32_t IsValid = 0;
-	if((EventId < 0) || (EventId > MAX_NUM_EVENT_TYPE-1))
-	{
-		fprintf(stderr, "CheckCurBitValidByProcessorId EventId %d error.\n", EventId);
-		return -1;
-	}
-	if(0 < (g_CurStartedEvent[EventId].s_LinkAlarmStrategy & (1<<(StrategyId-1))))
-	{
-		IsValid = 1;
-	}
-	return IsValid;
-}
 
 
 size_t EventTransactionCenter::m_IsStartHumanDetect = 0;
@@ -290,13 +276,66 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType
     return Result;
 }
 
-GMI_RESULT EventTransactionCenter::StartGPIOAlarmInputEx(const void *Parameter, size_t ParamterLength)
+GMI_RESULT EventTransactionCenter::ConfigureAlarmScheduleTime(size_t ScheduleId,const void_t * Parameter, size_t Parameterlength)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+
+	if((0 == Parameterlength)
+		|| (NULL == Parameter)
+		|| (Parameterlength < sizeof(struct AlarmScheduleTimeInfo)))
+	{
+		fprintf(stderr, "ConfigureAlarmScheduleTime GMI_INVALID_PARAMETER.\n");
+		Result = GMI_INVALID_PARAMETER;
+		return Result;
+	}
+
+	AlarmScheduleTimeInfo *TmpInfo = (AlarmScheduleTimeInfo *)Parameter;
+	
+	do
+	{
+		switch(ScheduleId)
+		{
+			case SCHEDULE_TIME_ID_ALARM_IN:
+				if((TmpInfo->s_Index < 0)
+					|| (TmpInfo->s_Index > (MAX_NUM_GPIO_IN-1)))
+				{
+					fprintf(stderr, "ConfigureAlarmScheduleTime  Index %d SCHEDULE_TIME_ID_ALARM_IN error.\n", TmpInfo->s_Index);
+					Result = GMI_INVALID_PARAMETER;
+					break;
+				}
+				memcpy(&(g_CurStartedAlarmIn[TmpInfo->s_Index].s_ScheduleTime[0]), &(TmpInfo->s_ScheduleTime[0]), sizeof(ScheduleTimeInfo)*7);
+				break;
+			case SCHEDULE_TIME_ID_ALARM_OUT:
+				if((TmpInfo->s_Index < 0)
+					|| (TmpInfo->s_Index > (MAX_NUM_GPIO_OUT-1)))
+				{
+					fprintf(stderr, "ConfigureAlarmScheduleTime  Index %d SCHEDULE_TIME_ID_ALARM_OUT error.\n", TmpInfo->s_Index);
+					Result = GMI_INVALID_PARAMETER;
+					break;
+				}
+				memcpy(&(g_CurStartedAlarmOut[TmpInfo->s_Index].s_ScheduleTime[0]), &(TmpInfo->s_ScheduleTime[0]), sizeof(ScheduleTimeInfo)*7);
+				break;
+			case SCHEDULE_TIME_ID_HUMAN_DETECT:
+				memcpy(&(g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[0]), &(TmpInfo->s_ScheduleTime[0]), sizeof(ScheduleTimeInfo)*7);
+				break;
+			default:
+				fprintf(stderr, "ConfigureAlarmScheduleTime  ScheduleId %d error.\n", ScheduleId);
+				break;
+		}
+	}while(0);
+	
+	
+	return Result;
+}
+
+
+GMI_RESULT EventTransactionCenter::StartGPIOAlarmInputEx(const void *Parameter, size_t ParameterLength)
 {
 	GMI_RESULT Result = GMI_SUCCESS;
 	
-	if((0 == ParamterLength)
+	if((0 == ParameterLength)
 		|| (NULL == Parameter)
-		|| (ParamterLength < sizeof(struct AlarmInputInfo)))
+		|| (ParameterLength < sizeof(struct AlarmInputInfo)))
 	{
 		fprintf(stderr, "StartGPIOAlarmInputEx GMI_INVALID_PARAMETER.\n");
 		Result = GMI_INVALID_PARAMETER;
@@ -372,13 +411,13 @@ GMI_RESULT EventTransactionCenter::StopGPIOAlarmInputEx(size_t InIoIndex)
     return Result;
 }
 
-GMI_RESULT EventTransactionCenter::StartGPIOAlarmOutputEx(const void *Parameter, size_t ParamterLength)
+GMI_RESULT EventTransactionCenter::StartGPIOAlarmOutputEx(const void *Parameter, size_t ParameterLength)
 {
 	GMI_RESULT Result = GMI_SUCCESS;
 	
-	if((0 == ParamterLength)
+	if((0 == ParameterLength)
 		|| (NULL == Parameter)
-		|| (ParamterLength < sizeof(struct AlarmOutputInfo)))
+		|| (ParameterLength < sizeof(struct AlarmOutputInfo)))
 	{
 		fprintf(stderr, "StartGPIOAlarmOutputEx GMI_INVALID_PARAMETER.\n");
 		Result = GMI_INVALID_PARAMETER;

@@ -131,6 +131,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 		TmpIoOutParam.s_DelayTime = 5; //s
 	}
 	TmpIoOutParam.s_NormalStatus = e_AlarmOutputStatus_Closed;
+	#if 0
 	TmpIoOutParam.s_ScheduleTime[0].s_StartTime = 0;
 	TmpIoOutParam.s_ScheduleTime[0].s_EndTime = 24*60;
 	TmpIoOutParam.s_ScheduleTime[1].s_StartTime = 0;
@@ -145,6 +146,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpIoOutParam.s_ScheduleTime[5].s_EndTime = 24*60;
 	TmpIoOutParam.s_ScheduleTime[6].s_StartTime = 0;
 	TmpIoOutParam.s_ScheduleTime[6].s_EndTime = 24*60;
+	#endif
 	Center.ConfigureGPIOAlarmOutput((void_t*)(&TmpIoOutParam),sizeof(TmpIoOutParam));
 	
 	#endif
@@ -156,6 +158,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpIoParam.s_InputNumber = 0;
 	TmpIoParam.s_NormalStatus = e_AlarmInputStatus_Closed;
 	strcpy(TmpIoParam.s_Name, "Io input 0");
+	#if 0
 	TmpIoParam.s_ScheduleTime[0].s_StartTime = 0;
 	TmpIoParam.s_ScheduleTime[0].s_EndTime = 24*60;
 	TmpIoParam.s_ScheduleTime[1].s_StartTime = 0;
@@ -170,13 +173,16 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpIoParam.s_ScheduleTime[5].s_EndTime = 24*60;
 	TmpIoParam.s_ScheduleTime[6].s_StartTime = 0;
 	TmpIoParam.s_ScheduleTime[6].s_EndTime = 24*60;
+	#endif
 	TmpIoParam.s_LinkAlarmStrategy = 3;
+	TmpIoParam.s_LinkAlarmExtInfo.s_IoNum = 0;
 	Center.ConfigureGPIOAlarmInput((void_t*)(&TmpIoParam),sizeof(TmpIoParam));
 
 	memset(&TmpIoParam, 0, sizeof(TmpIoParam));
 	TmpIoParam.s_EnableFlag = 1;
 	TmpIoParam.s_InputNumber = 2;
 	strcpy(TmpIoParam.s_Name, "Io input 2");
+	#if 0
 	TmpIoParam.s_ScheduleTime[0].s_StartTime = 0;
 	TmpIoParam.s_ScheduleTime[0].s_EndTime = 24*60;
 	TmpIoParam.s_ScheduleTime[1].s_StartTime = 0;
@@ -191,6 +197,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpIoParam.s_ScheduleTime[5].s_EndTime = 24*60;
 	TmpIoParam.s_ScheduleTime[6].s_StartTime = 0;
 	TmpIoParam.s_ScheduleTime[6].s_EndTime = 24*60;
+	#endif
 	TmpIoParam.s_LinkAlarmStrategy = 3;
 	Center.ConfigureGPIOAlarmInput((void_t*)(&TmpIoParam),sizeof(TmpIoParam));
 	#endif
@@ -223,6 +230,9 @@ int32_t main( int32_t argc, char_t* argv[] )
 		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = 450;
 	}
 	TmpParam.s_LinkAlarmStrategy = 3;
+	TmpParam.s_LinkAlarmExtInfo.s_IoNum = 0;
+
+	#if 0
 	TmpParam.s_ScheduleTime[0].s_StartTime = 0;
 	TmpParam.s_ScheduleTime[0].s_EndTime = 24*60;
 	TmpParam.s_ScheduleTime[1].s_StartTime = 0;
@@ -237,8 +247,38 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpParam.s_ScheduleTime[5].s_EndTime = 24*60;
 	TmpParam.s_ScheduleTime[6].s_StartTime = 0;
 	TmpParam.s_ScheduleTime[6].s_EndTime = 24*60;
+	#endif
 	Center.ConfigureAlarmEvent(e_AlarmEventType_HumanDetect, (void_t*)(&TmpParam),sizeof(TmpParam));
 	#endif
+
+	AlarmScheduleTimeInfo TmpTimeParam;
+	memset(&TmpTimeParam, 0, sizeof(TmpTimeParam));
+	TmpTimeParam.s_ScheduleTime[0].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[0].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[1].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[1].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[2].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[2].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[3].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[3].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[4].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[4].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[5].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[5].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[6].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[6].s_EndTime = 24*60;
+
+	TmpTimeParam.s_Index = 0;
+	Center.ConfigureAlarmScheduleTime(SCHEDULE_TIME_ID_HUMAN_DETECT, &TmpTimeParam, sizeof(TmpTimeParam));
+
+	TmpTimeParam.s_Index = 0;
+	Center.ConfigureAlarmScheduleTime(SCHEDULE_TIME_ID_ALARM_IN, &TmpTimeParam, sizeof(TmpTimeParam));
+
+	TmpTimeParam.s_Index = 2;
+	Center.ConfigureAlarmScheduleTime(SCHEDULE_TIME_ID_ALARM_IN, &TmpTimeParam, sizeof(TmpTimeParam));
+
+	TmpTimeParam.s_Index = 0;
+	Center.ConfigureAlarmScheduleTime(SCHEDULE_TIME_ID_ALARM_OUT, &TmpTimeParam, sizeof(TmpTimeParam));
 
 //	int32_t n=5;
 	while('a' != getchar())

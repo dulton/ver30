@@ -88,7 +88,9 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 			switch(EventId)
 			{
 				case EVENT_DETECTOR_ID_ALARM_INPUT:
-					if(0 < (g_CurStartedAlarmIn[Index].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1))))
+					printf("Index=%d, s_IoNum=%d, GetOutputNumber=%d\n", Index, g_CurStartedAlarmIn[Index].s_LinkAlarmExtInfo.s_IoNum, GetOutputNumber());
+					if((0 < (g_CurStartedAlarmIn[Index].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1))))
+						&& (g_CurStartedAlarmIn[Index].s_LinkAlarmExtInfo.s_IoNum == GetOutputNumber()))
 					{
 						if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_NormalStatus)
 						{
@@ -107,11 +109,15 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 			            {
 			                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
 			            }
+						
+						BreakFlag = 1;
 					}
-					BreakFlag = 1;
 					break;
 				case EVENT_DETECTOR_ID_HUMAN_DETECT:
-					if(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1))))
+					
+					printf("EventId=%d, s_IoNum=%d, GetOutputNumber=%d\n", EventId, g_CurStartedEvent[EventId-1].s_LinkAlarmExtInfo.s_IoNum, GetOutputNumber());
+					if(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1)))
+						&& (g_CurStartedEvent[EventId-1].s_LinkAlarmExtInfo.s_IoNum == GetOutputNumber()))
 			        {
 			            Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, (e_EventType_Start == Type) ? 1 : 0 );
 						if ( FAILED( Result ) )
@@ -124,8 +130,9 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 			            {
 			                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
 			            }
+						
+						BreakFlag = 1;
 			        }
-					BreakFlag = 1;
 					break;
 				default:
 					fprintf(stderr, "AlarmOutput::Notify EventId %d error.\n", EventId);
