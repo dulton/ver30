@@ -1,6 +1,7 @@
 #ifndef __SYSTEM_SERVICE_H__
 #define __SYSTEM_SERVICE_H__
 
+#include "alarm.h"
 #include "net_manager.h"
 #include "ptz_control.h"
 #include "sys_env_types.h"
@@ -163,6 +164,7 @@ private:
     ReferrencePtr<UserManager>         m_UserManagerPtr;
     ReferrencePtr<SdkStreamControl>    m_SdkStreamCtlPtr;
     ReferrencePtr<RtspStreamControl>   m_RtspStreamCtlPtr;
+    ReferrencePtr<Alarm>               m_AlarmPtr;
 
     //stream center communication port
     uint16_t                           m_MediaLocalClientPort;

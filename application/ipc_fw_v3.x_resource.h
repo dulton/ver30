@@ -75,6 +75,8 @@
 #define GMI_SDK_TO_SYS_SERVER_REQ_PORT_ITEM         "sdk_to_sys_server_req_port"
 #define SDK_TO_SYS_SERVER_REQ_PORT                  (GMI_UDP_PORT_BASE+31)
 #define SDK_TO_AUTH_SERVER_PORT                     (GMI_UDP_PORT_BASE+32)
+#define GMI_SYS_SERVER_C_WARING_PORT                (GMI_UDP_PORT_BASE+33)
+#define GMI_SDK_S_WARING_PORT                       (GMI_UDP_PORT_BASE+34)
 
 
 //streaming media server
@@ -191,13 +193,6 @@
 #define GMI_STREAMING_MEDIA_SERVER_ENCODE_AUDIO1_IPC_MUTEX_KEY       (GMI_IPC_MUTEX_BASE_KEY+10)
 #define GMI_STREAMING_MEDIA_SERVER_DECODE_AUDIO1_IPC_MUTEX_KEY       (GMI_IPC_MUTEX_BASE_KEY+12)
 
-//file lock
-#define CAPABILITY_SW_FILE_NAME_KEY                                  3346
-#define CAPABILITY_AUTO_FILE_NAME_KEY                                3348
-#define GMI_SETTING_CONFIG_FILE_NAME_KEY                             3350
-#define GMI_FACTORY_SETTING_CONFIG_FILE_NAME_KEY                     3352
-#define GMI_RESOURCE_CONFIG_FILE_NAME_KEY                            3354
-
 #define GMI_USER_LOG_IPC_MUTEX_KEY                                   (GMI_IPC_MUTEX_BASE_KEY+14)
 // not used for now 
 #define GMI_DEBUG_LOG_IPC_MUTEX_KEY                                  (GMI_IPC_MUTEX_BASE_KEY+16)
@@ -223,6 +218,15 @@
 #define GMI_STREAMING_MEDIA_SERVER_ENCODE_VIDEO4_SHARE_MEMORY_KEY    (GMI_SHARE_MEMORY_BASE_KEY+7)
 #define GMI_STREAMING_MEDIA_SERVER_ENCODE_AUDIO1_SHARE_MEMORY_KEY    (GMI_SHARE_MEMORY_BASE_KEY+8)
 #define GMI_STREAMING_MEDIA_SERVER_DECODE_AUDIO1_SHARE_MEMORY_KEY    (GMI_SHARE_MEMORY_BASE_KEY+9)
+
+/***********************file lock**********************************/
+#define GMI_FILE_OPERATE_MUTEX_BASE_KEY                              3000
+#define CAPABILITY_SW_FILE_NAME_KEY                                  (GMI_FILE_OPERATE_MUTEX_BASE_KEY+1)
+#define CAPABILITY_AUTO_FILE_NAME_KEY                                (GMI_FILE_OPERATE_MUTEX_BASE_KEY+2)
+#define GMI_SETTING_CONFIG_FILE_NAME_KEY                             (GMI_FILE_OPERATE_MUTEX_BASE_KEY+3)
+#define GMI_FACTORY_SETTING_CONFIG_FILE_NAME_KEY                     (GMI_FILE_OPERATE_MUTEX_BASE_KEY+4)
+#define GMI_RESOURCE_CONFIG_FILE_NAME_KEY                            (GMI_FILE_OPERATE_MUTEX_BASE_KEY+5)
+
 
 /************************ multicast address ************************/
 //onvif rtsp server

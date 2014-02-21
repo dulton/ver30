@@ -226,6 +226,29 @@ GMI_RESULT SystemServiceManager::MiscInitial()
     	return Result;
     }
 
+	//alarm init
+	m_AlarmPtr = BaseMemoryManager::Instance().New<Alarm>();
+	if (NULL == m_AlarmPtr.GetPtr())
+	{
+		UserLogQuery::Deinitialize();
+		m_BoardManagerPtr = NULL;
+        m_UserManagerPtr->Deinitialize();
+        m_UserManagerPtr = NULL;
+		SYS_ERROR("new alarm fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+
+	Result = m_AlarmPtr->Initialize();
+	if (FAILED(Result))
+	{
+		UserLogQuery::Deinitialize();
+		m_BoardManagerPtr = NULL;
+        m_UserManagerPtr->Deinitialize();
+        m_UserManagerPtr = NULL;
+		SYS_ERROR("new alarm fail, Result = 0x%lx\n", Result);
+		return Result;
+	}	
+	
     //set time type and ntp server ip
     SysPkgDateTimeType SysTimeType;
     memset(&SysTimeType, 0, sizeof(SysPkgDateTimeType));
@@ -240,6 +263,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
     Result = m_BoardManagerPtr->SetNtp(NtpEnable, SysTimeType.s_NtpInterval);
     if (FAILED(Result))
     {
+    	m_AlarmPtr->Deinitialize();
     	UserLogQuery::Deinitialize();
         m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -261,6 +285,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
     Result = m_BoardManagerPtr->SetNtpServer(SysNtpServerInfo.s_NtpAddr_1);
     if (FAILED(Result))
     {
+    	m_AlarmPtr->Deinitialize();
     	UserLogQuery::Deinitialize();
         m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -275,6 +300,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
     Result = m_ConfigFileManagerPtr->GetExternNetworkPort(&m_SysNetWorkPort);
     if (FAILED(Result))
     {
+    	m_AlarmPtr->Deinitialize();
     	UserLogQuery::Deinitialize();
     	m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -289,6 +315,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
 	Result = m_ConfigFileManagerPtr->GetDeviceInfo(&m_SysDeviceInfo);
 	if (FAILED(Result))
 	{
+		m_AlarmPtr->Deinitialize();
 		UserLogQuery::Deinitialize();
 		m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -303,6 +330,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
     Result = m_ConfigFileManagerPtr->GetNtpServerInfo(&m_SysNtpServerInfo);
     if (FAILED(Result))
     {
+    	m_AlarmPtr->Deinitialize();
     	UserLogQuery::Deinitialize();
     	m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -316,6 +344,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
 	m_CapabilitiesMessagePtr = BaseMemoryManager::Instance().News<char_t>(MAX_MESSAGE_LENGTH);
 	if (NULL == m_CapabilitiesMessagePtr.GetPtr())
 	{
+		m_AlarmPtr->Deinitialize();
 		UserLogQuery::Deinitialize();
 		m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -330,6 +359,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
 	Result = m_ConfigFileManagerPtr->GetCapabilities(MAX_MESSAGE_LENGTH, m_CapabilitiesMessagePtr.GetPtr(), &m_SysCapability);
 	if (FAILED(Result))
 	{
+		m_AlarmPtr->Deinitialize();
 		UserLogQuery::Deinitialize();
 		memset(&m_SysCapability, 0, sizeof(SysPkgXml));
 		m_CapabilitiesMessagePtr = NULL;

@@ -828,7 +828,7 @@ typedef struct tagLogInfoInt
 typedef struct tagAlarmInfor
 {
     uint64_t s_WaringId;
-    int32_t  s_WaringType;
+    int32_t  s_WaringType;// is the same as "s_MinorType" of log
     int32_t  s_WaringLevel;//1 for hight level, 5 for low level
     int32_t  s_OnOff; //0 for off, 1 for on;
     uint8_t  s_Time[36];
@@ -837,6 +837,7 @@ typedef struct tagAlarmInfor
     union 
     {
         uint32_t s_IoNum;
+        uint8_t  Reserved[4];
     }s_ExtraInfo;
 }SysPkgAlarmInfor;
 
@@ -845,15 +846,15 @@ typedef struct tagAlarmInfor
 ////alarm log
 //alarm log major type
 #define SYS_LOGMAJOR_ALARM            0x1
-//minor type, alarm in
+//minor type, gpio alarm in
 #define SYS_LOGMINOR_ALRAM_IN         0x1
-//alarm out
+//alarm out, gpio alarm out
 #define SYS_LOGMINOR_ALRAM_OUT        0x2
 //motion detect
-#define SYS_LOGMINOR_MOTDET_START     0x3
+#define SYS_LOGMINOR_MOTDET           0x3
 #define SYS_LOGMINOR_MOTDET_STOP      0x4
 //hide alarm
-#define SYS_LOGMINOR_HIDE_ALARM_START 0x5
+#define SYS_LOGMINOR_HIDE             0x5
 #define SYS_LOGMINOR_HIDE_ALARM_STOP  0x6
 //selt definition alarm
 #define SYS_LOGMINOR_SELF_DEF         0x7
@@ -861,6 +862,8 @@ typedef struct tagAlarmInfor
 #define SYS_LOGMINOR_ENLARGE_ALARM    0x8
 //extend 64io
 #define SYS_LOGMINOR_ENLARGE_64_ALARM 0x9
+//PIR
+#define SYS_LOGMINOR_PIR_ALARM_IN     0xa             
 
 ////abnormal log
 #define SYS_LOGMAJOR_EXCEPTION        0x2
