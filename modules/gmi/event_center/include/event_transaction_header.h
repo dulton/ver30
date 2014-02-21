@@ -115,7 +115,8 @@ struct AlarmInputInfo
     {
         uint8_t  s_IoNum;               //sequence number:0, 1, 2 ...
 		uint8_t  s_OperateCmd;          //when link PTZ:0-none, 1-Preset Points ,2-cruise, 3-scan
-		uint8_t  s_OperateSeqNum;       //when link PTZ:sequence number:0, 1, 2 ...
+		uint16_t s_OperateSeqNum;       //when link PTZ:sequence number:0, 1, 2 ...
+		uint8_t  s_Reserverd[4];
     }s_LinkAlarmExtInfo;                //when link alarm out, need IO number.
 	uint32_t          s_Reserverd[4];
 };
@@ -141,9 +142,11 @@ struct AlarmEventConfigInfo
     //0-Alarm output,1-Info record,2-...;
     //value 0-invalid, value 1-valid
 	uint32_t          s_LinkAlarmStrategy;
-	union 
+	struct 
     {
-        uint32_t s_IoNum;
+        uint8_t  s_IoNum;               //sequence number:0, 1, 2 ...
+		uint8_t  s_OperateCmd;          //when link PTZ:0-none, 1-Preset Points ,2-cruise, 3-scan
+		uint8_t  s_OperateSeqNum;       //when link PTZ:sequence number:0, 1, 2 ...
     }s_LinkAlarmExtInfo;                //when link alarm out, need IO number.
 	uint32_t          s_CheckTime;
 	uint32_t          s_Reserverd[4];
