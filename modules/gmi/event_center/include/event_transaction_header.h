@@ -138,7 +138,7 @@ struct AlarmEventConfigInfo
 struct AlarmScheduleTimeInfo
 {
 	uint32_t          s_Index;            //when alarm in/out, need IO number
-	ScheduleTimeInfo  s_ScheduleTime[7]; //7 days of every week 
+	ScheduleTimeInfo  s_ScheduleTime[7];  //7 days of every week 
 	uint8_t           s_Reserved[8];
 };
 
@@ -148,8 +148,8 @@ struct AlarmUploadInf
     int32_t  s_AlarmType;
 	int32_t  s_AlarmLevel;
     int32_t  s_OnOff; //0 for off, 1 for on;
-    uint32_t  s_TimeSec;
-	uint32_t  s_TimeMsec;
+    uint32_t  s_TimeSec;   //unit:s
+	uint32_t  s_TimeUsec;  //unit:us
     char_t  s_Description[128];
     union 
     {
@@ -164,5 +164,6 @@ struct AlarmUploadInf
 extern AlarmEventConfigInfo g_CurStartedEvent[MAX_NUM_EVENT_TYPE];
 extern AlarmInputInfo g_CurStartedAlarmIn[MAX_NUM_GPIO_IN];
 extern AlarmOutputInfo g_CurStartedAlarmOut[MAX_NUM_GPIO_OUT];
+extern uint64_t        g_AlarmMessageId;
 
 #endif//EVENT_TRANSACTION_HEADER

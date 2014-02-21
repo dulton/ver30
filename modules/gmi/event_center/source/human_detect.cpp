@@ -105,14 +105,17 @@ void_t* HumanDetect::DetectEntry()
     //uint8_t GPIOStatus = 0;
 	//int8_t s_GPIOStatus = 0;
 	time_t       CurrTime;
+	struct timeval     TimeVal;
 	struct tm    CurrTm;
 	uint32_t     Curhm;
 	int32_t      CurrDay;
-	int32_t      CurTrigVal = 0;    
+	int32_t      CurTrigVal = 0;
+	AlarmUploadInf     AlarmUploaddata;
 
     while( !m_ThreadExitFlag )
     {
-    	CurrTime = time(NULL);
+    	gettimeofday(&TimeVal, NULL);
+		CurrTime = TimeVal.tv_sec;
 		CurrTm   = *localtime(&CurrTime);
 		CurrDay  = CurrTm.tm_wday;
 		Curhm    = (CurrTm.tm_hour * 60) + CurrTm.tm_min;
@@ -148,7 +151,18 @@ void_t* HumanDetect::DetectEntry()
 			&& (g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ExtData.s_HumanDetectExInfo.s_MinSensVal < g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ExtData.s_HumanDetectExInfo.s_MaxSensVal)
 			&& ((CurTrigVal < (int32_t)g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ExtData.s_HumanDetectExInfo.s_MinSensVal) || (CurTrigVal > (int32_t)g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ExtData.s_HumanDetectExInfo.s_MaxSensVal)))
 		{
-            m_ProcessCenter->Notify( GetId(), 0, e_EventType_Start, NULL, 0 );
+			if(g_AlarmMessageId > 0xEFFFFFFF)
+			{
+				g_AlarmMessageId = 0;
+			}	
+			AlarmUploaddata.s_AlarmId = ++g_AlarmMessageId;
+			AlarmUploaddata.s_AlarmType = e_AlarmEventType_HumanDetect;
+			AlarmUploaddata.s_ExtraInfo.s_IoNum = 0;
+			AlarmUploaddata.s_TimeSec = TimeVal.tv_sec;
+			AlarmUploaddata.s_TimeUsec = TimeVal.tv_usec;
+			strcpy(AlarmUploaddata.s_Description, "human detect appear.\n");
+			AlarmUploaddata.s_OnOff = e_EventType_Start;
+            m_ProcessCenter->Notify( GetId(), 0, e_EventType_Start, &AlarmUploaddata, sizeof(AlarmUploaddata) );
 		}
 
         GMI_Sleep( GetCheckTime() );

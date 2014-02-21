@@ -105,9 +105,9 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 							m_OperationLock.Unlock();
 			                return Result;
 			            }
-			            if ( NULL != m_Callback )
+			           // if ( NULL != m_Callback )
 			            {
-			                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
+			                //m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
 			            }
 						
 						BreakFlag = 1;
@@ -126,9 +126,9 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 			                return Result;
 			            }
 						printf("GMI_ALARM_MODE_LIGHT open\n");
-			            if ( NULL != m_Callback )
+			            //if ( NULL != m_Callback )
 			            {
-			                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
+			                //m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
 			            }
 						
 						BreakFlag = 1;

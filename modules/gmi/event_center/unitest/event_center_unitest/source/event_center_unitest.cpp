@@ -14,8 +14,32 @@
 void_t EventProcess( void_t *UserData, uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength )
 {
     struct timeval CurrentTime;
+	struct AlarmUploadInf *TmpInfo = NULL;
+	if((Parameter != NULL) && (ParameterLength >= sizeof(struct AlarmUploadInf)))
+	{
+		TmpInfo = (struct AlarmUploadInf *)Parameter;
+	}
+	else
+	{
+		printf("EventProcess Parameter NULL\n");
+	}
     gettimeofday1( &CurrentTime, NULL );
-    printf( "EventProcess: UserData=%p, EventId=%d, Type=%d, Parameter=%p, ParameterLength=%d, current time=%ld:%06ld \n", UserData, EventId, Type, Parameter, ParameterLength, CurrentTime.tv_sec, CurrentTime.tv_usec );
+    //printf( "EventProcess: UserData=%p, EventId=%d, Type=%d, Parameter=%p, ParameterLength=%d, current time=%ld:%06ld \n", UserData, EventId, Type, Parameter, ParameterLength, CurrentTime.tv_sec, CurrentTime.tv_usec );
+	printf("****callback %ld:%06ld****\n", CurrentTime.tv_sec, CurrentTime.tv_usec);
+	printf("EventId=%d\n", EventId);
+	printf("Type=%d\n", Type);
+	
+	if(NULL != TmpInfo)
+	{
+		printf("s_AlarmId=%ld\n", (long)TmpInfo->s_AlarmId);
+		printf("s_AlarmType=%d\n", TmpInfo->s_AlarmType);
+		printf("s_AlarmLevel=%d\n", TmpInfo->s_AlarmLevel);
+		printf("s_OnOff=%d(1-on,0-off)\n", TmpInfo->s_OnOff);
+		printf("s_Time=%d:%06d\n", TmpInfo->s_TimeSec, TmpInfo->s_TimeUsec);
+		printf("s_Description=%s\n", TmpInfo->s_Description);
+		printf("s_IoNum=%d\n", TmpInfo->s_ExtraInfo.s_IoNum);
+	}
+	printf("****************\n\n");
 }
 
 #if defined( _WIN32 )

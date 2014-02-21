@@ -130,17 +130,21 @@ void_t* AlarmInput::DetectEntry()
     uint8_t GPIOStatus = 0;
 	uint8_t LastGPIOStatus = 0;
 	time_t			   CurrTime;
+	struct timeval     TimeVal;
 	struct tm		   CurrTm;
 	uint32_t           Curhm;
 	int32_t 		   CurrDay;
 	int32_t            IsFirstExcute = 1;
+	AlarmUploadInf     AlarmUploaddata;
 
     while( !m_ThreadExitFlag )
     {
-		CurrTime = time(NULL);
+    	gettimeofday(&TimeVal, NULL);
+		CurrTime = TimeVal.tv_sec;
 		CurrTm   = *localtime(&CurrTime);
 		CurrDay  = CurrTm.tm_wday;
-		Curhm    = (CurrTm.tm_hour * 60) + CurrTm.tm_min;	
+		Curhm    = (CurrTm.tm_hour * 60) + CurrTm.tm_min;
+		memset(&AlarmUploaddata, 0, sizeof(AlarmUploaddata));
 		if(((Curhm < g_CurStartedAlarmIn[GetInputNumber()].s_ScheduleTime[CurrDay].s_StartTime)
 			|| (Curhm > g_CurStartedAlarmIn[GetInputNumber()].s_ScheduleTime[CurrDay].s_EndTime)))
 		{
@@ -170,13 +174,25 @@ void_t* AlarmInput::DetectEntry()
         if ( GPIOStatus != LastGPIOStatus )
         {
             LastGPIOStatus = GPIOStatus;
+			if(g_AlarmMessageId > 0xEFFFFFFF)
+			{
+				g_AlarmMessageId = 0;
+			}	
+			AlarmUploaddata.s_AlarmId = ++g_AlarmMessageId;
+			AlarmUploaddata.s_AlarmType = e_AlarmEventType_AlarmInput;
+			AlarmUploaddata.s_ExtraInfo.s_IoNum = GetInputNumber();
+			AlarmUploaddata.s_TimeSec = TimeVal.tv_sec;
+			AlarmUploaddata.s_TimeUsec = TimeVal.tv_usec;
+			memcpy(AlarmUploaddata.s_Description, GetName(), strlen(GetName()));
 			if(LastGPIOStatus != m_GPIOInputStatus)
 			{
-            	m_ProcessCenter->Notify( GetId(), GetInputNumber(), e_EventType_Start, 0, 0 );
+				AlarmUploaddata.s_OnOff = 1;
+            	m_ProcessCenter->Notify( GetId(), GetInputNumber(), e_EventType_Start, &AlarmUploaddata, sizeof(AlarmUploaddata) );
 			}
 			else
 			{
-				m_ProcessCenter->Notify( GetId(), GetInputNumber(), e_EventType_End, 0, 0 );
+				AlarmUploaddata.s_OnOff = 0;
+				m_ProcessCenter->Notify( GetId(), GetInputNumber(), e_EventType_End, &AlarmUploaddata, sizeof(AlarmUploaddata) );
 			}
 		}
 

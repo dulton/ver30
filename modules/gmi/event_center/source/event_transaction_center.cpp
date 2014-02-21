@@ -8,6 +8,7 @@
 AlarmEventConfigInfo g_CurStartedEvent[MAX_NUM_EVENT_TYPE];
 AlarmInputInfo g_CurStartedAlarmIn[MAX_NUM_GPIO_IN];
 AlarmOutputInfo g_CurStartedAlarmOut[MAX_NUM_GPIO_OUT];
+uint64_t        g_AlarmMessageId = 0;
 
 int32_t CheckCurBitValid(uint32_t BitPos)
 {
@@ -482,7 +483,7 @@ GMI_RESULT EventTransactionCenter::StartGPIOAlarmOutputEx(const void *Parameter,
     //AlarmOutputProcessor->AddDetectorId( EVENT_DETECTOR_ID_ALARM_INPUT );
 	//AlarmOutputProcessor->AddDetectorId( EVENT_DETECTOR_ID_HUMAN_DETECT);
 
-    AlarmOutputProcessor->SetEventCallback( m_Callback, m_UserData );
+    //AlarmOutputProcessor->SetEventCallback( m_Callback, m_UserData );
 
     Result = m_Center->RegisterEventProcessor( AlarmOutputProcessor, &Info, sizeof(Info) );
     if ( FAILED( Result ) )
@@ -564,10 +565,8 @@ GMI_RESULT EventTransactionCenter::StartAlarmInfoRecord()
 			//printf("AlarmInfoRecordProcessor %d\n", i);
 		}
 	}
-    //AlarmInfoRecordProcessor->AddDetectorId( EVENT_DETECTOR_ID_ALARM_INPUT );
-	
-	//AlarmInfoRecordProcessor->AddDetectorId( EVENT_DETECTOR_ID_HUMAN_DETECT);
-
+   
+    AlarmInfoRecordProcessor->SetEventCallback( m_Callback, m_UserData );
 
     GMI_RESULT Result = m_Center->RegisterEventProcessor( AlarmInfoRecordProcessor, NULL, 0);
     if ( FAILED( Result ) )
