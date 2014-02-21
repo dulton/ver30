@@ -94,11 +94,11 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 					{
 						if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_NormalStatus)
 						{
-							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmOutputStatus_Closed: (uint8_t)e_AlarmOutputStatus_Opened );
+							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, GetOutputNumber(), (e_EventType_Start == Type) ? (uint8_t)e_AlarmOutputStatus_Closed: (uint8_t)e_AlarmOutputStatus_Opened );
 						}
 						else
 						{
-							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, m_OutputNumber, (e_EventType_Start == Type) ? (uint8_t)e_AlarmOutputStatus_Opened: (uint8_t)e_AlarmOutputStatus_Closed);
+							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, GetOutputNumber(), (e_EventType_Start == Type) ? (uint8_t)e_AlarmOutputStatus_Opened: (uint8_t)e_AlarmOutputStatus_Closed);
 						}
 						if ( FAILED( Result ) )
 			            {
@@ -109,8 +109,15 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 			            {
 			                //m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
 			            }
-						
-						BreakFlag = 1;
+
+						if(e_EventType_Start == Type)
+						{
+							BreakFlag = 1;
+						}
+						else
+						{
+							BreakFlag = 2;
+						}
 					}
 					break;
 				case EVENT_DETECTOR_ID_HUMAN_DETECT:
@@ -130,8 +137,15 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 			            {
 			                //m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
 			            }
-						
-						BreakFlag = 1;
+
+						if(e_EventType_Start == Type)
+						{
+							BreakFlag = 1;
+						}
+						else
+						{
+							BreakFlag = 2;
+						}
 			        }
 					break;
 				default:
@@ -140,9 +154,16 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 			}
 			
 		}
-		if(1 == BreakFlag)
+		if(0 <  BreakFlag)
 		{
-			SetTriggedTime(CurrTime, EventId);
+			if(1 == BreakFlag)
+			{
+				SetTriggedTime(CurrTime, EventId);
+			}
+			else if(2 == BreakFlag)
+			{
+				SetTriggedTime(0, EventId);
+			}
 			break;
 		}
     }
@@ -240,7 +261,23 @@ void_t* AlarmOutput::TimerEntry()
 			            {	            	
 						    fprintf(stderr, "GMI_BrdSetAlarmOutput GMI_ALARM_MODE_LIGHT fail\n");
 			            }
-					break;
+						break;
+					case EVENT_DETECTOR_ID_ALARM_INPUT:
+						printf("GMI_ALARM_MODE_GPIO recover[%u]\n", (uint32_t)CurrTime);
+			            //Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, 0 );
+						if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_NormalStatus)
+						{
+							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, GetOutputNumber(), (uint8_t)e_AlarmOutputStatus_Opened );
+						}
+						else
+						{
+							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, GetOutputNumber(), (uint8_t)e_AlarmOutputStatus_Closed );
+						}
+						if ( FAILED( Result ) )
+			            {	            	
+						    fprintf(stderr, "GMI_BrdSetAlarmOutput GMI_ALARM_MODE_GPIO fail\n");
+			            }
+						break;
 					default:
 						break;
 				}

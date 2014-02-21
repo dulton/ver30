@@ -169,7 +169,7 @@ void_t* AlarmInput::DetectEntry()
 			SetCheckTime(g_CurStartedAlarmIn[GetInputNumber()].s_CheckTime);
 		}
 		
-        Result = GMI_BrdGetAlarmInput( GMI_ALARM_MODE_GPIO, 0, &GPIOStatus );
+        Result = GMI_BrdGetAlarmInput( GMI_ALARM_MODE_GPIO, GetInputNumber(), &GPIOStatus );
 		if(m_GPIOInputStatus != g_CurStartedAlarmIn[GetInputNumber()].s_NormalStatus)
 		{
 			m_GPIOInputStatus = g_CurStartedAlarmIn[GetInputNumber()].s_NormalStatus;

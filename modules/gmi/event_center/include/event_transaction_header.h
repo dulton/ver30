@@ -61,7 +61,7 @@ enum AlarmOutputStatus
 };
 
 
-
+/*
 enum TimeType
 {
     e_TimeType_Absolute = 1, // uint64_t can express absolute time
@@ -70,6 +70,7 @@ enum TimeType
     e_TimeType_WeekCycle,    // uint64_t: weekday-hour-minute-second-microsecond, 0xwwhhmmss00xxxxxx
     e_TimeType_MonthCycle,   // uint64_t: monthday-hour-minute-second-microsecond, 0xwwhhmmss00xxxxxx
 };
+*/
 
 enum AlarmOutputWorkMode
 {
@@ -80,9 +81,9 @@ enum AlarmOutputWorkMode
 
 struct ScheduleTimeInfo
 {
-    enum TimeType     s_TimeType;
-    uint64_t          s_StartTime;
-    uint64_t          s_EndTime;
+    //enum TimeType     s_TimeType;
+    uint32_t          s_StartTime;   //unit:min
+    uint32_t          s_EndTime;     //unit:min
 };
 
 struct AlarmOutputInfo
