@@ -253,7 +253,7 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType
 			}
 		}
 
-		if(0 < CheckCurBitValid(EVENT_PROCESSOR_ID_INFO_RECORD))
+		if(0 < CheckCurBitValid(EVENT_PROCESSOR_ID_INFO_UPLOAD))
 		{
 			Result = StartAlarmInfoRecord();
 			if ( FAILED( Result ) )
@@ -304,7 +304,7 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmScheduleTime(size_t ScheduleId,
 					Result = GMI_INVALID_PARAMETER;
 					break;
 				}
-				memcpy(&(g_CurStartedAlarmIn[TmpInfo->s_Index].s_ScheduleTime[0]), &(TmpInfo->s_ScheduleTime[0]), sizeof(ScheduleTimeInfo)*7);
+				memcpy(&(g_CurStartedAlarmIn[TmpInfo->s_Index].s_ScheduleTime[0][0]), &(TmpInfo->s_ScheduleTime[0][0]), sizeof(ScheduleTimeInfo)*7*MAX_SEG_TIME_PERDAY);
 				break;
 			case SCHEDULE_TIME_ID_ALARM_OUT:
 				if((TmpInfo->s_Index < 0)
@@ -314,10 +314,10 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmScheduleTime(size_t ScheduleId,
 					Result = GMI_INVALID_PARAMETER;
 					break;
 				}
-				memcpy(&(g_CurStartedAlarmOut[TmpInfo->s_Index].s_ScheduleTime[0]), &(TmpInfo->s_ScheduleTime[0]), sizeof(ScheduleTimeInfo)*7);
+				memcpy(&(g_CurStartedAlarmOut[TmpInfo->s_Index].s_ScheduleTime[0][0]), &(TmpInfo->s_ScheduleTime[0][0]), sizeof(ScheduleTimeInfo)*7*MAX_SEG_TIME_PERDAY);
 				break;
 			case SCHEDULE_TIME_ID_HUMAN_DETECT:
-				memcpy(&(g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[0]), &(TmpInfo->s_ScheduleTime[0]), sizeof(ScheduleTimeInfo)*7);
+				memcpy(&(g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[0][0]), &(TmpInfo->s_ScheduleTime[0][0]), sizeof(ScheduleTimeInfo)*7*MAX_SEG_TIME_PERDAY);
 				break;
 			default:
 				fprintf(stderr, "ConfigureAlarmScheduleTime  ScheduleId %d error.\n", ScheduleId);
@@ -534,7 +534,7 @@ GMI_RESULT EventTransactionCenter::StartAlarmInfoRecord()
 		return GMI_SUCCESS;
 	}
 	int32_t i = 0, j = 0;
-    ReferrencePtr<EventProcessInfoRecord> AlarmInfoRecordProcessor( BaseMemoryManager::Instance().New<EventProcessInfoRecord>( EVENT_PROCESSOR_ID_INFO_RECORD, 0 ) );
+    ReferrencePtr<EventProcessInfoRecord> AlarmInfoRecordProcessor( BaseMemoryManager::Instance().New<EventProcessInfoRecord>( EVENT_PROCESSOR_ID_INFO_UPLOAD, 0 ) );
     if ( NULL == AlarmInfoRecordProcessor.GetPtr() )
     {
         m_Center->Deinitialize();
@@ -589,7 +589,7 @@ GMI_RESULT EventTransactionCenter::StopAlarmInfoRecord()
 	}
 	
 	printf("StopAlarmInfoRecord start\n");
-    GMI_RESULT Result = m_Center->UnregisterEventProcessor( EVENT_PROCESSOR_ID_INFO_RECORD, 0 );
+    GMI_RESULT Result = m_Center->UnregisterEventProcessor( EVENT_PROCESSOR_ID_INFO_UPLOAD, 0 );
     if ( FAILED( Result ) )
     {
         return Result;

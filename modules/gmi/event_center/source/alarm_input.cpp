@@ -136,6 +136,7 @@ void_t* AlarmInput::DetectEntry()
 	int32_t 		   CurrDay;
 	int32_t            IsFirstExcute = 1;
 	AlarmUploadInf     AlarmUploaddata;
+	int32_t            i = 0;
 
     while( !m_ThreadExitFlag )
     {
@@ -145,8 +146,17 @@ void_t* AlarmInput::DetectEntry()
 		CurrDay  = CurrTm.tm_wday;
 		Curhm    = (CurrTm.tm_hour * 60) + CurrTm.tm_min;
 		memset(&AlarmUploaddata, 0, sizeof(AlarmUploaddata));
-		if(((Curhm < g_CurStartedAlarmIn[GetInputNumber()].s_ScheduleTime[CurrDay].s_StartTime)
-			|| (Curhm > g_CurStartedAlarmIn[GetInputNumber()].s_ScheduleTime[CurrDay].s_EndTime)))
+
+		for(i=0; i<MAX_SEG_TIME_PERDAY; i++)
+		{
+			if(((Curhm >= g_CurStartedAlarmIn[GetInputNumber()].s_ScheduleTime[CurrDay][i].s_StartTime)
+				&& (Curhm <= g_CurStartedAlarmIn[GetInputNumber()].s_ScheduleTime[CurrDay][i].s_EndTime)))
+			{
+				break;
+			}
+		}
+
+		if(i >= MAX_SEG_TIME_PERDAY)
 		{
 			fprintf(stderr, "Alarm input is not in the ScheduleTime\n");
 			GMI_Sleep(2000);

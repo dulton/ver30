@@ -17,7 +17,7 @@ static const char_t *G_EventStatusTypeName[] =
 };
 
 
-static uint32_t G_EventDetectorTypeNameArraySize = 2;
+//static uint32_t G_EventDetectorTypeNameArraySize = 2;
 
 void EventRecodPrt(const char *fmt, ...)
 {
@@ -98,17 +98,10 @@ GMI_RESULT  EventProcessInfoRecord::Notify( uint32_t EventId, uint32_t Index, en
     		switch(EventId)
     		{
     			case EVENT_DETECTOR_ID_ALARM_INPUT:
-					if(0 < (g_CurStartedAlarmIn[Index].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_INFO_RECORD-1))))
+					
+					EventRecodPrt("[EventName:%s %d] tigger %s!", G_EventDetectorTypeName[EventId-1], Index, G_EventStatusTypeName[Type-1]);
+					if(0 < (g_CurStartedAlarmIn[Index].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_INFO_UPLOAD-1))))
 					{
-						if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
-			        	{ 		
-							EventRecodPrt("[EventName:%s %d] tigger %s!", G_EventDetectorTypeName[EventId-1], Index, G_EventStatusTypeName[Type-1]);
-			        	}
-						else
-						{
-							EventRecodPrt("[EventId:%d] tigger %d[1-start,2-end]!", EventId, Type);
-						}
-
 						if ( NULL != m_Callback )
 			            {
 			                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
@@ -118,17 +111,9 @@ GMI_RESULT  EventProcessInfoRecord::Notify( uint32_t EventId, uint32_t Index, en
 					BreakFlag = 1;
 					break;
 				case EVENT_DETECTOR_ID_HUMAN_DETECT:
-					if(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_INFO_RECORD-1))))
+					EventRecodPrt("[EventName:%s] tigger %s!", G_EventDetectorTypeName[EventId-1], G_EventStatusTypeName[Type-1]);
+					if(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_INFO_UPLOAD-1))))
 					{
-			        	if((EventId <= G_EventDetectorTypeNameArraySize) && (EventId > 0) && (Type > 0))
-			        	{ 		
-							EventRecodPrt("[EventName:%s] tigger %s!", G_EventDetectorTypeName[EventId-1], G_EventStatusTypeName[Type-1]);
-			        	}
-						else
-						{
-							EventRecodPrt("[EventId:%d] tigger %d[1-start,2-end]!", EventId, Type);
-						}
-
 						if ( NULL != m_Callback )
 			            {
 			                m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );

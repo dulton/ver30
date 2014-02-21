@@ -277,20 +277,20 @@ int32_t main( int32_t argc, char_t* argv[] )
 
 	AlarmScheduleTimeInfo TmpTimeParam;
 	memset(&TmpTimeParam, 0, sizeof(TmpTimeParam));
-	TmpTimeParam.s_ScheduleTime[0].s_StartTime = 0;
-	TmpTimeParam.s_ScheduleTime[0].s_EndTime = 24*60;
-	TmpTimeParam.s_ScheduleTime[1].s_StartTime = 0;
-	TmpTimeParam.s_ScheduleTime[1].s_EndTime = 24*60;
-	TmpTimeParam.s_ScheduleTime[2].s_StartTime = 0;
-	TmpTimeParam.s_ScheduleTime[2].s_EndTime = 24*60;
-	TmpTimeParam.s_ScheduleTime[3].s_StartTime = 0;
-	TmpTimeParam.s_ScheduleTime[3].s_EndTime = 24*60;
-	TmpTimeParam.s_ScheduleTime[4].s_StartTime = 0;
-	TmpTimeParam.s_ScheduleTime[4].s_EndTime = 24*60;
-	TmpTimeParam.s_ScheduleTime[5].s_StartTime = 0;
-	TmpTimeParam.s_ScheduleTime[5].s_EndTime = 24*60;
-	TmpTimeParam.s_ScheduleTime[6].s_StartTime = 0;
-	TmpTimeParam.s_ScheduleTime[6].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[0][0].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[0][0].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[1][0].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[1][0].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[2][0].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[2][0].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[3][0].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[3][0].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[4][0].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[4][0].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[5][0].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[5][0].s_EndTime = 24*60;
+	TmpTimeParam.s_ScheduleTime[6][0].s_StartTime = 0;
+	TmpTimeParam.s_ScheduleTime[6][0].s_EndTime = 24*60;
 
 	TmpTimeParam.s_Index = 0;
 	Center.ConfigureAlarmScheduleTime(SCHEDULE_TIME_ID_HUMAN_DETECT, &TmpTimeParam, sizeof(TmpTimeParam));

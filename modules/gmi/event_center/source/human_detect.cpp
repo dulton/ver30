@@ -111,6 +111,7 @@ void_t* HumanDetect::DetectEntry()
 	int32_t      CurrDay;
 	int32_t      CurTrigVal = 0;
 	AlarmUploadInf     AlarmUploaddata;
+	int32_t     i = 0;
 
     while( !m_ThreadExitFlag )
     {
@@ -120,8 +121,15 @@ void_t* HumanDetect::DetectEntry()
 		CurrDay  = CurrTm.tm_wday;
 		Curhm    = (CurrTm.tm_hour * 60) + CurrTm.tm_min;
 		CurTrigVal = 0xffff;
-		if(((Curhm < g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[CurrDay].s_StartTime)
-			|| (Curhm > g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[CurrDay].s_EndTime)))
+		for(i=0; i<MAX_SEG_TIME_PERDAY; i++)
+		{
+			if(((Curhm >= g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[CurrDay][i].s_StartTime)
+				&& (Curhm <= g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[CurrDay][i].s_EndTime)))
+			{
+				break;
+			}
+		}
+		if(i >= MAX_SEG_TIME_PERDAY)
 		{
 			fprintf(stderr, "human detect is not in the ScheduleTime\n");
 			GMI_Sleep(2000);
