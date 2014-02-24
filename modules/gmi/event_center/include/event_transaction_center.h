@@ -4,7 +4,6 @@
 #include "event_center.h"
 #include "event_process_header.h"
 #include "event_transaction_header.h"
-#include "event_common_header.h"
 
 class EventTransactionCenter
 {
