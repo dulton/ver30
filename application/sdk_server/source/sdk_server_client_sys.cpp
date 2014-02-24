@@ -430,6 +430,7 @@ int SdkServerClient::__HandleMessageRead(sdk_client_comm_t * & pComm)
         return 0;
     }
 
+
     if(pComm->m_FHB == 0 && pComm->m_Type == GMIS_PROTOCOL_TYPE_LOGGIN)
     {
         ret = EINVAL;
