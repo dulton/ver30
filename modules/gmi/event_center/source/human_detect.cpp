@@ -168,7 +168,7 @@ void_t* HumanDetect::DetectEntry()
 			AlarmUploaddata.s_ExtraInfo.s_IoNum = 0;
 			AlarmUploaddata.s_TimeSec = TimeVal.tv_sec;
 			AlarmUploaddata.s_TimeUsec = TimeVal.tv_usec;
-			strcpy(AlarmUploaddata.s_Description, "human detect appear.\n");
+			strcpy(AlarmUploaddata.s_Description, "human detect appear.");
 			AlarmUploaddata.s_OnOff = e_EventType_Start;
             m_ProcessCenter->Notify( GetId(), 0, e_EventType_Start, &AlarmUploaddata, sizeof(AlarmUploaddata) );
 		}
