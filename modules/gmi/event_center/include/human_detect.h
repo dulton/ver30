@@ -2,6 +2,7 @@
 
 #include "event_detector.h"
 #include "event_transaction_header.h"
+#include "event_common_header.h"
 
 struct HumanDetectInfo
 {

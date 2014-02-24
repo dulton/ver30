@@ -9,7 +9,7 @@ AlarmOutput::AlarmOutput( uint32_t EventProcessorId, uint32_t Index )
     : EventProcessor( EventProcessorId, Index )
     , m_OutputNumber( 0 )
     , m_Name()
-    , m_WorkMode( e_AlarmOutputWorkMode_DelayAutoTrigger )
+    //, m_WorkMode( e_AlarmOutputWorkMode_DelayAutoTrigger )
     , m_DelayTime( 0 )
     , m_ScheduleTimes()
     , m_OperationLock()
@@ -88,11 +88,11 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 			switch(EventId)
 			{
 				case EVENT_DETECTOR_ID_ALARM_INPUT:
-					printf("Index=%d, s_IoNum=%d, GetOutputNumber=%d\n", Index, g_CurStartedAlarmIn[Index].s_LinkAlarmExtInfo.s_IoNum, GetOutputNumber());
-					if((0 < (g_CurStartedAlarmIn[Index].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1))))
-						&& (g_CurStartedAlarmIn[Index].s_LinkAlarmExtInfo.s_IoNum == GetOutputNumber()))
+					printf("Index=%d, s_IoNum=%d, GetOutputNumber=%d\n", Index, g_CurStartedAlarmIn[Index].s_AlarmInputInfo.s_LinkAlarmExtInfo.s_IoNum, GetOutputNumber());
+					if((0 < (g_CurStartedAlarmIn[Index].s_AlarmInputInfo.s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1))))
+						&& (g_CurStartedAlarmIn[Index].s_AlarmInputInfo.s_LinkAlarmExtInfo.s_IoNum == GetOutputNumber()))
 					{
-						if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_NormalStatus)
+						if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_AlarmOutputInfo.s_NormalStatus)
 						{
 							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, GetOutputNumber(), (e_EventType_Start == Type) ? (uint8_t)e_AlarmOutputStatus_Closed: (uint8_t)e_AlarmOutputStatus_Opened );
 						}
@@ -122,9 +122,9 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 					break;
 				case EVENT_DETECTOR_ID_HUMAN_DETECT:
 					
-					printf("EventId=%d, s_IoNum=%d, GetOutputNumber=%d\n", EventId, g_CurStartedEvent[EventId-1].s_LinkAlarmExtInfo.s_IoNum, GetOutputNumber());
-					if(0 < (g_CurStartedEvent[EventId-1].s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1)))
-						&& (g_CurStartedEvent[EventId-1].s_LinkAlarmExtInfo.s_IoNum == GetOutputNumber()))
+					printf("EventId=%d, s_IoNum=%d, GetOutputNumber=%d\n", EventId, g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmExtInfo.s_IoNum, GetOutputNumber());
+					if(0 < (g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1)))
+						&& (g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmExtInfo.s_IoNum == GetOutputNumber()))
 			        {
 			            Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, (e_EventType_Start == Type) ? 1 : 0 );
 						if ( FAILED( Result ) )
@@ -177,7 +177,7 @@ GMI_RESULT  AlarmOutput::Start( const void_t *Parameter, size_t ParameterLength 
     const struct AlarmOutputInfo *Info = (const struct AlarmOutputInfo *) Parameter;
     SetOutputNumber( Info->s_OutputNumber );
     SetName( Info->s_Name );
-    SetWorkMode( (enum AlarmOutputWorkMode) Info->s_WorkMode );
+    //SetWorkMode( (enum AlarmOutputWorkMode) Info->s_WorkMode );
     SetDelayTime( Info->s_DelayTime );
 	#if 0
     for ( uint32_t i = 0; i < Info->s_ScheduleTimeNumber; ++i )
@@ -242,9 +242,9 @@ void_t* AlarmOutput::TimerEntry()
     while( !m_ThreadExitFlag )
     {
     	CurrTime = time(NULL);
-		if(GetDelayTime() != g_CurStartedAlarmOut[GetOutputNumber()].s_DelayTime)
+		if(GetDelayTime() != g_CurStartedAlarmOut[GetOutputNumber()].s_AlarmOutputInfo.s_DelayTime)
 		{
-			SetDelayTime(g_CurStartedAlarmOut[GetOutputNumber()].s_DelayTime);
+			SetDelayTime(g_CurStartedAlarmOut[GetOutputNumber()].s_AlarmOutputInfo.s_DelayTime);
 		}
 		m_OperationLock.Lock( TIMEOUT_INFINITE );
 		for(i=1; i <= MAX_NUM_EVENT_TYPE; i++)
@@ -265,7 +265,7 @@ void_t* AlarmOutput::TimerEntry()
 					case EVENT_DETECTOR_ID_ALARM_INPUT:
 						printf("GMI_ALARM_MODE_GPIO recover[%u]\n", (uint32_t)CurrTime);
 			            //Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, 0 );
-						if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_NormalStatus)
+						if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_AlarmOutputInfo.s_NormalStatus)
 						{
 							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, GetOutputNumber(), (uint8_t)e_AlarmOutputStatus_Opened );
 						}

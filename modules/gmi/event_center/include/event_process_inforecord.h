@@ -2,6 +2,7 @@
 
 #include "event_processor.h"
 #include "event_transaction_header.h"
+#include "event_common_header.h"
 
 #define FILE_PATH_EVENT_LOG  "/opt/log/event_trigger_log"
 #define LENGTH_EVENT_LOG_MAX                500*1024

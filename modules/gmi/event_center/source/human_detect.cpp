@@ -136,10 +136,10 @@ void_t* HumanDetect::DetectEntry()
 			continue;
 		}
 
-		if((GetCheckTime() != g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_CheckTime)
-			&& (g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_CheckTime >= 200))
+		if((GetCheckTime() != g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_CheckTime)
+			&& (g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_CheckTime >= 200))
 		{
-			SetCheckTime(g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_CheckTime);
+			SetCheckTime(g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_CheckTime);
 		}
 
 		#if 0
@@ -156,8 +156,8 @@ void_t* HumanDetect::DetectEntry()
 		if( SUCCEEDED(Result)
 			&& (CurTrigVal != 0xffff)
 			&& (CurTrigVal > 0)
-			&& (g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ExtData.s_HumanDetectExInfo.s_MinSensVal < g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ExtData.s_HumanDetectExInfo.s_MaxSensVal)
-			&& ((CurTrigVal < (int32_t)g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ExtData.s_HumanDetectExInfo.s_MinSensVal) || (CurTrigVal > (int32_t)g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ExtData.s_HumanDetectExInfo.s_MaxSensVal)))
+			&& (g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MinSensVal < g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal)
+			&& ((CurTrigVal < (int32_t)g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MinSensVal) || (CurTrigVal > (int32_t)g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal)))
 		{
 			if(g_AlarmMessageId > 0xEFFFFFFF)
 			{

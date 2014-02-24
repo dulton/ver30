@@ -163,16 +163,16 @@ void_t* AlarmInput::DetectEntry()
 			continue;
 		}
 
-		if((GetCheckTime() != g_CurStartedAlarmIn[GetInputNumber()].s_CheckTime)
-			&& (g_CurStartedAlarmIn[GetInputNumber()].s_CheckTime >= 200))
+		if((GetCheckTime() != g_CurStartedAlarmIn[GetInputNumber()].s_AlarmInputInfo.s_CheckTime)
+			&& (g_CurStartedAlarmIn[GetInputNumber()].s_AlarmInputInfo.s_CheckTime >= 200))
 		{
-			SetCheckTime(g_CurStartedAlarmIn[GetInputNumber()].s_CheckTime);
+			SetCheckTime(g_CurStartedAlarmIn[GetInputNumber()].s_AlarmInputInfo.s_CheckTime);
 		}
 		
         Result = GMI_BrdGetAlarmInput( GMI_ALARM_MODE_GPIO, GetInputNumber(), &GPIOStatus );
-		if(m_GPIOInputStatus != g_CurStartedAlarmIn[GetInputNumber()].s_NormalStatus)
+		if(m_GPIOInputStatus != g_CurStartedAlarmIn[GetInputNumber()].s_AlarmInputInfo.s_NormalStatus)
 		{
-			m_GPIOInputStatus = g_CurStartedAlarmIn[GetInputNumber()].s_NormalStatus;
+			m_GPIOInputStatus = g_CurStartedAlarmIn[GetInputNumber()].s_AlarmInputInfo.s_NormalStatus;
 		}
 		
 		if(1 == IsFirstExcute)

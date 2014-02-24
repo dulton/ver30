@@ -1,13 +1,13 @@
 #include "event_transaction_center.h"
-
+#include "event_common_header.h"
 #include "alarm_input.h"
 #include "alarm_output.h"
 #include "event_process_inforecord.h"
 #include "human_detect.h"
 
-AlarmEventConfigInfo g_CurStartedEvent[MAX_NUM_EVENT_TYPE];
-AlarmInputInfo g_CurStartedAlarmIn[MAX_NUM_GPIO_IN];
-AlarmOutputInfo g_CurStartedAlarmOut[MAX_NUM_GPIO_OUT];
+AlarmEventConfigInfoEx g_CurStartedEvent[MAX_NUM_EVENT_TYPE];
+AlarmInputInfoEx g_CurStartedAlarmIn[MAX_NUM_GPIO_IN];
+AlarmOutputInfoEx g_CurStartedAlarmOut[MAX_NUM_GPIO_OUT];
 uint64_t        g_AlarmMessageId = 0;
 
 int32_t CheckCurBitValid(uint32_t BitPos)
@@ -20,7 +20,7 @@ int32_t CheckCurBitValid(uint32_t BitPos)
 	}
 	for(i = 0; i<MAX_NUM_EVENT_TYPE; i++)
 	{
-		if(0 < (g_CurStartedEvent[i].s_LinkAlarmStrategy & (1<<(BitPos-1))))
+		if(0 < (g_CurStartedEvent[i].s_AlarmEventConfigInfo.s_LinkAlarmStrategy & (1<<(BitPos-1))))
 		{
 			IsValid = 1;
 			break;
@@ -160,7 +160,7 @@ GMI_RESULT EventTransactionCenter::ConfigureGPIOAlarmInput( const void_t *Parame
 		}
 		
 		memcpy(&(g_CurStartedAlarmIn[InfoPtr->s_InputNumber]), (AlarmInputInfo *)Parameter, sizeof(AlarmInputInfo));
-		if(FLAG_EVENT_ENABLE == g_CurStartedAlarmIn[InfoPtr->s_InputNumber].s_EnableFlag)
+		if(FLAG_EVENT_ENABLE == g_CurStartedAlarmIn[InfoPtr->s_InputNumber].s_AlarmInputInfo.s_EnableFlag)
 		{
 			Result = StartGPIOAlarmInputEx(Parameter, sizeof(AlarmInputInfo));
 					
@@ -228,7 +228,7 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType
 			break;
 		}
 		memcpy(&(g_CurStartedEvent[EventType-1]), (AlarmEventConfigInfo *)Parameter, sizeof(AlarmEventConfigInfo));
-		if(FLAG_EVENT_ENABLE == g_CurStartedEvent[EventType-1].s_EnableFlag)
+		if(FLAG_EVENT_ENABLE == g_CurStartedEvent[EventType-1].s_AlarmEventConfigInfo.s_EnableFlag)
 		{
 			switch(EventType)
 			{
@@ -618,15 +618,15 @@ GMI_RESULT EventTransactionCenter::StartHumanDetect()
     }
 
     struct HumanDetectInfo Info;
-    Info.s_CheckTime = g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_CheckTime;
+    Info.s_CheckTime = g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_CheckTime;
 	if(Info.s_CheckTime < 200)
 	{
 		Info.s_CheckTime = 200;
 	}
 	printf("********human detect*******\n");
-	printf("s_CheckTime=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_CheckTime);
-	printf("s_MinSensVal=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ExtData.s_HumanDetectExInfo.s_MinSensVal);
-	printf("s_MaxSensVal=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ExtData.s_HumanDetectExInfo.s_MaxSensVal);
+	printf("s_CheckTime=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_CheckTime);
+	printf("s_MinSensVal=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MinSensVal);
+	printf("s_MaxSensVal=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal);
 	printf("**************************\n\n");
     //Info.s_ScheduleTimeNumber = 1;
     //Info.s_ScheduleTime[0].s_StartTime = 0x106000000000000;//Monday, AM 06:00:00

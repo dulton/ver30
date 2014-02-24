@@ -2,6 +2,7 @@
 
 #include "event_processor.h"
 #include "event_transaction_header.h"
+#include "event_common_header.h"
 
 class AlarmOutput : public EventProcessor
 {
@@ -24,6 +25,7 @@ public:
         return m_Name.GetPtr();
     }
 
+	#if 0
     inline void_t SetWorkMode( enum AlarmOutputWorkMode Mode )
     {
         m_WorkMode  = Mode;
@@ -32,6 +34,7 @@ public:
     {
         return m_WorkMode;
     }
+	#endif
 
     inline void_t SetDelayTime( uint32_t Time )
     {
@@ -78,7 +81,7 @@ private:
 private:
     uint32_t                                m_OutputNumber;
     SafePtr<char_t, DefaultObjectsDeleter>  m_Name;
-    enum AlarmOutputWorkMode                m_WorkMode;
+    //enum AlarmOutputWorkMode                m_WorkMode;
     uint32_t                                m_DelayTime;
     std::vector<ScheduleTimeInfo>           m_ScheduleTimes;
 
