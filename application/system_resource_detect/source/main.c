@@ -63,7 +63,7 @@ int32_t main(void)
            // if(memcmp(tmp, TxBuffer,4) == 0)
 	    if ( dev )
             {
-		syslog(LOG_DEBUG,"[%d]GMI_NetWorkDevCheck Is Exist",__LINE__);
+		//syslog(LOG_DEBUG,"[%d]GMI_NetWorkDevCheck Is Exist",__LINE__);
                 l_DetectNumber = NETWORK_DETECT_NUMBER_MAX;
                 Result  = GMI_BrdGetEthLinkStat(0, &Link);
                 if (SUCCEEDED(Result))
