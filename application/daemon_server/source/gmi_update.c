@@ -1351,6 +1351,22 @@ GMI_RESULT GMI_ReportUpdateNotify(long_t CltFd, int32_t Status, int32_t  schedul
     return Ret;
 }
 
+GMI_RESULT GMI_SystemReboot(void)
+{
+    GMI_RESULT Result = GMI_FAIL;
+
+    GMI_ApplicationQuit(LOG_SERVER_ID);
+
+    Result = GMI_BrdHwReset();
+    if (FAILED(Result))
+    {
+        DAEMON_PRINT_LOG(ERROR,"GMI_Reboot! !!!");
+    }
+
+    return Result;
+}
+
+
 /*=======================================================
 name				:	GMI_AnalyzeMessage
 function			:  Report Update status notify
@@ -1568,7 +1584,15 @@ long_t GMI_AnalyzeMessage(long_t CltFd, char_t *szBuffer, long_t CltAddr)
         {
             DAEMON_PRINT_LOG(ERROR,"GMI_ReportUpdateNotify is Error ! ! ");
         }
-        
+    
+	GMI_DeBugPrint("[%s][%d]Update Success ,System Will be reboot\n",__func__,__LINE__);
+
+        Ret = GMI_SystemReboot();
+        if(SUCCEEDED(Ret))
+        {
+              GMI_DeBugPrint("[%s][%d]Update Success ,System reboot Success!!!",__func__,__LINE__);
+        }
+
     }
     else if (FAILED(Ret))
     {
@@ -1770,8 +1794,6 @@ long_t GMI_Reboot(long_t CltFd, char_t *szBuffer, long_t CltAddr)
 
     return Ret;
 }
-
-
 
 
 /*=======================================================

@@ -25,11 +25,9 @@ modification	:
 #include "gmi_brdwrapper.h"
 #include "sys_info_readonly.h"
 
-
 static int32_t l_I2cFd = -1;
 static int32_t l_SpiFd = -1;
 static int32_t l_GpioFd = -1;
-
 
 uint8_t BitRev8(uint8_t byte)
 {
