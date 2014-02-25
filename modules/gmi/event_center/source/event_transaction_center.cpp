@@ -29,6 +29,37 @@ int32_t CheckCurBitValid(uint32_t BitPos)
 	return IsValid;
 }
 
+int32_t CalcHumanDetectMapValue(int32_t Flag, int32_t Value)
+{
+	if(Value > 100)
+	{
+		Value = 100;
+	}
+	else if(Value < 0)
+	{
+		Value = 0;
+	}
+
+	int32_t RetVal = 0;
+	
+	switch(Flag)
+	{
+		case FLAG_MIN_VALUE:
+			RetVal = (((AVG_REF_VALUE_HUMAN_DETECT - CHG_REF_VALUE_HUMAN_DETECT) - MIN_REF_VALUE_HUMAN_DETECT) * Value)/100
+				    + MIN_REF_VALUE_HUMAN_DETECT;
+			break;
+		case FLAG_MAX_VALUE:
+			RetVal = ((MAX_REF_VALUE_HUMAN_DETECT - (AVG_REF_VALUE_HUMAN_DETECT + CHG_REF_VALUE_HUMAN_DETECT)) * (100-Value))/100
+				     + (AVG_REF_VALUE_HUMAN_DETECT + CHG_REF_VALUE_HUMAN_DETECT);
+			break;
+		default:
+			fprintf(stderr, "CalcHumanDetectMapValue Flag %d error.\n", Flag);
+			break;
+	}
+
+	return RetVal;
+}
+
 
 
 size_t EventTransactionCenter::m_IsStartHumanDetect = 0;
@@ -213,7 +244,7 @@ GMI_RESULT EventTransactionCenter::ConfigureGPIOAlarmOutput( const void_t *Param
 }
 
 
-GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType EventType, const void *Parameter, size_t ParameterLength)
+GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const size_t EventType, const void *Parameter, size_t ParameterLength)
 {
 	GMI_RESULT Result = GMI_SUCCESS;
 
@@ -232,7 +263,18 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType
 		{
 			switch(EventType)
 			{
-				case e_AlarmEventType_HumanDetect:
+				case EVENT_DETECTOR_ID_HUMAN_DETECT:
+					if(0 >= g_CurStartedEvent[EventType-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal)
+					{
+						g_CurStartedEvent[EventType-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MinSensVal 
+							= CalcHumanDetectMapValue(FLAG_MIN_VALUE, g_CurStartedEvent[EventType-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_Sensitivity);
+						g_CurStartedEvent[EventType-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal
+							= CalcHumanDetectMapValue(FLAG_MAX_VALUE, g_CurStartedEvent[EventType-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_Sensitivity);
+					}
+					fprintf(stderr, "Human detect s_Sensitivity = %d, MinSensVal = %d, MaxSensVal = %d\n", 
+						g_CurStartedEvent[EventType-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_Sensitivity,
+						g_CurStartedEvent[EventType-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MinSensVal,
+						g_CurStartedEvent[EventType-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal);
 					Result = StartHumanDetect();
 					break;
 				default:
@@ -244,7 +286,7 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const enum AlarmEventType
 		{
 			switch(EventType)
 			{
-				case e_AlarmEventType_HumanDetect:
+				case EVENT_DETECTOR_ID_HUMAN_DETECT:
 					Result = StopHumanDetect();
 					break;
 				default:
@@ -317,7 +359,7 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmScheduleTime(size_t ScheduleId,
 				memcpy(&(g_CurStartedAlarmOut[TmpInfo->s_Index].s_ScheduleTime[0][0]), &(TmpInfo->s_ScheduleTime[0][0]), sizeof(ScheduleTimeInfo)*7*MAX_SEG_TIME_PERDAY);
 				break;
 			case SCHEDULE_TIME_ID_HUMAN_DETECT:
-				memcpy(&(g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_ScheduleTime[0][0]), &(TmpInfo->s_ScheduleTime[0][0]), sizeof(ScheduleTimeInfo)*7*MAX_SEG_TIME_PERDAY);
+				memcpy(&(g_CurStartedEvent[EVENT_DETECTOR_ID_HUMAN_DETECT-1].s_ScheduleTime[0][0]), &(TmpInfo->s_ScheduleTime[0][0]), sizeof(ScheduleTimeInfo)*7*MAX_SEG_TIME_PERDAY);
 				break;
 			default:
 				fprintf(stderr, "ConfigureAlarmScheduleTime  ScheduleId %d error.\n", ScheduleId);
@@ -461,7 +503,7 @@ GMI_RESULT EventTransactionCenter::StartGPIOAlarmOutputEx(const void *Parameter,
 	memset(&TmpDetectInfo, 0, sizeof(TmpDetectInfo));
 	for(i=1; i<=MAX_NUM_EVENT_TYPE; i++)
 	{
-		if(i == e_AlarmEventType_AlarmInput)
+		if(i == EVENT_DETECTOR_ID_ALARM_INPUT)
 		{
 			for(j=0; j<MAX_NUM_GPIO_IN; j++)
 			{
@@ -547,7 +589,7 @@ GMI_RESULT EventTransactionCenter::StartAlarmInfoRecord()
 	memset(&TmpDetectInfo, 0, sizeof(TmpDetectInfo));
 	for(i=1; i<=MAX_NUM_EVENT_TYPE; i++)
 	{
-		if(i == e_AlarmEventType_AlarmInput)
+		if(i == EVENT_DETECTOR_ID_ALARM_INPUT)
 		{
 			for(j=0; j<MAX_NUM_GPIO_IN; j++)
 			{
@@ -618,15 +660,15 @@ GMI_RESULT EventTransactionCenter::StartHumanDetect()
     }
 
     struct HumanDetectInfo Info;
-    Info.s_CheckTime = g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_CheckTime;
+    Info.s_CheckTime = g_CurStartedEvent[EVENT_DETECTOR_ID_HUMAN_DETECT-1].s_AlarmEventConfigInfo.s_CheckTime;
 	if(Info.s_CheckTime < 200)
 	{
 		Info.s_CheckTime = 200;
 	}
 	printf("********human detect*******\n");
-	printf("s_CheckTime=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_CheckTime);
-	printf("s_MinSensVal=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MinSensVal);
-	printf("s_MaxSensVal=%d\n", g_CurStartedEvent[e_AlarmEventType_HumanDetect-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal);
+	printf("s_CheckTime=%d\n", g_CurStartedEvent[EVENT_DETECTOR_ID_HUMAN_DETECT-1].s_AlarmEventConfigInfo.s_CheckTime);
+	printf("s_MinSensVal=%d\n", g_CurStartedEvent[EVENT_DETECTOR_ID_HUMAN_DETECT-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MinSensVal);
+	printf("s_MaxSensVal=%d\n", g_CurStartedEvent[EVENT_DETECTOR_ID_HUMAN_DETECT-1].s_AlarmEventConfigInfo.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal);
 	printf("**************************\n\n");
     //Info.s_ScheduleTimeNumber = 1;
     //Info.s_ScheduleTime[0].s_StartTime = 0x106000000000000;//Monday, AM 06:00:00

@@ -247,12 +247,18 @@ int32_t main( int32_t argc, char_t* argv[] )
 		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = 450;
 	}
 
+	#if 0
 	if(TmpParam.s_ExtData.s_HumanDetectExInfo.s_MinSensVal > TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal)
 	{
 		printf("lower limit value bigger than upper limit value, need default value[100,450].\n");
 		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MinSensVal = 100;
 		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = 450;
 	}
+	#endif
+	TmpParam.s_ExtData.s_HumanDetectExInfo.s_MinSensVal = 0;
+	TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = 0;
+	TmpParam.s_ExtData.s_HumanDetectExInfo.s_Sensitivity = 50;
+	
 	TmpParam.s_LinkAlarmStrategy = 3;
 	TmpParam.s_LinkAlarmExtInfo.s_IoNum = 0;
 
@@ -272,7 +278,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpParam.s_ScheduleTime[6].s_StartTime = 0;
 	TmpParam.s_ScheduleTime[6].s_EndTime = 24*60;
 	#endif
-	Center.ConfigureAlarmEvent(e_AlarmEventType_HumanDetect, (void_t*)(&TmpParam),sizeof(TmpParam));
+	Center.ConfigureAlarmEvent(EVENT_DETECTOR_ID_HUMAN_DETECT, (void_t*)(&TmpParam),sizeof(TmpParam));
 	#endif
 
 	AlarmScheduleTimeInfo TmpTimeParam;
@@ -326,7 +332,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 
 	TmpParam.s_EnableFlag = 0;
 	
-	Center.ConfigureAlarmEvent(e_AlarmEventType_HumanDetect, (void_t*)(&TmpParam),sizeof(TmpParam));
+	Center.ConfigureAlarmEvent(EVENT_DETECTOR_ID_HUMAN_DETECT, (void_t*)(&TmpParam),sizeof(TmpParam));
 
 	while('b' != getchar())
 	{
@@ -337,14 +343,14 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpParam.s_EnableFlag = 1;
 	TmpParam.s_CheckTime = 500;
 	TmpParam.s_LinkAlarmStrategy = 2;
-	Center.ConfigureAlarmEvent(e_AlarmEventType_HumanDetect, (void_t*)(&TmpParam),sizeof(TmpParam));
+	Center.ConfigureAlarmEvent(EVENT_DETECTOR_ID_HUMAN_DETECT, (void_t*)(&TmpParam),sizeof(TmpParam));
 
 	while('c' != getchar())
 	{
 		GMI_Sleep(1000);
 	}
 	TmpParam.s_LinkAlarmStrategy = 3;
-	Center.ConfigureAlarmEvent(e_AlarmEventType_HumanDetect, (void_t*)(&TmpParam),sizeof(TmpParam));
+	Center.ConfigureAlarmEvent(EVENT_DETECTOR_ID_HUMAN_DETECT, (void_t*)(&TmpParam),sizeof(TmpParam));
 	TmpIoOutParam.s_DelayTime = 10;
 
 	Center.ConfigureGPIOAlarmOutput((void_t*)(&TmpIoOutParam),sizeof(TmpIoOutParam));

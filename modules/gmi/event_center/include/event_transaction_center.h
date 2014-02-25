@@ -16,7 +16,7 @@ public:
 
     GMI_RESULT ConfigureGPIOAlarmInput( const void_t *Parameter, size_t ParameterLength );
     GMI_RESULT ConfigureGPIOAlarmOutput( const void_t *Parameter, size_t ParameterLength );
-	GMI_RESULT ConfigureAlarmEvent(const enum AlarmEventType EventType, const void *Parameter, size_t ParamterLength);
+	GMI_RESULT ConfigureAlarmEvent(const size_t EventType, const void *Parameter, size_t ParamterLength);
 	GMI_RESULT ConfigureAlarmScheduleTime(size_t ScheduleId, const void_t *Parameter, size_t Parameterlength);
 
 private:

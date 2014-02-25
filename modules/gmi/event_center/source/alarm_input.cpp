@@ -189,7 +189,7 @@ void_t* AlarmInput::DetectEntry()
 				g_AlarmMessageId = 0;
 			}	
 			AlarmUploaddata.s_AlarmId = ++g_AlarmMessageId;
-			AlarmUploaddata.s_AlarmType = e_AlarmEventType_AlarmInput;
+			AlarmUploaddata.s_AlarmType = EVENT_DETECTOR_ID_ALARM_INPUT;
 			AlarmUploaddata.s_ExtraInfo.s_IoNum = GetInputNumber();
 			AlarmUploaddata.s_TimeSec = TimeVal.tv_sec;
 			AlarmUploaddata.s_TimeUsec = TimeVal.tv_usec;

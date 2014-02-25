@@ -44,11 +44,13 @@
 #define FLAG_EVENT_DISABLE            0
 #define FLAG_EVENT_ENABLE             1
 
+#if 0
 enum AlarmEventType
 {
     e_AlarmEventType_AlarmInput = 1,
     e_AlarmEventType_HumanDetect,
 };
+#endif
 
 
 enum AlarmInputStatus
@@ -101,6 +103,7 @@ struct HumanDetectData
 {
 	uint32_t          s_MinSensVal; //human detect use
 	uint32_t          s_MaxSensVal; //human detect use
+	uint32_t          s_Sensitivity; //range from 0-100
 	uint32_t          s_Reserved[4];
 };
 
@@ -112,7 +115,7 @@ union UnionExternData
 
 struct AlarmEventConfigInfo
 {
-	AlarmEventType    s_AlarmEventType;
+	uint32_t          s_AlarmEventType;  //type:EVENT_DETECTOR_ID_XX
 	uint32_t          s_EnableFlag;      //0-disable, 1-enbale
 	//every bit represents the certain AlarmStrategy;
     //0-Alarm output,1-Info upload,2-audio, 3-mail, 4-FTP, 5-record, 6-PTZ, 7-capture picture;

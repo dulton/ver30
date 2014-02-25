@@ -1,6 +1,14 @@
 #if !defined( EVENT_COMMON_HEADER )
 #define EVENT_COMMON_HEADER
 
+#define MAX_REF_VALUE_HUMAN_DETECT  650
+#define MIN_REF_VALUE_HUMAN_DETECT  5
+#define AVG_REF_VALUE_HUMAN_DETECT  275
+#define CHG_REF_VALUE_HUMAN_DETECT  10
+
+#define FLAG_MIN_VALUE              0
+#define FLAG_MAX_VALUE              1
+
 struct AlarmEventConfigInfoEx
 {
 	AlarmEventConfigInfo  s_AlarmEventConfigInfo;
