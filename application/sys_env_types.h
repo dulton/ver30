@@ -118,8 +118,8 @@ extern "C" {
 #define SYSCODE_SET_DAY_NIGHT_RSP         1226
 #define SYSCODE_GET_LOGINFO_REQ           1227
 #define SYSCODE_GET_LOGINFO_RSP           1228
-#define SYSCODE_GET_ALARM_REQ             1229
-#define SYSCODE_GET_ALARM_RSP             1230
+#define SYSCODE_GET_ALARM_INFO_REQ        1229
+#define SYSCODE_GET_ALARM_INFO_RSP        1230
 
 //inner use
 #define SYSCODE_START_AUDIO_DECODE_REQ    2002 
@@ -162,8 +162,6 @@ extern "C" {
 #define TYPE_HIDEAREA           31
 #define TYPE_PERFORMANCE        32
 #define TYPE_ALMDEPLOY          66
-#define TYPE_ALMSUBSCRIPTION    67
-#define TYPE_ALARM              81
 #define TYPE_VIDEODATA          34
 #define TYPE_AUDIODATA          35
 #define TYPE_DATAACK            39
@@ -190,6 +188,10 @@ extern "C" {
 #define TYPE_LOGINFO            120
 #define TYPE_LOGINFO_INT        121
 #define TYPE_WARING_INFO        122
+#define TYPE_ALARM_IN           123
+#define TYPE_ALARM_OUT          124
+#define TYPE_ALARM_EVENT        125
+#define TYPE_GET_ALMDEPLOY      126
 
 //inner use
 #define TYPE_AUDIO_DECODE       201
@@ -824,24 +826,6 @@ typedef struct tagLogInfoInt
 }SysPkgLogInfoInt;
 
 
-//alarm info
-typedef struct tagAlarmInfor
-{
-    uint64_t s_WaringId;
-    int32_t  s_WaringType;// is the same as "s_MinorType" of log
-    int32_t  s_WaringLevel;//1 for hight level, 5 for low level
-    int32_t  s_OnOff; //0 for off, 1 for on;
-    uint8_t  s_Time[36];
-    uint8_t  s_DevId[64];
-    uint8_t  s_Description[128];
-    union 
-    {
-        uint32_t s_IoNum;
-        uint8_t  Reserved[4];
-    }s_ExtraInfo;
-}SysPkgAlarmInfor;
-
-
 //log major type and minor type
 ////alarm log
 //alarm log major type
@@ -851,10 +835,10 @@ typedef struct tagAlarmInfor
 //alarm out, gpio alarm out
 #define SYS_LOGMINOR_ALRAM_OUT        0x2
 //motion detect
-#define SYS_LOGMINOR_MOTDET           0x3
+#define SYS_LOGMINOR_MOTDET_START     0x3
 #define SYS_LOGMINOR_MOTDET_STOP      0x4
 //hide alarm
-#define SYS_LOGMINOR_HIDE             0x5
+#define SYS_LOGMINOR_HIDE_START       0x5
 #define SYS_LOGMINOR_HIDE_ALARM_STOP  0x6
 //selt definition alarm
 #define SYS_LOGMINOR_SELF_DEF         0x7
@@ -1501,6 +1485,135 @@ typedef struct tagSysDaynight
 	uint32_t s_SchedEndTime[DAY_NIGHT_SCHED_WEEKS];//0~24*3600s.default 0
 	uint8_t  s_Reserved[4];
 }SysPkgDaynight;
+
+
+/*====alarm=====*/
+//schedule
+typedef enum
+{
+	SYS_SCHEDULE_TIME_ID_ALARM_IN = 1,
+	SYS_SCHEDULE_TIME_ID_ALARM_OUT,
+	SYS_SCHEDULE_TIME_ID_PIR_DETECT
+}SysPkgScheduleTimeId;
+
+//alarm id
+typedef enum
+{
+	SYS_DETECTOR_ID_ALARM_INPUT = 1,
+	SYS_DETECTOR_ID_PIR,
+	SYS_DETECTOR_ID_MOTION_DETECT,
+	SYS_DETECTOR_ID_VCOVER_DETECT,
+	SYS_DETECTOR_ID_VLOSS_DETECT,
+	SYS_DETECTOR_ID_ABNORMAL_DETECT,
+
+	SYS_PROCESSOR_ID_ALARM_OUTPUT = 256,
+	SYS_PROCESSOR_ID_ALARM_INFO_REPORT,
+	SYS_PROCESSOR_ID_ALARM_AUDIO, 
+	SYS_PROCESSOR_ID_LINK_MAIL,
+	SYS_PROCESSOR_ID_UPLOAD_FTP,
+	SYS_PROCESSOR_ID_LINK_RECORD,
+	SYS_PROCESSOR_ID_LINK_PTZ,
+}SysPkgAlarmId;
+
+typedef struct tagScheduleTime
+{
+	uint32_t s_StartTime; //unit:minute
+	uint32_t s_EndTime; //unit:minute	
+}SysPkgScheduleTime;
+
+#define DAYS_OF_WEEK        (7)
+#define TIME_SEGMENT_OF_DAY (4)
+typedef struct tagAlarmScheduleTimeInfo
+{
+	uint32_t s_ScheduleId;// 1--alarmin, 2--alarm out, 3--PIR
+	uint32_t s_Index;//when alarm in or alarm out, it represents IO number, for example, 0, 1, 2, 3...
+	SysPkgScheduleTime s_ScheduleTime[7][4];
+	uint8_t  s_Reserved[8];
+}SysPkgAlarmScheduleTime;
+
+
+typedef struct tagGetAlarmScheduleTimeInfo
+{
+	uint32_t s_ScheduleId; // 1--alarmin, 2--alarm out, 3--PIR
+	uint32_t s_Index;//when alarm in or alarm out, it represents IO number, for example, 0, 1, 2, 3...
+	uint8_t  s_Reserved[8];
+}SysPkgGetAlarmScheduleTime;
+
+
+typedef struct tagLinkAlarmExtInfo
+{
+	uint8_t  s_IoNum;//seq no:0,1,2,....
+	uint8_t  s_OperateCmd;//when link ptz:0--none, 1--preset ,2--cruise, 3--scan
+	uint16_t s_OperateSeqNum;//when link ptz: seqno: 0(home),1,2,3...
+	uint8_t  s_Reserved[4];	
+}SysPkgLinkAlarmExtInfo;
+
+
+typedef struct tagAlarmInConfig
+{
+	uint32_t s_EnableFlag; //0--disable, 1--enable
+	uint32_t s_InputNumber; //Port 0~3
+	char_t   s_Name[32];
+	uint32_t s_CheckTime; //ms
+	uint32_t s_NormalStatus; //0--normal close, 1--normal open
+	uint32_t s_LinkAlarmStrategy;	
+	SysPkgLinkAlarmExtInfo s_LinkAlarmExtInfo;
+	uint32_t s_Reserved[4];
+}SysPkgAlarmInConfig;
+
+
+typedef struct tagAlarmOutConfig
+{
+	uint32_t s_EnableFlag;//0--disable, 1--enable;
+	uint32_t s_OutputNumber;//range from 0~3
+	char_t   s_Name[32];
+	uint32_t s_NormalStatus;//0--close, 1--open
+	uint32_t s_DelayTime;//second;	
+	uint32_t s_Reserved[4];
+}SysPkgAlarmOutConfig;
+
+
+typedef struct tagPIRDetectData
+{
+	uint32_t s_Sensitive;
+	uint32_t s_Reserved[5];
+}SysPkgPIRDetectData;
+
+
+typedef union tagUnionExternData
+{
+	SysPkgPIRDetectData s_PIRDetectInfo;
+}SysPkgAlarmUnionExternData;
+
+
+typedef struct tagAlarmEventConfig
+{
+	uint32_t s_AlarmId; //SysPkgAlarmId
+	uint32_t s_EnableFlag;//0--disable, 1--enable
+	uint32_t s_CheckTime; //ms
+	uint32_t s_LinkAlarmStrategy;	
+	SysPkgAlarmUnionExternData s_AlarmUnionExtData;	
+	SysPkgLinkAlarmExtInfo s_LinkAlarmExtInfo; 
+	uint32_t s_Reserved[4];
+}SysPkgAlarmEventConfig;
+
+
+//alarm info
+typedef struct tagAlarmInfor
+{
+    uint64_t s_WaringId;
+    int32_t  s_WaringType;// is the same as "s_MinorType" of log
+    int32_t  s_WaringLevel;//1 for hight level, 5 for low level
+    int32_t  s_OnOff; //0 for off, 1 for on;
+    uint8_t  s_Time[36];
+    uint8_t  s_DevId[64];
+    uint8_t  s_Description[128];
+    union 
+    {
+        uint32_t s_IoNum;
+        uint8_t  Reserved[4];
+    }s_ExtraInfo;
+}SysPkgAlarmInfor;
 
 #ifdef __cplusplus
 }

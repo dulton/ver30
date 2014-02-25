@@ -93,6 +93,12 @@ public:
     GMI_RESULT GetCapabilities(int32_t CapabilityCategory, int32_t CapabilityBufferLength, char_t* Capability, SysPkgXml *SysCapabilities);
     GMI_RESULT GetWorkState(int32_t WorkStateBufferLength, char_t* WorkState, SysPkgXml *SysWorkState);
     GMI_RESULT ExcuteImportConfigFile(SysPkgConfigFileInfo *SysConfigFilePtr);
+
+    //alarm
+    GMI_RESULT SvrGetAlarmConfig(int32_t AlarmId, void_t *Parameter, size_t ParameterLength);
+    GMI_RESULT SvrSetAlarmConfig(int32_t AlarmId, const void_t *Parameter, size_t ParameterLength);
+    GMI_RESULT SvrGetAlmScheduleTime(SysPkgGetAlarmScheduleTime *SysGetAlarmScheduleTime, void_t *Parameter, size_t ParameterLength);
+    GMI_RESULT SvrSetAlmScheduleTime(int32_t ScheduleId, const void_t *Parameter, size_t ParameterLength);
 private:
     inline uint32_t TimeStamp(void)
     {

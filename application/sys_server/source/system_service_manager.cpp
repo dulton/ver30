@@ -5846,3 +5846,107 @@ GMI_RESULT SystemServiceManager::ExcuteImportConfigFile(SysPkgConfigFileInfo *Sy
     return Result;
 }
 
+
+/*=============alarm==================*/
+SysPkgAlarmEventConfig g_AlarmEventConfig;
+SysPkgAlarmInConfig    g_AlarmInConfig;
+SysPkgAlarmOutConfig   g_AlarmOutConfig;
+SysPkgAlarmScheduleTime     g_AlarmInScheduleTime[2];
+SysPkgAlarmScheduleTime     g_PIRScheduleTime;
+GMI_RESULT SystemServiceManager::SvrGetAlarmConfig(int32_t AlarmId,  void_t *Parameter, size_t ParameterLength)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+	switch (AlarmId)
+	{
+	case SYS_DETECTOR_ID_ALARM_INPUT:
+		memcpy(Parameter, (void_t*)&g_AlarmInConfig, sizeof(SysPkgAlarmInConfig));
+		break;
+	case SYS_DETECTOR_ID_PIR:
+		memcpy(Parameter, (void_t*)&g_AlarmEventConfig, sizeof(SysPkgAlarmEventConfig));
+		break;
+	case SYS_PROCESSOR_ID_ALARM_OUTPUT:
+		memcpy(Parameter, (void_t*)&g_AlarmOutConfig, sizeof(SysPkgAlarmOutConfig));
+		break;
+	default:
+		return GMI_NOT_SUPPORT;
+	}
+	
+	return Result;
+}
+
+
+GMI_RESULT SystemServiceManager::SvrSetAlarmConfig(int32_t AlarmId, const void_t *Parameter, size_t ParameterLength)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+	
+	Result = m_AlarmPtr->Config(AlarmId, Parameter, ParameterLength);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("set alarm id %d config fail\n", AlarmId);
+		return Result;
+	}
+
+	switch (AlarmId)
+	{
+	case SYS_DETECTOR_ID_ALARM_INPUT:
+		memcpy(&g_AlarmInConfig, Parameter, ParameterLength);
+		break;
+	case SYS_DETECTOR_ID_PIR:
+		memcpy(&g_AlarmEventConfig, Parameter, ParameterLength);
+		break;
+	case SYS_PROCESSOR_ID_ALARM_OUTPUT:
+		memcpy(&g_AlarmOutConfig, Parameter, ParameterLength);
+		break;
+	default:
+		return GMI_NOT_SUPPORT;
+	}
+	
+	return GMI_SUCCESS;
+}
+
+
+GMI_RESULT SystemServiceManager::SvrGetAlmScheduleTime(SysPkgGetAlarmScheduleTime *SysGetAlarmScheduleTime, void_t *Parameter, size_t ParameterLength)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+	
+	switch (SysGetAlarmScheduleTime->s_ScheduleId)
+	{
+	case SYS_SCHEDULE_TIME_ID_ALARM_IN:
+		memcpy(Parameter, &g_AlarmInScheduleTime[SysGetAlarmScheduleTime->s_Index], sizeof(SysPkgAlarmScheduleTime));
+		break;
+	case SYS_SCHEDULE_TIME_ID_PIR_DETECT:
+		memcpy(Parameter, &g_PIRScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+		break;
+	default:
+		return GMI_NOT_SUPPORT;
+	}
+	
+	return Result;
+}
+
+
+GMI_RESULT SystemServiceManager::SvrSetAlmScheduleTime(int32_t ScheduleId, const void_t *Parameter, size_t ParameterLength)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+
+	Result = m_AlarmPtr->Sechdule(ScheduleId, Parameter, ParameterLength);	
+	if (FAILED(Result))
+	{
+		SYS_ERROR("set Sechdule id %d config fail\n", ScheduleId);
+		return Result;
+	}
+
+	switch (ScheduleId)
+	{
+	case SYS_SCHEDULE_TIME_ID_ALARM_IN:
+		memcpy(&g_AlarmInScheduleTime[0], Parameter, ParameterLength);
+		break;
+	case SYS_SCHEDULE_TIME_ID_PIR_DETECT:
+		memcpy(&g_PIRScheduleTime, Parameter, ParameterLength);
+		break;
+	default:
+		return GMI_NOT_SUPPORT;
+	}
+	
+	return GMI_SUCCESS;
+}

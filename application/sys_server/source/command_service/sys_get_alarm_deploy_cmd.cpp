@@ -1,21 +1,21 @@
 #include "log.h"
-#include "sys_get_alarm_config_cmd.h"
+#include "sys_get_alarm_deploy_cmd.h"
 #include "system_packet.h"
 #include "sys_env_types.h"
 
-
-SysGetAlarmConfigCommandExecutor::SysGetAlarmConfigCommandExecutor(void)
-	: SysBaseCommandExecutor(SYSCODE_GET_ALMCFG_REQ, CT_ShortTask )
+
+SysGetAlarmDeployCommandExecutor::SysGetAlarmDeployCommandExecutor(void)
+	: SysBaseCommandExecutor(SYSCODE_GET_ALMDEPLOY_REQ, CT_ShortTask )
 {
 }
 
 
-SysGetAlarmConfigCommandExecutor::~SysGetAlarmConfigCommandExecutor(void)
+SysGetAlarmDeployCommandExecutor::~SysGetAlarmDeployCommandExecutor(void)
 {
 }
 
 
-GMI_RESULT SysGetAlarmConfigCommandExecutor::Create(ReferrencePtr<BasePacket>& Packet, SafePtr<BaseCommandExecutor>& CommandExecutor )
+GMI_RESULT SysGetAlarmDeployCommandExecutor::Create(ReferrencePtr<BasePacket>& Packet, SafePtr<BaseCommandExecutor>& CommandExecutor )
 {
 	SystemPacket *SysPacket = (SystemPacket*) Packet.GetPtr();
 
@@ -24,27 +24,27 @@ GMI_RESULT SysGetAlarmConfigCommandExecutor::Create(ReferrencePtr<BasePacket>& P
 		return GMI_FAIL;
 	}
 
-	SafePtr<SysGetAlarmConfigCommandExecutor> GetAlarmConfigCommandExecutor( BaseMemoryManager::Instance().New<SysGetAlarmConfigCommandExecutor>() );
-	if (NULL == GetAlarmConfigCommandExecutor.GetPtr())
+	SafePtr<SysGetAlarmDeployCommandExecutor> GetAlarmDeployCommandExecutor( BaseMemoryManager::Instance().New<SysGetAlarmDeployCommandExecutor>() );
+	if (NULL == GetAlarmDeployCommandExecutor.GetPtr())
 	{
 		return GMI_OUT_OF_MEMORY;
 	}
 
-	GetAlarmConfigCommandExecutor->m_Session = Packet->GetSession();
-	GetAlarmConfigCommandExecutor->m_Reply   = Packet->Clone();
-	GMI_RESULT Result = GetAlarmConfigCommandExecutor->SetParameter(m_SystemServiceManager, m_Argument, m_ArgumentSize);
+	GetAlarmDeployCommandExecutor->m_Session = Packet->GetSession();
+	GetAlarmDeployCommandExecutor->m_Reply   = Packet->Clone();
+	GMI_RESULT Result = GetAlarmDeployCommandExecutor->SetParameter(m_SystemServiceManager, m_Argument, m_ArgumentSize);
 	if (FAILED(Result))
 	{
 		return Result;
 	}
 
-	CommandExecutor = GetAlarmConfigCommandExecutor;
+	CommandExecutor = GetAlarmDeployCommandExecutor;
 
 	return GMI_SUCCESS;
 }
 
 
-GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
+GMI_RESULT	SysGetAlarmDeployCommandExecutor::Execute()
 {
 	SYS_INFO("%s in..........\n", __func__);
 	GMI_RESULT        Result           = GMI_SUCCESS;
@@ -53,9 +53,8 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
     uint8_t          *PayloadBuff      = CommandPacket->GetPacketPayloadBuffer();
     SysPkgAttrHeader *SysPkgAttrHdPtr  = (SysPkgAttrHeader*)PayloadBuff;
 
-    SysPkgAlarmInConfig    SysAlarmInConfig;
-    SysPkgAlarmOutConfig   SysAlarmOutConfig;
-    SysPkgAlarmEventConfig SysAlarmEventConfig;
+	SysPkgAlarmScheduleTime SysAlarmScheduleTime;
+	memset(&SysAlarmScheduleTime, 0, sizeof(SysPkgAlarmScheduleTime));
     uint16_t ToGetAttrType = 0;
     uint8_t *ToGetAttr = NULL;
     uint16_t ToGetAttrLength = 0;
@@ -70,76 +69,40 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
         }
 
         SysPkgAttrHdPtr->s_Type = NETWORK_TO_HOST_USHORT(SysPkgAttrHdPtr->s_Type);
-        if (SysPkgAttrHdPtr->s_Type != TYPE_INTVALUE)
+        if (SysPkgAttrHdPtr->s_Type != TYPE_GET_ALMDEPLOY)
         {
             SYS_ERROR("SysPkgAttrHdPtr->s_Type %d incorrect\n", SysPkgAttrHdPtr->s_Type);
             MessageCode = RETCODE_ERROR;
             break;
         }
 
-		int32_t  DetectId = *(int32_t*)(PayloadBuff + sizeof(SysPkgAttrHeader));
-		DetectId = NETWORK_TO_HOST_UINT(DetectId);
-		switch (DetectId)
+		SysPkgGetAlarmScheduleTime *SysGetAlarmScheduleTimePtr = (SysPkgGetAlarmScheduleTime*)(PayloadBuff + sizeof(SysPkgAttrHeader));
+		
+		SysGetAlarmScheduleTimePtr->s_ScheduleId = NETWORK_TO_HOST_UINT(SysGetAlarmScheduleTimePtr->s_ScheduleId);
+		SysGetAlarmScheduleTimePtr->s_Index      = NETWORK_TO_HOST_UINT(SysGetAlarmScheduleTimePtr->s_Index);
+
+		Result = m_SystemServiceManager->SvrGetAlmScheduleTime(SysGetAlarmScheduleTimePtr, &SysAlarmScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+		if (FAILED(Result))
 		{
-		case SYS_DETECTOR_ID_ALARM_INPUT:
-			ToGetAttrType = TYPE_ALARM_IN;
-			memset(&SysAlarmInConfig, 0, sizeof(SysPkgAlarmInConfig));	
-			Result = m_SystemServiceManager->SvrGetAlarmConfig(SYS_DETECTOR_ID_ALARM_INPUT, &SysAlarmInConfig, sizeof(SysPkgAlarmInConfig));
-			if (FAILED(Result))
-			{
-				MessageCode = RETCODE_ERROR;
-				SYS_ERROR("SvrGetAlarmConfig %d fail, Result = 0x%lx\n", SYS_DETECTOR_ID_ALARM_INPUT, Result);
-				break;
-			}		
-			SysAlarmInConfig.s_EnableFlag   = HOST_TO_NETWORK_UINT(SysAlarmInConfig.s_EnableFlag);
-	    	SysAlarmInConfig.s_InputNumber  = HOST_TO_NETWORK_UINT(SysAlarmInConfig.s_InputNumber);
-	    	SysAlarmInConfig.s_CheckTime    = HOST_TO_NETWORK_UINT(SysAlarmInConfig.s_CheckTime);
-	    	SysAlarmInConfig.s_NormalStatus = HOST_TO_NETWORK_UINT(SysAlarmInConfig.s_NormalStatus);
-	    	SysAlarmInConfig.s_LinkAlarmStrategy = HOST_TO_NETWORK_UINT(SysAlarmInConfig.s_LinkAlarmStrategy);
-	    	SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = HOST_TO_NETWORK_UINT(SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);	    	
-			ToGetAttr = (uint8_t*)&SysAlarmInConfig;
-			ToGetAttrLength = sizeof(SysPkgAlarmInConfig);
+			SYS_ERROR("SvrGetAlmScheduleTime ScheduleId %d, Index %d fail, Result = 0x%lx\n", SysGetAlarmScheduleTimePtr->s_ScheduleId, SysGetAlarmScheduleTimePtr->s_Index, Result);
+			MessageCode = RETCODE_ERROR;
 			break;
-		case SYS_DETECTOR_ID_PIR:
-			ToGetAttrType = TYPE_ALARM_EVENT;
-			memset(&SysAlarmEventConfig, 0, sizeof(SysPkgAlarmEventConfig));
-			Result = m_SystemServiceManager->SvrGetAlarmConfig(SYS_DETECTOR_ID_PIR, &SysAlarmEventConfig, sizeof(SysPkgAlarmEventConfig));
-			if (FAILED(Result))
+		}
+
+		SysAlarmScheduleTime.s_ScheduleId = HOST_TO_NETWORK_UINT(SysAlarmScheduleTime.s_ScheduleId);
+		SysAlarmScheduleTime.s_Index      = HOST_TO_NETWORK_UINT(SysAlarmScheduleTime.s_Index);
+		for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
+		{
+			for (int32_t j = 0; j < TIME_SEGMENT_OF_DAY; j++)
 			{
-				MessageCode = RETCODE_ERROR;
-				SYS_ERROR("SvrGetAlarmConfig %d fail, Result = 0x%lx\n", SYS_DETECTOR_ID_PIR, Result);
-				break;
+				SysAlarmScheduleTime.s_ScheduleTime[i][j].s_StartTime = HOST_TO_NETWORK_UINT(SysAlarmScheduleTime.s_ScheduleTime[i][j].s_StartTime);
+				SysAlarmScheduleTime.s_ScheduleTime[i][j].s_EndTime   = HOST_TO_NETWORK_UINT(SysAlarmScheduleTime.s_ScheduleTime[i][j].s_EndTime);
 			}
-			SysAlarmEventConfig.s_AlarmId = HOST_TO_NETWORK_UINT(SysAlarmEventConfig.s_AlarmId);
-			SysAlarmEventConfig.s_EnableFlag = HOST_TO_NETWORK_UINT(SysAlarmEventConfig.s_EnableFlag);
-			SysAlarmEventConfig.s_CheckTime  = HOST_TO_NETWORK_UINT(SysAlarmEventConfig.s_CheckTime);
-			SysAlarmEventConfig.s_LinkAlarmStrategy = HOST_TO_NETWORK_UINT(SysAlarmEventConfig.s_LinkAlarmStrategy);
-			SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive = HOST_TO_NETWORK_UINT(SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);	    	
-			SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = HOST_TO_NETWORK_UINT(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);    			    				
-			ToGetAttr = (uint8_t*)&SysAlarmEventConfig;
-			ToGetAttrLength = sizeof(SysPkgAlarmEventConfig);
-			break;		
-		case SYS_PROCESSOR_ID_ALARM_OUTPUT:
-			ToGetAttrType = TYPE_ALARM_OUT;
-			memset(&SysAlarmOutConfig, 0, sizeof(SysPkgAlarmOutConfig));
-			Result = m_SystemServiceManager->SvrGetAlarmConfig(SYS_PROCESSOR_ID_ALARM_OUTPUT, &SysAlarmOutConfig, sizeof(SysPkgAlarmOutConfig));
-			if (FAILED(Result))
-			{
-				MessageCode = RETCODE_ERROR;
-				SYS_ERROR("SvrGetAlarmConfig %d fail, Result = 0x%lx\n", SYS_PROCESSOR_ID_ALARM_OUTPUT, Result);
-				break;
-			}
-			SysAlarmOutConfig.s_EnableFlag   = HOST_TO_NETWORK_UINT(SysAlarmOutConfig.s_EnableFlag);
-	    	SysAlarmOutConfig.s_OutputNumber = HOST_TO_NETWORK_UINT(SysAlarmOutConfig.s_OutputNumber);
-	    	SysAlarmOutConfig.s_NormalStatus = HOST_TO_NETWORK_UINT(SysAlarmOutConfig.s_NormalStatus);
-	    	SysAlarmOutConfig.s_DelayTime    = HOST_TO_NETWORK_UINT(SysAlarmOutConfig.s_DelayTime);
-			ToGetAttr = (uint8_t*)&SysAlarmOutConfig;
-			ToGetAttrLength = sizeof(SysAlarmOutConfig);
-			break;
-		default:
-			MessageCode = RETCODE_NOSUPPORT;
-			break;
-		}        
+		}
+
+		ToGetAttrType   = TYPE_ALMDEPLOY;
+		ToGetAttr       = (uint8_t*)&SysAlarmScheduleTime;
+		ToGetAttrLength = sizeof(SysPkgAlarmScheduleTime);
 	}
 	while (0);
 
@@ -182,7 +145,7 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
                  Reply->GetPacketHeaderBuffer(),
                  CommandPacket->GetMessageTag(),
                  CommandPacket->GetVersion(),
-                 SYSCODE_GET_ALMCFG_RSP,
+                 SYSCODE_GET_ALMDEPLOY_RSP,
                  AttrCnt,
                  AppPacketSize,
                  CommandPacket->GetSessionId(),
@@ -243,7 +206,7 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
 }
 
 
-GMI_RESULT	SysGetAlarmConfigCommandExecutor::Reply()
+GMI_RESULT	SysGetAlarmDeployCommandExecutor::Reply()
 {
 	GMI_RESULT Result =  m_Reply->Submit(m_Session);
 	if (FAILED(Result))
@@ -253,5 +216,4 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Reply()
 
 	return GMI_SUCCESS;
 }
-
 
