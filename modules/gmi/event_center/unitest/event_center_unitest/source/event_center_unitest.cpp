@@ -257,7 +257,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 	#endif
 	TmpParam.s_ExtData.s_HumanDetectExInfo.s_MinSensVal = 0;
 	TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = 0;
-	TmpParam.s_ExtData.s_HumanDetectExInfo.s_Sensitivity = 50;
+	TmpParam.s_ExtData.s_HumanDetectExInfo.s_Sensitivity = 10;
 	
 	TmpParam.s_LinkAlarmStrategy = 3;
 	TmpParam.s_LinkAlarmExtInfo.s_IoNum = 0;
