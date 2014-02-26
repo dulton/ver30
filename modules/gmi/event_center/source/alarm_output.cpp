@@ -90,7 +90,7 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 				case EVENT_DETECTOR_ID_ALARM_INPUT:
 					printf("Index=%d, s_IoNum=%d, GetOutputNumber=%d\n", Index, g_CurStartedAlarmIn[Index].s_AlarmInputInfo.s_LinkAlarmExtInfo.s_IoNum, GetOutputNumber());
 					if((0 < (g_CurStartedAlarmIn[Index].s_AlarmInputInfo.s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1))))
-						&& (g_CurStartedAlarmIn[Index].s_AlarmInputInfo.s_LinkAlarmExtInfo.s_IoNum == GetOutputNumber()))
+						&& ((g_CurStartedAlarmIn[Index].s_AlarmInputInfo.s_LinkAlarmExtInfo.s_IoNum & (1<<GetOutputNumber())) > 0))
 					{
 						if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_AlarmOutputInfo.s_NormalStatus)
 						{

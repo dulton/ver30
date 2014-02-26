@@ -77,7 +77,7 @@ struct AlarmOutputInfo
 
 struct LinkAlarmExtInfo
 {
-    uint8_t  s_IoNum;               //sequence number:0, 1, 2 ...
+    uint8_t  s_IoNum;               //sequence number:every bit,0-output1, 1-output2, 2-output3 , when bit value:1- valid,0-invalid 
 	uint8_t  s_OperateCmd;          //when link PTZ:0-none, 1-Preset Points ,2-cruise, 3-scan
 	uint16_t s_OperateSeqNum;       //when link PTZ:sequence number:0, 1, 2 ...
 	uint16_t s_DelayTime;           //when link light,unit: sencond

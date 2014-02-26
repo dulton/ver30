@@ -297,7 +297,7 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const size_t EventType, c
 			}
 		}
 
-		if(0 < CheckCurBitValid(EVENT_PROCESSOR_ID_INFO_UPLOAD))
+		if(1)//0 < CheckCurBitValid(EVENT_PROCESSOR_ID_INFO_UPLOAD))
 		{
 			Result = StartAlarmInfoRecord();
 			if ( FAILED( Result ) )

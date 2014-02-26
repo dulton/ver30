@@ -100,7 +100,7 @@ GMI_RESULT  EventProcessInfoRecord::Notify( uint32_t EventId, uint32_t Index, en
     			case EVENT_DETECTOR_ID_ALARM_INPUT:
 					
 					EventRecodPrt("[EventName:%s %d] tigger %s!", G_EventDetectorTypeName[EventId-1], Index, G_EventStatusTypeName[Type-1]);
-					if(0 < (g_CurStartedAlarmIn[Index].s_AlarmInputInfo.s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_INFO_UPLOAD-1))))
+					if(1)//0 < (g_CurStartedAlarmIn[Index].s_AlarmInputInfo.s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_INFO_UPLOAD-1))))
 					{
 						if ( NULL != m_Callback )
 			            {
@@ -112,7 +112,7 @@ GMI_RESULT  EventProcessInfoRecord::Notify( uint32_t EventId, uint32_t Index, en
 					break;
 				case EVENT_DETECTOR_ID_HUMAN_DETECT:
 					EventRecodPrt("[EventName:%s] tigger %s!", G_EventDetectorTypeName[EventId-1], G_EventStatusTypeName[Type-1]);
-					if(0 < (g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_INFO_UPLOAD-1))))
+					if(1)//0 < (g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_INFO_UPLOAD-1))))
 					{
 						if ( NULL != m_Callback )
 			            {
