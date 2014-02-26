@@ -140,7 +140,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 		return -1;
 	}
 
-	#if 1
+	#if 0
 	AlarmOutputInfo TmpIoOutParam;
 	memset(&TmpIoOutParam, 0, sizeof(TmpIoOutParam));
 	TmpIoOutParam.s_EnableFlag = 1;
@@ -175,7 +175,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 	
 	#endif
 
-	#if 1
+	#if 0
 	AlarmInputInfo TmpIoParam;
 	memset(&TmpIoParam, 0, sizeof(TmpIoParam));
 	TmpIoParam.s_EnableFlag = 1;
@@ -247,6 +247,15 @@ int32_t main( int32_t argc, char_t* argv[] )
 		TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = 450;
 	}
 
+	if((atoi(argv[3]) > 0) && (atoi(argv[3]) < 60))
+	{
+		TmpParam.s_LinkAlarmExtInfo.s_DelayTime = atoi(argv[3]);
+	}
+	else
+	{
+		TmpParam.s_LinkAlarmExtInfo.s_DelayTime = 5; //s
+	}
+
 	#if 0
 	if(TmpParam.s_ExtData.s_HumanDetectExInfo.s_MinSensVal > TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal)
 	{
@@ -257,9 +266,9 @@ int32_t main( int32_t argc, char_t* argv[] )
 	#endif
 	TmpParam.s_ExtData.s_HumanDetectExInfo.s_MinSensVal = 0;
 	TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = 0;
-	TmpParam.s_ExtData.s_HumanDetectExInfo.s_Sensitivity = 10;
+	TmpParam.s_ExtData.s_HumanDetectExInfo.s_Sensitivity = 50;
 	
-	TmpParam.s_LinkAlarmStrategy = 3;
+	TmpParam.s_LinkAlarmStrategy = 0x102;
 	TmpParam.s_LinkAlarmExtInfo.s_IoNum = 0;
 
 	#if 0
@@ -342,26 +351,8 @@ int32_t main( int32_t argc, char_t* argv[] )
 	
 	TmpParam.s_EnableFlag = 1;
 	TmpParam.s_CheckTime = 500;
-	TmpParam.s_LinkAlarmStrategy = 2;
+	TmpParam.s_LinkAlarmStrategy = 0x01;
 	Center.ConfigureAlarmEvent(EVENT_DETECTOR_ID_HUMAN_DETECT, (void_t*)(&TmpParam),sizeof(TmpParam));
-
-	while('c' != getchar())
-	{
-		GMI_Sleep(1000);
-	}
-	TmpParam.s_LinkAlarmStrategy = 3;
-	Center.ConfigureAlarmEvent(EVENT_DETECTOR_ID_HUMAN_DETECT, (void_t*)(&TmpParam),sizeof(TmpParam));
-	TmpIoOutParam.s_DelayTime = 10;
-
-	Center.ConfigureGPIOAlarmOutput((void_t*)(&TmpIoOutParam),sizeof(TmpIoOutParam));
-
-	while('d' != getchar())
-	{
-		GMI_Sleep(1000);
-	}
-	TmpIoOutParam.s_EnableFlag = 0;
-
-	Center.ConfigureGPIOAlarmOutput((void_t*)(&TmpIoOutParam),sizeof(TmpIoOutParam));
 	
 	while('q' != getchar())
 	{

@@ -121,7 +121,7 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 					}
 					break;
 				case EVENT_DETECTOR_ID_HUMAN_DETECT:
-					
+					#if 0
 					printf("EventId=%d, s_IoNum=%d, GetOutputNumber=%d\n", EventId, g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmExtInfo.s_IoNum, GetOutputNumber());
 					if(0 < (g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1)))
 						&& (g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmExtInfo.s_IoNum == GetOutputNumber()))
@@ -147,6 +147,8 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 							BreakFlag = 2;
 						}
 			        }
+					#endif
+					fprintf(stderr, "AlarmOutput::Notify EVENT_DETECTOR_ID_HUMAN_DETECT no need process.\n");
 					break;
 				default:
 					fprintf(stderr, "AlarmOutput::Notify EventId %d error.\n", EventId);
@@ -255,12 +257,14 @@ void_t* AlarmOutput::TimerEntry()
 				switch(i)
 				{
 					case EVENT_DETECTOR_ID_HUMAN_DETECT:
+						#if 0
 						printf("GMI_ALARM_MODE_LIGHT close[%u]\n", (uint32_t)CurrTime);
 			            Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, 0 );
 						if ( FAILED( Result ) )
 			            {	            	
 						    fprintf(stderr, "GMI_BrdSetAlarmOutput GMI_ALARM_MODE_LIGHT fail\n");
 			            }
+						#endif
 						break;
 					case EVENT_DETECTOR_ID_ALARM_INPUT:
 						printf("GMI_ALARM_MODE_GPIO recover[%u]\n", (uint32_t)CurrTime);

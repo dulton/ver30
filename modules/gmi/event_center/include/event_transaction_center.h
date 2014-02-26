@@ -26,6 +26,8 @@ private:
     GMI_RESULT StopGPIOAlarmOutputEx(size_t OutIoIndex);
 	GMI_RESULT StartAlarmInfoRecord();
     GMI_RESULT StopAlarmInfoRecord(); 
+	GMI_RESULT StartAlarmLinkLight(const void *Parameter, size_t ParameterLength);
+    GMI_RESULT StopAlarmLinkLight();
 	GMI_RESULT StartHumanDetect();
     GMI_RESULT StopHumanDetect();
 
@@ -37,5 +39,6 @@ private:
 	static size_t               m_IsStartInfoRecord;
 	static size_t               m_IsStartGPIOInputEx[MAX_NUM_GPIO_IN];
 	static size_t               m_IsStartGPIOOutputEx[MAX_NUM_GPIO_OUT];
+	static size_t               m_IsStartLinkLight;
 	
 };

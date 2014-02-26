@@ -24,7 +24,7 @@
 #define EVENT_PROCESSOR_ID_LINK_RECORD   6
 #define EVENT_PROCESSOR_ID_LINK_PTZ      7
 #define EVENT_PROCESSOR_ID_LINK_CAP      8
-
+#define EVENT_PROCESSOR_ID_LINK_LIGHT    9
 
 //schedule id 
 #define SCHEDULE_TIME_ID_ALARM_IN        1
@@ -71,7 +71,7 @@ struct AlarmOutputInfo
 	uint32_t          s_OutputNumber; //range from 0-3
     char_t            s_Name[ALARM_OUTPUT_MAX_NAME_LENGTH];
 	AlarmOutputStatus s_NormalStatus; //io status
-    uint32_t          s_DelayTime; //unit:second
+    uint32_t          s_DelayTime;    //unit:second
 	uint32_t          s_Reserverd[4];
 };
 
@@ -80,6 +80,8 @@ struct LinkAlarmExtInfo
     uint8_t  s_IoNum;               //sequence number:0, 1, 2 ...
 	uint8_t  s_OperateCmd;          //when link PTZ:0-none, 1-Preset Points ,2-cruise, 3-scan
 	uint16_t s_OperateSeqNum;       //when link PTZ:sequence number:0, 1, 2 ...
+	uint16_t s_DelayTime;           //when link light,unit: sencond
+	uint16_t s_DutyRatio;           //when link light,reserved
 	uint8_t  s_Reserverd[4];
 };
 
@@ -92,7 +94,7 @@ struct AlarmInputInfo
     uint32_t          s_CheckTime;       //poll time, unit:ms
     AlarmInputStatus  s_NormalStatus;    //io status
 	//every bit represents the certain AlarmStrategy;
-    //0-Alarm output,1-Info upload,2-audio, 3-mail, 4-FTP, 5-record, 6-PTZ, 7-capture picture;
+    //0-Alarm output,1-Info upload,2-audio, 3-mail, 4-FTP, 5-record, 6-PTZ, 7-capture picture, 8-light;
     //value 0-invalid, value 1-valid
 	uint32_t          s_LinkAlarmStrategy;
 	LinkAlarmExtInfo  s_LinkAlarmExtInfo;  //when link alarm out, PTZ      
@@ -118,7 +120,7 @@ struct AlarmEventConfigInfo
 	uint32_t          s_AlarmEventType;  //type:EVENT_DETECTOR_ID_XX
 	uint32_t          s_EnableFlag;      //0-disable, 1-enbale
 	//every bit represents the certain AlarmStrategy;
-    //0-Alarm output,1-Info upload,2-audio, 3-mail, 4-FTP, 5-record, 6-PTZ, 7-capture picture;
+    //0-Alarm output,1-Info upload,2-audio, 3-mail, 4-FTP, 5-record, 6-PTZ, 7-capture picture,  8-light;
     //value 0-invalid, value 1-valid
 	uint32_t          s_LinkAlarmStrategy;
 	LinkAlarmExtInfo  s_LinkAlarmExtInfo;    //when link alarm out, PTZ.

@@ -4,6 +4,8 @@
 #include "alarm_output.h"
 #include "event_process_inforecord.h"
 #include "human_detect.h"
+#include "event_process_light.h"
+
 
 AlarmEventConfigInfoEx g_CurStartedEvent[MAX_NUM_EVENT_TYPE];
 AlarmInputInfoEx g_CurStartedAlarmIn[MAX_NUM_GPIO_IN];
@@ -66,7 +68,7 @@ size_t EventTransactionCenter::m_IsStartHumanDetect = 0;
 size_t EventTransactionCenter::m_IsStartInfoRecord = 0;
 size_t EventTransactionCenter::m_IsStartGPIOInputEx[MAX_NUM_GPIO_IN] = {0};
 size_t EventTransactionCenter::m_IsStartGPIOOutputEx[MAX_NUM_GPIO_OUT] = {0};
-
+size_t EventTransactionCenter::m_IsStartLinkLight = 0;
 
 
 
@@ -310,6 +312,25 @@ GMI_RESULT EventTransactionCenter::ConfigureAlarmEvent(const size_t EventType, c
 			if ( FAILED( Result ) )
 			{
 				fprintf(stderr, "ConfigureAlarmEvent StopAlarmInfoRecord error.\n");
+				break;
+			}
+		}
+
+		if(0 < CheckCurBitValid(EVENT_PROCESSOR_ID_LINK_LIGHT))
+		{
+			Result = StartAlarmLinkLight(Parameter, sizeof(AlarmEventConfigInfo));
+			if ( FAILED( Result ) )
+			{
+				fprintf(stderr, "ConfigureAlarmEvent StartAlarmLinkLight error.\n");
+				break;
+			}
+		}
+		else
+		{
+			Result = StopAlarmLinkLight();
+			if ( FAILED( Result ) )
+			{
+				fprintf(stderr, "ConfigureAlarmEvent StopAlarmLinkLight error.\n");
 				break;
 			}
 		}
@@ -639,6 +660,82 @@ GMI_RESULT EventTransactionCenter::StopAlarmInfoRecord()
 	
 	m_IsStartInfoRecord = 0;
 	printf("StopAlarmInfoRecord end\n");
+
+    return Result;
+}
+
+
+GMI_RESULT EventTransactionCenter::StartAlarmLinkLight(const void *Parameter, size_t ParameterLength)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+	
+	if((0 == ParameterLength)
+		|| (NULL == Parameter)
+		|| (ParameterLength < sizeof(struct AlarmEventConfigInfo)))
+	{
+		fprintf(stderr, "StartAlarmLinkLight GMI_INVALID_PARAMETER.\n");
+		Result = GMI_INVALID_PARAMETER;
+		return Result;
+	}
+
+	
+    struct AlarmEventConfigInfo Info;
+	memset(&Info, 0, sizeof(Info));
+	memcpy(&Info, Parameter, sizeof(Info));
+	
+	if(1 == m_IsStartLinkLight)
+	{
+		fprintf(stderr, "StartAlarmLinkLight has done.\n");
+		return GMI_SUCCESS;
+	}
+
+	printf("********link light*******\n");
+	printf("s_DelayTime=%d\n", Info.s_LinkAlarmExtInfo.s_DelayTime);
+	printf("**************************\n\n");
+	
+    ReferrencePtr<EventProcessLight> EventProcessLightProcessor( BaseMemoryManager::Instance().New<EventProcessLight>( EVENT_PROCESSOR_ID_LINK_LIGHT, 0 ) );
+    if ( NULL == EventProcessLightProcessor.GetPtr() )
+    {
+        m_Center->Deinitialize();
+        printf( "allocating EventProcessLightProcessor object failed \n" );
+        return GMI_OUT_OF_MEMORY;
+    }
+
+	struct DetectorInfo TmpDetectInfo;
+	memset(&TmpDetectInfo, 0, sizeof(TmpDetectInfo));
+	TmpDetectInfo.s_DetectorId = EVENT_DETECTOR_ID_HUMAN_DETECT;
+	TmpDetectInfo.s_Index = 0;
+	
+	EventProcessLightProcessor->AddDetectorId( TmpDetectInfo );
+
+    Result = m_Center->RegisterEventProcessor( EventProcessLightProcessor, &Info, sizeof(Info) );
+    if ( FAILED( Result ) )
+    {
+        m_Center->Deinitialize();
+        printf( "EventCenter RegisterEventProcessor failed \n" );
+        return Result;
+    }
+
+	m_IsStartLinkLight = 1;
+    return Result;
+}
+
+GMI_RESULT EventTransactionCenter::StopAlarmLinkLight()
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+	
+	if(0 == m_IsStartLinkLight)
+	{
+		fprintf(stderr, "StopAlarmLinkLight has done.\n");
+		return GMI_SUCCESS;
+	}
+    Result = m_Center->UnregisterEventProcessor( EVENT_PROCESSOR_ID_LINK_LIGHT, 0 );
+    if ( FAILED( Result ) )
+    {
+        return Result;
+    }
+	m_IsStartLinkLight = 0;
+	printf("StopAlarmLinkLight end\n");
 
     return Result;
 }
