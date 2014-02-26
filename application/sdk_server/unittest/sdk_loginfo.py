@@ -71,20 +71,18 @@ def __GetLogInfo(ssock,opts):
 	search.StopTime(opts.stoptime)
 	search.Offset(opts.offset)
 	search.MaxNum(opts.maxnum)
+	logging.info("search %s"%(repr(search)))
 
 	loginfos = ssock.QuerySearch(search)
 	logging.info('query %s'%(repr(search)))
 	logging.info('result %s'%(repr(loginfos)))
-	if isinstance(loginfos,int):
-		sys.stdout.write('%s'%(repr(search)))
-		sys.stdout.write('results (%d)\n'%(loginfos))
-	else:
-		i = 0
-		for info in loginfos:
-			sys.stdout.write('++++++++%d+++++++\n'%(i))
-			sys.stdout.write('%s'%(repr(info)))
-			sys.stdout.write('--------%d-------\n'%(i))
-			i += 1
+	i = 0
+	sys.stdout.write('totalnum   (%d)'%(len(loginfos)))
+	for info in loginfos:
+		sys.stdout.write('++++++++%d+++++++\n'%(i))
+		sys.stdout.write('%s'%(repr(info)))
+		sys.stdout.write('--------%d-------\n'%(i))
+		i += 1
 	return
 
 def GetLogInfoSession(host,port,sesid,opts):
