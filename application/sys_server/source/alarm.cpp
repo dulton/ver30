@@ -122,7 +122,7 @@ GMI_RESULT Alarm::Config(int32_t AlarmId, const void_t *Parameter, size_t Parame
 
 		struct AlarmEventConfigInfo AlarmEventConfig;
 		memset(&AlarmEventConfig, 0, sizeof(struct AlarmEventConfigInfo));
-		AlarmEventConfig.s_AlarmEventType      = (enum AlarmEventType)EVENT_DETECTOR_ID_HUMAN_DETECT;
+		AlarmEventConfig.s_AlarmEventType      = EVENT_DETECTOR_ID_HUMAN_DETECT;
 		AlarmEventConfig.s_EnableFlag          = SysAlarmPIRConfig.s_EnableFlag;
 		AlarmEventConfig.s_LinkAlarmStrategy   = SysAlarmPIRConfig.s_LinkAlarmStrategy;
 		AlarmEventConfig.s_CheckTime           = SysAlarmPIRConfig.s_CheckTime;
@@ -130,7 +130,7 @@ GMI_RESULT Alarm::Config(int32_t AlarmId, const void_t *Parameter, size_t Parame
 		AlarmEventConfig.s_LinkAlarmExtInfo.s_OperateCmd    = SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_OperateCmd;
 		AlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_OperateSeqNum;
 		AlarmEventConfig.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = SysAlarmPIRConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive;
-		Result = m_EventCenter.ConfigureAlarmEvent((enum AlarmEventType)EVENT_DETECTOR_ID_HUMAN_DETECT, &AlarmEventConfig, sizeof(struct AlarmEventConfigInfo));
+		Result = m_EventCenter.ConfigureAlarmEvent(EVENT_DETECTOR_ID_HUMAN_DETECT, &AlarmEventConfig, sizeof(struct AlarmEventConfigInfo));
 		if (FAILED(Result))
 		{
 			SYS_ERROR("ConfigureAlarmEvent fail, Result = 0x%lx\n", Result);
