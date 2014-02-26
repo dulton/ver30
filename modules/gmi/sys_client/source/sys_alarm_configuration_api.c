@@ -187,15 +187,15 @@ GMI_RESULT SysGetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, SysPkgG
     uint16_t     RspAttrCnt        = 0;
     uint16_t     ReqAttrCnt        = 1;
     boolean_t    Exist             = false;    
-    SysPkgGetAlarmScheduleTime GetAlarmScheduleTime; 
-    SysPkgAlarmScheduleTime    SysAlarmScheduleTime;         
+    SysPkgGetAlarmScheduleTime GetAlarmScheduleTime = {0}; 
+    SysPkgAlarmScheduleTime    SysAlarmScheduleTime = {0};         
 
 
     do
     {    
         memcpy(&GetAlarmScheduleTime, SysGetAlarmScheduleTime, sizeof(SysPkgGetAlarmScheduleTime));        
-        GetAlarmScheduleTime.s_ScheduleId = ntohl(GetAlarmScheduleTime.s_ScheduleId);
-		GetAlarmScheduleTime.s_Index      = ntohl(GetAlarmScheduleTime.s_Index);      
+        GetAlarmScheduleTime.s_ScheduleId = htonl(GetAlarmScheduleTime.s_ScheduleId);
+		GetAlarmScheduleTime.s_Index      = htonl(GetAlarmScheduleTime.s_Index);      
         SysReqAttr.s_Type       = TYPE_GET_ALMDEPLOY;
         SysReqAttr.s_Attr       = (void_t*)&GetAlarmScheduleTime;
         SysReqAttr.s_AttrLength = sizeof(SysPkgGetAlarmScheduleTime);
@@ -215,8 +215,9 @@ GMI_RESULT SysGetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, SysPkgG
         
         SysRspAttrTmpPtr = SysRspAttrPtr;
         if (SysRspAttrTmpPtr->s_Type == TYPE_ALMDEPLOY
-                && SysRspAttrTmpPtr->s_AttrLength == sizeof(SysAlarmScheduleTime))
+                && SysRspAttrTmpPtr->s_AttrLength == sizeof(SysPkgAlarmScheduleTime))
         {
+            memcpy(&SysAlarmScheduleTime, SysRspAttrTmpPtr->s_Attr, SysRspAttrTmpPtr->s_AttrLength);
             SysAlarmScheduleTime.s_ScheduleId = ntohl(SysAlarmScheduleTime.s_ScheduleId);
     		SysAlarmScheduleTime.s_Index      = ntohl(SysAlarmScheduleTime.s_Index);
     		for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
