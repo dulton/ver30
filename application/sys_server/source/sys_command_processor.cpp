@@ -47,6 +47,10 @@
 #include "sys_get_log_info_cmd.h"
 #include "sys_ptz_3dctrl_cmd.h"
 #include "sys_stop_3a_cmd.h"
+#include "sys_get_alarm_config_cmd.h"
+#include "sys_set_alarm_config_cmd.h"
+#include "sys_get_alarm_deploy_cmd.h"
+#include "sys_set_alarm_deploy_cmd.h"
 #include "log.h"
 #include "server_command_pipeline_manager.h"
 #include "gmi_system_headers.h"
@@ -1231,6 +1235,90 @@ GMI_RESULT SysCommandProcessor::RegisterCommand()
         return Result;
     }
 
+    SafePtr<SysGetAlarmConfigCommandExecutor> GetAlarmConfigCommandExecutor(BaseMemoryManager::Instance().New<SysGetAlarmConfigCommandExecutor>());
+    if (NULL == GetAlarmConfigCommandExecutor.GetPtr())
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SearchPresetCommandExecutor new fail\n");
+        SYS_ERROR("SearchPresetCommandExecutor new fail\n");
+        return GMI_OUT_OF_MEMORY;
+    }
+    Result = GetAlarmConfigCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
+    if (FAILED(Result))
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetParameter fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+    Result = m_CommandPipeline->RegisterCommandExecutor(GetAlarmConfigCommandExecutor);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+
+    SafePtr<SysSetAlarmConfigCommandExecutor> SetAlarmConfigCommandExecutor(BaseMemoryManager::Instance().New<SysSetAlarmConfigCommandExecutor>());
+    if (NULL == SetAlarmConfigCommandExecutor.GetPtr())
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SearchPresetCommandExecutor new fail\n");
+        SYS_ERROR("SearchPresetCommandExecutor new fail\n");
+        return GMI_OUT_OF_MEMORY;
+    }
+    Result = SetAlarmConfigCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
+    if (FAILED(Result))
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetParameter fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+    Result = m_CommandPipeline->RegisterCommandExecutor(SetAlarmConfigCommandExecutor);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+
+    SafePtr<SysGetAlarmDeployCommandExecutor> GetAlarmDeployCommandExecutor(BaseMemoryManager::Instance().New<SysGetAlarmDeployCommandExecutor>());
+    if (NULL == GetAlarmDeployCommandExecutor.GetPtr())
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SearchPresetCommandExecutor new fail\n");
+        SYS_ERROR("SearchPresetCommandExecutor new fail\n");
+        return GMI_OUT_OF_MEMORY;
+    }
+    Result = GetAlarmDeployCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
+    if (FAILED(Result))
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetParameter fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+    Result = m_CommandPipeline->RegisterCommandExecutor(GetAlarmDeployCommandExecutor);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+
+    SafePtr<SysSetAlarmDeployCommandExecutor> SetAlarmDeployCommandExecutor(BaseMemoryManager::Instance().New<SysSetAlarmDeployCommandExecutor>());
+    if (NULL == SetAlarmDeployCommandExecutor.GetPtr())
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SearchPresetCommandExecutor new fail\n");
+        SYS_ERROR("SearchPresetCommandExecutor new fail\n");
+        return GMI_OUT_OF_MEMORY;
+    }
+    Result = SetAlarmDeployCommandExecutor->SetParameter(m_ServiceManager, NULL, 0);
+    if (FAILED(Result))
+    {
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetParameter fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+    Result = m_CommandPipeline->RegisterCommandExecutor(SetAlarmDeployCommandExecutor);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "RegisterCommandExecutor fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+    
     SafePtr<SysProcessNotSupportCommandExecutor> ProcessNotSupportCommandExecutor(BaseMemoryManager::Instance().New<SysProcessNotSupportCommandExecutor>() );
     if (NULL == ProcessNotSupportCommandExecutor.GetPtr())
     {

@@ -1545,7 +1545,8 @@ typedef struct tagLinkAlarmExtInfo
 	uint8_t  s_IoNum;//seq no:0,1,2,....
 	uint8_t  s_OperateCmd;//when link ptz:0--none, 1--preset ,2--cruise, 3--scan
 	uint16_t s_OperateSeqNum;//when link ptz: seqno: 0(home),1,2,3...
-	uint8_t  s_Reserved[4];	
+	uint8_t  s_DelayTime;//unit:s
+	uint8_t  s_Reserved[7];	
 }SysPkgLinkAlarmExtInfo;
 
 
@@ -1556,7 +1557,7 @@ typedef struct tagAlarmInConfig
 	char_t   s_Name[32];
 	uint32_t s_CheckTime; //ms
 	uint32_t s_NormalStatus; //0--normal close, 1--normal open
-	uint32_t s_LinkAlarmStrategy;	
+	uint32_t s_LinkAlarmStrategy;	//0-Alarm output,1-Info upload,2-audio, 3-mail, 4-FTP, 5-record, 6-PTZ, 7-capture picture,8--white light
 	SysPkgLinkAlarmExtInfo s_LinkAlarmExtInfo;
 	uint32_t s_Reserved[4];
 }SysPkgAlarmInConfig;
@@ -1602,7 +1603,7 @@ typedef struct tagAlarmEventConfig
 typedef struct tagAlarmInfor
 {
     uint64_t s_WaringId;
-    int32_t  s_WaringType;// is the same as "s_MinorType" of log
+    int32_t  s_WaringType;//SysPkgAlarmId 
     int32_t  s_WaringLevel;//1 for hight level, 5 for low level
     int32_t  s_OnOff; //0 for off, 1 for on;
     uint8_t  s_Time[36];
