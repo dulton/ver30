@@ -138,6 +138,7 @@ GMI_RESULT SysSetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
             SysReqAttr.s_AttrLength = sizeof(SysPkgAlarmInConfig);
             break;
         case SYS_DETECTOR_ID_PIR:
+            memcpy(&SysAlarmEventConfig, Parameter, sizeof(SysPkgAlarmEventConfig));
             SysAlarmEventConfig.s_AlarmId    = htonl(SysAlarmEventConfig.s_AlarmId);
 			SysAlarmEventConfig.s_EnableFlag = htonl(SysAlarmEventConfig.s_EnableFlag);
 			SysAlarmEventConfig.s_CheckTime  = htonl(SysAlarmEventConfig.s_CheckTime);
@@ -150,6 +151,7 @@ GMI_RESULT SysSetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
             SysReqAttr.s_AttrLength = sizeof(SysPkgAlarmEventConfig);
             break;
         case SYS_PROCESSOR_ID_ALARM_OUTPUT:
+            memcpy(&SysAlarmOutConfig, Parameter, sizeof(SysPkgAlarmOutConfig));
             SysAlarmOutConfig.s_EnableFlag   = htonl(SysAlarmOutConfig.s_EnableFlag);
 	    	SysAlarmOutConfig.s_OutputNumber = htonl(SysAlarmOutConfig.s_OutputNumber);
 	    	SysAlarmOutConfig.s_NormalStatus = htonl(SysAlarmOutConfig.s_NormalStatus);
