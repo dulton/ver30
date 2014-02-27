@@ -169,11 +169,17 @@ GMI_RESULT Alarm::CheckConfig(int32_t AlarmId, int32_t Index, const void_t *Para
 		SYS_INFO("s_AlarmId 					= %d\n", SysAlarmPIRConfig.s_AlarmId);
 		SYS_INFO("EnableFlag                    = %d\n", SysAlarmPIRConfig.s_EnableFlag);		
 		SYS_INFO("s_LinkAlarmStrategy           = 0x%x\n", SysAlarmPIRConfig.s_LinkAlarmStrategy);
+		SYS_INFO("s_Sensitivety                 = %d\n", SysAlarmPIRConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);
 		SYS_INFO("s_CheckTime                   = %d\n", SysAlarmPIRConfig.s_CheckTime);
 		SYS_INFO("s_LinkAlarmExtInfo.s_IoNum    = 0x%x\n", SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_IoNum);
 		SYS_INFO("s_LinkAlarmExtInfo.s_OperateCmd    = %d\n", SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_OperateCmd);
 		SYS_INFO("s_LinkAlarmExtInfo.s_OperateSeqNum = %d\n", SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);
-		SYS_INFO("s_LinkAlarmExtInfo.s_DelayTime = %d\n", SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_DelayTime);				
+		SYS_INFO("s_LinkAlarmExtInfo.s_DelayTime = %d\n", SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_DelayTime);	
+		if (SysAlarmPIRConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive < 0 || SysAlarmPIRConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive > 100)
+		{
+			SYS_ERROR("s_Sensitive %d error\n", SysAlarmPIRConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);
+			return GMI_INVALID_PARAMETER;
+		}
 		break;
 	case SYS_PROCESSOR_ID_ALARM_OUTPUT:
 		SysPkgAlarmOutConfig SysAlarmOutConfig;
@@ -261,7 +267,7 @@ GMI_RESULT Alarm::Config(int32_t AlarmId, int32_t Index, const void_t *Parameter
 		AlarmEventConfig.s_LinkAlarmExtInfo.s_IoNum         = SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_IoNum;
 		AlarmEventConfig.s_LinkAlarmExtInfo.s_OperateCmd    = SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_OperateCmd;
 		AlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_OperateSeqNum;
-		AlarmEventConfig.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = SysAlarmPIRConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive;
+		AlarmEventConfig.s_ExtData.s_HumanDetectExInfo.s_Sensitivity = SysAlarmPIRConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive;
 		Result = m_EventCenter.ConfigureAlarmEvent(EVENT_DETECTOR_ID_HUMAN_DETECT, &AlarmEventConfig, sizeof(struct AlarmEventConfigInfo));
 		if (FAILED(Result))
 		{
