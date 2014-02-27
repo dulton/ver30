@@ -1784,6 +1784,16 @@ GMI_RESULT ConfigFileManager::SetAudioEncodeSettings(SysPkgAudioEncodeCfg *Audio
 
 GMI_RESULT ConfigFileManager::GetHwAutoDetectInfo(SysPkgComponents *SysComponents)
 {
+#if 1
+	GMI_RESULT Result = m_FactoryOperation.GetHwAutoDetectInfo(SysComponents);
+    if (FAILED(Result))
+    {
+        SYS_ERROR("get hw auto detect info fail, Result = 0x%lx\n", Result);
+        return Result;
+    }
+
+    return GMI_SUCCESS;
+#else
     GMI_RESULT Result;
     FD_HANDLE  Handle;
     char_t     HwAutoDetectPath[128] = {0};
@@ -1880,6 +1890,7 @@ GMI_RESULT ConfigFileManager::GetHwAutoDetectInfo(SysPkgComponents *SysComponent
     }
 
     return GMI_SUCCESS;
+#endif
 }
 
 

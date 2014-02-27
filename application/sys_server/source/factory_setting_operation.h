@@ -30,11 +30,12 @@ public:
     GMI_RESULT GetIrcut(GeneralParam_Ircut *Ircut);
     //get device information
     GMI_RESULT GetDeviceInfo(SysPkgDeviceInfo *SysDeviceInfoPtr);
+    //get hw components info
+    GMI_RESULT GetHwAutoDetectInfo(SysPkgComponents *SysComponents);
     //excute import file
     GMI_RESULT ExcuteImportFile(SysPkgConfigFileInfo *SysConfigFilePtr);
 private:
-	GMI_RESULT FileIsExist(const char_t *File, boolean_t *Exist);
-	GMI_RESULT GetHwAutoDetectInfo(SysPkgComponents *SysComponents);
+	GMI_RESULT FileIsExist(const char_t *File, boolean_t *Exist);	
 	GMI_RESULT CheckVideoReslution(uint16_t Width, uint16_t Height);
 	GMI_RESULT GetMediaParam(int32_t *MaxStreamNumPtr, int32_t *MaxPicWidthPtr, int32_t *MaxPicHeightPtr);
 	GMI_RESULT WriteMediaParamToCapSw(int32_t MaxStreamNum, int32_t MaxPicWidth, int32_t MaxPicHeight);
@@ -45,6 +46,7 @@ private:
 	GMI_RESULT GetMaxResByHwInfo(int32_t *MaxWidthPtr, int32_t *MaxHeightPtr);
 	GMI_RESULT CheckCapabilitySwFile(const char_t *FilePath);
 	GMI_RESULT GenerateSoftwareCapabilityByHwInfo(void);
+	GMI_RESULT GetCapabilitySwConfigLens(char_t ConfigLens[64]);
 	GMI_RESULT Lock();
 	GMI_RESULT Unlock();
 private:

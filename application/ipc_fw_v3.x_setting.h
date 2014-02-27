@@ -70,6 +70,7 @@
 #define GMI_SETTING_CONFIG_FILE_NAME                "/opt/config/gmi_setting.xml"
 #define GMI_DEFAULT_SETTING_CONFIG_FILE_NAME        "/opt/config/gmi_default_setting.xml"
 #define GMI_FACTORY_SETTING_CONFIG_FILE_NAME        "/opt/config/gmi_factory_setting.xml"
+/*======Hardware info=====*/
 //hw auto detect info
 #define SENSOR_ID_2715                              "ov2715"
 #define SENSOR_ID_9715                              "ov9715"
@@ -82,6 +83,7 @@
 #define LENS_NONE                                   "NONE"
 #define LENS_DF003                                  "DF003"
 #define LENS_YB22                                   "YB22"
+#define LENS_ICRJZ9                                 "ICRJZ9"
 #define BOARD_NORMAL                                "NORMAL"
 #define BOARD_LARK                                  "LARK"
 
@@ -96,11 +98,15 @@
 #define HW_SENSOR_KEY                               "VideoIn"
 #define HW_LENS_KEY                                 "Lens"
 #define HW_MAINBOARD_KEY                            "MainBoard"
-//software info
+
+//capability  info
 #define CAPABILITY_SW_MEDIA_PATH                    "/Capabilities/Device/Media/"
 #define MAX_PIC_WIDTH_KEY                           "MaxPicWidth"
 #define MAX_PIC_HEIGHT_KEY                          "MaxPicHeight"
 #define MAX_STREAM_NUM_KEY                          "MaxStreamNum"
+#define CAPABILITY_SW_PRIVATE_PATH                  "/Capabilities/Device/Private/"
+#define CONFIG_LENS_KEY                             "Lens"
+#define CONFIG_PIR_KEY                              "PIR"
 
 
 /*========ptz==========*/

@@ -425,7 +425,8 @@ typedef enum tagSysZoomLensId
 {
 	  e_ZOOM_LENS_NONE  = 0,
 	  e_ZOOM_LENS_DF003 = 1,//18x,TAMRON
-	  e_ZOOM_LENS_YB22,//22x,FUJI	  
+	  e_ZOOM_LENS_YB22,//22x,FUJI
+	  e_ZOOM_LENS_ICRJZ9,//zoom gun
 }SysPkgZoomLensId;
 
 
@@ -542,7 +543,10 @@ typedef struct tagSysXml
 			<PatrolCruise>8</PatrolCruise>
 		</PTZ>
 		<Private>
-			<CpuType>A5S_66<CpuType>
+			<!--"NONE", "ICRJZ9"."NONE" and "ICRJZ9" means no auto focus function, other Means have auto focus function-->
+			<Lens>DF003</Lens>
+			<!--1:support PIR, 0: not support-- >
+			<PIR>1</PIR>			
 		</Private>
 	</Capabilities>
 */

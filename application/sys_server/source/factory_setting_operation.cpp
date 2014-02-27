@@ -35,20 +35,7 @@ static uint16_t l_ReslutionTable[][2] =
 #define DEFAULT_THREE_STREAM_COMBINE_NAME "%dP25fps_576Pfps_CIF25fps_CIF25fps"
 #define DEFAULT_FOUR_STREAM_COMBINE_NAME  "%dP25fps_576Pfps_CIF25fps_CIF25fps"
 
-//hardware key
-#define SENSOR_ID_2715   "ov2715"
-#define SENSOR_ID_9715   "ov9715"
-#define SENSOR_ID_IMX122 "imx122"
-#define SENSOR_ID_34041  "mn34041pl"
-#define SENSOR_ID_TW9910 "tw9910"
 
-#define CPU_ID_A55       "A5S_55"
-#define CPU_ID_A66       "A5S_66"
-#define CPU_ID_A88       "A5S_88"
-
-#define LENS_NONE        "NONE"
-#define LENS_DF003       "DF003"
-#define LENS_YB22        "YB22"
 
 //limits key
 //image
@@ -931,6 +918,43 @@ GMI_RESULT FactorySettingOperation::GetSensorName(char_t SensorName[64])
 }
 
 
+GMI_RESULT FactorySettingOperation::GetCapabilitySwConfigLens(char_t ConfigLens[64])
+{
+	FD_HANDLE  Handle;
+	char_t     CapabiltiySwPrivatePath[128] = {0};
+	
+	m_CapabilitySwFileLock.Lock();
+	GMI_RESULT Result = GMI_XmlOpen(CAPABILITY_SW_FILE_NAME, &Handle);
+    if (FAILED(Result))
+    {
+    	m_CapabilitySwFileLock.Unlock();
+        return Result;
+    }
+
+	memset(CapabiltiySwPrivatePath, 0, sizeof(CapabiltiySwPrivatePath));
+    strcpy(CapabiltiySwPrivatePath, CAPABILITY_SW_PRIVATE_PATH);
+    Result = GMI_XmlRead(Handle, (const char_t*)CapabiltiySwPrivatePath, CONFIG_LENS_KEY, HW_LENS, ConfigLens, GMI_CONFIG_READ_ONLY);
+    if (FAILED(Result))
+    {
+        GMI_XmlFileSave(Handle);
+        m_CapabilitySwFileLock.Unlock();
+        return Result;
+    }
+
+    Result = GMI_XmlFileSave(Handle);
+    if (FAILED(Result))
+    {
+    	m_CapabilitySwFileLock.Unlock();
+        return Result;
+    }
+    m_CapabilitySwFileLock.Unlock();
+
+    SYS_INFO("config lens is %s\n", ConfigLens);
+
+    return GMI_SUCCESS;
+}
+
+
 //get hardware information from CAPABILITY_AUTO_FILE_NAME
 GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysComponents)
 {
@@ -939,6 +963,8 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
     char_t     Cpu[64];
     char_t     Sensor[64];
     char_t     Lens[64];
+    char_t     Board[64];
+    char_t     HwAutoDetectPath[128] = {0};
 
 	m_CapabilityAutoFileLock.Lock();
     Result = GMI_XmlOpen(CAPABILITY_AUTO_FILE_NAME, &Handle);
@@ -947,11 +973,13 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
     	m_CapabilityAutoFileLock.Unlock();
         return Result;
     }
-
-    Result = GMI_XmlRead(Handle, CAPABILITY_AUTO_PATH, HW_CPU_KEY,    HW_CPU,    Cpu,    GMI_CONFIG_READ_ONLY);
-    Result = GMI_XmlRead(Handle, CAPABILITY_AUTO_PATH, HW_SENSOR_KEY, HW_SENSOR, Sensor, GMI_CONFIG_READ_ONLY);
-    Result = GMI_XmlRead(Handle, CAPABILITY_AUTO_PATH, HW_LENS_KEY,   HW_LENS,   Lens,   GMI_CONFIG_READ_ONLY);
-
+	
+	memset(HwAutoDetectPath, 0, sizeof(HwAutoDetectPath));
+    strcpy(HwAutoDetectPath, HW_AUTO_DETECT_INFO_PATH);
+    Result = GMI_XmlRead(Handle, (const char_t*)HwAutoDetectPath, HW_CPU_KEY,    HW_CPU,    Cpu,    GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)HwAutoDetectPath, HW_SENSOR_KEY, HW_SENSOR, Sensor, GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)HwAutoDetectPath, HW_LENS_KEY,   HW_LENS,   Lens,   GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)HwAutoDetectPath, HW_MAINBOARD_KEY, HW_MAINBOARD, Board, GMI_CONFIG_READ_ONLY);
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
@@ -967,8 +995,9 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
     }
     m_CapabilityAutoFileLock.Unlock();
 
-    SYS_INFO("Cpu %s, Sensor %s, Lens %s\n", Cpu, Sensor, Lens);
+    SYS_INFO("Cpu %s, Sensor %s, Lens %s, Board %s\n", Cpu, Sensor, Lens, Board);
 
+	//sensor
     if (strcmp(Sensor, SENSOR_ID_2715) == 0)
     {
         SysComponents->s_SensorId = e_SENSOR_OV2715;
@@ -994,6 +1023,7 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
         SysComponents->s_SensorId = e_SENSOR_TW9910;
     }
 
+	//cpu
     if (strcmp(Cpu, CPU_ID_A88) == 0)
     {
         SysComponents->s_CpuId = e_CPU_A5S_88;
@@ -1007,6 +1037,7 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
         SysComponents->s_CpuId = e_CPU_A5S_55;
     }
 
+	//lens
     if (strcmp(Lens, LENS_DF003) == 0)
     {
         SysComponents->s_ZoomLensId = e_ZOOM_LENS_DF003;
@@ -1014,12 +1045,42 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
     else if (strcmp(Lens, LENS_YB22) == 0)
     {
         SysComponents->s_ZoomLensId = e_ZOOM_LENS_YB22;
-    }
+    }    
     else
     {
         SysComponents->s_ZoomLensId = e_ZOOM_LENS_NONE;
     }
 
+	//board
+	if (strcmp(Board, BOARD_NORMAL) == 0)
+    {
+    	SysComponents->s_BoardId = e_BOARD_NORMAL;
+    }
+    else
+    {
+    	SysComponents->s_BoardId = e_BOARD_LARK;
+    }
+
+    if (SysComponents->s_ZoomLensId == e_ZOOM_LENS_NONE)
+    {
+    	char_t ConfigLens[128] = {0};
+    	Result = GetCapabilitySwConfigLens(ConfigLens);
+    	if (FAILED(Result))
+    	{
+    		SYS_ERROR("get config lens fail, Result = 0x%lx\n", Result);
+    		return Result;
+    	}
+
+    	if (strcmp(ConfigLens, LENS_ICRJZ9) == 0)
+    	{
+    		SysComponents->s_ZoomLensId = e_ZOOM_LENS_ICRJZ9;
+    	}
+		else
+		{
+			SysComponents->s_ZoomLensId = e_ZOOM_LENS_NONE;
+		}
+    }
+    
     return GMI_SUCCESS;
 }
 

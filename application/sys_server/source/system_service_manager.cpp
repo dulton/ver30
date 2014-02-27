@@ -1823,91 +1823,156 @@ GMI_RESULT SystemServiceManager::PTZ_Initial()
             return Result;
         }
 
-        Result = m_StreamCenterClientPtr->StartAutoFocusDevice(m_AutoFocusHandle);
-        if (FAILED(Result))
-        {
-            m_PtzControlPtr	= NULL;
-            m_UserManagerPtr->Deinitialize();
-            m_UserManagerPtr = NULL;
-            SYS_ERROR("StartAutoFocusDevice fail, Result = 0x%lx\n", Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "StartAutoFocusDevice fail, Result = 0x%lx\n", Result);
-            return Result;
-        }
+		//particular lens, particular process
+		if (e_ZOOM_LENS_ICRJZ9 == SysComponents.s_ZoomLensId)
+		{
+			//zoom
+	        Result = m_StreamCenterClientPtr->OpenZoomDevice(0, &m_ZoomHandle);
+	        if (FAILED(Result))
+	        {	           
+	            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);	            
+	            SYS_ERROR("OpenZoomDevice fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "OpenZoomDevice fail, Result = 0x%lx\n", Result);
+	            return Result;
+	        }
 
-        Result = m_ConfigFileManagerPtr->GetAutoFocusMode(&m_FocusMode);
-        if (FAILED(Result))
-        {
-            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);
-            m_AutoFocusHandle = NULL;
-            m_PtzControlPtr	= NULL;
-            m_PresetsInfo_InnerPtr = NULL;
-            SYS_ERROR("m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
-            return Result;
-        }
+	        int32_t ZoomPos;
+	        Result = m_ConfigFileManagerPtr->GetCurrentZoomPos(&ZoomPos);
+	        if (FAILED(Result))
+	        {
+	            ZoomPos = PTZ_CURRENT_ZOOM;
+	            SYS_ERROR("GetCurrentZoomPos fail, warning, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "GetCurrentZoomPos fail, Result = 0x%lx\n", Result);
+	            //return Result;
+	        }
 
-        Result = m_StreamCenterClientPtr->SetAutoFocusMode(m_AutoFocusHandle, m_FocusMode);
-        if (FAILED(Result))
-        {
-            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);
-            m_AutoFocusHandle = NULL;
-            m_PtzControlPtr	= NULL;
-            m_PresetsInfo_InnerPtr = NULL;
-            SYS_ERROR("m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
-            //return Result;
-        }
+	        Result = m_StreamCenterClientPtr->SetZoomPosition(m_ZoomHandle, ZoomPos);
+	        if (FAILED(Result))
+	        {	            
+	        	m_StreamCenterClientPtr->CloseZoomDevice(m_ZoomHandle);
+	            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);	           
+	            SYS_ERROR("SetZoomPosition fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetZoomPosition fail, Result = 0x%lx\n", Result);
+	            return Result;
+	        }	        
 
-        //zoom
-        Result = m_StreamCenterClientPtr->OpenZoomDevice(0, &m_ZoomHandle);
-        if (FAILED(Result))
-        {
-            m_StreamCenterClientPtr->StopAutoFocusDevice(m_AutoFocusHandle);
-            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);
-            m_AutoFocusHandle = NULL;
-            m_PtzControlPtr	= NULL;
-            m_PresetsInfo_InnerPtr = NULL;
-            SYS_ERROR("OpenZoomDevice fail, Result = 0x%lx\n", Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "OpenZoomDevice fail, Result = 0x%lx\n", Result);
-            return Result;
-        }
+	        Result = m_StreamCenterClientPtr->StartAutoFocusDevice(m_AutoFocusHandle);
+	        if (FAILED(Result))
+	        {	     
+	        	m_StreamCenterClientPtr->CloseZoomDevice(m_ZoomHandle);
+	        	m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);
+	            SYS_ERROR("StartAutoFocusDevice fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "StartAutoFocusDevice fail, Result = 0x%lx\n", Result);
+	            return Result;
+	        }
 
-        int32_t ZoomPos;
-        Result = m_ConfigFileManagerPtr->GetCurrentZoomPos(&ZoomPos);
-        if (FAILED(Result))
-        {
-            ZoomPos = PTZ_CURRENT_ZOOM;
-            SYS_ERROR("GetCurrentZoomPos fail, warning, Result = 0x%lx\n", Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "GetCurrentZoomPos fail, Result = 0x%lx\n", Result);
-            //return Result;
-        }
+	        Result = m_ConfigFileManagerPtr->GetAutoFocusMode(&m_FocusMode);
+	        if (FAILED(Result))
+	        {	        	
+	        	m_StreamCenterClientPtr->StopAutoFocusDevice(m_AutoFocusHandle);
+	        	m_StreamCenterClientPtr->CloseZoomDevice(m_ZoomHandle);
+	            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);	            
+	            SYS_ERROR("m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
+	            return Result;
+	        }
 
-        Result = m_StreamCenterClientPtr->SetZoomPosition(m_ZoomHandle, ZoomPos);
-        if (FAILED(Result))
-        {
-            m_StreamCenterClientPtr->StopAutoFocusDevice(m_AutoFocusHandle);
-            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);
-            m_AutoFocusHandle = NULL;
-            m_PtzControlPtr	= NULL;
-            m_PresetsInfo_InnerPtr = NULL;
-            SYS_ERROR("SetZoomPosition fail, Result = 0x%lx\n", Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetZoomPosition fail, Result = 0x%lx\n", Result);
-            return Result;
-        }
+	        Result = m_StreamCenterClientPtr->SetAutoFocusMode(m_AutoFocusHandle, m_FocusMode);
+	        if (FAILED(Result))
+	        {
+	        	m_StreamCenterClientPtr->StopAutoFocusDevice(m_AutoFocusHandle);
+	        	m_StreamCenterClientPtr->CloseZoomDevice(m_ZoomHandle);
+	            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);	           
+	            SYS_ERROR("m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
+	            return Result;
+	        }
 
-        //start record user last zoom postion
-        Result = StartRecordZoomPos();
-        if (FAILED(Result))
-        {
-            m_StreamCenterClientPtr->StopAutoFocusDevice(m_AutoFocusHandle);
-            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);
-            m_AutoFocusHandle = NULL;
-            m_PtzControlPtr	= NULL;
-            m_PresetsInfo_InnerPtr = NULL;
-            SYS_ERROR("SetZoomPosition fail, Result = 0x%lx\n", Result);
-            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetZoomPosition fail, Result = 0x%lx\n", Result);
-            return Result;
-        }
+	        //start record user last zoom postion
+	        Result = StartRecordZoomPos();
+	        if (FAILED(Result))
+	        {
+	            m_StreamCenterClientPtr->StopAutoFocusDevice(m_AutoFocusHandle);
+	        	m_StreamCenterClientPtr->CloseZoomDevice(m_ZoomHandle);
+	            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);           
+	            SYS_ERROR("SetZoomPosition fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetZoomPosition fail, Result = 0x%lx\n", Result);
+	            return Result;
+	        }
+		}
+		else
+		{
+			Result = m_StreamCenterClientPtr->StartAutoFocusDevice(m_AutoFocusHandle);
+	        if (FAILED(Result))
+	        {	      	        	
+	        	m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);
+	            SYS_ERROR("StartAutoFocusDevice fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "StartAutoFocusDevice fail, Result = 0x%lx\n", Result);
+	            return Result;
+	        }
+
+	        Result = m_ConfigFileManagerPtr->GetAutoFocusMode(&m_FocusMode);
+	        if (FAILED(Result))
+	        {
+	            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);	    
+	            SYS_ERROR("m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
+	            return Result;
+	        }
+
+	        Result = m_StreamCenterClientPtr->SetAutoFocusMode(m_AutoFocusHandle, m_FocusMode);
+	        if (FAILED(Result))
+	        {
+	            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);	       
+	            SYS_ERROR("m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "m_ConfigFileManagerPtr GetAutoFocusMode fail, Result = 0x%lx\n", Result);
+	            //return Result;
+	        }
+
+	        //zoom
+	        Result = m_StreamCenterClientPtr->OpenZoomDevice(0, &m_ZoomHandle);
+	        if (FAILED(Result))
+	        {
+	            m_StreamCenterClientPtr->StopAutoFocusDevice(m_AutoFocusHandle);
+	            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);	      
+	            SYS_ERROR("OpenZoomDevice fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "OpenZoomDevice fail, Result = 0x%lx\n", Result);
+	            return Result;
+	        }
+
+	        int32_t ZoomPos;
+	        Result = m_ConfigFileManagerPtr->GetCurrentZoomPos(&ZoomPos);
+	        if (FAILED(Result))
+	        {
+	            ZoomPos = PTZ_CURRENT_ZOOM;
+	            SYS_ERROR("GetCurrentZoomPos fail, warning, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Warning, "GetCurrentZoomPos fail, Result = 0x%lx\n", Result);
+	            //return Result;
+	        }
+
+	        Result = m_StreamCenterClientPtr->SetZoomPosition(m_ZoomHandle, ZoomPos);
+	        if (FAILED(Result))
+	        {
+	        	m_StreamCenterClientPtr->CloseZoomDevice(m_ZoomHandle);
+	            m_StreamCenterClientPtr->StopAutoFocusDevice(m_AutoFocusHandle);
+	            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);	        
+	            SYS_ERROR("SetZoomPosition fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetZoomPosition fail, Result = 0x%lx\n", Result);
+	            return Result;
+	        }
+
+	        //start record user last zoom postion
+	        Result = StartRecordZoomPos();
+	        if (FAILED(Result))
+	        {
+	            m_StreamCenterClientPtr->CloseZoomDevice(m_ZoomHandle);
+	            m_StreamCenterClientPtr->StopAutoFocusDevice(m_AutoFocusHandle);
+	            m_StreamCenterClientPtr->CloseAutoFocusDevice(m_AutoFocusHandle);           
+	            SYS_ERROR("SetZoomPosition fail, Result = 0x%lx\n", Result);
+	            DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "SetZoomPosition fail, Result = 0x%lx\n", Result);
+	            return Result;
+	        }
+		}        
     }
 
     SYS_INFO("##%s normal out..........\n", __func__);
@@ -2053,7 +2118,8 @@ void_t* SystemServiceManager::RecordZoomPosThread(void *Argument)
 
 void_t* SystemServiceManager::RecordZoomPos(void)
 {
-
+	int32_t ZoomPos = PTZ_CURRENT_ZOOM;
+	
     while (!m_RecordZoomPosThreadExitFlag)
     {
 
@@ -2064,8 +2130,9 @@ void_t* SystemServiceManager::RecordZoomPos(void)
             continue;
         }
 
-        SYS_INFO("save current zoom positon\n");
-        Result = m_ConfigFileManagerPtr->SetCurrentZoomPos(m_ZoomPos);
+        m_StreamCenterClientPtr->GetZoomPosition(m_ZoomHandle, &ZoomPos);		
+        SYS_INFO("save current zoom positon %d\n", ZoomPos);
+        Result = m_ConfigFileManagerPtr->SetCurrentZoomPos(ZoomPos);
         if (FAILED(Result))
         {
             SYS_ERROR("Save CurrentZoomPos fail, Result = 0x%lx\n", Result);
@@ -4328,8 +4395,8 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
 
         // SYS_INFO("Time %u, Cmd %d, Param[0] %d, Param[1] %d, Param[2] %d, Param[3] %d\n",
         //          Time1, PtzCtrlTmp.s_PtzCmd, PtzCtrlTmp.s_Param[0], PtzCtrlTmp.s_Param[1], PtzCtrlTmp.s_Param[2], PtzCtrlTmp.s_Param[3]);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "Time %u, Cmd %d, Param[0] %d, Param[1] %d, Param[2] %d, Param[3] %d\n", \
-                  Time1, PtzCtrlTmp.s_PtzCmd, PtzCtrlTmp.s_Param[0], PtzCtrlTmp.s_Param[1], PtzCtrlTmp.s_Param[2], PtzCtrlTmp.s_Param[3]);
+        //DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "Time %u, Cmd %d, Param[0] %d, Param[1] %d, Param[2] %d, Param[3] %d\n", \
+        //          Time1, PtzCtrlTmp.s_PtzCmd, PtzCtrlTmp.s_Param[0], PtzCtrlTmp.s_Param[1], PtzCtrlTmp.s_Param[2], PtzCtrlTmp.s_Param[3]);
         USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_OPERATION, SYS_LOGMINOR_REMOTE_PTZCTRL, USER_NAME, strlen(USER_NAME), "ptz control", strlen("ptz control"));
 
         if (SYS_PTZCMD_LEFT        == PtzCtrlTmp.s_PtzCmd
@@ -4568,15 +4635,7 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
                     SYS_ERROR("PTZ Control fail, Result = 0x%lx\n", Result);
                     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PTZ Control fail, Result = 0x%lx\n", Result);
                     return Result;
-                }
-
-                Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, false);
-                if (FAILED(Result))
-                {
-                    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                    return Result;
-                }
+                }                
             }
             else if (SYS_PTZCMD_ZOOM_TELE == LastPtzCmd
                      || SYS_PTZCMD_ZOOM_WIDE == LastPtzCmd)
