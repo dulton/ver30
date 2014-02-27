@@ -136,6 +136,12 @@ GMI_RESULT Alarm::CheckConfig(int32_t AlarmId, int32_t Index, const void_t *Para
 		SYS_INFO("s_LinkAlarmExtInfo.s_IoNum    = 0x%x\n", SysAlarmInCfg.s_LinkAlarmExtInfo.s_IoNum);
 		SYS_INFO("s_LinkAlarmExtInfo.s_OperateCmd    = %d\n", SysAlarmInCfg.s_LinkAlarmExtInfo.s_OperateCmd);
 		SYS_INFO("s_LinkAlarmExtInfo.s_OperateSeqNum = %d\n", SysAlarmInCfg.s_LinkAlarmExtInfo.s_OperateSeqNum);	
+
+		if (Index >= MAX_ALARM_IN_PORT)
+		{
+			SYS_ERROR("Index %d exceed, but Max Port num %d\n", Index, MAX_ALARM_IN_PORT);
+			return GMI_INVALID_PARAMETER;
+		}
 		
 		if ((uint32_t)Index != SysAlarmInCfg.s_InputNumber)
 		{
@@ -196,6 +202,13 @@ GMI_RESULT Alarm::CheckConfig(int32_t AlarmId, int32_t Index, const void_t *Para
 		SYS_INFO("s_OutputNumber                = %d\n", SysAlarmOutConfig.s_OutputNumber);		
 		SYS_INFO("s_NormalStatus                = %d\n", SysAlarmOutConfig.s_NormalStatus);
 		SYS_INFO("s_DelayTime                   = %d\n", SysAlarmOutConfig.s_DelayTime);	
+
+		if (Index >= MAX_ALARM_OUT_PORT)
+		{
+			SYS_ERROR("Index %d exceed, but Max Port num %d\n", Index, MAX_ALARM_OUT_PORT);
+			return GMI_INVALID_PARAMETER;
+		}
+		
 		if ((uint32_t)Index != SysAlarmOutConfig.s_OutputNumber)
 		{
 			SYS_ERROR("index %d, but SysAlarmOutConfig.s_OutputNumber %d\n", Index, SysAlarmOutConfig.s_OutputNumber);
@@ -325,6 +338,25 @@ GMI_RESULT Alarm::CheckSchedule(int32_t ScheduleId, int32_t Index, const void_t 
 		}
 	}
 
+	switch (ScheduleId)
+	{
+	case SYS_SCHEDULE_TIME_ID_ALARM_IN:	
+		if (Index >= MAX_ALARM_IN_PORT)
+		{
+			SYS_ERROR("Index %d exceed, but Max Port num %d\n", Index, MAX_ALARM_IN_PORT);
+			return GMI_INVALID_PARAMETER;
+		} 
+		break;
+	case SYS_SCHEDULE_TIME_ID_ALARM_OUT:
+		if (Index >= MAX_ALARM_OUT_PORT)
+		{
+			SYS_ERROR("Index %d exceed, but Max Port num %d\n", Index, MAX_ALARM_OUT_PORT);
+			return GMI_INVALID_PARAMETER;
+		}
+		break;
+	}
+	
+	
 	if ((uint32_t)Index != SysAlarmScheduleTime.s_Index)
 	{
 		SYS_ERROR("Index %d, but %d\n", Index, SysAlarmScheduleTime.s_Index);

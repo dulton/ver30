@@ -4395,7 +4395,7 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
 
         // SYS_INFO("Time %u, Cmd %d, Param[0] %d, Param[1] %d, Param[2] %d, Param[3] %d\n",
         //          Time1, PtzCtrlTmp.s_PtzCmd, PtzCtrlTmp.s_Param[0], PtzCtrlTmp.s_Param[1], PtzCtrlTmp.s_Param[2], PtzCtrlTmp.s_Param[3]);
-        //DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "Time %u, Cmd %d, Param[0] %d, Param[1] %d, Param[2] %d, Param[3] %d\n", \
+        //DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "Time %u, Cmd %d, Param[0] %d, Param[1] %d, Param[2] %d, Param[3] %d\n", 
         //          Time1, PtzCtrlTmp.s_PtzCmd, PtzCtrlTmp.s_Param[0], PtzCtrlTmp.s_Param[1], PtzCtrlTmp.s_Param[2], PtzCtrlTmp.s_Param[3]);
         USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_OPERATION, SYS_LOGMINOR_REMOTE_PTZCTRL, USER_NAME, strlen(USER_NAME), "ptz control", strlen("ptz control"));
 
@@ -6103,6 +6103,13 @@ GMI_RESULT SystemServiceManager::SvrSetAlarmConfig(int32_t AlarmId, int32_t Inde
 		return Result;
 	}
 
+	Result = m_ConfigFileManagerPtr->SetAlarmConfig(AlarmId, Index, (void_t*)Parameter, ParameterLength);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("save alarm id %d config fail\n", AlarmId);
+		return Result;
+	}
+	
 	switch (AlarmId)
 	{
 	case SYS_DETECTOR_ID_ALARM_INPUT:
@@ -6153,6 +6160,13 @@ GMI_RESULT SystemServiceManager::SvrSetAlmScheduleTime(int32_t ScheduleId, int32
 	if (FAILED(Result))
 	{
 		SYS_ERROR("set Sechdule id %d config fail\n", ScheduleId);
+		return Result;
+	}
+
+	Result = m_ConfigFileManagerPtr->SetAlarmSchedule(ScheduleId, Index, (SysPkgAlarmScheduleTime*)Parameter);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("save Sechdule id %d config fail\n", ScheduleId);
 		return Result;
 	}
 
