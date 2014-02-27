@@ -182,22 +182,22 @@ GMI_RESULT  GMI_SetSystemNetworkMac(const char_t *NetMac);
 *func:get AlarmInConfig/AlarmOutConfig/PIR Config
 *AlarmId:sys_env_types.h  SysPkgAlarmId  
 *------------------------------------------------------*/
-GMI_RESULT SysGetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t AlarmId, void_t *Parameter, uint32_t ParameterLength);
+GMI_RESULT SysGetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t AlarmId, int32_t Index, void_t *Parameter, uint32_t ParameterLength);
 /*************************************************
 *func:set AlarmInConfig/AlarmOutConfig/PIR Config
 *AlarmId:sys_env_types.h  SysPkgAlarmId  
 *------------------------------------------------------*/
-GMI_RESULT SysSetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t AlarmId, const void_t *Parameter, uint32_t ParameterLength);
+GMI_RESULT SysSetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t AlarmId, int32_t Index, const void_t *Parameter, uint32_t ParameterLength);
 /*************************************************
 *func:get ScheduleTime
 *SysGetAlarmScheduleTime:provide ScheduleId and Index
 *ScheduleId sys_env_types.h SysPkgScheduleTimeId
 *------------------------------------------------------*/
-GMI_RESULT SysGetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, SysPkgGetAlarmScheduleTime *SysGetAlarmScheduleTime, SysPkgAlarmScheduleTime *SysAlarmSchTime);
+GMI_RESULT SysGetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, int32_t ScheduleId, int32_t Index, SysPkgAlarmScheduleTime *SysAlarmSchTime);
 /*************************************************
 *func:set ScheduleTime
 *------------------------------------------------------*/
-GMI_RESULT SysSetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, SysPkgAlarmScheduleTime *SysAlarmSchTime);
+GMI_RESULT SysSetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, int32_t ScheduleId, int32_t Index, SysPkgAlarmScheduleTime *SysAlarmSchTime);
 
 #endif
 

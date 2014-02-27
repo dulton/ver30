@@ -5,7 +5,7 @@
 #include "gmi_system_headers.h"
 
 
-GMI_RESULT SysGetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t AlarmId, void_t *Parameter, uint32_t ParameterLength)
+GMI_RESULT SysGetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t AlarmId, int32_t Index, void_t *Parameter, uint32_t ParameterLength)
 {
     GMI_RESULT   Result = GMI_SUCCESS;  
     SysAttr      SysReqAttr        = {0};
@@ -14,7 +14,7 @@ GMI_RESULT SysGetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
     uint16_t     RspAttrCnt        = 0;
     uint16_t     ReqAttrCnt        = 1;
     boolean_t    Exist             = false;
-    int32_t      AlarmIdBak        = 0;
+    SysPkgGetAlarmConfig SysGetAlarmConfig;
 
     if (NULL == Parameter)
     {
@@ -22,12 +22,13 @@ GMI_RESULT SysGetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
     }
 
     do
-    {    
-        AlarmIdBak = AlarmId;
-        AlarmId = htonl(AlarmId);
-        SysReqAttr.s_Type      = TYPE_INTVALUE;
-        SysReqAttr.s_Attr      = (void_t*)&AlarmId;
-        SysReqAttr.s_AttrLength = sizeof(int32_t);
+    {            
+        memset(&SysGetAlarmConfig, 0, sizeof(SysPkgGetAlarmConfig));
+        SysGetAlarmConfig.s_AlarmId = htonl(AlarmId);
+        SysGetAlarmConfig.s_Index   = htonl(Index);
+        SysReqAttr.s_Type       = TYPE_GET_ALMCONFIG;
+        SysReqAttr.s_Attr       = (void_t*)&SysGetAlarmConfig;
+        SysReqAttr.s_AttrLength = sizeof(SysPkgGetAlarmConfig);
         Result = SysGetCmdExcuteWithAttrs(SessionId, AuthValue, SYSCODE_GET_ALMCFG_REQ, ReqAttrCnt, &SysReqAttr, &RspAttrCnt, &SysRspAttrPtr);
         if (FAILED(Result))
         {
@@ -43,7 +44,7 @@ GMI_RESULT SysGetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
         }
         
         SysRspAttrTmpPtr = SysRspAttrPtr;
-        switch (AlarmIdBak)
+        switch (AlarmId)
         {
         case SYS_DETECTOR_ID_ALARM_INPUT:
             if (SysRspAttrTmpPtr->s_Type == TYPE_ALARM_IN
@@ -111,7 +112,7 @@ GMI_RESULT SysGetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
 }
 
 
-GMI_RESULT SysSetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t AlarmId, const void_t *Parameter, uint32_t ParameterLength)
+GMI_RESULT SysSetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t AlarmId, int32_t Index, const void_t *Parameter, uint32_t ParameterLength)
 {
     GMI_RESULT Result     = GMI_SUCCESS;
     uint16_t   ReqAttrCnt = 1;
@@ -127,7 +128,7 @@ GMI_RESULT SysSetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
         case SYS_DETECTOR_ID_ALARM_INPUT:
             memcpy(&SysAlarmInConfig, Parameter, sizeof(SysPkgAlarmInConfig));
             SysAlarmInConfig.s_EnableFlag   = htonl(SysAlarmInConfig.s_EnableFlag);
-	    	SysAlarmInConfig.s_InputNumber  = htonl(SysAlarmInConfig.s_InputNumber);
+	    	SysAlarmInConfig.s_InputNumber  = htonl(Index);
 	    	SysAlarmInConfig.s_CheckTime    = htonl(SysAlarmInConfig.s_CheckTime);
 	    	SysAlarmInConfig.s_NormalStatus = htonl(SysAlarmInConfig.s_NormalStatus);
 	    	SysAlarmInConfig.s_LinkAlarmStrategy = htonl(SysAlarmInConfig.s_LinkAlarmStrategy);
@@ -153,7 +154,7 @@ GMI_RESULT SysSetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
         case SYS_PROCESSOR_ID_ALARM_OUTPUT:
             memcpy(&SysAlarmOutConfig, Parameter, sizeof(SysPkgAlarmOutConfig));
             SysAlarmOutConfig.s_EnableFlag   = htonl(SysAlarmOutConfig.s_EnableFlag);
-	    	SysAlarmOutConfig.s_OutputNumber = htonl(SysAlarmOutConfig.s_OutputNumber);
+	    	SysAlarmOutConfig.s_OutputNumber = htonl(Index);
 	    	SysAlarmOutConfig.s_NormalStatus = htonl(SysAlarmOutConfig.s_NormalStatus);
 	    	SysAlarmOutConfig.s_DelayTime    = htonl(SysAlarmOutConfig.s_DelayTime);
 	    	
@@ -180,7 +181,7 @@ GMI_RESULT SysSetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
 }
 
 
-GMI_RESULT SysGetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, SysPkgGetAlarmScheduleTime *SysGetAlarmScheduleTime, SysPkgAlarmScheduleTime *SysAlarmSchTime)
+GMI_RESULT SysGetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, int32_t ScheduleId, int32_t Index, SysPkgAlarmScheduleTime *SysAlarmSchTime)
 {
     GMI_RESULT   Result = GMI_SUCCESS;  
     SysAttr      SysReqAttr        = {0};
@@ -194,10 +195,10 @@ GMI_RESULT SysGetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, SysPkgG
 
 
     do
-    {    
-        memcpy(&GetAlarmScheduleTime, SysGetAlarmScheduleTime, sizeof(SysPkgGetAlarmScheduleTime));        
-        GetAlarmScheduleTime.s_ScheduleId = htonl(GetAlarmScheduleTime.s_ScheduleId);
-		GetAlarmScheduleTime.s_Index      = htonl(GetAlarmScheduleTime.s_Index);      
+    {            
+        memset(&GetAlarmScheduleTime, 0, sizeof(SysPkgGetAlarmScheduleTime));      
+        GetAlarmScheduleTime.s_ScheduleId = htonl(ScheduleId);
+		GetAlarmScheduleTime.s_Index      = htonl(Index);      
         SysReqAttr.s_Type       = TYPE_GET_ALMDEPLOY;
         SysReqAttr.s_Attr       = (void_t*)&GetAlarmScheduleTime;
         SysReqAttr.s_AttrLength = sizeof(SysPkgGetAlarmScheduleTime);
@@ -251,7 +252,7 @@ GMI_RESULT SysGetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, SysPkgG
 }
 
 
-GMI_RESULT SysSetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, SysPkgAlarmScheduleTime *SysAlarmSchTime)
+GMI_RESULT SysSetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, int32_t ScheduleId, int32_t Index, SysPkgAlarmScheduleTime *SysAlarmSchTime)
 {
     GMI_RESULT Result     = GMI_SUCCESS;
     uint16_t   ReqAttrCnt = 1;
@@ -259,10 +260,17 @@ GMI_RESULT SysSetAlmScheduleTime(uint16_t SessionId, uint32_t AuthValue, SysPkgA
     SysPkgAlarmScheduleTime SysAlarmScheduleTime;      
 
     do
-    {
+    {        
          memcpy(&SysAlarmScheduleTime, SysAlarmSchTime, sizeof(SysPkgAlarmScheduleTime));
-         SysAlarmScheduleTime.s_ScheduleId = ntohl(SysAlarmScheduleTime.s_ScheduleId);
-		 SysAlarmScheduleTime.s_Index  = ntohl(SysAlarmScheduleTime.s_Index);
+         if (SysAlarmScheduleTime.s_ScheduleId != (uint32_t)ScheduleId
+            || SysAlarmScheduleTime.s_Index != (uint32_t)Index)
+         {
+            SYS_CLIENT_ERROR("invalid parameter\n");
+            return GMI_INVALID_PARAMETER;
+         }
+         
+         SysAlarmScheduleTime.s_ScheduleId = ntohl(ScheduleId);
+		 SysAlarmScheduleTime.s_Index  = ntohl(Index);
 		 for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
 		 {
 		    for (int32_t j = 0; j < TIME_SEGMENT_OF_DAY; j++)

@@ -23,22 +23,15 @@ int main()
         	goto errExit;
         }		
 		
-		Result = SysStop3A(1234, 0);
-		if (FAILED(Result))
-		{
-			printf("stop 3A fail\n");
-			goto errExit;
-		}
-		printf("stop 3a OK\n");
-		
+		#if 0
 		SysPkgLogInfoSearch SysLogInfoSearch;
 		SysPkgLogInfoInt    SysLogInfoInt;
 		SysPkgLogInfo       *SysLogInfoPtr;
 		SysLogInfoSearch.s_SelectMode = 0;
 		SysLogInfoSearch.s_MajorType = 0;
 		SysLogInfoSearch.s_MinorType = 0;
-		strcpy(SysLogInfoSearch.s_StartTime, "2013-12-18 00:00:00");
-		strcpy(SysLogInfoSearch.s_StopTime, "2013-12-18 12:00:00");
+		strcpy(SysLogInfoSearch.s_StartTime, "2014-2-26 00:00:00");
+		strcpy(SysLogInfoSearch.s_StopTime, "2014-2-27 00:00:00");
 		SysLogInfoSearch.s_Offset = 0;
 		SysLogInfoSearch.s_MaxNum = 20;
 		SysLogInfoPtr = (SysPkgLogInfo*)malloc(SysLogInfoSearch.s_MaxNum*sizeof(SysPkgLogInfo));
@@ -48,7 +41,100 @@ int main()
 			printf("SysGetLogInfo fail\n");
 			goto errExit;
 		}
-		printf("%s %s %s\n", SysLogInfoPtr->s_LogTime, SysLogInfoPtr->s_UserName, SysLogInfoPtr->s_LogData);
+		printf("%lld %s %s %s\n", SysLogInfoPtr->s_LogId, SysLogInfoPtr->s_LogTime, SysLogInfoPtr->s_UserName, SysLogInfoPtr->s_LogData);
+		#endif
+		
+		SysPkgAlarmEventConfig SysAlarmEventConfig;
+		Result = SysGetAlarmConfig(0, 0, SYS_DETECTOR_ID_PIR, 0, &SysAlarmEventConfig, sizeof(SysPkgAlarmEventConfig));
+		if (FAILED(Result))
+		{
+		    printf("SysGetAlarmConfig %d fail\n", SYS_DETECTOR_ID_PIR);
+		    goto errExit;
+		}
+		
+		SysAlarmEventConfig.s_AlarmId = SYS_DETECTOR_ID_PIR;
+		SysAlarmEventConfig.s_EnableFlag   = 0;	
+	    SysAlarmEventConfig.s_CheckTime    = 100;	
+	    SysAlarmEventConfig.s_LinkAlarmStrategy = 1;
+	    SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = 1;
+		Result = SysSetAlarmConfig(0, 0, SYS_DETECTOR_ID_PIR, 0, &SysAlarmEventConfig, sizeof(SysPkgAlarmEventConfig));
+		if (FAILED(Result))
+		{
+		    printf("SysSetAlarmConfig %d fail\n", SYS_DETECTOR_ID_PIR);
+		    goto errExit;
+		}
+		
+		Result = SysGetAlarmConfig(0, 0, SYS_DETECTOR_ID_PIR, 0, &SysAlarmEventConfig, sizeof(SysPkgAlarmEventConfig));
+		if (FAILED(Result))
+		{
+		    printf("SysGetAlarmConfig %d fail\n", SYS_DETECTOR_ID_PIR);
+		    goto errExit;
+		}
+		printf("%d %d %d %d\n", SysAlarmEventConfig.s_EnableFlag,  SysAlarmEventConfig.s_CheckTime,\
+		    SysAlarmEventConfig.s_LinkAlarmStrategy, SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);
+		goto errExit;
+		
+		SysPkgAlarmInConfig SysAlarmInConfig;
+		Result = SysGetAlarmConfig(0, 0, SYS_DETECTOR_ID_ALARM_INPUT, 0, &SysAlarmInConfig, sizeof(SysPkgAlarmInConfig));
+		if (FAILED(Result))
+		{
+		    printf("SysGetAlarmConfig %d fail\n", SYS_DETECTOR_ID_ALARM_INPUT);
+		    goto errExit;
+		}
+		
+		SysAlarmInConfig.s_EnableFlag   = 1;
+	    SysAlarmInConfig.s_InputNumber  = 0;
+	    SysAlarmInConfig.s_CheckTime    = 50;
+	    SysAlarmInConfig.s_NormalStatus = 1;
+	    SysAlarmInConfig.s_LinkAlarmStrategy = 1;
+	    SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = 1;
+		Result = SysSetAlarmConfig(0, 0, SYS_DETECTOR_ID_ALARM_INPUT, 0, &SysAlarmInConfig, sizeof(SysPkgAlarmInConfig));
+		if (FAILED(Result))
+		{
+		    printf("SysSetAlarmConfig %d fail\n", SYS_DETECTOR_ID_ALARM_INPUT);
+		    goto errExit;
+		}
+		
+		Result = SysGetAlarmConfig(0, 0, SYS_DETECTOR_ID_ALARM_INPUT, 0, &SysAlarmInConfig, sizeof(SysPkgAlarmInConfig));
+		if (FAILED(Result))
+		{
+		    printf("SysGetAlarmConfig %d fail\n", SYS_DETECTOR_ID_ALARM_INPUT);
+		    goto errExit;
+		}
+		printf("%d %d %d %d %d %d\n", SysAlarmInConfig.s_EnableFlag, SysAlarmInConfig.s_InputNumber, SysAlarmInConfig.s_CheckTime,\
+		    SysAlarmInConfig.s_NormalStatus,  SysAlarmInConfig.s_LinkAlarmStrategy, SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);
+		
+		SysPkgAlarmScheduleTime SysAlarmSchTime;
+		SysAlarmSchTime.s_ScheduleId = 1;
+		SysAlarmSchTime.s_Index = 0;
+		SysAlarmSchTime.s_ScheduleTime[0][0].s_StartTime = 0;
+		SysAlarmSchTime.s_ScheduleTime[0][0].s_EndTime = 60*10;
+		Result = SysSetAlmScheduleTime(0, 0, 1, 0, &SysAlarmSchTime);
+		if (FAILED(Result))
+		{
+		    printf("SysSetAlmScheduleTime fail\n");
+		    goto errExit;
+		}
+		
+		memset(&SysAlarmSchTime, 0, sizeof(SysPkgAlarmScheduleTime));		
+		Result = SysGetAlmScheduleTime(0, 0, 1, 0, &SysAlarmSchTime);
+		if (FAILED(Result))
+		{
+		    printf("SysSetAlmScheduleTime fail\n");
+		    goto errExit;
+		}
+		printf("%d,%d,%d,%d\n", SysAlarmSchTime.s_ScheduleId, SysAlarmSchTime.s_Index, SysAlarmSchTime.s_ScheduleTime[0][0].s_StartTime, SysAlarmSchTime.s_ScheduleTime[0][0].s_EndTime);
+		goto errExit;
+		
+		Result = SysStop3A(1234, 0);
+		if (FAILED(Result))
+		{
+			printf("stop 3A fail\n");
+			goto errExit;
+		}
+		printf("stop 3a OK\n");
+		
+		
 		goto errExit;
 		
 		// printf("==========>Test SysGetNetworkPort\n");
