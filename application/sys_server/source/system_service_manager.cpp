@@ -206,7 +206,7 @@ GMI_RESULT SystemServiceManager::AlarmInitial()
 		return Result;
 	}
 
-	//get alarm in schedule config
+	//get alarm in schedule 
 	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
 	{		
 		Result = m_ConfigFileManagerPtr->GetAlarmSchedule(SYS_SCHEDULE_TIME_ID_ALARM_IN, i, &m_SysAlarmInScheduleTime[i]);
@@ -218,7 +218,7 @@ GMI_RESULT SystemServiceManager::AlarmInitial()
 		}		
 	}
 
-	//get alarm out config
+	//get alarm out schedule
 	for (int32_t i = 0; i < MAX_ALARM_OUT_PORT; i++)
 	{		
 		Result = m_ConfigFileManagerPtr->GetAlarmSchedule(SYS_SCHEDULE_TIME_ID_ALARM_OUT, i, &m_SysAlarmOutScheduleTime[i]);
@@ -230,7 +230,7 @@ GMI_RESULT SystemServiceManager::AlarmInitial()
 		}		
 	}
 
-	//get PIR schedule config
+	//get PIR schedule 
 	Result = m_ConfigFileManagerPtr->GetAlarmSchedule(SYS_SCHEDULE_TIME_ID_PIR_DETECT, 0, &m_SysAlarmPIRScheduleTime);
 	if (FAILED(Result))
 	{		
@@ -239,6 +239,7 @@ GMI_RESULT SystemServiceManager::AlarmInitial()
 		return Result;
 	}	
 
+ 	////Set To Alarm
 	//set alarm in config 
 	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
 	{
@@ -275,10 +276,10 @@ GMI_RESULT SystemServiceManager::AlarmInitial()
 	//set alarm in schedule
 	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
 	{
-		Result = m_AlarmPtr->Sechdule(SYS_SCHEDULE_TIME_ID_ALARM_IN, i, &m_SysAlarmInScheduleTime[i], sizeof(SysPkgAlarmScheduleTime));
+		Result = m_AlarmPtr->Schedule(SYS_SCHEDULE_TIME_ID_ALARM_IN, i, &m_SysAlarmInScheduleTime[i], sizeof(SysPkgAlarmScheduleTime));
 		if (FAILED(Result))
 		{		
-			SYS_ERROR("SetAlarmPIRSchedule to event module fail, Result = 0x%lx\n", Result);
+			SYS_ERROR("SetAlarmInSchedule to event module fail, Result = 0x%lx\n", Result);
 			m_AlarmPtr->Deinitialize();
 			return Result;
 		}
@@ -287,7 +288,7 @@ GMI_RESULT SystemServiceManager::AlarmInitial()
 	//set alarm out schedule
 	for (int32_t i = 0; i < MAX_ALARM_OUT_PORT; i++)
 	{
-		Result = m_AlarmPtr->Sechdule(SYS_SCHEDULE_TIME_ID_ALARM_OUT, i, &m_SysAlarmOutScheduleTime[i], sizeof(SysPkgAlarmScheduleTime));
+		Result = m_AlarmPtr->Schedule(SYS_SCHEDULE_TIME_ID_ALARM_OUT, i, &m_SysAlarmOutScheduleTime[i], sizeof(SysPkgAlarmScheduleTime));
 		if (FAILED(Result))
 		{		
 			SYS_ERROR("SetAlarmOutSchedule to event module fail, Result = 0x%lx\n", Result);
@@ -297,7 +298,7 @@ GMI_RESULT SystemServiceManager::AlarmInitial()
 	}
 	
 	//set PIR schedule
-	Result = m_AlarmPtr->Sechdule(SYS_SCHEDULE_TIME_ID_PIR_DETECT, 0, &m_SysAlarmPIRScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+	Result = m_AlarmPtr->Schedule(SYS_SCHEDULE_TIME_ID_PIR_DETECT, 0, &m_SysAlarmPIRScheduleTime, sizeof(SysPkgAlarmScheduleTime));
 	if (FAILED(Result))
 	{		
 		SYS_ERROR("SetAlarmPIRSchedule to event module fail, Result = 0x%lx\n", Result);
@@ -6089,7 +6090,7 @@ GMI_RESULT SystemServiceManager::SvrSetAlmScheduleTime(int32_t ScheduleId, int32
 {
 	GMI_RESULT Result = GMI_SUCCESS;
 
-	Result = m_AlarmPtr->Sechdule(ScheduleId, Index, Parameter, ParameterLength);	
+	Result = m_AlarmPtr->Schedule(ScheduleId, Index, Parameter, ParameterLength);	
 	if (FAILED(Result))
 	{
 		SYS_ERROR("set Sechdule id %d config fail\n", ScheduleId);

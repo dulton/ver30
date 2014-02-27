@@ -100,7 +100,7 @@ GMI_RESULT  SysSetAlarmConfigCommandExecutor::Execute()
 		    	SysAlarmEventConfigPtr->s_CheckTime  = NETWORK_TO_HOST_UINT(SysAlarmEventConfigPtr->s_CheckTime);
 		    	SysAlarmEventConfigPtr->s_LinkAlarmStrategy = NETWORK_TO_HOST_UINT(SysAlarmEventConfigPtr->s_LinkAlarmStrategy);
 		    	SysAlarmEventConfigPtr->s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive = NETWORK_TO_HOST_UINT(SysAlarmEventConfigPtr->s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);	    	
-		    	SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum = NETWORK_TO_HOST_UINT(SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum);    	
+		    	SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum = NETWORK_TO_HOST_USHORT(SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum);    	
 		    	Result = m_SystemServiceManager->SvrSetAlarmConfig(SYS_DETECTOR_ID_PIR, 0, SysAlarmEventConfigPtr, sizeof(SysPkgAlarmEventConfig));
 		        if (FAILED(Result))
 		        {

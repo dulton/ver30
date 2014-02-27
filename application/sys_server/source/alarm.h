@@ -14,10 +14,12 @@ public:
 	GMI_RESULT Initialize();
     GMI_RESULT Deinitialize(); 
     GMI_RESULT Config(int32_t AlarmId, int32_t Index, const void_t *Parameter, size_t ParameterLength);
-    GMI_RESULT Sechdule(int32_t ScheduleId, int32_t Index, const void_t *Parameter, size_t ParameterLength);
+    GMI_RESULT Schedule(int32_t ScheduleId, int32_t Index, const void_t *Parameter, size_t ParameterLength);
 private:
 	GMI_RESULT Report(SysPkgAlarmInfor *SysAlarmInfor);
 	static void EventProcess(void_t *UserData, uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength);
+	GMI_RESULT CheckConfig(int32_t AlarmId, int32_t Index, const void_t *Parameter, size_t ParameterLength);
+	GMI_RESULT CheckSchedule(int32_t ScheduleId, int32_t Index, const void_t *Parameter, size_t ParameterLength);
 private:
 	ReferrencePtr<AlarmSession>    m_AlarmSession;
 	EventTransactionCenter         m_EventCenter;

@@ -75,10 +75,8 @@ void Alarm::EventProcess(void_t *UserData, uint32_t EventId, enum EventType Type
 }
 
 
-GMI_RESULT Alarm::Config(int32_t AlarmId, int32_t Index, const void_t *Parameter, size_t ParameterLength)
+GMI_RESULT Alarm::CheckConfig(int32_t AlarmId, int32_t Index, const void_t *Parameter, size_t ParameterLength)
 {
-	GMI_RESULT Result = GMI_SUCCESS;
-	
 	switch (AlarmId)
 	{
 	case SYS_DETECTOR_ID_ALARM_INPUT:
@@ -89,6 +87,106 @@ GMI_RESULT Alarm::Config(int32_t AlarmId, int32_t Index, const void_t *Parameter
 			SYS_ERROR("ParameterLength is %d, but real length should be %d\n", ParameterLength, sizeof(SysPkgAlarmInConfig));
 			return GMI_INVALID_PARAMETER;
 		}
+		memcpy(&SysAlarmInCfg, Parameter, ParameterLength);
+		SYS_INFO("====Alarm In Config======\n");
+		SYS_INFO("EnableFlag                    = %d\n", SysAlarmInCfg.s_EnableFlag);
+		SYS_INFO("Index                      	= %d\n", Index);
+		SYS_INFO("SysAlarmInCfg.s_NormalStatus  = %d\n", SysAlarmInCfg.s_NormalStatus);
+		SYS_INFO("s_LinkAlarmStrategy           = 0x%x\n", SysAlarmInCfg.s_LinkAlarmStrategy);
+		SYS_INFO("s_CheckTime                   = %d\n", SysAlarmInCfg.s_CheckTime);
+		SYS_INFO("s_LinkAlarmExtInfo.s_IoNum    = 0x%x\n", SysAlarmInCfg.s_LinkAlarmExtInfo.s_IoNum);
+		SYS_INFO("s_LinkAlarmExtInfo.s_OperateCmd    = %d\n", SysAlarmInCfg.s_LinkAlarmExtInfo.s_OperateCmd);
+		SYS_INFO("s_LinkAlarmExtInfo.s_OperateSeqNum = %d\n", SysAlarmInCfg.s_LinkAlarmExtInfo.s_OperateSeqNum);	
+		
+		if ((uint32_t)Index != SysAlarmInCfg.s_InputNumber)
+		{
+			SYS_ERROR("index %d, but SysAlarmInCfg.s_InputNumber %d\n", Index, SysAlarmInCfg.s_InputNumber);
+			return GMI_INVALID_PARAMETER;
+		}
+
+		if (SysAlarmInCfg.s_NormalStatus != 0 && SysAlarmInCfg.s_NormalStatus != 1)
+		{
+			SYS_ERROR("SysAlarmInCfg.s_NormalStatus %d error\n", SysAlarmInCfg.s_NormalStatus);
+			return GMI_INVALID_PARAMETER;
+		}		
+
+		if (SysAlarmInCfg.s_LinkAlarmExtInfo.s_OperateCmd < 0 || SysAlarmInCfg.s_LinkAlarmExtInfo.s_OperateCmd > 3)
+		{
+			SYS_ERROR("SysAlarmInCfg.s_LinkAlarmExtInfo.s_OperateCmd %d error\n", SysAlarmInCfg.s_LinkAlarmExtInfo.s_OperateCmd);
+			return GMI_INVALID_PARAMETER;
+		}
+		break;
+	case SYS_DETECTOR_ID_PIR:
+		SysPkgAlarmEventConfig SysAlarmPIRConfig;
+		memset(&SysAlarmPIRConfig, 0, sizeof(SysPkgAlarmEventConfig));
+		if (ParameterLength != sizeof(SysPkgAlarmEventConfig))
+		{
+			SYS_ERROR("ParameterLength is %d, but real length should be %d\n", ParameterLength, sizeof(SysPkgAlarmEventConfig));
+			return GMI_INVALID_PARAMETER;
+		}
+		memcpy(&SysAlarmPIRConfig, Parameter, ParameterLength);
+
+		SYS_INFO("====PIR Config======\n");
+		SYS_INFO("s_AlarmId 					= %d\n", SysAlarmPIRConfig.s_AlarmId);
+		SYS_INFO("EnableFlag                    = %d\n", SysAlarmPIRConfig.s_EnableFlag);		
+		SYS_INFO("s_LinkAlarmStrategy           = 0x%x\n", SysAlarmPIRConfig.s_LinkAlarmStrategy);
+		SYS_INFO("s_CheckTime                   = %d\n", SysAlarmPIRConfig.s_CheckTime);
+		SYS_INFO("s_LinkAlarmExtInfo.s_IoNum    = 0x%x\n", SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_IoNum);
+		SYS_INFO("s_LinkAlarmExtInfo.s_OperateCmd    = %d\n", SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_OperateCmd);
+		SYS_INFO("s_LinkAlarmExtInfo.s_OperateSeqNum = %d\n", SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);
+		SYS_INFO("s_LinkAlarmExtInfo.s_DelayTime = %d\n", SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_DelayTime);				
+		break;
+	case SYS_PROCESSOR_ID_ALARM_OUTPUT:
+		SysPkgAlarmOutConfig SysAlarmOutConfig;
+		memset(&SysAlarmOutConfig, 0, sizeof(SysPkgAlarmOutConfig));
+		if (ParameterLength != sizeof(SysPkgAlarmOutConfig))
+		{
+			SYS_ERROR("ParameterLength is %d, but real length should be %d\n", ParameterLength, sizeof(SysPkgAlarmOutConfig));
+			return GMI_INVALID_PARAMETER;
+		}
+		memcpy(&SysAlarmOutConfig, Parameter, ParameterLength);
+
+		SYS_INFO("====Alarm Out Config======\n");		
+		SYS_INFO("EnableFlag 					= %d\n", SysAlarmOutConfig.s_EnableFlag);		
+		SYS_INFO("s_OutputNumber                = %d\n", SysAlarmOutConfig.s_OutputNumber);		
+		SYS_INFO("s_NormalStatus                = %d\n", SysAlarmOutConfig.s_NormalStatus);
+		SYS_INFO("s_DelayTime                   = %d\n", SysAlarmOutConfig.s_DelayTime);	
+		if ((uint32_t)Index != SysAlarmOutConfig.s_OutputNumber)
+		{
+			SYS_ERROR("index %d, but SysAlarmOutConfig.s_OutputNumber %d\n", Index, SysAlarmOutConfig.s_OutputNumber);
+			return GMI_INVALID_PARAMETER;
+		}
+
+		if (SysAlarmOutConfig.s_NormalStatus != 0 && SysAlarmOutConfig.s_NormalStatus != 1)
+		{
+			SYS_ERROR("SysAlarmOutConfig.s_NormalStatus %d error\n", SysAlarmOutConfig.s_NormalStatus);
+			return GMI_INVALID_PARAMETER;
+		}				
+		break;
+	default:
+		return GMI_NOT_SUPPORT;
+	}
+
+	return GMI_SUCCESS;
+}
+
+
+GMI_RESULT Alarm::Config(int32_t AlarmId, int32_t Index, const void_t *Parameter, size_t ParameterLength)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+
+	Result = CheckConfig(AlarmId, Index, Parameter, ParameterLength);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("check config fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+	
+	switch (AlarmId)
+	{
+	case SYS_DETECTOR_ID_ALARM_INPUT:
+		SysPkgAlarmInConfig SysAlarmInCfg;
+		memset(&SysAlarmInCfg, 0, sizeof(SysPkgAlarmInConfig));		
 		memcpy(&SysAlarmInCfg, Parameter, ParameterLength);
 
 		struct AlarmInputInfo AlmInInfo;
@@ -112,12 +210,7 @@ GMI_RESULT Alarm::Config(int32_t AlarmId, int32_t Index, const void_t *Parameter
 		break;
 	case SYS_DETECTOR_ID_PIR:
 		SysPkgAlarmEventConfig SysAlarmPIRConfig;
-		memset(&SysAlarmPIRConfig, 0, sizeof(SysPkgAlarmEventConfig));
-		if (ParameterLength != sizeof(SysPkgAlarmEventConfig))
-		{
-			SYS_ERROR("ParameterLength is %d, but real length should be %d\n", ParameterLength, sizeof(SysPkgAlarmEventConfig));
-			return GMI_INVALID_PARAMETER;
-		}
+		memset(&SysAlarmPIRConfig, 0, sizeof(SysPkgAlarmEventConfig));		
 		memcpy(&SysAlarmPIRConfig, Parameter, ParameterLength);
 
 		struct AlarmEventConfigInfo AlarmEventConfig;
@@ -139,12 +232,7 @@ GMI_RESULT Alarm::Config(int32_t AlarmId, int32_t Index, const void_t *Parameter
 		break;
 	case SYS_PROCESSOR_ID_ALARM_OUTPUT:
 		SysPkgAlarmOutConfig SysAlarmOutConfig;
-		memset(&SysAlarmOutConfig, 0, sizeof(SysPkgAlarmOutConfig));
-		if (ParameterLength != sizeof(SysPkgAlarmOutConfig))
-		{
-			SYS_ERROR("ParameterLength is %d, but real length should be %d\n", ParameterLength, sizeof(SysPkgAlarmOutConfig));
-			return GMI_INVALID_PARAMETER;
-		}
+		memset(&SysAlarmOutConfig, 0, sizeof(SysPkgAlarmOutConfig));		
 		memcpy(&SysAlarmOutConfig, Parameter, ParameterLength);
 
 		struct AlarmOutputInfo AlarmOutInfo;
@@ -169,18 +257,76 @@ GMI_RESULT Alarm::Config(int32_t AlarmId, int32_t Index, const void_t *Parameter
 }
 
 
-GMI_RESULT Alarm::Sechdule(int32_t ScheduleId, int32_t Index, const void_t *Parameter, size_t ParameterLength)
+GMI_RESULT Alarm::CheckSchedule(int32_t ScheduleId, int32_t Index, const void_t *Parameter, size_t ParameterLength)
 {
-	GMI_RESULT Result = GMI_SUCCESS;
-
-	SysPkgAlarmScheduleTime SysAlarmScheduleTime;
-	memset(&SysAlarmScheduleTime, 0, sizeof(SysPkgAlarmScheduleTime));
+	SysPkgAlarmScheduleTime SysAlarmScheduleTime;	
 	if (ParameterLength != sizeof(SysPkgAlarmScheduleTime))
 	{
 		SYS_ERROR("ParameterLength is %d, but real length should be %d\n", ParameterLength, sizeof(SysPkgAlarmScheduleTime));
 		return GMI_INVALID_PARAMETER;
 	}
+	memcpy(&SysAlarmScheduleTime, Parameter, ParameterLength);
 
+	SYS_INFO("======Schedule Config====\n");
+	SYS_INFO("s_ScheduleId = %d\n", SysAlarmScheduleTime.s_ScheduleId);
+	SYS_INFO("s_Index      = %d\n", SysAlarmScheduleTime.s_Index);	
+	for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
+	{
+		for (int32_t j = 0; j < TIME_SEGMENT_OF_DAY; j++)
+		{
+			SYS_INFO("s_StartTime[%d][%d]  = %d\n", i, j, SysAlarmScheduleTime.s_ScheduleTime[i][j].s_StartTime);
+			SYS_INFO("s_EndTime[%d][%d]    = %d\n", i, j, SysAlarmScheduleTime.s_ScheduleTime[i][j].s_EndTime);
+		}
+	}
+
+	if ((uint32_t)Index != SysAlarmScheduleTime.s_Index)
+	{
+		SYS_ERROR("Index %d, but %d\n", Index, SysAlarmScheduleTime.s_Index);
+		return GMI_INVALID_PARAMETER;
+	}
+
+	if ((uint32_t)ScheduleId != SysAlarmScheduleTime.s_ScheduleId)
+	{
+		SYS_ERROR("scheduleId %d, but %d\n", ScheduleId, SysAlarmScheduleTime.s_ScheduleId);
+		return GMI_INVALID_PARAMETER;
+	}
+
+	for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
+	{
+		for (int32_t j = 0; j < TIME_SEGMENT_OF_DAY; j++)
+		{
+			if (SysAlarmScheduleTime.s_ScheduleTime[i][j].s_EndTime > (24*60))
+			{
+				SYS_ERROR("s_EndTime[%d][%d] = %d error, should less than 24*60\n", i, j, SysAlarmScheduleTime.s_ScheduleTime[i][j].s_EndTime);
+				return GMI_INVALID_PARAMETER;
+			}
+
+			if (SysAlarmScheduleTime.s_ScheduleTime[i][j].s_EndTime < SysAlarmScheduleTime.s_ScheduleTime[i][j].s_StartTime)
+			{
+				SYS_ERROR("s_EndTime[%d][%d] = %d is less than s_StartTime[%d][%d]  = %d\n", i, j, SysAlarmScheduleTime.s_ScheduleTime[i][j].s_EndTime, i, j, SysAlarmScheduleTime.s_ScheduleTime[i][j].s_StartTime);
+				return GMI_INVALID_PARAMETER;
+			}
+		}
+	}
+
+	return GMI_SUCCESS;
+}
+
+
+GMI_RESULT Alarm::Schedule(int32_t ScheduleId, int32_t Index, const void_t *Parameter, size_t ParameterLength)
+{
+	GMI_RESULT Result = GMI_SUCCESS;
+
+	Result = CheckSchedule(ScheduleId, Index, Parameter, ParameterLength);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("CheckSchedule fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+	
+	SysPkgAlarmScheduleTime SysAlarmScheduleTime;	
+	memcpy(&SysAlarmScheduleTime, Parameter, ParameterLength);
+	
 	struct AlarmScheduleTimeInfo AlmScheduleTimeInfo;
 	memset(&AlmScheduleTimeInfo, 0, sizeof(struct AlarmScheduleTimeInfo));
 		

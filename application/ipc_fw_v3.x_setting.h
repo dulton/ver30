@@ -550,6 +550,7 @@ typedef enum
 #define ALARM_IN_LINK_ALARM_OUT_NO_KEY              "LinkAlarmOutNo"
 #define ALARM_IN_LINK_PTZ_FUNC_KEY                  "LinkPTZFuncNo"
 #define ALARM_IN_LINK_PTZ_SEQ_KEY                   "LinkPTZSeqNo"
+#define ALARM_IN_LINK_PTZ_DELAY_TIME_KEY            "LinkPTZDelayTime"
 #define ALARM_IN_ENABLE                         	(0)
 #define ALARM_IN_INPUT_NO                       	(0)
 #define ALARM_IN_NAME                           	("AlarmIn")
@@ -561,6 +562,7 @@ typedef enum
 #define ALARM_IN_LINK_ALARM_OUT_NO              	(0)
 #define ALARM_IN_LINK_PTZ_FUNC                  	(0)
 #define ALARM_IN_LINK_PTZ_SEQ                   	(0)
+#define ALARM_IN_LINK_PTZ_DELAY_TIME                (0)
 
 #define ALARM_OUT_CONFIG_PATH                       "/Config/Alarm/AlarmOut%d/"
 #define ALARM_OUT_ENABLE_KEY                        "Enable"
@@ -611,7 +613,7 @@ typedef enum
 #define ALARM_OUT_SCHEDULE_INDEX_KEY                "Index"
 #define ALARM_OUT_SCHEDULE_START_TIME_KEY           "Week%d_StartTime%d"
 #define ALARM_OUT_SCHEDULE_END_TIME_KEY             "Week%d_EndTime%d"
-#define ALARM_OUT_SCHEDULE_ID                       (1)
+#define ALARM_OUT_SCHEDULE_ID                       (2)
 #define ALARM_OUT_SCHEDULE_INDEX                    (0)
 #define ALARM_OUT_SCHEDULE_START_TIME               (0)
 #define ALARM_OUT_SCHEDULE_END_TIME                 (24*60)
