@@ -145,7 +145,7 @@ void_t* EventProcessLight::TimerEntry()
 		
 		m_OperationLock.Lock( TIMEOUT_INFINITE );
 		if((GetTriggedTime() > 0)
-			&&(CurrTime > (GetTriggedTime()+GetDelayTime())))
+			&&((CurrTime > (GetTriggedTime()+GetDelayTime())) || (GetTriggedTime() > CurrTime)))
 		{	
 			printf("GMI_ALARM_MODE_LIGHT close[%u]\n", (uint32_t)CurrTime);
             Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, 0 );
@@ -159,6 +159,15 @@ void_t* EventProcessLight::TimerEntry()
         GMI_Sleep( 1000 );
     }
     m_ThreadWorking   = false;
+	if(GetTriggedTime() > 0)
+	{
+		Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, 0 );
+		if ( FAILED( Result ) )
+        {	            	
+		    fprintf(stderr, "GMI_BrdSetAlarmOutput GMI_ALARM_MODE_LIGHT fail\n");
+        }
+		SetTriggedTime(0);
+	}
     return (void_t *) size_t(Result);
 }
 
