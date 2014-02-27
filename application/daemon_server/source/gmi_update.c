@@ -35,7 +35,48 @@ static boolean_t l_UpdateFlags = true;
 
 #define GET_KERNEL_VERSION		"cat /proc/version | grep Number: | awk '{print $3}'"
 #define GET_ROOTFS_VERSION		"cat /etc/version | grep Number: | awk '{print $3}'"
+#define GMI_SYSTEM_START_TIME      "cat /opt/log/LastStartTime"
 
+GMI_RESULT GMI_NetWorkDevCheck(boolean_t *dev)
+{
+    struct ifreq *ifr;   
+    struct ifreq ifs[16];    
+    struct ifconf ifc;   
+
+    int32_t SockFd;   
+  //  int32_t DevCnt = 0;  
+
+    if ( (SockFd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)    
+    {		 
+    	 printf("create ifr socket error[%d]!\n", errno);		 
+    	 return GMI_FAIL;   
+    }  
+
+    ifc.ifc_len = sizeof(ifs);	
+    ifc.ifc_req = ifs;	
+    
+    if (ioctl(SockFd, SIOCGIFCONF, &ifc) < 0)	
+    {		
+    	printf("ioctl SIOCGIFCONF error[%d]!\n", errno);		
+    	close(SockFd);		  
+    	return GMI_FAIL;	  
+    }	
+    
+ //   DevCnt = ifc.ifc_len/sizeof(struct ifreq);  
+    ifr = ifc.ifc_req;	
+    
+    if (0 == strcmp(ifr->ifr_name, "eth0") )    
+    {		
+        *dev = true; 
+    }	 
+    else
+    {
+         *dev = false; 
+    }
+    
+    close(SockFd); 
+    return GMI_SUCCESS;
+}
 
 GMI_RESULT GMI_GetMacInfo(char_t *EthName, char_t *Mac)
 {
@@ -1908,10 +1949,21 @@ GMI_RESULT GMI_DeviceInfoPacket(char_t *Buf, uint16_t *BufLen)
 
     SysInfoReadDeinitialize();
 
+    char_t SystemStartTime[32];
+    memset(SystemStartTime, 0, sizeof(SystemStartTime));
+    Result = GMI_GetVersion(GMI_SYSTEM_START_TIME, SystemStartTime, sizeof(SystemStartTime));
+    if (FAILED(Result))
+    {
+	strcpy(SystemStartTime, "20140211163524");
+    }
+
+    boolean_t NetFlag = true;
+    GMI_NetWorkDevCheck(&NetFlag);
+
     Length += sprintf(Buf+Length, "<Response operation=\"Search\" result=\"0\">");
     Length += sprintf(Buf+Length, "<NetworkInfo>");
     Length += sprintf(Buf+Length, "<InterfaceList num=\"1\">");
-    Length += sprintf(Buf+Length, "<Interface name=\"eth0\" enable=\"1\" dhcp=\"0\">");
+    Length += sprintf(Buf+Length, "<Interface name=\"eth0\" enable=\"%d\" dhcp=\"%d\">",NetFlag, NetFlag?0:1);
     Length += sprintf(Buf+Length, "<Address>%s</Address>", Ip);
     Length += sprintf(Buf+Length, "<Netmask>255.255.0.0</Netmask>");
     Length += sprintf(Buf+Length, "<Gateway>10.0.0.1</Gateway>");
@@ -1929,7 +1981,7 @@ GMI_RESULT GMI_DeviceInfoPacket(char_t *Buf, uint16_t *BufLen)
     Length += sprintf(Buf+Length, "<SN>%s</SN>", Sn);
     Length += sprintf(Buf+Length, "<HwVersion>%s</HwVersion>", HwVersion);
     Length += sprintf(Buf+Length, "<FwVersion>%s</FwVersion>", FwVersion);
-    Length += sprintf(Buf+Length, "<LastBootTime>%s</LastBootTime>", "20140211163524");
+    Length += sprintf(Buf+Length, "<LastBootTime>%s</LastBootTime>", SystemStartTime);
     Length += sprintf(Buf+Length, "</DeviceInfo>");
     Length += sprintf(Buf+Length, "<ServiceList>");
     Length += sprintf(Buf+Length, "<Service name=\"HTTP\" port=\"%d\"/>", HTTP_Port);
