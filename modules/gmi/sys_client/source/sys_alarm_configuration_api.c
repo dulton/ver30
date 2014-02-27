@@ -57,7 +57,7 @@ GMI_RESULT SysGetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
 	    	    SysAlarmInConfig.s_CheckTime    = ntohl(SysAlarmInConfig.s_CheckTime);
 	    	    SysAlarmInConfig.s_NormalStatus = ntohl(SysAlarmInConfig.s_NormalStatus);
 	    	    SysAlarmInConfig.s_LinkAlarmStrategy = ntohl(SysAlarmInConfig.s_LinkAlarmStrategy);
-	    	    SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = ntohl(SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);	    	
+	    	    SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = ntohs(SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);	    	
 	    	    memcpy(Parameter, &SysAlarmInConfig, sizeof(SysPkgAlarmInConfig));
 	    	    Exist = true;
             }
@@ -73,7 +73,7 @@ GMI_RESULT SysGetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
 			    SysAlarmEventConfig.s_CheckTime  = ntohl(SysAlarmEventConfig.s_CheckTime);
 			    SysAlarmEventConfig.s_LinkAlarmStrategy = ntohl(SysAlarmEventConfig.s_LinkAlarmStrategy);
 			    SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive = ntohl(SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);	    	
-			    SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = ntohl(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);    			    				                
+			    SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = ntohs(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);    			    				                
 			    memcpy(Parameter, &SysAlarmEventConfig, sizeof(SysPkgAlarmEventConfig));
 			    Exist = true;
             }
@@ -132,7 +132,7 @@ GMI_RESULT SysSetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
 	    	SysAlarmInConfig.s_CheckTime    = htonl(SysAlarmInConfig.s_CheckTime);
 	    	SysAlarmInConfig.s_NormalStatus = htonl(SysAlarmInConfig.s_NormalStatus);
 	    	SysAlarmInConfig.s_LinkAlarmStrategy = htonl(SysAlarmInConfig.s_LinkAlarmStrategy);
-	    	SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = htonl(SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);	    		    	
+	    	SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = htons(SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);	    		    	
 	    	
 	    	SysReqAttr.s_Type = TYPE_ALARM_IN;
             SysReqAttr.s_Attr = (void_t*)&SysAlarmInConfig;
@@ -145,7 +145,7 @@ GMI_RESULT SysSetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
 			SysAlarmEventConfig.s_CheckTime  = htonl(SysAlarmEventConfig.s_CheckTime);
 			SysAlarmEventConfig.s_LinkAlarmStrategy = htonl(SysAlarmEventConfig.s_LinkAlarmStrategy);
 			SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive = htonl(SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);	    	
-			SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = htonl(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);    			    							
+			SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = htons(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);    			    							
 			
 			SysReqAttr.s_Type = TYPE_ALARM_EVENT;
             SysReqAttr.s_Attr = (void_t*)&SysAlarmEventConfig;
