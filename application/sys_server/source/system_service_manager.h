@@ -95,10 +95,10 @@ public:
     GMI_RESULT ExcuteImportConfigFile(SysPkgConfigFileInfo *SysConfigFilePtr);
 
     //alarm
-    GMI_RESULT SvrGetAlarmConfig(int32_t AlarmId, void_t *Parameter, size_t ParameterLength);
-    GMI_RESULT SvrSetAlarmConfig(int32_t AlarmId, const void_t *Parameter, size_t ParameterLength);
-    GMI_RESULT SvrGetAlmScheduleTime(SysPkgGetAlarmScheduleTime *SysGetAlarmScheduleTime, void_t *Parameter, size_t ParameterLength);
-    GMI_RESULT SvrSetAlmScheduleTime(int32_t ScheduleId, const void_t *Parameter, size_t ParameterLength);
+    GMI_RESULT SvrGetAlarmConfig(int32_t AlarmId, int32_t Index, void_t *Parameter, size_t ParameterLength);
+    GMI_RESULT SvrSetAlarmConfig(int32_t AlarmId, int32_t Index, const void_t *Parameter, size_t ParameterLength);
+    GMI_RESULT SvrGetAlmScheduleTime(int32_t ScheduleId, int32_t Index, void_t *Parameter, size_t ParameterLength);
+    GMI_RESULT SvrSetAlmScheduleTime(int32_t ScheduleId, int32_t Index, const void_t *Parameter, size_t ParameterLength);
 private:
     inline uint32_t TimeStamp(void)
     {
@@ -152,6 +152,10 @@ private:
     GMI_RESULT OsdsInit(int32_t VideoCnt, VideoEncodeParam VideoEncodeParam[], VideoOSDParam VideoOsdParam[]);
     GMI_RESULT CheckShutterAndChange(int32_t VidInFps);
     GMI_RESULT GetCompileNum(int32_t *CompilesPtr);
+
+    //alarm
+    GMI_RESULT AlarmInitial();
+    GMI_RESULT AlarmDeinitial();
 private:
     //read & write lock
     pthread_rwlock_t                   m_Lock;
@@ -220,7 +224,13 @@ private:
     SysPkgNtpServerInfo                m_SysNtpServerInfo;
 	//set vidin blocked flag
 	boolean_t                          m_VidInBlocked;
-    
+	//alarm 	
+	SysPkgAlarmInConfig                m_SysAlarmInCfg[MAX_ALARM_IN_PORT];
+	SysPkgAlarmOutConfig               m_SysAlarmOutCfg[MAX_ALARM_OUT_PORT];
+	SysPkgAlarmEventConfig             m_SysAlarmPIRCfg;
+	SysPkgAlarmScheduleTime            m_SysAlarmInScheduleTime[MAX_ALARM_IN_PORT];
+	SysPkgAlarmScheduleTime            m_SysAlarmOutScheduleTime[MAX_ALARM_OUT_PORT];
+	SysPkgAlarmScheduleTime            m_SysAlarmPIRScheduleTime;    
 };
 
 

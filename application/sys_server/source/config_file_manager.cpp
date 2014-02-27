@@ -2635,6 +2635,389 @@ GMI_RESULT ConfigFileManager::GetPtzSpeedMap(char_t HSpeed[10][64], char_t VSpee
 }
 
 
+GMI_RESULT ConfigFileManager::GetAlarmConfig(int32_t AlarmId, int32_t Index, void_t* Parameter, size_t ParameterLength)
+{
+	FD_HANDLE Handle;
+	
+	m_SettingFileLock.Lock();
+    GMI_RESULT Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
+    if (FAILED(Result))
+    {
+    	m_SettingFileLock.Unlock();        
+        return Result;
+    }
+    
+	if (SYS_DETECTOR_ID_ALARM_INPUT == AlarmId)
+	{		
+		char_t AlmInPath[128] = {0};
+		SysPkgAlarmInConfig SysAlarmInConfig;
+
+		memset(&SysAlarmInConfig, 0, sizeof(SysPkgAlarmInConfig));
+		memset(AlmInPath, 0, sizeof(AlmInPath));
+		sprintf(AlmInPath, ALARM_IN_CONFIG_PATH, Index);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_ENABLE_KEY,  ALARM_IN_ENABLE,  (int32_t*)&SysAlarmInConfig.s_EnableFlag,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_INPUT_NO_KEY,  (const int32_t)Index,  (int32_t*)&SysAlarmInConfig.s_InputNumber,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_NAME_KEY,  ALARM_IN_NAME,  (char_t*)SysAlarmInConfig.s_Name,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_CHECK_TIME_KEY,  ALARM_IN_CHECK_TIME,  (int32_t*)&SysAlarmInConfig.s_CheckTime,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_NORMAL_STATUS_KEY,  ALARM_IN_NORMAL_STATUS,  (int32_t*)&SysAlarmInConfig.s_NormalStatus,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_STRATEGY_KEY,  ALARM_IN_LINK_STRATEGY,  (int32_t*)&SysAlarmInConfig.s_LinkAlarmStrategy,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_ALARM_OUT_NO_KEY,  ALARM_IN_LINK_ALARM_OUT_NO,  &SysAlarmInConfig.s_LinkAlarmExtInfo.s_IoNum,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_FUNC_KEY,  ALARM_IN_LINK_PTZ_FUNC,  &SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateCmd,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_SEQ_KEY,  ALARM_IN_LINK_PTZ_SEQ,  (int32_t*)&SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum,  GMI_CONFIG_READ_WRITE);		
+		if (FAILED(Result))
+		{
+			GMI_XmlFileSave(Handle);
+			m_SettingFileLock.Unlock();			
+			return Result;
+		}		
+		memcpy(Parameter, &SysAlarmInConfig, sizeof(SysPkgAlarmInConfig));
+	}
+	else if (SYS_DETECTOR_ID_PIR == AlarmId)
+	{
+		char_t AlmPIRPath[128] = {0};
+		SysPkgAlarmEventConfig SysAlarmEventConfig;
+
+		memset(&SysAlarmEventConfig, 0, sizeof(SysPkgAlarmEventConfig));
+		memset(AlmPIRPath, 0, sizeof(AlmPIRPath));
+		strcpy(AlmPIRPath, ALARM_PIR_CONFIG_PATH);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_ALARM_ID_KEY,  ALARM_PIR_ALARM_ID,  (int32_t*)&SysAlarmEventConfig.s_AlarmId,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_ENABLE_KEY,  ALARM_PIR_ENABLE,  (int32_t*)&SysAlarmEventConfig.s_EnableFlag,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_CHECK_TIME_KEY,  ALARM_PIR_CHECK_TIME,  (int32_t*)&SysAlarmEventConfig.s_CheckTime,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_STARTEGY_KEY,  ALARM_PIR_LINK_STARTEGY,  (int32_t*)&SysAlarmEventConfig.s_LinkAlarmStrategy,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_SENSITIVE_KEY,  ALARM_PIR_SENSITIVE,  (int32_t*)&SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_ALARM_OUT_NO_KEY,  ALARM_PIR_LINK_ALARM_OUT_NO,  &SysAlarmEventConfig.s_LinkAlarmExtInfo.s_IoNum,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_WHITE_LIGHT_DELAY_TIME_KEY,  ALARM_PIR_LINK_WHITE_LIGHT_DELAY_TIME,  (int32_t*)&SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime,  GMI_CONFIG_READ_WRITE);		
+		if (FAILED(Result))
+		{
+			GMI_XmlFileSave(Handle);
+			m_SettingFileLock.Unlock();			
+			return Result;
+		}		
+		memcpy(Parameter, &SysAlarmEventConfig, sizeof(SysPkgAlarmEventConfig));
+	}
+	else if (SYS_PROCESSOR_ID_ALARM_OUTPUT == AlarmId)
+	{	
+		char_t AlmOutPath[128] = {0};
+		SysPkgAlarmOutConfig SysAlarmOutConfig;
+
+		memset(&SysAlarmOutConfig, 0, sizeof(SysPkgAlarmOutConfig));
+		memset(AlmOutPath, 0, sizeof(AlmOutPath));
+		sprintf(AlmOutPath, ALARM_OUT_CONFIG_PATH, Index);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmOutPath, ALARM_OUT_ENABLE_KEY,  ALARM_OUT_ENABLE,  (int32_t*)&SysAlarmOutConfig.s_EnableFlag,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmOutPath, ALARM_OUT_OUTPUT_NO_KEY,  (const int32_t)Index,  (int32_t*)&SysAlarmOutConfig.s_OutputNumber,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmOutPath, ALARM_OUT_NAME_KEY,  ALARM_OUT_NAME,  (char_t*)SysAlarmOutConfig.s_Name,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmOutPath, ALARM_OUT_NORMAL_STATUS_KEY,  ALARM_OUT_NORMAL_STATUS,  (int32_t*)&SysAlarmOutConfig.s_NormalStatus,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmOutPath, ALARM_OUT_DELAY_TIME_KEY,  ALARM_OUT_DELAY_TIME,  (int32_t*)&SysAlarmOutConfig.s_DelayTime,  GMI_CONFIG_READ_WRITE);				
+		memcpy(Parameter, &SysAlarmOutConfig, sizeof(SysPkgAlarmEventConfig));
+	}
+	else
+	{
+		SYS_ERROR("not support AlarmId %d\n", AlarmId);
+		Result = GMI_XmlFileSave(Handle);
+		if (FAILED(Result))
+		{
+			m_SettingFileLock.Unlock();
+			return Result;
+		}
+		m_SettingFileLock.Unlock();
+
+		return GMI_NOT_SUPPORT;
+	}
+
+	Result = GMI_XmlFileSave(Handle);
+	if (FAILED(Result))
+	{
+		m_SettingFileLock.Unlock();
+		return Result;
+	}
+	m_SettingFileLock.Unlock();
+
+	return GMI_SUCCESS;
+}
+
+
+GMI_RESULT ConfigFileManager::SetAlarmConfig(int32_t AlarmId, int32_t Index, void_t* Parameter, size_t ParameterLength)
+{
+	FD_HANDLE Handle;
+	
+	m_SettingFileLock.Lock();
+    GMI_RESULT Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
+    if (FAILED(Result))
+    {
+    	m_SettingFileLock.Unlock();        
+        return Result;
+    }
+
+    if (SYS_DETECTOR_ID_ALARM_INPUT == AlarmId)
+    {
+    	char_t AlmInPath[128] = {0};
+		SysPkgAlarmInConfig SysAlarmInConfig;
+
+		memcpy(&SysAlarmInConfig, Parameter, ParameterLength);		
+		memset(AlmInPath, 0, sizeof(AlmInPath));
+		sprintf(AlmInPath, ALARM_IN_CONFIG_PATH, Index);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_ENABLE_KEY, (const int32_t)SysAlarmInConfig.s_EnableFlag);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_INPUT_NO_KEY, (const int32_t)SysAlarmInConfig.s_InputNumber);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_NAME_KEY, (const char_t*)SysAlarmInConfig.s_Name);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_CHECK_TIME_KEY, (const int32_t)SysAlarmInConfig.s_CheckTime);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_NORMAL_STATUS_KEY, (const int32_t)SysAlarmInConfig.s_NormalStatus);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_STRATEGY_KEY,  (const int32_t)SysAlarmInConfig.s_LinkAlarmStrategy);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_ALARM_OUT_NO_KEY,  SysAlarmInConfig.s_LinkAlarmExtInfo.s_IoNum);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_FUNC_KEY,  SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateCmd);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_SEQ_KEY,  (const int32_t)SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);		
+		if (FAILED(Result))
+		{
+			GMI_XmlFileSave(Handle);
+			m_SettingFileLock.Unlock();			
+			return Result;
+		}		
+    }
+    else if (SYS_DETECTOR_ID_PIR == AlarmId)
+    {
+    	char_t AlmPIRPath[128] = {0};
+		SysPkgAlarmEventConfig SysAlarmEventConfig;
+
+		memcpy(&SysAlarmEventConfig, Parameter, ParameterLength);	
+		memset(AlmPIRPath, 0, sizeof(AlmPIRPath));
+		strcpy(AlmPIRPath, ALARM_PIR_CONFIG_PATH);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_ALARM_ID_KEY,  (const int32_t)SysAlarmEventConfig.s_AlarmId);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_ENABLE_KEY,  (const int32_t)SysAlarmEventConfig.s_EnableFlag);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_STARTEGY_KEY,  (const int32_t)SysAlarmEventConfig.s_LinkAlarmStrategy);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_SENSITIVE_KEY,  (const int32_t)SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_ALARM_OUT_NO_KEY,  SysAlarmEventConfig.s_LinkAlarmExtInfo.s_IoNum);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_WHITE_LIGHT_DELAY_TIME_KEY,  (const int32_t)SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime);		
+		if (FAILED(Result))
+		{
+			GMI_XmlFileSave(Handle);
+			m_SettingFileLock.Unlock();			
+			return Result;
+		}		
+    }
+    else if(SYS_PROCESSOR_ID_ALARM_OUTPUT == AlarmId)
+    {
+    	char_t AlmOutPath[128] = {0};
+		SysPkgAlarmOutConfig SysAlarmOutConfig;
+
+		memset(&SysAlarmOutConfig, 0, sizeof(SysPkgAlarmOutConfig));
+		memset(AlmOutPath, 0, sizeof(AlmOutPath));
+		sprintf(AlmOutPath, ALARM_OUT_CONFIG_PATH, Index);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmOutPath, ALARM_OUT_ENABLE_KEY, (const int32_t)SysAlarmOutConfig.s_EnableFlag);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmOutPath, ALARM_OUT_OUTPUT_NO_KEY, (const int32_t)SysAlarmOutConfig.s_OutputNumber);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmOutPath, ALARM_OUT_NAME_KEY, (const char_t*)SysAlarmOutConfig.s_Name);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmOutPath, ALARM_OUT_NORMAL_STATUS_KEY, (const int32_t)SysAlarmOutConfig.s_NormalStatus);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmOutPath, ALARM_OUT_DELAY_TIME_KEY, (const int32_t)SysAlarmOutConfig.s_DelayTime);				
+    }
+    else
+    {
+    	SYS_ERROR("not support AlarmId %d\n", AlarmId);
+		Result = GMI_XmlFileSave(Handle);
+		if (FAILED(Result))
+		{
+			m_SettingFileLock.Unlock();
+			return Result;
+		}
+		m_SettingFileLock.Unlock();
+
+		return GMI_NOT_SUPPORT;
+    }
+    
+    Result = GMI_XmlFileSave(Handle);
+	if (FAILED(Result))
+	{
+		m_SettingFileLock.Unlock();
+		return Result;
+	}
+	m_SettingFileLock.Unlock();
+
+	return GMI_SUCCESS;
+}
+
+
+GMI_RESULT ConfigFileManager::GetAlarmSchedule(int32_t ScheduleId, int32_t Index, SysPkgAlarmScheduleTime *SysAlarmScheduleTime)
+{
+	FD_HANDLE Handle;
+	
+	m_SettingFileLock.Lock();
+    GMI_RESULT Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
+    if (FAILED(Result))
+    {
+    	m_SettingFileLock.Unlock();        
+        return Result;
+    }
+
+    char_t AlmSchedulePath[128] = {0};
+    SysPkgAlarmScheduleTime SysAlmScheduleTime = {0};
+
+    char_t StartTime[64];
+    char_t EndTime[64];
+    uint32_t StartTimeDefault = 0;
+    uint32_t EndTimeDefault = 0;
+	if (SYS_SCHEDULE_TIME_ID_ALARM_IN == ScheduleId)
+	{
+		sprintf(AlmSchedulePath, ALARM_IN_SCHEDULE_TIME_PATH, Index);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmSchedulePath, ALARM_IN_SCHEDULE_ID_KEY, ALARM_IN_SCHEDULE_ID, (int32_t*)&SysAlmScheduleTime.s_ScheduleId,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmSchedulePath, ALARM_IN_SCHEDULE_INDEX_KEY, ALARM_IN_SCHEDULE_INDEX, (int32_t*)&SysAlmScheduleTime.s_Index,  GMI_CONFIG_READ_WRITE);
+		for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
+		{
+			StartTimeDefault = ALARM_IN_SCHEDULE_START_TIME;
+			EndTimeDefault   = ALARM_IN_SCHEDULE_END_TIME;
+			for (int32_t j = 0; j < TIME_SEGMENT_OF_DAY; j++)
+			{			
+				memset(StartTime, 0, sizeof(StartTime));				
+				sprintf(StartTime, ALARM_IN_SCHEDULE_START_TIME_KEY, i, j);				
+				memset(EndTime, 0, sizeof(EndTime));
+				sprintf(EndTime, ALARM_IN_SCHEDULE_END_TIME_KEY, i, j);				
+				
+				Result = GMI_XmlRead(Handle, (const char_t*)AlmSchedulePath, (const char_t*)StartTime, (const int32_t)StartTimeDefault, (int32_t*)&SysAlmScheduleTime.s_ScheduleTime[i][j].s_StartTime,  GMI_CONFIG_READ_WRITE);
+				Result = GMI_XmlRead(Handle, (const char_t*)AlmSchedulePath, (const char_t*)EndTime, (const int32_t)EndTimeDefault, (int32_t*)&SysAlmScheduleTime.s_ScheduleTime[i][j].s_EndTime,  GMI_CONFIG_READ_WRITE);
+				StartTimeDefault = 0;
+				EndTimeDefault   = 0;
+			}
+		}	
+
+		memcpy(SysAlarmScheduleTime, &SysAlmScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+	}
+	else if (SYS_SCHEDULE_TIME_ID_PIR_DETECT == ScheduleId)
+	{
+		strcpy(AlmSchedulePath, PIR_SCHEDULE_TIME_PATH);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmSchedulePath, PIR_SCHEDULE_ID_KEY, PIR_SCHEDULE_ID, (int32_t*)&SysAlmScheduleTime.s_ScheduleId,  GMI_CONFIG_READ_WRITE);		
+		for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
+		{
+			StartTimeDefault = PIR_SCHEDULE_START_TIME;
+			EndTimeDefault   = PIR_SCHEDULE_END_TIME;
+			for (int32_t j = 0; j < TIME_SEGMENT_OF_DAY; j++)
+			{			
+				memset(StartTime, 0, sizeof(StartTime));
+				sprintf(StartTime, PIR_SCHEDULE_START_TIME_KEY, i, j);
+				memset(EndTime, 0, sizeof(EndTime));
+				sprintf(EndTime, PIR_SCHEDULE_END_TIME_KEY, i, j);
+				
+				Result = GMI_XmlRead(Handle, (const char_t*)AlmSchedulePath, (const char_t*)StartTime, (const int32_t)StartTimeDefault, (int32_t*)&SysAlmScheduleTime.s_ScheduleTime[i][j].s_StartTime,  GMI_CONFIG_READ_WRITE);
+				Result = GMI_XmlRead(Handle, (const char_t*)AlmSchedulePath, (const char_t*)EndTime, (const int32_t)EndTimeDefault, (int32_t*)&SysAlmScheduleTime.s_ScheduleTime[i][j].s_EndTime,  GMI_CONFIG_READ_WRITE);
+				StartTimeDefault = 0;
+				EndTimeDefault   = 0;
+			}
+		}	
+
+		memcpy(SysAlarmScheduleTime, &SysAlmScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+	}
+	else if (SYS_SCHEDULE_TIME_ID_ALARM_OUT == ScheduleId)
+	{
+		sprintf(AlmSchedulePath, ALARM_OUT_SCHEDULE_TIME_PATH, Index);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmSchedulePath, ALARM_OUT_SCHEDULE_ID_KEY, ALARM_OUT_SCHEDULE_ID, (int32_t*)&SysAlmScheduleTime.s_ScheduleId,  GMI_CONFIG_READ_WRITE);
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmSchedulePath, ALARM_OUT_SCHEDULE_INDEX_KEY, ALARM_OUT_SCHEDULE_INDEX, (int32_t*)&SysAlmScheduleTime.s_Index,  GMI_CONFIG_READ_WRITE);
+		for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
+		{
+			StartTimeDefault = ALARM_OUT_SCHEDULE_START_TIME;
+			EndTimeDefault   = ALARM_OUT_SCHEDULE_END_TIME;
+			for (int32_t j = 0; j < TIME_SEGMENT_OF_DAY; j++)
+			{			
+				memset(StartTime, 0, sizeof(StartTime));				
+				sprintf(StartTime, ALARM_OUT_SCHEDULE_START_TIME_KEY, i, j);				
+				memset(EndTime, 0, sizeof(EndTime));
+				sprintf(EndTime, ALARM_OUT_SCHEDULE_END_TIME_KEY, i, j);				
+				
+				Result = GMI_XmlRead(Handle, (const char_t*)AlmSchedulePath, (const char_t*)StartTime, (const int32_t)StartTimeDefault, (int32_t*)&SysAlmScheduleTime.s_ScheduleTime[i][j].s_StartTime,  GMI_CONFIG_READ_WRITE);
+				Result = GMI_XmlRead(Handle, (const char_t*)AlmSchedulePath, (const char_t*)EndTime, (const int32_t)EndTimeDefault, (int32_t*)&SysAlmScheduleTime.s_ScheduleTime[i][j].s_EndTime,  GMI_CONFIG_READ_WRITE);
+				StartTimeDefault = 0;
+				EndTimeDefault   = 0;
+			}
+		}	
+
+		memcpy(SysAlarmScheduleTime, &SysAlmScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+	}
+	else
+	{
+		SYS_ERROR("not support schdule id %d\n", ScheduleId);
+		Result = GMI_XmlFileSave(Handle);
+		if (FAILED(Result))
+		{
+			m_SettingFileLock.Unlock();
+			return Result;
+		}
+		m_SettingFileLock.Unlock();
+		return GMI_NOT_SUPPORT;
+	}
+
+	Result = GMI_XmlFileSave(Handle);
+	if (FAILED(Result))
+	{
+		m_SettingFileLock.Unlock();
+		return Result;
+	}
+	m_SettingFileLock.Unlock();
+
+	return GMI_SUCCESS;		
+}
+
+
+GMI_RESULT ConfigFileManager::SetAlarmSchedule(int32_t ScheduleId, int32_t Index, SysPkgAlarmScheduleTime *SysAlarmScheduleTime)
+{
+	FD_HANDLE Handle;
+	
+	m_SettingFileLock.Lock();
+    GMI_RESULT Result = GMI_XmlOpen((const char_t*)m_SettingFile, &Handle);
+    if (FAILED(Result))
+    {
+    	m_SettingFileLock.Unlock();        
+        return Result;
+    }
+
+    char_t AlmSchedulePath[128] = {0};
+    SysPkgAlarmScheduleTime SysAlmScheduleTime = {0};
+
+    char_t StartTime[64];
+    char_t EndTime[64];
+
+    memcpy(&SysAlmScheduleTime, SysAlarmScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+    
+	if (SYS_SCHEDULE_TIME_ID_ALARM_IN == ScheduleId)
+	{
+		sprintf(AlmSchedulePath, ALARM_IN_SCHEDULE_TIME_PATH, Index);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, ALARM_IN_SCHEDULE_ID_KEY, (const int32_t)SysAlmScheduleTime.s_ScheduleId);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, ALARM_IN_SCHEDULE_INDEX_KEY, (const int32_t)&SysAlmScheduleTime.s_Index);
+		for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
+		{			
+			for (int32_t j = 0; j < TIME_SEGMENT_OF_DAY; j++)
+			{			
+				memset(StartTime, 0, sizeof(StartTime));
+				sprintf(StartTime, ALARM_IN_SCHEDULE_START_TIME_KEY, i, j);
+				memset(EndTime, 0, sizeof(EndTime));
+				sprintf(EndTime, ALARM_IN_SCHEDULE_END_TIME_KEY, i, j);
+				
+				Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, (const char_t*)StartTime, (const int32_t)SysAlmScheduleTime.s_ScheduleTime[i][j].s_StartTime);
+				Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, (const char_t*)EndTime, (const int32_t)SysAlmScheduleTime.s_ScheduleTime[i][j].s_EndTime);				
+			}
+		}			
+	}
+	else if (SYS_SCHEDULE_TIME_ID_PIR_DETECT == ScheduleId)
+	{
+		strcpy(AlmSchedulePath, PIR_SCHEDULE_TIME_PATH);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, PIR_SCHEDULE_ID_KEY, (const int32_t)SysAlmScheduleTime.s_ScheduleId);		
+		for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
+		{			
+			for (int32_t j = 0; j < TIME_SEGMENT_OF_DAY; j++)
+			{			
+				memset(StartTime, 0, sizeof(StartTime));
+				sprintf(StartTime, PIR_SCHEDULE_START_TIME_KEY, i, j);
+				memset(EndTime, 0, sizeof(EndTime));
+				sprintf(EndTime, PIR_SCHEDULE_END_TIME_KEY, i, j);
+				
+				Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, (const char_t*)StartTime, (const int32_t)SysAlmScheduleTime.s_ScheduleTime[i][j].s_StartTime);
+				Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, (const char_t*)EndTime, (const int32_t)SysAlmScheduleTime.s_ScheduleTime[i][j].s_EndTime);				
+			}
+		}			
+	}
+	else
+	{
+		SYS_ERROR("not support schdule id %d\n", ScheduleId);
+		return GMI_NOT_SUPPORT;
+	}
+
+
+	return GMI_SUCCESS;
+}
+
 GMI_RESULT ConfigFileManager::FactoryDefault(void)
 {
     int32_t Result;

@@ -157,6 +157,170 @@ GMI_RESULT SystemServiceManager::Deinitialize()
 }
 
 
+GMI_RESULT SystemServiceManager::AlarmInitial()
+{
+	m_AlarmPtr = BaseMemoryManager::Instance().New<Alarm>();
+	if (NULL == m_AlarmPtr.GetPtr())
+	{		
+		SYS_ERROR("new alarm fail\n");
+		return GMI_OUT_OF_MEMORY;
+	}
+
+	GMI_RESULT Result = m_AlarmPtr->Initialize();
+	if (FAILED(Result))
+	{
+		SYS_ERROR("alarm initial fail, Result = 0x%lx\n", Result);
+		return Result;
+	}	
+
+	//get alarm in config
+	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
+	{
+		Result = m_ConfigFileManagerPtr->GetAlarmConfig(SYS_DETECTOR_ID_ALARM_INPUT, i, &m_SysAlarmInCfg[i], sizeof(SysPkgAlarmInConfig));
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("GetAlarmInConfig from file fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}
+	}
+
+	//get alarm out config
+	for (int32_t i = 0; i < MAX_ALARM_OUT_PORT; i++)
+	{
+		Result = m_ConfigFileManagerPtr->GetAlarmConfig(SYS_PROCESSOR_ID_ALARM_OUTPUT, i, &m_SysAlarmOutCfg[i], sizeof(SysPkgAlarmOutConfig));
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("GetAlarmOutConfig from file fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}
+	}
+
+	//get PIR config
+	Result = m_ConfigFileManagerPtr->GetAlarmConfig(SYS_DETECTOR_ID_PIR, 0, &m_SysAlarmPIRCfg, sizeof(SysPkgAlarmEventConfig));
+	if (FAILED(Result))
+	{		
+		SYS_ERROR("GetAlarmPIRConfig from file fail, Result = 0x%lx\n", Result);
+		m_AlarmPtr->Deinitialize();
+		return Result;
+	}
+
+	//get alarm in schedule config
+	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
+	{		
+		Result = m_ConfigFileManagerPtr->GetAlarmSchedule(SYS_SCHEDULE_TIME_ID_ALARM_IN, i, &m_SysAlarmInScheduleTime[i]);
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("GetAlarmInSchedule from file fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}		
+	}
+
+	//get alarm out config
+	for (int32_t i = 0; i < MAX_ALARM_OUT_PORT; i++)
+	{		
+		Result = m_ConfigFileManagerPtr->GetAlarmSchedule(SYS_SCHEDULE_TIME_ID_ALARM_OUT, i, &m_SysAlarmOutScheduleTime[i]);
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("GetAlarmOutSchedule from file fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}		
+	}
+
+	//get PIR schedule config
+	Result = m_ConfigFileManagerPtr->GetAlarmSchedule(SYS_SCHEDULE_TIME_ID_PIR_DETECT, 0, &m_SysAlarmPIRScheduleTime);
+	if (FAILED(Result))
+	{		
+		SYS_ERROR("GetAlarmPIRSchedule from file fail, Result = 0x%lx\n", Result);
+		m_AlarmPtr->Deinitialize();
+		return Result;
+	}	
+
+	//set alarm in config 
+	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
+	{
+		Result = m_AlarmPtr->Config(SYS_DETECTOR_ID_ALARM_INPUT, i, &m_SysAlarmInCfg[i], sizeof(SysPkgAlarmInConfig));
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("SetAlarmInConfig to event module fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}
+	}
+	
+	//set alarm out config
+	for (int32_t i = 0; i < MAX_ALARM_OUT_PORT; i++)
+	{
+		Result = m_AlarmPtr->Config(SYS_PROCESSOR_ID_ALARM_OUTPUT, i, &m_SysAlarmOutCfg[i], sizeof(SysPkgAlarmOutConfig));
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("SetAlarmOutConfig to event module fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}
+	}	
+
+	//set PIR config
+	Result = m_AlarmPtr->Config(SYS_DETECTOR_ID_PIR, 0, &m_SysAlarmPIRCfg, sizeof(SysPkgAlarmEventConfig));
+	if (FAILED(Result))
+	{		
+		SYS_ERROR("SetAlarmPIRConfig to event module fail, Result = 0x%lx\n", Result);
+		m_AlarmPtr->Deinitialize();
+		return Result;
+	}
+	
+	//set alarm in schedule
+	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
+	{
+		Result = m_AlarmPtr->Sechdule(SYS_SCHEDULE_TIME_ID_ALARM_IN, i, &m_SysAlarmInScheduleTime[i], sizeof(SysPkgAlarmScheduleTime));
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("SetAlarmPIRSchedule to event module fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}
+	}
+
+	//set alarm out schedule
+	for (int32_t i = 0; i < MAX_ALARM_OUT_PORT; i++)
+	{
+		Result = m_AlarmPtr->Sechdule(SYS_SCHEDULE_TIME_ID_ALARM_OUT, i, &m_SysAlarmOutScheduleTime[i], sizeof(SysPkgAlarmScheduleTime));
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("SetAlarmOutSchedule to event module fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}
+	}
+	
+	//set PIR schedule
+	Result = m_AlarmPtr->Sechdule(SYS_SCHEDULE_TIME_ID_PIR_DETECT, 0, &m_SysAlarmPIRScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+	if (FAILED(Result))
+	{		
+		SYS_ERROR("SetAlarmPIRSchedule to event module fail, Result = 0x%lx\n", Result);
+		m_AlarmPtr->Deinitialize();
+		return Result;
+	}	
+	
+	return GMI_SUCCESS;
+}
+
+GMI_RESULT SystemServiceManager::AlarmDeinitial()
+{
+	GMI_RESULT Result = m_AlarmPtr->Deinitialize();
+	if (FAILED(Result))
+	{
+		SYS_ERROR("alarm Deinitial fail, Result = 0x%lx\n", Result);
+		return Result;
+	}
+
+	return GMI_SUCCESS;
+}
+
+
 GMI_RESULT SystemServiceManager::MiscInitial()
 {
     SYS_INFO("##%s in..........\n", __func__);
@@ -227,27 +391,16 @@ GMI_RESULT SystemServiceManager::MiscInitial()
     }
 
 	//alarm init
-	m_AlarmPtr = BaseMemoryManager::Instance().New<Alarm>();
-	if (NULL == m_AlarmPtr.GetPtr())
-	{
-		UserLogQuery::Deinitialize();
-		m_BoardManagerPtr = NULL;
-        m_UserManagerPtr->Deinitialize();
-        m_UserManagerPtr = NULL;
-		SYS_ERROR("new alarm fail, Result = 0x%lx\n", Result);
-		return Result;
-	}
-
-	Result = m_AlarmPtr->Initialize();
+	Result = AlarmInitial();
 	if (FAILED(Result))
 	{
 		UserLogQuery::Deinitialize();
 		m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
         m_UserManagerPtr = NULL;
-		SYS_ERROR("new alarm fail, Result = 0x%lx\n", Result);
+		SYS_ERROR("AlarmInitial fail, Result = 0x%lx\n", Result);
 		return Result;
-	}	
+	}		
 	
     //set time type and ntp server ip
     SysPkgDateTimeType SysTimeType;
@@ -263,7 +416,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
     Result = m_BoardManagerPtr->SetNtp(NtpEnable, SysTimeType.s_NtpInterval);
     if (FAILED(Result))
     {
-    	m_AlarmPtr->Deinitialize();
+    	AlarmDeinitial();
     	UserLogQuery::Deinitialize();
         m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -285,7 +438,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
     Result = m_BoardManagerPtr->SetNtpServer(SysNtpServerInfo.s_NtpAddr_1);
     if (FAILED(Result))
     {
-    	m_AlarmPtr->Deinitialize();
+    	AlarmDeinitial();
     	UserLogQuery::Deinitialize();
         m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -300,7 +453,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
     Result = m_ConfigFileManagerPtr->GetExternNetworkPort(&m_SysNetWorkPort);
     if (FAILED(Result))
     {
-    	m_AlarmPtr->Deinitialize();
+    	AlarmDeinitial();
     	UserLogQuery::Deinitialize();
     	m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -315,7 +468,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
 	Result = m_ConfigFileManagerPtr->GetDeviceInfo(&m_SysDeviceInfo);
 	if (FAILED(Result))
 	{
-		m_AlarmPtr->Deinitialize();
+		AlarmDeinitial();
 		UserLogQuery::Deinitialize();
 		m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -330,7 +483,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
     Result = m_ConfigFileManagerPtr->GetNtpServerInfo(&m_SysNtpServerInfo);
     if (FAILED(Result))
     {
-    	m_AlarmPtr->Deinitialize();
+    	AlarmDeinitial();
     	UserLogQuery::Deinitialize();
     	m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -344,7 +497,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
 	m_CapabilitiesMessagePtr = BaseMemoryManager::Instance().News<char_t>(MAX_MESSAGE_LENGTH);
 	if (NULL == m_CapabilitiesMessagePtr.GetPtr())
 	{
-		m_AlarmPtr->Deinitialize();
+		AlarmDeinitial();
 		UserLogQuery::Deinitialize();
 		m_BoardManagerPtr = NULL;
         m_UserManagerPtr->Deinitialize();
@@ -359,7 +512,7 @@ GMI_RESULT SystemServiceManager::MiscInitial()
 	Result = m_ConfigFileManagerPtr->GetCapabilities(MAX_MESSAGE_LENGTH, m_CapabilitiesMessagePtr.GetPtr(), &m_SysCapability);
 	if (FAILED(Result))
 	{
-		m_AlarmPtr->Deinitialize();
+		AlarmDeinitial();
 		UserLogQuery::Deinitialize();
 		memset(&m_SysCapability, 0, sizeof(SysPkgXml));
 		m_CapabilitiesMessagePtr = NULL;
@@ -380,10 +533,19 @@ GMI_RESULT SystemServiceManager::MiscDeinitial()
 {
     SYS_INFO("%s in..........\n", __func__);
     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "%s in..........\n", __func__);
-	GMI_RESULT Result = UserLogQuery::Deinitialize();
+    GMI_RESULT Result = AlarmDeinitial();
+    if (FAILED(Result))
+    {
+    	SYS_ERROR("AlarmDeinitial fail, Result = 0x%lx\n", Result);
+    	DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "AlarmDeinitial fail, Result = 0x%lx\n", Result);
+    	return Result;
+    }
+    
+	Result = UserLogQuery::Deinitialize();
 	if (FAILED(Result))
 	{
 		SYS_ERROR("UserLogQuery::Deinitialize() fail, Result = 0x%lx\n", Result);
+		DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "UserLogQuery::Deinitialize() fail, Result = 0x%lx\n", Result);
 		return Result;
 	}
 	
@@ -5848,24 +6010,19 @@ GMI_RESULT SystemServiceManager::ExcuteImportConfigFile(SysPkgConfigFileInfo *Sy
 
 
 /*=============alarm==================*/
-SysPkgAlarmEventConfig g_AlarmEventConfig;
-SysPkgAlarmInConfig    g_AlarmInConfig;
-SysPkgAlarmOutConfig   g_AlarmOutConfig;
-SysPkgAlarmScheduleTime     g_AlarmInScheduleTime[2];
-SysPkgAlarmScheduleTime     g_PIRScheduleTime;
-GMI_RESULT SystemServiceManager::SvrGetAlarmConfig(int32_t AlarmId,  void_t *Parameter, size_t ParameterLength)
+GMI_RESULT SystemServiceManager::SvrGetAlarmConfig(int32_t AlarmId,  int32_t Index, void_t *Parameter, size_t ParameterLength)
 {
 	GMI_RESULT Result = GMI_SUCCESS;
 	switch (AlarmId)
 	{
 	case SYS_DETECTOR_ID_ALARM_INPUT:
-		memcpy(Parameter, (void_t*)&g_AlarmInConfig, sizeof(SysPkgAlarmInConfig));
+		memcpy(Parameter, &m_SysAlarmInCfg[Index], sizeof(SysPkgAlarmInConfig));
 		break;
 	case SYS_DETECTOR_ID_PIR:
-		memcpy(Parameter, (void_t*)&g_AlarmEventConfig, sizeof(SysPkgAlarmEventConfig));
+		memcpy(Parameter, &m_SysAlarmPIRCfg, sizeof(SysPkgAlarmEventConfig));
 		break;
 	case SYS_PROCESSOR_ID_ALARM_OUTPUT:
-		memcpy(Parameter, (void_t*)&g_AlarmOutConfig, sizeof(SysPkgAlarmOutConfig));
+		memcpy(Parameter, &m_SysAlarmOutCfg[Index], sizeof(SysPkgAlarmOutConfig));
 		break;
 	default:
 		return GMI_NOT_SUPPORT;
@@ -5875,11 +6032,11 @@ GMI_RESULT SystemServiceManager::SvrGetAlarmConfig(int32_t AlarmId,  void_t *Par
 }
 
 
-GMI_RESULT SystemServiceManager::SvrSetAlarmConfig(int32_t AlarmId, const void_t *Parameter, size_t ParameterLength)
+GMI_RESULT SystemServiceManager::SvrSetAlarmConfig(int32_t AlarmId, int32_t Index, const void_t *Parameter, size_t ParameterLength)
 {
 	GMI_RESULT Result = GMI_SUCCESS;
 	
-	Result = m_AlarmPtr->Config(AlarmId, Parameter, ParameterLength);
+	Result = m_AlarmPtr->Config(AlarmId, Index, Parameter, ParameterLength);
 	if (FAILED(Result))
 	{
 		SYS_ERROR("set alarm id %d config fail\n", AlarmId);
@@ -5889,13 +6046,13 @@ GMI_RESULT SystemServiceManager::SvrSetAlarmConfig(int32_t AlarmId, const void_t
 	switch (AlarmId)
 	{
 	case SYS_DETECTOR_ID_ALARM_INPUT:
-		memcpy(&g_AlarmInConfig, Parameter, ParameterLength);
+		memcpy(&m_SysAlarmInCfg[Index], Parameter, ParameterLength);
 		break;
 	case SYS_DETECTOR_ID_PIR:
-		memcpy(&g_AlarmEventConfig, Parameter, ParameterLength);
+		memcpy(&m_SysAlarmPIRCfg, Parameter, ParameterLength);
 		break;
 	case SYS_PROCESSOR_ID_ALARM_OUTPUT:
-		memcpy(&g_AlarmOutConfig, Parameter, ParameterLength);
+		memcpy(&m_SysAlarmOutCfg[Index], Parameter, ParameterLength);
 		break;
 	default:
 		return GMI_NOT_SUPPORT;
@@ -5905,17 +6062,20 @@ GMI_RESULT SystemServiceManager::SvrSetAlarmConfig(int32_t AlarmId, const void_t
 }
 
 
-GMI_RESULT SystemServiceManager::SvrGetAlmScheduleTime(SysPkgGetAlarmScheduleTime *SysGetAlarmScheduleTime, void_t *Parameter, size_t ParameterLength)
+GMI_RESULT SystemServiceManager::SvrGetAlmScheduleTime(int32_t ScheduleId, int32_t Index, void_t *Parameter, size_t ParameterLength)
 {
 	GMI_RESULT Result = GMI_SUCCESS;
 	
-	switch (SysGetAlarmScheduleTime->s_ScheduleId)
+	switch (ScheduleId)
 	{
 	case SYS_SCHEDULE_TIME_ID_ALARM_IN:
-		memcpy(Parameter, &g_AlarmInScheduleTime[SysGetAlarmScheduleTime->s_Index], sizeof(SysPkgAlarmScheduleTime));
+		memcpy(Parameter, &m_SysAlarmInScheduleTime[Index], sizeof(SysPkgAlarmScheduleTime));		
 		break;
 	case SYS_SCHEDULE_TIME_ID_PIR_DETECT:
-		memcpy(Parameter, &g_PIRScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+		memcpy(Parameter, &m_SysAlarmPIRScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+		break;
+	case SYS_SCHEDULE_TIME_ID_ALARM_OUT:
+		memcpy(Parameter, &m_SysAlarmOutScheduleTime[Index], sizeof(SysPkgAlarmScheduleTime));
 		break;
 	default:
 		return GMI_NOT_SUPPORT;
@@ -5925,11 +6085,11 @@ GMI_RESULT SystemServiceManager::SvrGetAlmScheduleTime(SysPkgGetAlarmScheduleTim
 }
 
 
-GMI_RESULT SystemServiceManager::SvrSetAlmScheduleTime(int32_t ScheduleId, const void_t *Parameter, size_t ParameterLength)
+GMI_RESULT SystemServiceManager::SvrSetAlmScheduleTime(int32_t ScheduleId, int32_t Index, const void_t *Parameter, size_t ParameterLength)
 {
 	GMI_RESULT Result = GMI_SUCCESS;
 
-	Result = m_AlarmPtr->Sechdule(ScheduleId, Parameter, ParameterLength);	
+	Result = m_AlarmPtr->Sechdule(ScheduleId, Index, Parameter, ParameterLength);	
 	if (FAILED(Result))
 	{
 		SYS_ERROR("set Sechdule id %d config fail\n", ScheduleId);
@@ -5939,10 +6099,13 @@ GMI_RESULT SystemServiceManager::SvrSetAlmScheduleTime(int32_t ScheduleId, const
 	switch (ScheduleId)
 	{
 	case SYS_SCHEDULE_TIME_ID_ALARM_IN:
-		memcpy(&g_AlarmInScheduleTime[0], Parameter, ParameterLength);
+		memcpy(&m_SysAlarmInScheduleTime[Index], Parameter, ParameterLength);		
 		break;
 	case SYS_SCHEDULE_TIME_ID_PIR_DETECT:
-		memcpy(&g_PIRScheduleTime, Parameter, ParameterLength);
+		memcpy(&m_SysAlarmPIRScheduleTime, Parameter, ParameterLength);
+		break;
+	case SYS_SCHEDULE_TIME_ID_ALARM_OUT:
+		memcpy(&m_SysAlarmOutScheduleTime[Index], Parameter, ParameterLength);
 		break;
 	default:
 		return GMI_NOT_SUPPORT;

@@ -103,7 +103,7 @@
 #define MAX_STREAM_NUM_KEY                          "MaxStreamNum"
 
 
-//////////ptz
+/*========ptz==========*/
 #define PTZ_UART_CONFIG_PATH                        "/Config/PTZ/uart_config/"
 #define PTZ_UART_BAUDE_RATE                         9600
 #define PTZ_UART_DATA_BITS                           3
@@ -133,8 +133,8 @@
 #define PTZ_PRESET_ZOOM_POSITION_KEY                "Zoom"
 #define PTZ_PRESET_SETTED_KEY                       "Setted"
 
-//////////video
-/////video source value
+/*========video==========*/
+/*========video source value==========*/
 #define VIDEO_SOURCE_PATH                           "/Config/Video/Source/"
 //source-576p,720p,1080p
 #define VIDEO_SOURCE_WIDTH                          1280
@@ -296,7 +296,7 @@ typedef enum
 #define VIDEO_LUX10_DAY_ADJUST_AVG_KEY                  "Avg"
 
 
-/////video encode value
+/*========video encode value==========*/
 #define VIDEO_ENCODE_PATH                           "/Config/Video/Encode/"
 #define VIDEO_ENCODE_STREAM_PATH                    "/Config/Video/Encode/Stream%d/"
 // 1~4
@@ -377,7 +377,7 @@ typedef enum
 #define VIDEO_ENCODE_STREAM_QUALITY_KEY              "EncodeQulity"
 #define VIDEO_ENCODE_STREAM_ROTATE_KEY               "Rotate"
 
-//////////osd
+/*========osd==========*/
 //osd value
 #define OSD_PATH                                   "/Config/Video/Osd%d/"
 #define OSD_TIME_PATH                              "/Config/Video/Osd%d/Time/"
@@ -471,7 +471,8 @@ typedef enum
 #define OSD_TEXT_ROTATE_KEY                          "TextRotate"
 #define OSD_TEXT_CONTENT_KEY                         "TextContent"
 
-/////////audio 
+
+/*========audio==========*/
 #define AUDIO_ENCODE_PATH                           "/Config/Audio/Encode/"
 #define AUDIO_ENCODE_TYPE                           1
 #define AUDIO_ENCODE_CHANNEL                        1
@@ -498,7 +499,7 @@ typedef enum
 #define AUDIO_ENCODE_AEC_DELAY_TIME_KEY             "AecDelayTime"
 
 
-/////////device info
+/*========device info==========*/
 //device info value
 #define DEVICE_INFO_PATH                            "/Config/Device/DeviceInfo/"
 #define DEVICE_NAME                                 "IPCamera"
@@ -536,6 +537,92 @@ typedef enum
 //version, compile num
 #define VERSION_COMPILE_FILE_NAME                   "/opt/bin/CompileNumber"
 #define COMPILE_NUM_KEY                             "Num"
+
+
+/*========alarm==========*/
+#define ALARM_IN_CONFIG_PATH                        "/Config/Alarm/AlarmIn%d/"
+#define ALARM_IN_ENABLE_KEY                         "Enable"
+#define ALARM_IN_INPUT_NO_KEY                       "InputNo"
+#define ALARM_IN_NAME_KEY                           "Name"
+#define ALARM_IN_CHECK_TIME_KEY                     "CheckTime"
+#define ALARM_IN_NORMAL_STATUS_KEY                  "NormalStatus"
+#define ALARM_IN_LINK_STRATEGY_KEY                  "LinkStrategy"
+#define ALARM_IN_LINK_ALARM_OUT_NO_KEY              "LinkAlarmOutNo"
+#define ALARM_IN_LINK_PTZ_FUNC_KEY                  "LinkPTZFuncNo"
+#define ALARM_IN_LINK_PTZ_SEQ_KEY                   "LinkPTZSeqNo"
+#define ALARM_IN_ENABLE                         	(0)
+#define ALARM_IN_INPUT_NO                       	(0)
+#define ALARM_IN_NAME                           	("AlarmIn")
+//300ms
+#define ALARM_IN_CHECK_TIME                    		(300)
+//normal open
+#define ALARM_IN_NORMAL_STATUS                 		(1)
+#define ALARM_IN_LINK_STRATEGY                  	(0x00)
+#define ALARM_IN_LINK_ALARM_OUT_NO              	(0)
+#define ALARM_IN_LINK_PTZ_FUNC                  	(0)
+#define ALARM_IN_LINK_PTZ_SEQ                   	(0)
+
+#define ALARM_OUT_CONFIG_PATH                       "/Config/Alarm/AlarmOut%d/"
+#define ALARM_OUT_ENABLE_KEY                        "Enable"
+#define ALARM_OUT_OUTPUT_NO_KEY                     "OutputNo"
+#define ALARM_OUT_NAME_KEY                          "Name"
+#define ALARM_OUT_NORMAL_STATUS_KEY                 "NormalStatus"
+#define ALARM_OUT_DELAY_TIME_KEY                    "DelayTime"
+#define ALARM_OUT_ENABLE                            (0)
+#define ALARM_OUT_OUTPUT_NO                     	(0)
+#define ALARM_OUT_NAME                          	"AlarmOut"
+//open
+#define ALARM_OUT_NORMAL_STATUS                 	(1)
+//5S
+#define ALARM_OUT_DELAY_TIME                    	(5)
+
+#define ALARM_PIR_CONFIG_PATH                       "/Config/Alarm/PIR/"
+#define ALARM_PIR_ALARM_ID_KEY                      "ID"
+#define ALARM_PIR_ENABLE_KEY                        "Enable"
+#define ALARM_PIR_CHECK_TIME_KEY                    "CheckTime"
+#define ALARM_PIR_LINK_STARTEGY_KEY                 "LinkStrategy"
+#define ALARM_PIR_SENSITIVE_KEY                     "Sensitive"
+#define ALARM_PIR_LINK_ALARM_OUT_NO_KEY             "LinkAlarmOutNo"
+#define ALARM_PIR_LINK_WHITE_LIGHT_DELAY_TIME_KEY   "LinkWhiteLightDelayTime" 
+#define ALARM_PIR_ALARM_ID                          (2)
+//enable
+#define ALARM_PIR_ENABLE                            (1)
+#define ALARM_PIR_CHECK_TIME                        (300)
+//link white light
+#define ALARM_PIR_LINK_STARTEGY                     (0x100)
+//0~100
+#define ALARM_PIR_SENSITIVE                         (50)
+#define ALARM_PIR_LINK_ALARM_OUT_NO             	(0)
+//5S
+#define ALARM_PIR_LINK_WHITE_LIGHT_DELAY_TIME  		(5)
+
+#define ALARM_IN_SCHEDULE_TIME_PATH                "/Config/Alarm/AlarmIn%d_Schedule/"
+#define ALARM_IN_SCHEDULE_ID_KEY                   "ScheduleId"
+#define ALARM_IN_SCHEDULE_INDEX_KEY                "Index"
+#define ALARM_IN_SCHEDULE_START_TIME_KEY           "Week%d_StartTime%d"
+#define ALARM_IN_SCHEDULE_END_TIME_KEY             "Week%d_EndTime%d"
+#define ALARM_IN_SCHEDULE_ID                       (1)
+#define ALARM_IN_SCHEDULE_INDEX                    (0)
+#define ALARM_IN_SCHEDULE_START_TIME               (0)
+#define ALARM_IN_SCHEDULE_END_TIME                 (24*60)
+
+#define ALARM_OUT_SCHEDULE_TIME_PATH                "/Config/Alarm/AlarmOut%d_Schedule/"
+#define ALARM_OUT_SCHEDULE_ID_KEY                   "ScheduleId"
+#define ALARM_OUT_SCHEDULE_INDEX_KEY                "Index"
+#define ALARM_OUT_SCHEDULE_START_TIME_KEY           "Week%d_StartTime%d"
+#define ALARM_OUT_SCHEDULE_END_TIME_KEY             "Week%d_EndTime%d"
+#define ALARM_OUT_SCHEDULE_ID                       (1)
+#define ALARM_OUT_SCHEDULE_INDEX                    (0)
+#define ALARM_OUT_SCHEDULE_START_TIME               (0)
+#define ALARM_OUT_SCHEDULE_END_TIME                 (24*60)
+
+#define PIR_SCHEDULE_TIME_PATH                		"/Config/Alarm/PIR_Schedule/"
+#define PIR_SCHEDULE_ID_KEY                   		"ScheduleId"
+#define PIR_SCHEDULE_START_TIME_KEY           		"Week%d_StartTime%d"
+#define PIR_SCHEDULE_END_TIME_KEY             		"Week%d_EndTime%d"
+#define PIR_SCHEDULE_ID                       		(3)
+#define PIR_SCHEDULE_START_TIME               		(0)
+#define PIR_SCHEDULE_END_TIME                 		(24*60)
 
 
 // log server heartbeat interval

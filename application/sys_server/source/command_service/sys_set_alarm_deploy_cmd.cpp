@@ -72,7 +72,7 @@ GMI_RESULT  SysSetAlarmDeployCommandExecutor::Execute()
 		        }
 		    }    	
 	    	
-	        Result = m_SystemServiceManager->SvrSetAlmScheduleTime(SysAlarmScheduleTimePtr->s_ScheduleId, SysAlarmScheduleTimePtr, sizeof(SysPkgAlarmScheduleTime));
+	        Result = m_SystemServiceManager->SvrSetAlmScheduleTime(SysAlarmScheduleTimePtr->s_ScheduleId, SysAlarmScheduleTimePtr->s_Index, SysAlarmScheduleTimePtr, sizeof(SysPkgAlarmScheduleTime));
 	        if (FAILED(Result))
 	        {
 	            SYS_ERROR("SvrSetAlmScheduleTime %d fail, Result = 0x%lx\n", SysAlarmScheduleTimePtr->s_ScheduleId, Result);

@@ -70,21 +70,23 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
         }
 
         SysPkgAttrHdPtr->s_Type = NETWORK_TO_HOST_USHORT(SysPkgAttrHdPtr->s_Type);
-        if (SysPkgAttrHdPtr->s_Type != TYPE_INTVALUE)
+        if (SysPkgAttrHdPtr->s_Type != TYPE_GET_ALMCONFIG)
         {
             SYS_ERROR("SysPkgAttrHdPtr->s_Type %d incorrect\n", SysPkgAttrHdPtr->s_Type);
             MessageCode = RETCODE_ERROR;
             break;
         }
 
-		int32_t  DetectId = *(int32_t*)(PayloadBuff + sizeof(SysPkgAttrHeader));
-		DetectId = NETWORK_TO_HOST_UINT(DetectId);
-		switch (DetectId)
+		SysPkgGetAlarmConfig SysGetAlarmConfig;	
+		memcpy(&SysGetAlarmConfig, (PayloadBuff + sizeof(SysPkgAttrHeader)), sizeof(SysPkgGetAlarmConfig));
+		int32_t  AlarmId  = NETWORK_TO_HOST_UINT(SysGetAlarmConfig.s_AlarmId);
+		int32_t  Index    = NETWORK_TO_HOST_UINT(SysGetAlarmConfig.s_Index);		
+		switch (AlarmId)
 		{
 		case SYS_DETECTOR_ID_ALARM_INPUT:
 			ToGetAttrType = TYPE_ALARM_IN;
 			memset(&SysAlarmInConfig, 0, sizeof(SysPkgAlarmInConfig));	
-			Result = m_SystemServiceManager->SvrGetAlarmConfig(SYS_DETECTOR_ID_ALARM_INPUT, &SysAlarmInConfig, sizeof(SysPkgAlarmInConfig));
+			Result = m_SystemServiceManager->SvrGetAlarmConfig(SYS_DETECTOR_ID_ALARM_INPUT, Index, &SysAlarmInConfig, sizeof(SysPkgAlarmInConfig));
 			if (FAILED(Result))
 			{
 				MessageCode = RETCODE_ERROR;
@@ -103,7 +105,7 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
 		case SYS_DETECTOR_ID_PIR:
 			ToGetAttrType = TYPE_ALARM_EVENT;
 			memset(&SysAlarmEventConfig, 0, sizeof(SysPkgAlarmEventConfig));
-			Result = m_SystemServiceManager->SvrGetAlarmConfig(SYS_DETECTOR_ID_PIR, &SysAlarmEventConfig, sizeof(SysPkgAlarmEventConfig));
+			Result = m_SystemServiceManager->SvrGetAlarmConfig(SYS_DETECTOR_ID_PIR, 0, &SysAlarmEventConfig, sizeof(SysPkgAlarmEventConfig));
 			if (FAILED(Result))
 			{
 				MessageCode = RETCODE_ERROR;
@@ -122,7 +124,7 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
 		case SYS_PROCESSOR_ID_ALARM_OUTPUT:
 			ToGetAttrType = TYPE_ALARM_OUT;
 			memset(&SysAlarmOutConfig, 0, sizeof(SysPkgAlarmOutConfig));
-			Result = m_SystemServiceManager->SvrGetAlarmConfig(SYS_PROCESSOR_ID_ALARM_OUTPUT, &SysAlarmOutConfig, sizeof(SysPkgAlarmOutConfig));
+			Result = m_SystemServiceManager->SvrGetAlarmConfig(SYS_PROCESSOR_ID_ALARM_OUTPUT, Index, &SysAlarmOutConfig, sizeof(SysPkgAlarmOutConfig));
 			if (FAILED(Result))
 			{
 				MessageCode = RETCODE_ERROR;

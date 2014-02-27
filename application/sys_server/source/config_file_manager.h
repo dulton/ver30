@@ -70,6 +70,12 @@ public:
     GMI_RESULT SetCurrentZoomPos(int32_t ZoomPos);    
     GMI_RESULT GetPtzSpeedMap(char_t HSpeed[10][64], char_t VSpeed[10][64]);
 
+    //alarm
+    GMI_RESULT GetAlarmConfig(int32_t AlarmId, int32_t Index, void_t* Parameter, size_t ParameterLength);
+	GMI_RESULT SetAlarmConfig(int32_t AlarmId, int32_t Index, void_t* Parameter, size_t ParameterLength);
+	GMI_RESULT GetAlarmSchedule(int32_t ScheduleId, int32_t Index, SysPkgAlarmScheduleTime *SysAlarmScheduleTime);
+	GMI_RESULT SetAlarmSchedule(int32_t ScheduleId, int32_t Index, SysPkgAlarmScheduleTime *SysAlarmScheduleTime);
+	
     GMI_RESULT FactoryDefault(void);
     GMI_RESULT GetBitrates(int32_t Width, int32_t Height, int32_t *BitRateAverage, int32_t *BitRateUp, int32_t *BitRateDown);
 private:	

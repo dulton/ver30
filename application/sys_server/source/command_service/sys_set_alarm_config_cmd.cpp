@@ -67,7 +67,7 @@ GMI_RESULT  SysSetAlarmConfigCommandExecutor::Execute()
 	    	SysAlarmInConfigPtr->s_NormalStatus = NETWORK_TO_HOST_UINT(SysAlarmInConfigPtr->s_NormalStatus);
 	    	SysAlarmInConfigPtr->s_LinkAlarmStrategy = NETWORK_TO_HOST_UINT(SysAlarmInConfigPtr->s_LinkAlarmStrategy);
 	    	SysAlarmInConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum = NETWORK_TO_HOST_USHORT(SysAlarmInConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum);	    	
-	        Result = m_SystemServiceManager->SvrSetAlarmConfig(SYS_DETECTOR_ID_ALARM_INPUT, SysAlarmInConfigPtr, sizeof(SysPkgAlarmInConfig));
+	        Result = m_SystemServiceManager->SvrSetAlarmConfig(SYS_DETECTOR_ID_ALARM_INPUT, SysAlarmInConfigPtr->s_InputNumber, SysAlarmInConfigPtr, sizeof(SysPkgAlarmInConfig));
 	        if (FAILED(Result))
 	        {
 	            SYS_ERROR("SvrSetAlarmConfig %d fail, Result = 0x%lx\n", SYS_DETECTOR_ID_ALARM_INPUT, Result);
@@ -82,7 +82,7 @@ GMI_RESULT  SysSetAlarmConfigCommandExecutor::Execute()
 	    	SysAlarmOutConfigPtr->s_OutputNumber = NETWORK_TO_HOST_UINT(SysAlarmOutConfigPtr->s_OutputNumber);
 	    	SysAlarmOutConfigPtr->s_NormalStatus = NETWORK_TO_HOST_UINT(SysAlarmOutConfigPtr->s_NormalStatus);
 	    	SysAlarmOutConfigPtr->s_DelayTime    = NETWORK_TO_HOST_UINT(SysAlarmOutConfigPtr->s_DelayTime);
-	    	Result = m_SystemServiceManager->SvrSetAlarmConfig(SYS_PROCESSOR_ID_ALARM_OUTPUT, SysAlarmOutConfigPtr, sizeof(SysPkgAlarmOutConfig));
+	    	Result = m_SystemServiceManager->SvrSetAlarmConfig(SYS_PROCESSOR_ID_ALARM_OUTPUT, SysAlarmOutConfigPtr->s_OutputNumber, SysAlarmOutConfigPtr, sizeof(SysPkgAlarmOutConfig));
 	        if (FAILED(Result))
 	        {
 	            SYS_ERROR("SvrSetAlarmConfig %d fail, Result = 0x%lx\n", SYS_PROCESSOR_ID_ALARM_OUTPUT, Result);
@@ -101,7 +101,7 @@ GMI_RESULT  SysSetAlarmConfigCommandExecutor::Execute()
 		    	SysAlarmEventConfigPtr->s_LinkAlarmStrategy = NETWORK_TO_HOST_UINT(SysAlarmEventConfigPtr->s_LinkAlarmStrategy);
 		    	SysAlarmEventConfigPtr->s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive = NETWORK_TO_HOST_UINT(SysAlarmEventConfigPtr->s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);	    	
 		    	SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum = NETWORK_TO_HOST_UINT(SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum);    	
-		    	Result = m_SystemServiceManager->SvrSetAlarmConfig(SYS_DETECTOR_ID_PIR, SysAlarmEventConfigPtr, sizeof(SysPkgAlarmEventConfig));
+		    	Result = m_SystemServiceManager->SvrSetAlarmConfig(SYS_DETECTOR_ID_PIR, 0, SysAlarmEventConfigPtr, sizeof(SysPkgAlarmEventConfig));
 		        if (FAILED(Result))
 		        {
 		            SYS_ERROR("SvrSetAlarmConfig %d fail, Result = 0x%lx\n", SYS_DETECTOR_ID_PIR, Result);

@@ -251,6 +251,8 @@ GMI_RESULT UserLogQuery::Query(SysPkgLogInfoSearch *SysLogInfoSearch, SysPkgLogI
 		SYS_ERROR("Offset %d, m_TotalUserLogNum %d\n", Offset, m_TotalUserLogNum);
 		return GMI_INVALID_PARAMETER;
 	}
+
+	SYS_INFO("log info num %d\n", m_LeftUserLogNum);
 	
 	if (m_LeftUserLogNum > 0)
 	{		
@@ -269,6 +271,7 @@ GMI_RESULT UserLogQuery::Query(SysPkgLogInfoSearch *SysLogInfoSearch, SysPkgLogI
 			strcpy(SysLogInfo[i].s_LogData, (char_t*)m_UserLogPtr[Offset].s_SpecificData);
 			Offset++;
 		}
+		SYS_INFO("LogId %llu\n", SysLogInfo[0].s_LogId);
 
 		m_LeftUserLogNum -= SyLogInfoInt->s_Count;
 	}		

@@ -192,6 +192,7 @@ extern "C" {
 #define TYPE_ALARM_OUT          124
 #define TYPE_ALARM_EVENT        125
 #define TYPE_GET_ALMDEPLOY      126
+#define TYPE_GET_ALMCONFIG      127
 
 //inner use
 #define TYPE_AUDIO_DECODE       201
@@ -1488,6 +1489,10 @@ typedef struct tagSysDaynight
 
 
 /*====alarm=====*/
+//max alarm in port
+#define MAX_ALARM_IN_PORT   (1)
+#define MAX_ALARM_OUT_PORT  (1)
+
 //schedule
 typedef enum
 {
@@ -1540,9 +1545,17 @@ typedef struct tagGetAlarmScheduleTimeInfo
 }SysPkgGetAlarmScheduleTime;
 
 
+typedef struct tagGetAlarmConfig
+{
+	uint32_t s_AlarmId;// 1-alarm in, 2-PIR, 3-motion detect
+	uint32_t s_Index;//when alarm in or alarm out, it represents IO number, for example, 0, 1, 2, 3...
+	uint8_t  s_Reserved[8];
+}SysPkgGetAlarmConfig;
+
+
 typedef struct tagLinkAlarmExtInfo
 {
-	uint8_t  s_IoNum;//seq no:0,1,2,....
+	uint8_t  s_IoNum;//bit: 0-alarm port 0, 1-alarm port 1, 2-alarm port 2, 3-alarm port 3
 	uint8_t  s_OperateCmd;//when link ptz:0--none, 1--preset ,2--cruise, 3--scan
 	uint16_t s_OperateSeqNum;//when link ptz: seqno: 0(home),1,2,3...
 	uint8_t  s_DelayTime;//unit:s

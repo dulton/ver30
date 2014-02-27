@@ -75,7 +75,7 @@ void Alarm::EventProcess(void_t *UserData, uint32_t EventId, enum EventType Type
 }
 
 
-GMI_RESULT Alarm::Config(int32_t AlarmId, const void_t *Parameter, size_t ParameterLength)
+GMI_RESULT Alarm::Config(int32_t AlarmId, int32_t Index, const void_t *Parameter, size_t ParameterLength)
 {
 	GMI_RESULT Result = GMI_SUCCESS;
 	
@@ -94,7 +94,7 @@ GMI_RESULT Alarm::Config(int32_t AlarmId, const void_t *Parameter, size_t Parame
 		struct AlarmInputInfo AlmInInfo;
 		memset(&AlmInInfo, 0, sizeof(struct AlarmInputInfo));
 		AlmInInfo.s_EnableFlag        = SysAlarmInCfg.s_EnableFlag;
-		AlmInInfo.s_InputNumber       = SysAlarmInCfg.s_InputNumber;
+		AlmInInfo.s_InputNumber       = Index;
 		AlmInInfo.s_NormalStatus      = (enum AlarmInputStatus)SysAlarmInCfg.s_NormalStatus;
 		AlmInInfo.s_LinkAlarmStrategy = SysAlarmInCfg.s_LinkAlarmStrategy;
 		AlmInInfo.s_CheckTime         = SysAlarmInCfg.s_CheckTime;
@@ -150,7 +150,7 @@ GMI_RESULT Alarm::Config(int32_t AlarmId, const void_t *Parameter, size_t Parame
 		struct AlarmOutputInfo AlarmOutInfo;
 		memset(&AlarmOutInfo, 0, sizeof(struct AlarmOutputInfo));
 		AlarmOutInfo.s_EnableFlag   = SysAlarmOutConfig.s_EnableFlag;
-		AlarmOutInfo.s_OutputNumber = SysAlarmOutConfig.s_OutputNumber;
+		AlarmOutInfo.s_OutputNumber = Index;
 		AlarmOutInfo.s_NormalStatus = (enum AlarmOutputStatus)SysAlarmOutConfig.s_NormalStatus;
 		AlarmOutInfo.s_DelayTime    = SysAlarmOutConfig.s_DelayTime;		
 		memcpy(AlarmOutInfo.s_Name, SysAlarmOutConfig.s_Name, sizeof(AlarmOutInfo.s_Name));
@@ -169,7 +169,7 @@ GMI_RESULT Alarm::Config(int32_t AlarmId, const void_t *Parameter, size_t Parame
 }
 
 
-GMI_RESULT Alarm::Sechdule(int32_t ScheduleId, const void_t *Parameter, size_t ParameterLength)
+GMI_RESULT Alarm::Sechdule(int32_t ScheduleId, int32_t Index, const void_t *Parameter, size_t ParameterLength)
 {
 	GMI_RESULT Result = GMI_SUCCESS;
 
@@ -177,7 +177,7 @@ GMI_RESULT Alarm::Sechdule(int32_t ScheduleId, const void_t *Parameter, size_t P
 	memset(&SysAlarmScheduleTime, 0, sizeof(SysPkgAlarmScheduleTime));
 	if (ParameterLength != sizeof(SysPkgAlarmScheduleTime))
 	{
-		SYS_ERROR("ParameterLength is %d, but real length should be %d\n", ParameterLength, sizeof(SysPkgAlarmOutConfig));
+		SYS_ERROR("ParameterLength is %d, but real length should be %d\n", ParameterLength, sizeof(SysPkgAlarmScheduleTime));
 		return GMI_INVALID_PARAMETER;
 	}
 
@@ -188,7 +188,7 @@ GMI_RESULT Alarm::Sechdule(int32_t ScheduleId, const void_t *Parameter, size_t P
 	{
 	case SYS_SCHEDULE_TIME_ID_ALARM_IN:				
 		AlmScheduleTimeInfo.s_ScheduleId   = SCHEDULE_TIME_ID_ALARM_IN;
-		AlmScheduleTimeInfo.s_Index        = SysAlarmScheduleTime.s_Index;
+		AlmScheduleTimeInfo.s_Index        = Index;
 		for (int32_t i = 0; i < 7; i++)
 		{
 			for (int32_t j = 0; j < MAX_SEG_TIME_PERDAY; j++)
@@ -201,13 +201,13 @@ GMI_RESULT Alarm::Sechdule(int32_t ScheduleId, const void_t *Parameter, size_t P
 		Result = m_EventCenter.ConfigureAlarmScheduleTime(SCHEDULE_TIME_ID_ALARM_IN, &AlmScheduleTimeInfo, sizeof(struct AlarmScheduleTimeInfo));
 		if (FAILED(Result))
 		{
-			SYS_ERROR("ConfigureAlarmScheduleTime fail, Result = 0x%lx\n", Result);
+			SYS_ERROR("ConfigureAlarmInScheduleTime fail, Result = 0x%lx\n", Result);
 			return Result;
 		}	 
 		break;
 	case SYS_SCHEDULE_TIME_ID_PIR_DETECT:		
 		AlmScheduleTimeInfo.s_ScheduleId   = SCHEDULE_TIME_ID_HUMAN_DETECT;
-		AlmScheduleTimeInfo.s_Index        = SysAlarmScheduleTime.s_Index;
+		AlmScheduleTimeInfo.s_Index        = Index;
 		for (int32_t i = 0; i < 7; i++)
 		{
 			for (int32_t j = 0; j < MAX_SEG_TIME_PERDAY; j++)
@@ -220,7 +220,26 @@ GMI_RESULT Alarm::Sechdule(int32_t ScheduleId, const void_t *Parameter, size_t P
 		Result = m_EventCenter.ConfigureAlarmScheduleTime(SCHEDULE_TIME_ID_HUMAN_DETECT, &AlmScheduleTimeInfo, sizeof(struct AlarmScheduleTimeInfo));
 		if (FAILED(Result))
 		{
-			SYS_ERROR("ConfigureAlarmScheduleTime fail, Result = 0x%lx\n", Result);
+			SYS_ERROR("ConfigureAlarmPIRScheduleTime fail, Result = 0x%lx\n", Result);
+			return Result;
+		}	 
+		break;
+	case SYS_SCHEDULE_TIME_ID_ALARM_OUT:
+		AlmScheduleTimeInfo.s_ScheduleId   = SCHEDULE_TIME_ID_ALARM_OUT;
+		AlmScheduleTimeInfo.s_Index        = Index;
+		for (int32_t i = 0; i < 7; i++)
+		{
+			for (int32_t j = 0; j < MAX_SEG_TIME_PERDAY; j++)
+			{
+				AlmScheduleTimeInfo.s_ScheduleTime[i][j].s_StartTime = SysAlarmScheduleTime.s_ScheduleTime[i][j].s_StartTime;
+				AlmScheduleTimeInfo.s_ScheduleTime[i][j].s_EndTime   = SysAlarmScheduleTime.s_ScheduleTime[i][j].s_EndTime;
+			}
+		}
+
+		Result = m_EventCenter.ConfigureAlarmScheduleTime(SCHEDULE_TIME_ID_ALARM_OUT, &AlmScheduleTimeInfo, sizeof(struct AlarmScheduleTimeInfo));
+		if (FAILED(Result))
+		{
+			SYS_ERROR("ConfigureAlarmOutScheduleTime fail, Result = 0x%lx\n", Result);
 			return Result;
 		}	 
 		break;

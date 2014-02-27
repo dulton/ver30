@@ -76,15 +76,17 @@ GMI_RESULT	SysGetAlarmDeployCommandExecutor::Execute()
             break;
         }
 
-		SysPkgGetAlarmScheduleTime *SysGetAlarmScheduleTimePtr = (SysPkgGetAlarmScheduleTime*)(PayloadBuff + sizeof(SysPkgAttrHeader));
-		
+		SysPkgGetAlarmScheduleTime *SysGetAlarmScheduleTimePtr = (SysPkgGetAlarmScheduleTime*)(PayloadBuff + sizeof(SysPkgAttrHeader));		
 		SysGetAlarmScheduleTimePtr->s_ScheduleId = NETWORK_TO_HOST_UINT(SysGetAlarmScheduleTimePtr->s_ScheduleId);
 		SysGetAlarmScheduleTimePtr->s_Index      = NETWORK_TO_HOST_UINT(SysGetAlarmScheduleTimePtr->s_Index);
+		
+		SysPkgGetAlarmScheduleTime SysGetAlarmScheduleTime;
+		memcpy(&SysGetAlarmScheduleTime, SysGetAlarmScheduleTimePtr, sizeof(SysPkgGetAlarmScheduleTime));
 
-		Result = m_SystemServiceManager->SvrGetAlmScheduleTime(SysGetAlarmScheduleTimePtr, &SysAlarmScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+		Result = m_SystemServiceManager->SvrGetAlmScheduleTime(SysGetAlarmScheduleTime.s_ScheduleId, SysGetAlarmScheduleTime.s_Index , &SysAlarmScheduleTime, sizeof(SysPkgAlarmScheduleTime));
 		if (FAILED(Result))
 		{
-			SYS_ERROR("SvrGetAlmScheduleTime ScheduleId %d, Index %d fail, Result = 0x%lx\n", SysGetAlarmScheduleTimePtr->s_ScheduleId, SysGetAlarmScheduleTimePtr->s_Index, Result);
+			SYS_ERROR("SvrGetAlmScheduleTime ScheduleId %d, Index %d fail, Result = 0x%lx\n", SysGetAlarmScheduleTime.s_ScheduleId, SysGetAlarmScheduleTime.s_Index, Result);
 			MessageCode = RETCODE_ERROR;
 			break;
 		}
@@ -136,7 +138,7 @@ GMI_RESULT	SysGetAlarmDeployCommandExecutor::Execute()
     Result = Reply->AllocatePacketBuffer(0, PayloadTotalSize);
     if (FAILED(Result))
     {
-        SYS_ERROR("AllocatePacketBuffer fail\n");
+        SYS_ERROR("AllocatePacketBuffer fail,Result = 0x%lx\n", Result);
         return Result;
     }
 

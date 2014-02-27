@@ -101,8 +101,8 @@ GMI_RESULT  SysGetLogInfoCommandExecutor::Execute()
 		SysLogInfoInt.s_Total = HOST_TO_NETWORK_UINT(SysLogInfoInt.s_Total);
 		
 		for (int32_t i = 0; i < LogCount; i++)
-		{		
-			UINT64_TO_BIGENDIAN(SysLogInfoPtr.GetPtr()[i].s_LogId, (uint8_t*)&(SysLogInfoPtr.GetPtr()[i].s_LogId));
+		{													
+			SysLogInfoPtr.GetPtr()[i].s_LogId     = htonll(SysLogInfoPtr.GetPtr()[i].s_LogId);			
 			SysLogInfoPtr.GetPtr()[i].s_MajorType = HOST_TO_NETWORK_UINT(SysLogInfoPtr.GetPtr()[i].s_MajorType);
 			SysLogInfoPtr.GetPtr()[i].s_MinorType = HOST_TO_NETWORK_UINT(SysLogInfoPtr.GetPtr()[i].s_MinorType);	
 		}		        
@@ -214,7 +214,7 @@ GMI_RESULT  SysGetLogInfoCommandExecutor::Execute()
                  CommandPacket->GetSdkTransferProtocolAuthValue()
              );
     if (FAILED(Result))
-    {
+    {    	
         SYS_ERROR("FillPacketSdkTransferProtocolKey fail\n");
         return Result;
     }
