@@ -71,6 +71,45 @@ void Alarm::EventProcess(void_t *UserData, uint32_t EventId, enum EventType Type
 	struct timeval CurrentTime;
     gettimeofday( &CurrentTime, NULL );
     SYS_INFO( "EventProcess: UserData=%p, EventId=%d, Type=%d, Parameter=%p, ParameterLength=%d, current time=%ld:%06ld \n", UserData, EventId, Type, Parameter, ParameterLength, CurrentTime.tv_sec, CurrentTime.tv_usec );
+
+	struct AlarmUploadInf AlmUploadInf;
+	memcpy(&AlmUploadInf, Parameter, sizeof(struct AlarmUploadInf)); 
+		
+    switch (EventId)
+    {
+    case EVENT_DETECTOR_ID_ALARM_INPUT:    	   	
+    	if (e_EventType_Start == Type)
+    	{
+    		char_t UserData[64] = {0};
+    		sprintf(UserData, "GPIO Alarm On:Input Port%d Description %s\n", AlmUploadInf.s_ExtraInfo.s_IoNum, AlmUploadInf.s_Description);
+    		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_ALRAM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
+    	}
+    	else if (e_EventType_End == Type)
+    	{
+    		char_t UserData[64] = {0};
+    		sprintf(UserData, "GPIO Alarm Off:Input Port%d Description %s\n", AlmUploadInf.s_ExtraInfo.s_IoNum, AlmUploadInf.s_Description);
+    		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_ALRAM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
+    	}    	
+    	break;
+    case EVENT_DETECTOR_ID_HUMAN_DETECT:    	 	
+    	if (e_EventType_Start == Type)
+    	{
+    		char_t UserData[64] = {0};
+    		sprintf(UserData, "PIR Alarm On:Description %s\n", AlmUploadInf.s_Description);
+    		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_PIR_ALARM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
+    	}
+    	else if (e_EventType_End == Type)
+    	{
+    		char_t UserData[64] = {0};
+    		sprintf(UserData, "PIR Alarm Off:Description %s\n", AlmUploadInf.s_Description);
+    		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_PIR_ALARM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
+    	}    	
+    	break;
+    default:
+    	break;
+    }
+    
+    
 	return;
 }
 
