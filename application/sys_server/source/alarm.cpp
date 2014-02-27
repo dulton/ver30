@@ -266,7 +266,8 @@ GMI_RESULT Alarm::Config(int32_t AlarmId, int32_t Index, const void_t *Parameter
 		AlarmEventConfig.s_CheckTime           = SysAlarmPIRConfig.s_CheckTime;
 		AlarmEventConfig.s_LinkAlarmExtInfo.s_IoNum         = SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_IoNum;
 		AlarmEventConfig.s_LinkAlarmExtInfo.s_OperateCmd    = SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_OperateCmd;
-		AlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_OperateSeqNum;
+		AlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_OperateSeqNum;	
+		AlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime     = SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_DelayTime;
 		AlarmEventConfig.s_ExtData.s_HumanDetectExInfo.s_Sensitivity = SysAlarmPIRConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive;
 		Result = m_EventCenter.ConfigureAlarmEvent(EVENT_DETECTOR_ID_HUMAN_DETECT, &AlarmEventConfig, sizeof(struct AlarmEventConfigInfo));
 		if (FAILED(Result))
