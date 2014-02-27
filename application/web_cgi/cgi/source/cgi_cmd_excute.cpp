@@ -3422,8 +3422,6 @@ GMI_RESULT CgiSysGetDeviceStartedTime(const char_t *FncCmd)
 
 }
 
-
-
 GMI_RESULT CgiConfigToolGetDeviceInfo(const char_t *FncCmd)
 {
     char_t *SessionId = WEB_GET_VAR("SessionId");
@@ -4263,3 +4261,852 @@ GMI_RESULT CgiSysStop3A(const char_t *FncCmd)
     return GMI_FAIL;
 
 }
+
+GMI_RESULT CgiSysCmdTest(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+    
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+             
+        RetFormat = "%s={\"RetCode\":\"%d\"}";
+        
+        fprintf(stdout, RetFormat, Cmd, RetCode);
+        return GMI_SUCCESS;
+    } while(0);
+    
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+}
+
+/*************************************************
+*func:get AlarmInConfig/AlarmOutConfig/PIR Config
+*AlarmId:sys_env_types.h  SysPkgAlarmId  
+*-----------------------------------------*/
+GMI_RESULT CgiSysGetAlarmConfig(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *AlarmId = WEB_GET_VAR("AlarmId");
+    const char_t *Index = WEB_GET_VAR("Index");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+    
+    CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+    
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue || NULL == AlarmId)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+        char_t *Buffer = NULL;
+	uint32_t ParameterLength=0;    
+	SysPkgAlarmInConfig *PkgAlarmInConfig = NULL;
+        SysPkgAlarmEventConfig *PkgAlarmEventConfig = NULL;
+	SysPkgAlarmOutConfig *PkgAlarmOutConfig = NULL;
+
+        switch(atoi(AlarmId))
+        {
+        case SYS_DETECTOR_ID_ALARM_INPUT:
+	    ParameterLength = sizeof(SysPkgAlarmInConfig);
+            Buffer = (char_t*)malloc(sizeof(SysPkgAlarmInConfig));
+            if(NULL == Buffer)
+            {
+                RetCode = RETCODE_ERROR;
+                Buffer = NULL;
+            }
+            break;
+	case SYS_DETECTOR_ID_PIR:
+            ParameterLength = sizeof(SysPkgAlarmEventConfig);
+            Buffer = (char_t*)malloc(sizeof(SysPkgAlarmEventConfig));
+            if(NULL == Buffer)
+            {
+                RetCode = RETCODE_ERROR;
+                Buffer = NULL;
+            }
+	    break;
+	case SYS_DETECTOR_ID_MOTION_DETECT:
+	
+	    break;
+        case SYS_DETECTOR_ID_VCOVER_DETECT:
+        
+            break;
+        case SYS_DETECTOR_ID_VLOSS_DETECT:
+        
+            break;
+        case SYS_DETECTOR_ID_ABNORMAL_DETECT:
+        
+            break;
+	case SYS_PROCESSOR_ID_ALARM_OUTPUT:
+            ParameterLength = sizeof(SysPkgAlarmOutConfig);
+            Buffer = (char_t*)malloc(sizeof(SysPkgAlarmOutConfig));
+            if(NULL == Buffer)
+            {
+            	RetCode = RETCODE_ERROR;
+            	Buffer = NULL;
+            }
+	    break;
+        default:
+            break;
+        }
+
+	Result = SysGetAlarmConfig(atoi(SessionId), atoi(AuthValue), atoi(AlarmId), atoi(Index), Buffer, ParameterLength);
+        if (FAILED(Result))
+        {
+	     CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d] \n",__LINE__);
+             if(NULL != Buffer)
+             {
+                 free(Buffer);
+             }
+             RetCode = RETCODE_ERROR;
+             break;
+         }
+
+         switch(atoi(AlarmId))
+        {
+        case SYS_DETECTOR_ID_ALARM_INPUT:
+	    PkgAlarmInConfig = (SysPkgAlarmInConfig *)Buffer;
+	    RetFormat = "%s={\"RetCode\":\"%d\",\"AlarmId\":\"%u\",\"Index\":\"%d\",\"EnableFlag\":\"%u\",\"InputNumber\":\"%u\",\"Name\":\"%s\""
+                                ",\"CheckTime\":\"%u\",\"NormalStatus\":\"%u\",\"LinkAlarmStrategy\":\"%u\",\"IoNum\":\"%u\""
+                                ",\"OperateCmd\":\"%u\",\"OperateSeqNum\":\"%u\",\"PtzDelayTime\":\"%u\"}";
+            fprintf(stdout, RetFormat, Cmd, RetCode,atoi(AlarmId),atoi(Index),PkgAlarmInConfig->s_EnableFlag,PkgAlarmInConfig->s_InputNumber,
+                              PkgAlarmInConfig->s_Name,PkgAlarmInConfig->s_CheckTime,PkgAlarmInConfig->s_NormalStatus,
+                              PkgAlarmInConfig->s_LinkAlarmStrategy,PkgAlarmInConfig->s_LinkAlarmExtInfo.s_IoNum,
+                              PkgAlarmInConfig->s_LinkAlarmExtInfo.s_OperateCmd,PkgAlarmInConfig->s_LinkAlarmExtInfo.s_OperateSeqNum,
+                              PkgAlarmInConfig->s_LinkAlarmExtInfo.s_PtzDelayTime);
+            break;
+	case SYS_DETECTOR_ID_PIR:
+	    PkgAlarmEventConfig = (SysPkgAlarmEventConfig *)Buffer;
+	    RetFormat = "%s={\"RetCode\":\"%d\",\"AlarmId\":\"%u\",\"Index\":\"%d\",\"EnableFlag\":\"%u\",\"CheckTime\":\"%u\",\"LinkAlarmStrategy\":\"%u\","
+                                 "\"Sensitive\":\"%u\",\"IoNum\":\"%u\",\"OperateCmd\":\"%u\",\"OperateSeqNum\":\"%u\",\"DelayTime\":\"%u\"}";
+            fprintf(stdout, RetFormat, Cmd, RetCode,atoi(AlarmId),atoi(Index),PkgAlarmEventConfig->s_EnableFlag,PkgAlarmEventConfig->s_CheckTime,
+                                 PkgAlarmEventConfig->s_LinkAlarmStrategy,PkgAlarmEventConfig->s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive,
+                                 PkgAlarmEventConfig->s_LinkAlarmExtInfo.s_IoNum ,PkgAlarmEventConfig->s_LinkAlarmExtInfo.s_OperateCmd,
+                                 PkgAlarmEventConfig->s_LinkAlarmExtInfo.s_OperateSeqNum, PkgAlarmEventConfig->s_LinkAlarmExtInfo.s_DelayTime);
+	    break;
+	case SYS_DETECTOR_ID_MOTION_DETECT:
+	
+	    break;
+        case SYS_DETECTOR_ID_VCOVER_DETECT:
+        
+            break;
+        case SYS_DETECTOR_ID_VLOSS_DETECT:
+        
+            break;
+        case SYS_DETECTOR_ID_ABNORMAL_DETECT:
+        
+            break;
+	case SYS_PROCESSOR_ID_ALARM_OUTPUT:
+	    PkgAlarmOutConfig = (SysPkgAlarmOutConfig *)Buffer;
+	    RetFormat = "%s={\"RetCode\":\"%d\",\"AlarmId\":\"%u\",\"Index\":\"%d\",\"EnableFlag\":\"%u\",\"OutputNumber\":\"%u\",\"Name\":\"%s\""
+                                ",\"NormalStatus\":\"%u\",\"DelayTime\":\"%u\"}";
+            fprintf(stdout, RetFormat, Cmd, RetCode,atoi(AlarmId),atoi(Index),PkgAlarmOutConfig->s_EnableFlag,PkgAlarmOutConfig->s_OutputNumber,
+                              PkgAlarmOutConfig->s_Name,PkgAlarmOutConfig->s_NormalStatus,PkgAlarmOutConfig->s_DelayTime);
+	    break;
+        default:
+            break;
+        }
+
+         if (NULL != Buffer)
+         {
+            free(Buffer);
+         }
+        
+	CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+        return GMI_SUCCESS;
+    } while(0);
+    
+    CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+}
+
+/*************************************************
+*func:set AlarmInConfig/AlarmOutConfig/PIR Config
+*AlarmId:sys_env_types.h  SysPkgAlarmId  
+*------------------------------------------------------*/
+GMI_RESULT CgiSysSetAlarmInConfig(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *AlarmId = WEB_GET_VAR("AlarmId");
+    const char_t *Index = WEB_GET_VAR("Index");
+    const char_t *EnableFlag = WEB_GET_VAR("EnableFlag");
+    const char_t *InputNumber = WEB_GET_VAR("InputNumber");
+    const char_t *Name = WEB_GET_VAR("Name");
+    const char_t *CheckTime = WEB_GET_VAR("CheckTime");
+    const char_t *NormalStatus = WEB_GET_VAR("NormalStatus");
+    const char_t *LinkAlarmStrategy = WEB_GET_VAR("LinkAlarmStrategy");
+    const char_t *IoNum = WEB_GET_VAR("IoNum");
+    const char_t *OperateCmd = WEB_GET_VAR("OperateCmd");
+    const char_t *OperateSeqNum = WEB_GET_VAR("OperateSeqNum");
+    const char_t *PtzDelayTime = WEB_GET_VAR("PtzDelayTime");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue || NULL==AlarmId ||SYS_DETECTOR_ID_ALARM_INPUT != atoi(AlarmId))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+	
+        CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+
+        char_t *Buffer = NULL;
+	uint32_t ParameterLength=0;    
+	SysPkgAlarmInConfig *PkgAlarmInConfig = NULL;
+        ParameterLength = sizeof(SysPkgAlarmInConfig);
+        Buffer = (char_t*)malloc(sizeof(SysPkgAlarmInConfig));
+        if(NULL == Buffer)
+        {
+            RetCode = RETCODE_ERROR;
+            Buffer = NULL;
+            break;
+        }
+            
+	Result = SysGetAlarmConfig(atoi(SessionId), atoi(AuthValue), atoi(AlarmId), atoi(Index), Buffer, ParameterLength);
+        if (FAILED(Result))
+        {
+             if(NULL != Buffer)
+             {
+                 free(Buffer);
+             }
+             RetCode = RETCODE_ERROR;
+             break;
+        }
+        PkgAlarmInConfig = (SysPkgAlarmInConfig *)Buffer;
+
+        if(EnableFlag != NULL)
+            PkgAlarmInConfig->s_EnableFlag = atoi(EnableFlag);
+        if(InputNumber != NULL)
+            PkgAlarmInConfig->s_InputNumber = atoi(InputNumber);
+        if(Name != NULL)
+            strcpy(PkgAlarmInConfig->s_Name, Name);
+        if(CheckTime != NULL)
+            PkgAlarmInConfig->s_CheckTime = atoi(CheckTime);
+        if(NormalStatus != NULL)
+	    PkgAlarmInConfig->s_NormalStatus = atoi(NormalStatus);
+        if(LinkAlarmStrategy != NULL)
+	    PkgAlarmInConfig->s_LinkAlarmStrategy = atoi(LinkAlarmStrategy);
+        if(IoNum != NULL)
+	    PkgAlarmInConfig->s_LinkAlarmExtInfo.s_IoNum = atoi(IoNum);
+        if(OperateCmd != NULL)
+	    PkgAlarmInConfig->s_LinkAlarmExtInfo.s_OperateCmd = atoi(OperateCmd);
+        if(OperateSeqNum != NULL)
+	    PkgAlarmInConfig->s_LinkAlarmExtInfo.s_OperateSeqNum = atoi(OperateSeqNum);
+        if(PtzDelayTime != NULL)
+             PkgAlarmInConfig->s_LinkAlarmExtInfo.s_PtzDelayTime = atoi(PtzDelayTime);
+	
+        CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+
+	Result = SysSetAlarmConfig(atoi(SessionId), atoi(AuthValue), atoi(AlarmId), atoi(Index),Buffer, ParameterLength);
+        if (FAILED(Result))
+        {
+             if(NULL != Buffer)
+             {
+                 free(Buffer);
+             }
+             RetCode = RETCODE_ERROR;
+             break;
+        }
+
+        if (NULL != Buffer)
+        {
+           free(Buffer);
+        }
+	
+        CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+
+	RetFormat = "%s={\"RetCode\":\"%d\"}";
+	
+	fprintf(stdout, RetFormat, Cmd, RetCode);
+	return GMI_SUCCESS;
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+}
+
+GMI_RESULT CgiSysSetAlarmOutConfig(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *AlarmId = WEB_GET_VAR("AlarmId");
+    const char_t *Index = WEB_GET_VAR("Index");
+    const char_t *EnableFlag = WEB_GET_VAR("EnableFlag");
+    const char_t *OutputNumber = WEB_GET_VAR("OutputNumber");
+    const char_t *Name = WEB_GET_VAR("Name");
+    const char_t *DelayTime = WEB_GET_VAR("DelayTime");
+    const char_t *NormalStatus = WEB_GET_VAR("NormalStatus");
+
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue || NULL==AlarmId ||SYS_PROCESSOR_ID_ALARM_OUTPUT != atoi(AlarmId))
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+	
+        CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+
+        char_t *Buffer = NULL;
+	uint32_t ParameterLength=0;    
+	SysPkgAlarmOutConfig *PkgAlarmOutConfig = NULL;
+        ParameterLength = sizeof(SysPkgAlarmOutConfig);
+        Buffer = (char_t*)malloc(sizeof(SysPkgAlarmOutConfig));
+        if(NULL == Buffer)
+        {
+            RetCode = RETCODE_ERROR;
+            Buffer = NULL;
+            break;
+        }
+            
+	CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+	Result = SysGetAlarmConfig(atoi(SessionId), atoi(AuthValue), atoi(AlarmId), atoi(Index), Buffer, ParameterLength);
+        if (FAILED(Result))
+        {
+             if(NULL != Buffer)
+             {
+                 free(Buffer);
+             }
+             RetCode = RETCODE_ERROR;
+             break;
+        }
+        PkgAlarmOutConfig = (SysPkgAlarmOutConfig *)Buffer;
+
+        if(EnableFlag != NULL)
+            PkgAlarmOutConfig->s_EnableFlag = atoi(EnableFlag);
+        if(OutputNumber != NULL)
+            PkgAlarmOutConfig->s_OutputNumber = atoi(OutputNumber);
+        if(Name != NULL)
+            strcpy(PkgAlarmOutConfig->s_Name, Name);
+        if(DelayTime != NULL)
+            PkgAlarmOutConfig->s_DelayTime = atoi(DelayTime);
+        if(NormalStatus != NULL)
+	    PkgAlarmOutConfig->s_NormalStatus = atoi(NormalStatus);
+	
+	Result = SysSetAlarmConfig(atoi(SessionId), atoi(AuthValue), atoi(AlarmId),  atoi(Index), Buffer, ParameterLength);
+        if (FAILED(Result))
+        {
+             if(NULL != Buffer)
+             {
+                 free(Buffer);
+             }
+             RetCode = RETCODE_ERROR;
+             break;
+        }
+
+        if (NULL != Buffer)
+        {
+           free(Buffer);
+        }
+	CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+
+	RetFormat = "%s={\"RetCode\":\"%d\"}";
+	
+	fprintf(stdout, RetFormat, Cmd, RetCode);
+	return GMI_SUCCESS;
+    } while(0);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+
+}
+
+GMI_RESULT CgiSysSetAlarmPIRConfig(const char_t *FncCmd)
+{  
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *AlarmId = WEB_GET_VAR("AlarmId");
+    const char_t *Index = WEB_GET_VAR("Index");
+    const char_t *EnableFlag = WEB_GET_VAR("EnableFlag");
+    const char_t *CheckTime = WEB_GET_VAR("CheckTime");
+    const char_t *LinkAlarmStrategy = WEB_GET_VAR("LinkAlarmStrategy");
+    const char_t *Sensitive = WEB_GET_VAR("Sensitive");    
+    const char_t *IoNum = WEB_GET_VAR("IoNum");
+    const char_t *OperateCmd = WEB_GET_VAR("OperateCmd");
+    const char_t *OperateSeqNum = WEB_GET_VAR("OperateSeqNum");
+    const char_t *DelayTime = WEB_GET_VAR("DelayTime");
+
+    const char_t *RetFormat;
+    char_t	Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+    
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+    
+    do
+    {
+    	if (NULL == SessionId || NULL == AuthValue || NULL==AlarmId ||SYS_DETECTOR_ID_PIR != atoi(AlarmId))
+    	{
+    		RetCode = RETCODE_ERROR;
+    		break;
+    	}
+    
+	CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+    	char_t *Buffer = NULL;
+        uint32_t ParameterLength=0;    
+        SysPkgAlarmEventConfig *PkgAlarmEventConfig = NULL;
+    	ParameterLength = sizeof(SysPkgAlarmEventConfig);
+    	Buffer = (char_t*)malloc(sizeof(SysPkgAlarmEventConfig));
+    	if(NULL == Buffer)
+    	{
+    		RetCode = RETCODE_ERROR;
+    		Buffer = NULL;
+    		break;
+    	}
+    		
+	CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+        Result = SysGetAlarmConfig(atoi(SessionId), atoi(AuthValue), atoi(AlarmId), atoi(Index), Buffer, ParameterLength);
+    	if (FAILED(Result))
+    	{
+    		 if(NULL != Buffer)
+    		 {
+    			 free(Buffer);
+    		 }
+    		 RetCode = RETCODE_ERROR;
+    		 break;
+    	}
+
+    	PkgAlarmEventConfig = (SysPkgAlarmEventConfig *)Buffer;
+    	if( NULL != EnableFlag )
+	    PkgAlarmEventConfig->s_EnableFlag = atoi(EnableFlag);
+        if( NULL != CheckTime )
+            PkgAlarmEventConfig->s_CheckTime = atoi(CheckTime);
+        if( NULL != LinkAlarmStrategy )
+            PkgAlarmEventConfig->s_LinkAlarmStrategy = atoi(LinkAlarmStrategy);
+        if( NULL != Sensitive )
+            PkgAlarmEventConfig->s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive = atoi(Sensitive);
+        if( NULL != IoNum )
+            PkgAlarmEventConfig->s_LinkAlarmExtInfo.s_IoNum = atoi(IoNum);
+        if( NULL != OperateCmd )
+            PkgAlarmEventConfig->s_LinkAlarmExtInfo.s_OperateCmd = atoi(OperateCmd);
+        if( NULL != OperateSeqNum )
+            PkgAlarmEventConfig->s_LinkAlarmExtInfo.s_OperateSeqNum = atoi(OperateSeqNum);
+        if( NULL != DelayTime )
+            PkgAlarmEventConfig->s_LinkAlarmExtInfo.s_DelayTime = atoi(DelayTime);
+
+	CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+        Result = SysSetAlarmConfig(atoi(SessionId), atoi(AuthValue), atoi(AlarmId), atoi(Index), PkgAlarmEventConfig, ParameterLength);
+    	if (FAILED(Result))
+    	{
+            if(NULL != Buffer)
+            {
+                free(Buffer);
+            }
+            RetCode = RETCODE_ERROR;
+            break;
+    	}
+    
+	CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+    	if (NULL != Buffer)
+    	{
+    	   free(Buffer);
+    	}
+    
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_SUCCESS;
+    } while(0);
+    
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+}
+
+/*************************************************
+*func:get ScheduleTime
+*SysGetAlarmScheduleTime:provide ScheduleId and Index
+*ScheduleId sys_env_types.h SysPkgScheduleTimeId
+*------------------------------------------------------*/
+GMI_RESULT CgiSysGetAlmScheduleTime(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *ScheduleId = WEB_GET_VAR("ScheduleId");
+    const char_t *Index = WEB_GET_VAR("Index");
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+    
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue ||NULL == ScheduleId  || NULL == Index)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+	CGI_ERROR("Call CgiSysGetAlmScheduleTime OK LINE = [%d]\n",__LINE__);
+        SysPkgAlarmScheduleTime *PkgAlarmScheduleTime = NULL;
+        PkgAlarmScheduleTime = (SysPkgAlarmScheduleTime *)malloc(sizeof(SysPkgAlarmScheduleTime));
+        if(NULL == PkgAlarmScheduleTime)
+        {
+	    CGI_ERROR("Call CgiSysGetAlmScheduleTime ERROR LINE = [%d]\n",__LINE__);
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+        memset(PkgAlarmScheduleTime, 0 ,sizeof(SysPkgAlarmScheduleTime));
+        Result = SysGetAlmScheduleTime(atoi(SessionId), atoi(AuthValue), atoi(ScheduleId), atoi(Index), PkgAlarmScheduleTime);
+        if(FAILED(Result))
+        {
+	    CGI_ERROR("Call SysGetAlmScheduleTime ERROR LINE = [%d]\n",__LINE__);
+            if (NULL != PkgAlarmScheduleTime)
+            {
+                 free(PkgAlarmScheduleTime);
+            }
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        char_t *Buffer = NULL;
+        int32_t Length=0;
+        Buffer = (char_t *)malloc(sizeof(SysPkgAlarmScheduleTime));
+        if(Buffer == NULL)
+        {
+	     CGI_ERROR("Call SysGetAlmScheduleTime malloc Error LINE = [%d]\n",__LINE__);
+             if (NULL != PkgAlarmScheduleTime)
+             {
+                 free(PkgAlarmScheduleTime);
+             }          
+             RetCode = RETCODE_ERROR;
+             break;
+        }
+                
+         memset(Buffer, 0, sizeof(SysPkgAlarmScheduleTime));
+         int32_t i=0;
+         for (i=0; i <7; i++)
+         {
+         Length += sprintf(Buffer+Length,",\"StartTime%d0\":\"%u\",\"EndTime%d0\":\"%u\""
+                                                              ",\"StartTime%d1\":\"%u\",\"EndTime%d1\":\"%u\""
+                                                              ",\"StartTime%d2\":\"%u\",\"EndTime%d2\":\"%u\""
+                                                              ",\"StartTime%d3\":\"%u\",\"EndTime%d3\":\"%u\""
+                   ,i , PkgAlarmScheduleTime->s_ScheduleTime[i][0].s_StartTime, i ,PkgAlarmScheduleTime->s_ScheduleTime[i][0].s_EndTime
+                   ,i , PkgAlarmScheduleTime->s_ScheduleTime[i][1].s_StartTime, i ,PkgAlarmScheduleTime->s_ScheduleTime[i][1].s_EndTime
+                   ,i , PkgAlarmScheduleTime->s_ScheduleTime[i][2].s_StartTime, i ,PkgAlarmScheduleTime->s_ScheduleTime[i][2].s_EndTime
+                   ,i , PkgAlarmScheduleTime->s_ScheduleTime[i][3].s_StartTime, i ,PkgAlarmScheduleTime->s_ScheduleTime[i][3].s_EndTime);
+         }
+
+        RetFormat = "%s={\"RetCode\":\"%d\",\"ScheduleId\":\"%d\",\"Index\":\"%d\"%s}";
+        
+        fprintf(stdout, RetFormat, Cmd, RetCode, PkgAlarmScheduleTime->s_ScheduleId , PkgAlarmScheduleTime->s_Index ,Buffer);
+
+        if(NULL != Buffer)
+        {
+             free(Buffer);
+        }
+ 
+        if(NULL != PkgAlarmScheduleTime)
+        {
+	    free(PkgAlarmScheduleTime);
+        }
+	CGI_ERROR("Call SysGetAlmScheduleTime  OK LINE = [%d]\n",__LINE__);
+        return GMI_SUCCESS;
+    } while(0);
+    
+    CGI_ERROR("Call SysGetAlmScheduleTime  FAIL LINE = [%d]\n",__LINE__);
+
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+}
+
+/*************************************************
+*func:set ScheduleTime
+*------------------------------------------------------*/
+GMI_RESULT CgiSysSetAlmScheduleTime(const char_t *FncCmd)
+{
+    char_t *SessionId = WEB_GET_VAR("SessionId");
+    const char_t *AuthValue = WEB_GET_VAR("AuthValue");
+    const char_t *ScheduleId = WEB_GET_VAR("ScheduleId");
+    const char_t *Index = WEB_GET_VAR("Index");
+    const char_t *StartTime00 = WEB_GET_VAR("StartTime00"); 
+    const char_t *EndTime00 = WEB_GET_VAR("EndTime00");
+    const char_t *StartTime01 = WEB_GET_VAR("StartTime01"); 
+    const char_t *EndTime01 = WEB_GET_VAR("EndTime01");
+    const char_t *StartTime02 = WEB_GET_VAR("StartTime02"); 
+    const char_t *EndTime02 = WEB_GET_VAR("EndTime02");
+    const char_t *StartTime03 = WEB_GET_VAR("StartTime03"); 
+    const char_t *EndTime03 = WEB_GET_VAR("EndTime03");
+
+    const char_t *StartTime10 = WEB_GET_VAR("StartTime10"); 
+    const char_t *EndTime10 = WEB_GET_VAR("EndTime10");
+    const char_t *StartTime11 = WEB_GET_VAR("StartTime11"); 
+    const char_t *EndTime11 = WEB_GET_VAR("EndTime11");
+    const char_t *StartTime12 = WEB_GET_VAR("StartTime12"); 
+    const char_t *EndTime12 = WEB_GET_VAR("EndTime12");
+    const char_t *StartTime13 = WEB_GET_VAR("StartTime13"); 
+    const char_t *EndTime13 = WEB_GET_VAR("EndTime13");
+
+    const char_t *StartTime20 = WEB_GET_VAR("StartTime20"); 
+    const char_t *EndTime20 = WEB_GET_VAR("EndTime20");
+    const char_t *StartTime21 = WEB_GET_VAR("StartTime21"); 
+    const char_t *EndTime21 = WEB_GET_VAR("EndTime21");
+    const char_t *StartTime22 = WEB_GET_VAR("StartTime22"); 
+    const char_t *EndTime22 = WEB_GET_VAR("EndTime22");
+    const char_t *StartTime23 = WEB_GET_VAR("StartTime23"); 
+    const char_t *EndTime23 = WEB_GET_VAR("EndTime23");
+
+    const char_t *StartTime30 = WEB_GET_VAR("StartTime30"); 
+    const char_t *EndTime30 = WEB_GET_VAR("EndTime30");
+    const char_t *StartTime31 = WEB_GET_VAR("StartTime31"); 
+    const char_t *EndTime31 = WEB_GET_VAR("EndTime31");
+    const char_t *StartTime32 = WEB_GET_VAR("StartTime32"); 
+    const char_t *EndTime32 = WEB_GET_VAR("EndTime32");
+    const char_t *StartTime33 = WEB_GET_VAR("StartTime33"); 
+    const char_t *EndTime33 = WEB_GET_VAR("EndTime33");
+
+    const char_t *StartTime40 = WEB_GET_VAR("StartTime40"); 
+    const char_t *EndTime40 = WEB_GET_VAR("EndTime40");
+    const char_t *StartTime41 = WEB_GET_VAR("StartTime41"); 
+    const char_t *EndTime41 = WEB_GET_VAR("EndTime41");
+    const char_t *StartTime42 = WEB_GET_VAR("StartTime42"); 
+    const char_t *EndTime42 = WEB_GET_VAR("EndTime42");
+    const char_t *StartTime43 = WEB_GET_VAR("StartTime43"); 
+    const char_t *EndTime43 = WEB_GET_VAR("EndTime43");
+
+    const char_t *StartTime50 = WEB_GET_VAR("StartTime50"); 
+    const char_t *EndTime50 = WEB_GET_VAR("EndTime50");
+    const char_t *StartTime51 = WEB_GET_VAR("StartTime51"); 
+    const char_t *EndTime51 = WEB_GET_VAR("EndTime51");
+    const char_t *StartTime52 = WEB_GET_VAR("StartTime52"); 
+    const char_t *EndTime52 = WEB_GET_VAR("EndTime52");
+    const char_t *StartTime53 = WEB_GET_VAR("StartTime53"); 
+    const char_t *EndTime53 = WEB_GET_VAR("EndTime53");
+
+    const char_t *StartTime60 = WEB_GET_VAR("StartTime60"); 
+    const char_t *EndTime60 = WEB_GET_VAR("EndTime60");
+    const char_t *StartTime61 = WEB_GET_VAR("StartTime61"); 
+    const char_t *EndTime61 = WEB_GET_VAR("EndTime61");
+    const char_t *StartTime62 = WEB_GET_VAR("StartTime62"); 
+    const char_t *EndTime62 = WEB_GET_VAR("EndTime62");
+    const char_t *StartTime63 = WEB_GET_VAR("StartTime63"); 
+    const char_t *EndTime63 = WEB_GET_VAR("EndTime63");
+
+    const char_t *RetFormat;
+    char_t  Cmd[CMD_BUFFER_LENTH];
+    int32_t RetCode = RETCODE_OK;
+    GMI_RESULT Result = GMI_FAIL;
+	CGI_ERROR("Call SysGetAlmScheduleTime  OK LINE = [%d]\n",__LINE__);
+
+    sprintf(Cmd, CMD_STRING, FncCmd, CONTENT_TYPE_JSON);
+
+    do
+    {
+        if (NULL == SessionId || NULL == AuthValue)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+	CGI_ERROR("Call SysGetAlmScheduleTime  OK LINE = [%d]\n",__LINE__);
+
+	SysPkgAlarmScheduleTime *SysAlarmSchTime;
+        SysAlarmSchTime = (SysPkgAlarmScheduleTime *)malloc(sizeof(SysPkgAlarmScheduleTime));
+        if(NULL == SysAlarmSchTime)
+        {
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        Result = SysGetAlmScheduleTime(atoi(SessionId), atoi(AuthValue), atoi(ScheduleId), atoi(Index), SysAlarmSchTime);
+        if(FAILED(Result))
+        {
+	    CGI_ERROR("Call SysGetAlmScheduleTime ERROR LINE = [%d]\n",__LINE__);
+            if (NULL != SysAlarmSchTime)
+            {
+                 free(SysAlarmSchTime);
+            }
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+        SysAlarmSchTime->s_ScheduleId = atoi(ScheduleId);
+        SysAlarmSchTime->s_Index = atoi(Index);
+        if (NULL != StartTime00)
+            SysAlarmSchTime->s_ScheduleTime[0][0].s_StartTime = atoi(StartTime00);
+        if (NULL != EndTime00)
+    	    SysAlarmSchTime->s_ScheduleTime[0][0].s_EndTime = atoi(EndTime00);
+        if (NULL != StartTime01)
+            SysAlarmSchTime->s_ScheduleTime[0][1].s_StartTime = atoi(StartTime01);
+        if (NULL != EndTime01)
+    	    SysAlarmSchTime->s_ScheduleTime[0][1].s_EndTime = atoi(EndTime01);
+        if (NULL != StartTime02)
+            SysAlarmSchTime->s_ScheduleTime[0][2].s_StartTime = atoi(StartTime02);
+        if (NULL != EndTime02)
+    	    SysAlarmSchTime->s_ScheduleTime[0][2].s_EndTime = atoi(EndTime02);
+        if (NULL != StartTime03)
+            SysAlarmSchTime->s_ScheduleTime[0][3].s_StartTime = atoi(StartTime03);
+        if (NULL != EndTime03)
+    	    SysAlarmSchTime->s_ScheduleTime[0][3].s_EndTime = atoi(EndTime03);
+
+        if (NULL != StartTime10)
+            SysAlarmSchTime->s_ScheduleTime[1][0].s_StartTime = atoi(StartTime10);
+        if (NULL != EndTime10)
+            SysAlarmSchTime->s_ScheduleTime[1][0].s_EndTime = atoi(EndTime10);
+        if (NULL != StartTime11)
+            SysAlarmSchTime->s_ScheduleTime[1][1].s_StartTime = atoi(StartTime11);
+        if (NULL != EndTime11)
+            SysAlarmSchTime->s_ScheduleTime[1][1].s_EndTime = atoi(EndTime11);
+        if (NULL != StartTime12)
+            SysAlarmSchTime->s_ScheduleTime[1][2].s_StartTime = atoi(StartTime12);
+        if (NULL != EndTime12)
+            SysAlarmSchTime->s_ScheduleTime[1][2].s_EndTime = atoi(EndTime12);
+        if (NULL != StartTime13)
+            SysAlarmSchTime->s_ScheduleTime[1][3].s_StartTime = atoi(StartTime13);
+        if (NULL != EndTime13)
+            SysAlarmSchTime->s_ScheduleTime[1][3].s_EndTime = atoi(EndTime13);
+            
+	if (NULL != StartTime20)
+            SysAlarmSchTime->s_ScheduleTime[2][0].s_StartTime = atoi(StartTime20);
+	if (NULL != EndTime20)
+            SysAlarmSchTime->s_ScheduleTime[2][0].s_EndTime = atoi(EndTime20);
+	if (NULL != StartTime21)
+            SysAlarmSchTime->s_ScheduleTime[2][1].s_StartTime = atoi(StartTime21);
+	if (NULL != EndTime21)
+            SysAlarmSchTime->s_ScheduleTime[2][1].s_EndTime = atoi(EndTime21);
+	if (NULL != StartTime22)
+            SysAlarmSchTime->s_ScheduleTime[2][2].s_StartTime = atoi(StartTime22);
+	if (NULL != EndTime22)
+            SysAlarmSchTime->s_ScheduleTime[2][2].s_EndTime = atoi(EndTime22);
+	if (NULL != StartTime23)
+            SysAlarmSchTime->s_ScheduleTime[2][3].s_StartTime = atoi(StartTime23);
+	if (NULL != EndTime23)
+            SysAlarmSchTime->s_ScheduleTime[2][3].s_EndTime = atoi(EndTime23);
+            
+	if (NULL != StartTime30)
+            SysAlarmSchTime->s_ScheduleTime[3][0].s_StartTime = atoi(StartTime30);
+	if (NULL != EndTime30)
+            SysAlarmSchTime->s_ScheduleTime[3][0].s_EndTime = atoi(EndTime30);
+	if (NULL != StartTime31)
+            SysAlarmSchTime->s_ScheduleTime[3][1].s_StartTime = atoi(StartTime31);
+	if (NULL != EndTime31)
+            SysAlarmSchTime->s_ScheduleTime[3][1].s_EndTime = atoi(EndTime31);
+        if (NULL != StartTime32)
+            SysAlarmSchTime->s_ScheduleTime[3][2].s_StartTime = atoi(StartTime32);
+	if (NULL != EndTime32)
+            SysAlarmSchTime->s_ScheduleTime[3][2].s_EndTime = atoi(EndTime32);
+	if (NULL != StartTime33)
+            SysAlarmSchTime->s_ScheduleTime[3][3].s_StartTime = atoi(StartTime33);
+	if (NULL != EndTime33)
+            SysAlarmSchTime->s_ScheduleTime[3][3].s_EndTime = atoi(EndTime33);
+
+	if (NULL != StartTime40)
+            SysAlarmSchTime->s_ScheduleTime[4][0].s_StartTime = atoi(StartTime40);
+	if (NULL != EndTime40)
+            SysAlarmSchTime->s_ScheduleTime[4][0].s_EndTime = atoi(EndTime40);
+	if (NULL != StartTime41)
+            SysAlarmSchTime->s_ScheduleTime[4][1].s_StartTime = atoi(StartTime41);
+	if (NULL != EndTime41)
+            SysAlarmSchTime->s_ScheduleTime[4][1].s_EndTime = atoi(EndTime41);
+	if (NULL != StartTime42)
+            SysAlarmSchTime->s_ScheduleTime[4][2].s_StartTime = atoi(StartTime42);
+	if (NULL != EndTime42)
+            SysAlarmSchTime->s_ScheduleTime[4][2].s_EndTime = atoi(EndTime42);
+	if (NULL != StartTime43)
+            SysAlarmSchTime->s_ScheduleTime[4][3].s_StartTime = atoi(StartTime43);
+	if (NULL != EndTime43)
+            SysAlarmSchTime->s_ScheduleTime[4][3].s_EndTime = atoi(EndTime43);
+        
+	if (NULL != StartTime50)
+            SysAlarmSchTime->s_ScheduleTime[5][0].s_StartTime = atoi(StartTime50);
+	if (NULL != EndTime50)
+            SysAlarmSchTime->s_ScheduleTime[5][0].s_EndTime = atoi(EndTime50);
+	if (NULL != StartTime51)
+            SysAlarmSchTime->s_ScheduleTime[5][1].s_StartTime = atoi(StartTime51);
+	if (NULL != EndTime51)
+            SysAlarmSchTime->s_ScheduleTime[5][1].s_EndTime = atoi(EndTime51);
+	if (NULL != StartTime52)
+            SysAlarmSchTime->s_ScheduleTime[5][2].s_StartTime = atoi(StartTime52);
+	if (NULL != EndTime52)
+            SysAlarmSchTime->s_ScheduleTime[5][2].s_EndTime = atoi(EndTime52);
+	if (NULL != StartTime53)
+            SysAlarmSchTime->s_ScheduleTime[5][3].s_StartTime = atoi(StartTime53);
+	if (NULL != EndTime53)
+            SysAlarmSchTime->s_ScheduleTime[5][3].s_EndTime = atoi(EndTime53);
+           
+        if (NULL != StartTime60)
+            SysAlarmSchTime->s_ScheduleTime[6][0].s_StartTime = atoi(StartTime60);
+	if (NULL != EndTime60)
+            SysAlarmSchTime->s_ScheduleTime[6][0].s_EndTime = atoi(EndTime60);
+	if (NULL != StartTime61)
+            SysAlarmSchTime->s_ScheduleTime[6][1].s_StartTime = atoi(StartTime61);
+	if (NULL != EndTime61)
+            SysAlarmSchTime->s_ScheduleTime[6][1].s_EndTime = atoi(EndTime61);
+	if (NULL != StartTime62)
+            SysAlarmSchTime->s_ScheduleTime[6][2].s_StartTime = atoi(StartTime62);
+	if (NULL != EndTime62)
+            SysAlarmSchTime->s_ScheduleTime[6][2].s_EndTime = atoi(EndTime62);
+	if (NULL != StartTime63)
+            SysAlarmSchTime->s_ScheduleTime[6][3].s_StartTime = atoi(StartTime63);
+	if (NULL != EndTime63)
+            SysAlarmSchTime->s_ScheduleTime[6][3].s_EndTime = atoi(EndTime63);
+	CGI_ERROR("Call SysGetAlmScheduleTime  OK LINE = [%d]\n",__LINE__);
+
+        Result = SysSetAlmScheduleTime(atoi(SessionId), atoi(AuthValue), atoi(ScheduleId), atoi(Index),SysAlarmSchTime);
+        if (FAILED(Result))
+        {
+            if (NULL != SysAlarmSchTime)
+            {
+                 free(SysAlarmSchTime);
+            }
+            RetCode = RETCODE_ERROR;
+            break;
+        }
+
+	RetFormat = "%s={\"RetCode\":\"%d\"}";
+	fprintf(stdout, RetFormat, Cmd, RetCode);
+
+	if (NULL != SysAlarmSchTime)
+	{
+		free(SysAlarmSchTime);
+	}
+	CGI_ERROR("Call SysGetAlmScheduleTime  OK LINE = [%d]\n",__LINE__);
+
+	return GMI_SUCCESS;
+
+    } while(0);
+
+    CGI_ERROR("Call SysGetAlmScheduleTime  ERROR LINE = [%d]\n",__LINE__);
+    RetFormat = "%s={\"RetCode\":\"%d\"}";
+    fprintf(stdout, RetFormat, Cmd, RetCode);
+    return GMI_FAIL;
+}
+

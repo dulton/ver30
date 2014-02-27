@@ -119,6 +119,32 @@ GMI_RESULT CgiSysSearchPtzPresetInfo(const char_t *FncCmd);
 
 GMI_RESULT CgiSysGetDeviceStartedTime(const char_t *FncCmd);
 
+/*************************************************
+*func:get AlarmInConfig/AlarmOutConfig/PIR Config
+*AlarmId:sys_env_types.h  SysPkgAlarmId  
+*-----------------------------------------*/
+GMI_RESULT CgiSysGetAlarmConfig(const char_t *FncCmd);
+
+/*************************************************
+*func:set AlarmInConfig/AlarmOutConfig/PIR Config
+*AlarmId:sys_env_types.h  SysPkgAlarmId  
+*------------------------------------------------------*/
+GMI_RESULT CgiSysSetAlarmInConfig(const char_t *FncCmd);
+GMI_RESULT CgiSysSetAlarmOutConfig(const char_t *FncCmd);
+GMI_RESULT CgiSysSetAlarmPIRConfig(const char_t *FncCmd);
+
+/*************************************************
+*func:get ScheduleTime
+*SysGetAlarmScheduleTime:provide ScheduleId and Index
+*ScheduleId sys_env_types.h SysPkgScheduleTimeId
+*------------------------------------------------------*/
+GMI_RESULT CgiSysGetAlmScheduleTime(const char_t *FncCmd);
+
+/*************************************************
+*func:set ScheduleTime
+*------------------------------------------------------*/
+GMI_RESULT CgiSysSetAlmScheduleTime(const char_t *FncCmd);
+
 //manufacture config tool api
 GMI_RESULT CgiConfigToolGetDeviceInfo(const char_t *FncCmd);
 GMI_RESULT CgiConfigToolSetDeviceInfo(const char_t *FncCmd);
@@ -135,5 +161,8 @@ GMI_RESULT CgiConfigToolIrCutClose(const char_t *FncCmd);
 GMI_RESULT CgiConfigToolGetSystemInfo(const char_t *FncCmd);
 GMI_RESULT CgiSysGetLogInfo(const char_t *FncCmd);
 GMI_RESULT CgiSysStop3A(const char_t *FncCmd);
+
+//Cgi cmd test
+GMI_RESULT CgiSysCmdTest(const char_t *FncCmd);
 
 #endif

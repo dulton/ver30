@@ -89,9 +89,16 @@ static CgiFncHandler WebFncTable[] =
     {"ConfigToolSetMac",CgiConfigToolSetMac},
     {"ConfigToolIrCutOpen",CgiConfigToolIrCutOpen},
     {"ConfigToolIrCutClose",CgiConfigToolIrCutClose},
-	{"ConfigToolGetSystemInfo",CgiConfigToolGetSystemInfo},
-	{"SysGetLogInfo",CgiSysGetLogInfo},
+    {"ConfigToolGetSystemInfo",CgiConfigToolGetSystemInfo},
+    {"SysGetLogInfo",CgiSysGetLogInfo},
     {"SysStop3A",CgiSysStop3A},
+    {"SysCmdTest",CgiSysCmdTest},
+    {"SysGetAlarmConfig",CgiSysGetAlarmConfig},
+    {"SysSetAlarmInConfig",CgiSysSetAlarmInConfig},
+    {"SysSetAlarmOutConfig",CgiSysSetAlarmOutConfig},
+    {"SysSetAlarmPIRConfig",CgiSysSetAlarmPIRConfig},
+    {"SysGetAlmScheduleTime",CgiSysGetAlmScheduleTime},
+    {"SysSetAlmScheduleTime",CgiSysSetAlmScheduleTime},
     {}
 };
 
