@@ -81,13 +81,13 @@ void Alarm::EventProcess(void_t *UserData, uint32_t EventId, enum EventType Type
     	if (e_EventType_Start == Type)
     	{
     		char_t UserData[64] = {0};
-    		sprintf(UserData, "GPIO Alarm On:Input Port%d Description %s\n", AlmUploadInf.s_ExtraInfo.s_IoNum, AlmUploadInf.s_Description);
+    		sprintf(UserData, "GPIO Alarm On:Input Port%d Description %s", AlmUploadInf.s_ExtraInfo.s_IoNum, AlmUploadInf.s_Description);
     		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_ALRAM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
     	}
     	else if (e_EventType_End == Type)
     	{
     		char_t UserData[64] = {0};
-    		sprintf(UserData, "GPIO Alarm Off:Input Port%d Description %s\n", AlmUploadInf.s_ExtraInfo.s_IoNum, AlmUploadInf.s_Description);
+    		sprintf(UserData, "GPIO Alarm Off:Input Port%d Description %s", AlmUploadInf.s_ExtraInfo.s_IoNum, AlmUploadInf.s_Description);
     		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_ALRAM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
     	}    	
     	break;
@@ -95,13 +95,13 @@ void Alarm::EventProcess(void_t *UserData, uint32_t EventId, enum EventType Type
     	if (e_EventType_Start == Type)
     	{
     		char_t UserData[64] = {0};
-    		sprintf(UserData, "PIR Alarm On:Description %s\n", AlmUploadInf.s_Description);
+    		sprintf(UserData, "PIR Alarm On:Description %s", AlmUploadInf.s_Description);
     		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_PIR_ALARM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
     	}
     	else if (e_EventType_End == Type)
     	{
     		char_t UserData[64] = {0};
-    		sprintf(UserData, "PIR Alarm Off:Description %s\n", AlmUploadInf.s_Description);
+    		sprintf(UserData, "PIR Alarm Off:Description %s", AlmUploadInf.s_Description);
     		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_PIR_ALARM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
     	}    	
     	break;
