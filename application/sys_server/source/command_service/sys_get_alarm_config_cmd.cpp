@@ -99,8 +99,8 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
 	    	SysAlarmInConfig.s_NormalStatus = HOST_TO_NETWORK_UINT(SysAlarmInConfig.s_NormalStatus);
 	    	SysAlarmInConfig.s_LinkAlarmStrategy = HOST_TO_NETWORK_UINT(SysAlarmInConfig.s_LinkAlarmStrategy);
 	    	SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = HOST_TO_NETWORK_USHORT(SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);	
-	    	SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime     = HOST_TO_NETWORK_USHORT(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime);
-	    	SysAlarmEventConfig.s_LinkAlarmExtInfo.s_PtzDelayTime  = HOST_TO_NETWORK_USHORT(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_PtzDelayTime);
+	    	SysAlarmInConfig.s_LinkAlarmExtInfo.s_DelayTime     = HOST_TO_NETWORK_USHORT(SysAlarmInConfig.s_LinkAlarmExtInfo.s_DelayTime);
+	    	SysAlarmInConfig.s_LinkAlarmExtInfo.s_PtzDelayTime  = HOST_TO_NETWORK_USHORT(SysAlarmInConfig.s_LinkAlarmExtInfo.s_PtzDelayTime);
 			ToGetAttr = (uint8_t*)&SysAlarmInConfig;
 			ToGetAttrLength = sizeof(SysPkgAlarmInConfig);
 			break;
@@ -140,7 +140,7 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
 	    	SysAlarmOutConfig.s_NormalStatus = HOST_TO_NETWORK_UINT(SysAlarmOutConfig.s_NormalStatus);
 	    	SysAlarmOutConfig.s_DelayTime    = HOST_TO_NETWORK_UINT(SysAlarmOutConfig.s_DelayTime);
 			ToGetAttr = (uint8_t*)&SysAlarmOutConfig;
-			ToGetAttrLength = sizeof(SysAlarmOutConfig);
+			ToGetAttrLength = sizeof(SysPkgAlarmOutConfig);
 			break;
 		default:
 			MessageCode = RETCODE_NOSUPPORT;
