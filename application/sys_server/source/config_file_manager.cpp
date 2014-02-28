@@ -2811,7 +2811,7 @@ GMI_RESULT ConfigFileManager::SetAlarmConfig(int32_t AlarmId, int32_t Index, voi
     	char_t AlmOutPath[128] = {0};
 		SysPkgAlarmOutConfig SysAlarmOutConfig;
 
-		memset(&SysAlarmOutConfig, 0, sizeof(SysPkgAlarmOutConfig));
+		memcpy(&SysAlarmOutConfig, Parameter, ParameterLength);	
 		memset(AlmOutPath, 0, sizeof(AlmOutPath));
 		sprintf(AlmOutPath, ALARM_OUT_CONFIG_PATH, Index);
 		Result = GMI_XmlWrite(Handle, (const char_t*)AlmOutPath, ALARM_OUT_ENABLE_KEY, (const int32_t)SysAlarmOutConfig.s_EnableFlag);
@@ -2988,7 +2988,7 @@ GMI_RESULT ConfigFileManager::SetAlarmSchedule(int32_t ScheduleId, int32_t Index
 	{
 		sprintf(AlmSchedulePath, ALARM_IN_SCHEDULE_TIME_PATH, Index);
 		Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, ALARM_IN_SCHEDULE_ID_KEY, (const int32_t)SysAlmScheduleTime.s_ScheduleId);
-		Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, ALARM_IN_SCHEDULE_INDEX_KEY, (const int32_t)&SysAlmScheduleTime.s_Index);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, ALARM_IN_SCHEDULE_INDEX_KEY, (const int32_t)SysAlmScheduleTime.s_Index);
 		for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
 		{			
 			for (int32_t j = 0; j < TIME_SEGMENT_OF_DAY; j++)
@@ -3021,11 +3021,45 @@ GMI_RESULT ConfigFileManager::SetAlarmSchedule(int32_t ScheduleId, int32_t Index
 			}
 		}			
 	}
+	else if (SYS_SCHEDULE_TIME_ID_ALARM_OUT == ScheduleId)
+	{
+		sprintf(AlmSchedulePath, ALARM_OUT_SCHEDULE_TIME_PATH, Index);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, ALARM_OUT_SCHEDULE_ID_KEY, (const int32_t)SysAlmScheduleTime.s_ScheduleId);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, ALARM_OUT_SCHEDULE_INDEX_KEY, (const int32_t)SysAlmScheduleTime.s_Index);
+		for (int32_t i = 0; i < DAYS_OF_WEEK; i++)
+		{			
+			for (int32_t j = 0; j < TIME_SEGMENT_OF_DAY; j++)
+			{			
+				memset(StartTime, 0, sizeof(StartTime));
+				sprintf(StartTime, ALARM_OUT_SCHEDULE_START_TIME_KEY, i, j);
+				memset(EndTime, 0, sizeof(EndTime));
+				sprintf(EndTime, ALARM_OUT_SCHEDULE_END_TIME_KEY, i, j);
+				
+				Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, (const char_t*)StartTime, (const int32_t)SysAlmScheduleTime.s_ScheduleTime[i][j].s_StartTime);
+				Result = GMI_XmlWrite(Handle, (const char_t*)AlmSchedulePath, (const char_t*)EndTime, (const int32_t)SysAlmScheduleTime.s_ScheduleTime[i][j].s_EndTime);				
+			}
+		}		
+	}
 	else
 	{
 		SYS_ERROR("not support schdule id %d\n", ScheduleId);
+		Result = GMI_XmlFileSave(Handle);
+		if (FAILED(Result))
+		{
+			m_SettingFileLock.Unlock();
+			return Result;
+		}
+		m_SettingFileLock.Unlock();
 		return GMI_NOT_SUPPORT;
 	}
+
+	Result = GMI_XmlFileSave(Handle);
+	if (FAILED(Result))
+	{
+		m_SettingFileLock.Unlock();
+		return Result;
+	}
+	m_SettingFileLock.Unlock();
 
 
 	return GMI_SUCCESS;
