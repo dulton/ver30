@@ -112,7 +112,7 @@ var t;
                 Streamid = 0;
             }
 			var streamtmp = parseInt(parent.StreamShow,10)-1;
-			if(streamtmp <= parseInt(Streamid,10))
+			if(streamtmp < parseInt(Streamid,10))
 			{
 						Streamid = 0;
 						setCookie("StreamIndex_yy", Streamid);
@@ -160,37 +160,28 @@ var t;
 				{
 					return;
 				}
-// 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						if(!fso.FileExists("d:\\web.txt"))
-//						{
-//							fso.CreateTextFile("d:\\web.txt", true);
-//						}
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("【预览界面已关闭】close---" + h+":"+m+":"+s+":"+ss);
-//						f.WriteBlankLines(1);
-//						f.Close(); 
 			});
-//  			  $(window).bind('beforeunload',function()
-//			  { 
-//			  	try
-//			  	{
-//					var activex=document.getElementById("GMIIPCmrWebPlugIn1");
-//					if (activex != null && activex != 'null')
-//					{
-//							if(activex)
-//							{activex.Pause();}
-//					}
-//			  }
-//			  catch(e)
-//			  {
-//				  //alert(e.message);
-//			  }
-//	});
+/*            $(window).bind('beforeunload',
+            function() {
+                try {
+                    var activex = document.getElementById("GMIIPCmrWebPlugIn1");
+                    if (activex != null && activex != 'null') {
+                        if (activex) 
+						{
+							activex.StopPlay();
+							alert("unload!");
+						}
+                    }
+                } catch(e) {
+                    return;
+                }
+            });*/
+			function f1(callback)
+			{
+				setTimeout(function(){
+					callback();
+					},5);
+			}
 		$(document).ready(function(){
 // 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
 //						if(!fso.FileExists("d:\\web.txt"))
@@ -206,9 +197,6 @@ var t;
 //						f.WriteLine("【预览界面已显示】Star---" + h+":"+m+":"+s+":"+ss);
 //						f.WriteBlankLines(1);
 //						f.Close(); 
-			//界面初始化
-			init();
-			//判断控件版本
 			if(!ActiveXCtr())
 			{
 				return;
@@ -217,89 +205,16 @@ var t;
 			//VideoAuthtmp = parent.VideoAuth;
 			//VidoeClock = setTimeout('CheckVideo()',1000);		
 			activeX = document.getElementById("GMIIPCmrWebPlugIn1");
-			
-//			if(parent.UserName = "" || parent.UserName == undefined)
-//			{
-//				parent.UserName = getCookie("gmiwebusername");
-//			}
-//			if(parent.UserPass == "" || parent.UserPass == undefined)
-//			{
-//				parent.UserPass = getCookie("gmiwebpassword");
-//			}
-			if(parent.ip == "")
-			{
-				parent.getip();
-			}
-		   if(parent.port=="" || parent.port == "undefined")
-		   {
-//						var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("视频预览：LoadImg begin(cgi)---" + h+":"+m+":"+s + ":" +ss);
-//						f.WriteBlankLines(1);
-//						f.Close();
-			   //alert("y:no:port:"+parent.port);
-			   //alert("getCookie(SdkPort)");
-			   parent.port = getCookie("SdkPort");
-			   if(parent.port == "" || parent.port == "undefined")
-			   {
-				   if(parent.id == "" || parent.id == "undefined")
-				   {
-					  parent.id = getQueryString("id"); 
-				   }
-					GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", getportsuccessfunc);   
-			   }
-			   else
-			   {
-					LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);   
-			   }
-			   
-			   function getportsuccessfunc(data)
-				{
-					var PackDate=new UnPackData(data);
-					if(PackDate.Content!=null)
-					{
-						if(PackDate.Content.RetCode=="0")
-						{
-							
 
-						
-								parent.port=PackDate.Content.SDK_Port;
-								LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
-								//LoadImg(parent.UserName,parent.UserPass,parent.ip,parent.port);
-								delete PackDate;
-						}
-					}
-				}
-		   }
-		   else
-		   {
-			   
-//			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("视频预览：LoadImg begin---" + h+":"+m+":"+s + ":" +ss);
-//						f.WriteBlankLines(1);
-//						f.Close();
-				//LoadImg(parent.UserName,parent.UserPass,parent.ip,parent.port);
-				//alert("y:y:port:"+parent.port);
-		   		LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
-		   }
-			//debugger;
-			
+			f1(loadfirstimg);
+			//界面初始化
+			init();
+		
 
 			//绑定云台按钮事件
 	 		$("input[type=button][name='yzwbtn']").bind("click",
                 function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -373,7 +288,7 @@ var t;
 		   //启动录像 停止录像
 				$("#brecord").bind("click",
 				function() {
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.VideoAuth == 0)
 				{
 					alert("没有权限！");
@@ -443,7 +358,7 @@ var t;
 		   //抓图
 				$("#bcapturePicture").bind("click",
 				function() {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 				if(parent.VideoAuth == 0)
 				{
 					alert("没有权限！");
@@ -492,7 +407,7 @@ var t;
 		   //3D
 				$("#threeD").bind("click",
 				function() {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 				if(parent.VideoAuth == 0)
 				{
 					alert("没有权限！");
@@ -529,7 +444,7 @@ var t;
 				//编码镜像change
 				$("#flip_rotate").bind("change",
 				function() {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -567,7 +482,7 @@ var t;
 					//暂停 预览
 				$("#bplay").bind("click",
 				function() {
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.VideoAuth == 0)
 
 				{
@@ -617,7 +532,7 @@ var t;
 				//启动话筒
 				$("#btalking").bind("click",
 				function() {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 //				if(parent.VideoAuth == 0)
 //				{
 //					alert("没有权限！");
@@ -686,7 +601,7 @@ var t;
 				//启动声音
 				$("#blistening").bind("click",
 				function() {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 				if(parent.VideoAuth == 0)
 				{
 					alert("没有权限！");
@@ -750,7 +665,7 @@ var t;
 				//亮度增加
                 $("#brightnessadd").bind("click",
                 function(e) {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -772,7 +687,7 @@ var t;
 				//亮度减弱
                 $("#brightnesssub").bind("click",
                 function(e) {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -794,7 +709,7 @@ var t;
 				//对比度增加
                 $("#contrastadd").bind("click",
                 function(e) {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -815,7 +730,7 @@ var t;
 				//对比度减弱
                 $("#contrastsub").bind("click",
                 function(e) {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -836,7 +751,7 @@ var t;
 				//锐度减弱
                 $("#sharpnesssub").bind("click",
                 function(e) {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -857,7 +772,7 @@ var t;
 				//锐度增加
                 $("#sharpnessadd").bind("click",
                 function(e) {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -876,7 +791,7 @@ var t;
 				//色彩减弱
                 $("#huesub").bind("click",
                 function(e) {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -896,7 +811,7 @@ var t;
 				//色彩增加
                 $("#hueadd").bind("click",
                 function(e) {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -916,7 +831,7 @@ var t;
 				//饱和度增加
                 $("#saturationadd").bind("click",
                 function(e) {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -936,7 +851,7 @@ var t;
 				//饱和度减弱
                 $("#saturationsub").bind("click",
                 function(e) {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -1129,7 +1044,7 @@ var t;
 				//云台控制home
 				$("#home").bind("click",
 				function(e) {
-					//parent.StartimeVideo();
+/*					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1154,13 +1069,69 @@ var t;
 						} else {
 							isMove = true;
 						}
+					}*/
+					//parent.StartimeVideo();!!!
+					if(parent.YunjingAuth == false)
+					{
+						alert("没有权限！");
+						return;
 					}
+					var value = $("#bplay").val();
+					if(value == "预览")
+					{
+						alert("当前视频暂停，操作失败！");
+						return;	
+					}
+					var a = type;
+					var pastStr = "";
+					//数字云台
+					if (a == 1) {
+						section = "DPTZ";
+						if(isMove == true)
+						{
+							//stopmove();	
+							pastStr = "ptz_cmd=19||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							stopmove("PTZ", pastStr);
+							isMove = false;
+						}
+						else
+						{
+							poststr = "dptz_off_x=-100||dptz_off_y=0||dptz_source=" + currentStreamid + "||dptz_zoom=" + $("#02dptz_zoom").val();	
+							startmove(section, poststr);
+						}
+						
+						
+					}
+					if (a == 2) {
+						section = "PTZ";
+						
+						if(isMove == true)
+						{
+							//stopmove();
+							pastStr = "ptz_cmd=19||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							stopmove("PTZ", pastStr);	
+							isMove = false;
+						}
+						else
+						{
+							poststr = "ptz_cmd=19||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							poststr1 = "ptz_cmd=6||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
+							startmove(section, poststr, poststr1);
+						}
+						
+					}
+					
+//						if (isMove) {
+//							isMove = false;
+//						} else {
+//							isMove = true;
+//						}
 				});
 
 				//云台控制 向上
 				$("#up").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1186,11 +1157,11 @@ var t;
 						startmove(section, poststr, poststr1);
 
 					}
-
+					isMove = false;
 				});
 				$("#rightup").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1216,10 +1187,11 @@ var t;
 						startmove(section, poststr, poststr1);
 
 					}
+					isMove = false;
 				});
 				$("#leftup").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1245,11 +1217,11 @@ var t;
 						startmove(section, poststr, poststr1);
 
 					}
-
+					isMove = false;
 				});
 				$("#leftdown").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1275,11 +1247,11 @@ var t;
 						startmove(section, poststr, poststr1);
 
 					}
-
+					isMove = false;
 				});
 				$("#rightdown").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1304,7 +1276,7 @@ var t;
 						poststr1 = "ptz_cmd=24||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
 						startmove(section, poststr, poststr1);
 					}
-
+					isMove = false;
 				});
                 //绑定机械云台数字云台选择事件
                 $("input[type=radio][name='type']").bind("click",
@@ -1404,7 +1376,7 @@ var t;
                 });
 				$("#up,#down,#right,#left,#zoomadd,#zoomsub,#focussub,#focusadd,#irissub,#irisadd,#leftup,#leftdown,#rightup,#rightdown").bind("mouseup",
 				function(e) {
-//					parent.StartimeVideo();
+//					parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1550,7 +1522,7 @@ var t;
 				});
 				//下拉菜单
 $("#autoFocusType").bind("change",function(e){
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1631,7 +1603,7 @@ function sucess_setJJ(data)
 				//云台控制 向下
 				$("#down").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1656,13 +1628,13 @@ function sucess_setJJ(data)
 						poststr1 = "ptz_cmd=3||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
 						startmove(section, poststr, poststr1);
 					}
-
+					isMove = false;
 				});
 
 				//云台控制 向右
 				$("#right").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1687,12 +1659,13 @@ function sucess_setJJ(data)
 						poststr1 = "ptz_cmd=7||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
 						startmove(section, poststr, poststr1);
 					}
+					isMove = false;
 				});
 
 				//云台控制 向左
 				$("#left").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1717,11 +1690,12 @@ function sucess_setJJ(data)
 						poststr1 = "ptz_cmd=6||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
 						startmove(section, poststr, poststr1);
 					}
+					isMove = false;
 				});
 
 				$("#zoomadd").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1755,7 +1729,7 @@ function sucess_setJJ(data)
 				//变倍 减
 				$("#zoomsub").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1776,7 +1750,7 @@ function sucess_setJJ(data)
 					if (a == 2) {
 						section = "PTZ";
 						//poststr = "ptz_cmd=" + parseInt(PTZ_ZOOM_WIDE, 16) + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
-						poststr = "ptz_cmd=12" + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val()
+						poststr = "ptz_cmd=12" + "||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
 						poststr1 = "ptz_cmd=11||ptz_hspeed=" + $("#03ptz_hspeed").val() + "||ptz_vspeed=" + $("#03ptz_vspeed").val();
 						startmove(section, poststr, poststr1);
 
@@ -1787,7 +1761,7 @@ function sucess_setJJ(data)
 				//光圈加
 				$("#irisadd").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1813,7 +1787,7 @@ function sucess_setJJ(data)
 				//光圈减
 				$("#irissub").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1838,7 +1812,7 @@ function sucess_setJJ(data)
 				//聚焦减
 				$("#focussub").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1864,7 +1838,7 @@ function sucess_setJJ(data)
 				//聚焦加
 				$("#focusadd").bind("mousedown",
 				function(e) {
-					//parent.StartimeVideo();
+					//parent.StartimeVideo();!!!
 					if(parent.YunjingAuth == false)
 					{
 						alert("没有权限！");
@@ -1907,7 +1881,61 @@ function sucess_setJJ(data)
 
                 };
                 $button.slider(sliderOpts);
+
+
+/*				var stmp6 = "<object classid='CLSID:D761DC49-4CDC-458E-ABB6-4F594E9DA1EB' codebase='' width=702 height=395 align='absmiddle' id='GMIIPCmrWebPlugIn1'></object>";
+			
+			$("#myvedio").append(stmp6);*/
+			
+			//document.onreadystatechange = subSomething;//当页面加载状态改变的时候执行这个方法. 
+			//判断控件版本
+
+			//debugger;
+	
 		});
+			function loadfirstimg()
+			{
+			if(parent.ip == "")
+			{
+				parent.getip();
+			}
+		   if(parent.port=="" || parent.port == "undefined")
+		   {
+
+			   parent.port = getCookie("SdkPort");
+			   if(parent.port == "" || parent.port == "undefined")
+			   {
+				   if(parent.id == "" || parent.id == "undefined")
+				   {
+					  parent.id = getQueryString("id"); 
+				   }
+					GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", getportsuccessfunc);   
+			   }
+			   else
+			   {
+					LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);   
+			   }
+			   
+			   function getportsuccessfunc(data)
+				{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+								parent.port=PackDate.Content.SDK_Port;
+								LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+								//LoadImg(parent.UserName,parent.UserPass,parent.ip,parent.port);
+								delete PackDate;
+						}
+					}
+				}
+		   }
+		   else
+		   {
+		   		LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+		   }	
+			}
 			//滑动处理函数
 			var request;
              function sliderFunction(e,ui,thisid)
@@ -1917,7 +1945,7 @@ function sucess_setJJ(data)
 				  // $button.css("left", "-" + ui.value + "px")
 				  if(id != "ptz_speed")
 				  {
-					parent.StartimeVideo();
+					//parent.StartimeVideo();
 					if(parent.shipinAuth == false)
 					{
 						alert("没有权限！");
@@ -1977,7 +2005,7 @@ function sucess_setJJ(data)
 			function LoadImg(name,password,ip,port) {
 		while(true)
 		{
-			//parent.StartimeVideo();
+			//parent.StartimeVideo();!!!
 			if(parent.VideoAuth == 1)
 			{
 				break;
@@ -2468,9 +2496,25 @@ function sucess_GetXJtype(data)
 					{
 						if(PackDate.Content.AutoFlags == "0")//枪击不支持
 						{
-							$("#divAutoFocusType").css("display","none");
-							//$("#divFocus").css("display","block");
-							$("#focusType").css("display","none");
+
+							//是否支持自动聚焦
+							if(parent.PrivateLens == "NONE")
+							{
+								$("#divAutoFocusType").css("display","none");
+								$("#focusType").css("display","none");	
+							}
+							else if(parent.PrivateLens == "ICRJZ9")
+							{
+								$("#divAutoFocusType").css("display","none");
+								$("#autofocus").css("display","none");
+								$("#divFocus").css("visibility", "visible");
+								$("#manualfocus").css("display","none");
+								$("#labelauto").css("display","none");
+								$("#labelmanul").css("display","none");
+								
+								
+								$("#qjjj").css("visibility", "visible");
+							}
 
 						}
 						else if(PackDate.Content.AutoFlags == "1")//球机支持
@@ -3341,7 +3385,5 @@ function StopTime_dj()
         	</div>
  		</div>
 <!--</div>-->
-
-
 </body>
 </html>

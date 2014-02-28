@@ -5,6 +5,16 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <style>
             html,body{ margin:0; padding:0;background-color:#242424;}
+			.pageOK
+			{
+				color:#FFF;
+				cursor:pointer;
+			}
+			.pageNO
+			{
+				color:#9e9d9d;
+				cursor:default;	
+			}
         </style>
         <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
         <script type="text/javascript" src="js/jquery-1.7.1.min.js">
@@ -49,14 +59,23 @@
         </script>
         <script>
 		var limitMax=200;//每次查询日志条数上限
-		var lognum = 0;	//档次查询日志总数
-		var logget = 0;	//已获取的日志数
+		var lognum = 0;	//当次查询日志总数
+		var logget = 0;	//偏移量
+		var logost = 0;	//日志总偏移量
 		 var isvalid = new Array(); //数据无效的数组。每个不合法项的ID 组成的数组。
+		 
+		 
+		var startDate="";
+		var endDate="";
+		var startTime="";
+		var endTime="";
+		var type=0;
+		var type1 = 0;
+		
             function changeLanguage(lang) {
                 TranslatePage(lang);
             }
             var mydata;
-
             jQuery(document).ready(function() {
 				
                 showTimer('startTime');
@@ -77,6 +96,175 @@
                 //语言初始化
                 initLang();
 
+				//上一页
+				$("#prepage").bind("click",function(){
+						if(logget<=0)
+						{
+							//alert("logget error!");
+							return;
+						}
+						//当前偏移量减一
+						logget--;
+						$("#pageindex").val(logget+1);
+						
+						if(logget == 0)
+						{
+							document.getElementById("prepage").className = "pageNO";
+							document.getElementById("firstpage").className = "pageNO";
+						}
+						if(logget < parseInt((logost-1),10))
+						{
+							document.getElementById("nextpage").className = "pageOK";
+							document.getElementById("lastpage").className = "pageOK";
+						}
+						//查询日志
+						startDate=$("#startDate").val()||0;
+						endDate=$("#endDate").val()||0;
+						startTime=returnTimer("startTime")||0;
+						endTime=returnTimer("endTime")||0;
+						type=$("#typethis").val()||0;
+						type1 = $("#typeother").val()||0;
+						jQuery("#list4").jqGrid("clearGridData");
+						queryLog(startDate,endDate,startTime,endTime,type,type1);
+					});
+				//下一页
+				$("#nextpage").bind("click",function(){
+						if(logget>=parseInt((logost-1),10))
+						{
+							//alert("logget error!");
+							return;
+						}
+						//当前偏移量加一
+						logget++;
+//						$("#pageindex").remove();
+//						var stmp = "<u class='pageOK' id='pageindex'>"+(logget+1)+"</u>";
+//						$("#pageindexpre").append(stmp);
+						$("#pageindex").val(logget+1);
+						
+						if(logget == parseInt((logost-1),10))
+						{
+							document.getElementById("nextpage").className = "pageNO";
+							document.getElementById("lastpage").className = "pageNO";
+						}
+						if(logget > 0)
+						{
+							document.getElementById("prepage").className = "pageOK";
+							document.getElementById("firstpage").className = "pageOK";
+						}
+						//查询日志
+						startDate=$("#startDate").val()||0;
+						endDate=$("#endDate").val()||0;
+						startTime=returnTimer("startTime")||0;
+						endTime=returnTimer("endTime")||0;
+						type=$("#typethis").val()||0;
+						type1 = $("#typeother").val()||0;
+						jQuery("#list4").jqGrid("clearGridData");
+						queryLog(startDate,endDate,startTime,endTime,type,type1);
+					});
+					//首页
+					$("#firstpage").bind("click",function(){
+						if(logget<=0)
+						{
+							////alert("logget error!");
+							return;
+						}
+							logget = 0;
+							document.getElementById("prepage").className = "pageNO";
+							document.getElementById("firstpage").className = "pageNO";
+							if(parseInt((logost-1),10)> 0)
+							{
+								document.getElementById("nextpage").className = "pageOK";
+								document.getElementById("lastpage").className = "pageOK";
+							}
+							$("#pageindex").val(logget+1);
+							//查询日志
+							startDate=$("#startDate").val()||0;
+							endDate=$("#endDate").val()||0;
+							startTime=returnTimer("startTime")||0;
+							endTime=returnTimer("endTime")||0;
+							type=$("#typethis").val()||0;
+							type1 = $("#typeother").val()||0;
+							jQuery("#list4").jqGrid("clearGridData");
+							queryLog(startDate,endDate,startTime,endTime,type,type1);
+						});
+					//尾页
+					$("#lastpage").bind("click",function(){
+							if(logget>=parseInt((logost-1),10))
+							{
+								//alert("logget error!");
+								return;
+							}
+							logget = parseInt((logost-1),10);
+							document.getElementById("nextpage").className = "pageNO";
+							document.getElementById("lastpage").className = "pageNO";
+							if(logget > 0)
+							{
+								document.getElementById("prepage").className = "pageOK";
+								document.getElementById("firstpage").className = "pageOK";
+							}
+							$("#pageindex").val(logget+1);
+						//查询日志
+						startDate=$("#startDate").val()||0;
+						endDate=$("#endDate").val()||0;
+						startTime=returnTimer("startTime")||0;
+						endTime=returnTimer("endTime")||0;
+						type=$("#typethis").val()||0;
+						type1 = $("#typeother").val()||0;
+						jQuery("#list4").jqGrid("clearGridData");
+						queryLog(startDate,endDate,startTime,endTime,type,type1);
+						});
+						//页码键盘事件
+				$("#pageindex").bind("keyup",function(event){
+				var keyCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
+					if (keyCode == 13) {
+						var pagetmp = $("#pageindex").val();
+						if(isNaN(pagetmp))
+						{
+							alert("请填写数字！");
+							$("#pageindex").val(logget+1);
+							return;
+						}
+						if(parseInt(pagetmp,10)>parseInt((logost),10)
+						||parseInt(pagetmp,10)<1
+						)
+						{
+							alert("页码超出范围！");
+							$("#pageindex").val(logget+1);
+							return;
+						}
+						
+						logget = pagetmp-1;
+						if(logget <= 0)
+						{
+							document.getElementById("prepage").className = "pageNO";
+							document.getElementById("firstpage").className = "pageNO";	
+						}
+						else
+						{
+							document.getElementById("prepage").className = "pageOK";
+							document.getElementById("firstpage").className = "pageOK";	
+						}
+						if(logget >= parseInt((logost-1),10))
+						{
+							document.getElementById("nextpage").className = "pageNO";
+							document.getElementById("lastpage").className = "pageNO";	
+						}
+						else
+						{
+							document.getElementById("nextpage").className = "pageOK";
+							document.getElementById("lastpage").className = "pageOK";	
+						}
+						//查询日志
+						startDate=$("#startDate").val()||0;
+						endDate=$("#endDate").val()||0;
+						startTime=returnTimer("startTime")||0;
+						endTime=returnTimer("endTime")||0;
+						type=$("#typethis").val()||0;
+						type1 = $("#typeother").val()||0;
+						jQuery("#list4").jqGrid("clearGridData");
+						queryLog(startDate,endDate,startTime,endTime,type,type1);
+					}
+				});
 				$("#submit").bind("click",function(){
 					if(parent.LogAuth == false)
 					{
@@ -85,12 +273,12 @@
 					}
 					if (isvalid.length == 0) {
 						bindData("");
-						var startDate=$("#startDate").val()||0;
-						var endDate=$("#endDate").val()||0;
-						var startTime=returnTimer("startTime")||0;
-						var endTime=returnTimer("endTime")||0;
-						var type=$("#typethis").val()||0;
-						var type1 = $("#typeother").val()||0;
+						startDate=$("#startDate").val()||0;
+						endDate=$("#endDate").val()||0;
+						startTime=returnTimer("startTime")||0;
+						endTime=returnTimer("endTime")||0;
+						type=$("#typethis").val()||0;
+						type1 = $("#typeother").val()||0;
 //						if(startDate!="0")
 //						{
 //							startDate=startDate.replace(new RegExp(/(-)/g),'');
@@ -118,7 +306,10 @@
 						jQuery("#list4").jqGrid("clearGridData");
 						//查询日志
 						//setTimeout("queryLog("+startDate+","+endDate+","+startTime+","+endTime+","+type+","+type1+","+0+","+limitMax+")",0);
-						queryLog(startDate,endDate,startTime,endTime,type,type1,0,limitMax);
+			   			lognum = 0;
+						logget = 0;
+						logost = 0;
+						queryLog(startDate,endDate,startTime,endTime,type,type1);
 						//queryLog(startDate,endDate,startTime,endTime,type,0,100);
 					}
 					else
@@ -146,6 +337,7 @@
 					PosSelhtml += "<option value='6'>关闭视频遮挡</option>";
 					PosSelhtml += "<option value='7'>用户自定义</option>";
 					PosSelhtml += "<option value='8'>扩展IO报警</option>";
+					PosSelhtml += "<option value='10'>PIR</option>";
 				}
 				else if(stmp=="2")	//异常日志
 				{
@@ -286,8 +478,19 @@
 	 }
 	 	var fileDialog = oXL.FileDialog(2);
 	 	fileDialog .show(); 
-	 	var savePath = fileDialog.SelectedItems(1); 
-	  
+	 	var savePath = "";
+		try{
+			savePath = fileDialog.SelectedItems(1); 
+			}
+		catch(e)
+		{
+			
+		}
+		
+	  	if(savePath == "" || savePath == "undefined")
+		{
+			return;
+		}
 	 	var ss = oWB.SaveAs(savePath); 
 	 	oXL.quit(); // 记得退出 
 	 	if(true == ss){  
@@ -379,7 +582,7 @@
 
                     datatype: "local",
                     height: 230,
-                    colNames: ['序号', '日期-时间','主类型','次类型','本地用户','远程主机','摘要'],
+                    colNames: ['序号', '日期-时间','主类型','次类型','本地用户','摘要'],
                     colModel: [{
                         name: 'id',
                         index: 'id',
@@ -413,17 +616,17 @@
                         align: "center"
                     },
 					//远程主机
-					{
-                        name: 'pc',
-                        index: 'pc',
-                        width: 100,
-                        align: "center"
-						
-                    },
+//					{
+//                        name: 'pc',
+//                        index: 'pc',
+//                        width: 100,
+//                        align: "center"
+//						
+//                    },
 					{
                         name: 'brief',
                         index: 'brief',
-                        width: 200,
+                        width: 300,
                         align: "center"
                     }
 
@@ -437,15 +640,15 @@
 						//翻页
 				onPaging:function(bt)
 					{
-						//alert("fanya");
+						LogListFY(bt);
 					},
                     viewrecords: true,
                     //是否显示行数  
-                    pager: "logListPager",
+                    //pager: "logListPager",
                     //分页显示的DIVID
-                    rowNum: 20,
+                    //rowNum: 20,
                     //每页20条记录 
-                    rowList: [10, 20, 30,50,100],
+                    //rowList: [20],
                     //可调整每页显示的记录数    
                     sortname: "id",
                     //默认排序的列名 
@@ -462,14 +665,14 @@
 				
 				    var records=$("#list4").jqGrid('getGridParam','records');
 					//alert(new Date().format("yyyy-MM-dd:S"));
-					for (var i = 0; i < mydata.length; i++) {
+/*					for (var i = 0; i < mydata.length; i++) {
 						//开始格式化数据
 						mydata[i].date=formatDate(mydata[i].date);
 						mydata[i].time=formatTime(mydata[i].time);
 						mydata[i].type=formatType(mydata[i].type);
 						//结束
 						jQuery("#list4").jqGrid('addRowData', records+ i + 1, mydata[i]);
-					}
+					}*/
 					//alert(new Date().format("yyyy-MM-dd:S"));
 				//jQuery("#list4").jqGrid('addJSONData',mydata);
                 //重新加载。开始分页
@@ -477,6 +680,7 @@
 				//var html=$("#debugdiv").html()+"<p>"+"绑定数据结束："+ new Date().format("yyyy-MM-dd hh:mm:ss:S"); 
 				//$("#debugdiv").html(html);
             }
+
 			function formatDate(datestr)
 			{
 				var res;
@@ -531,10 +735,8 @@
 				
 				return res;
 			}
-           function queryLog(startDate,endDate,startTime,endTime,type,type1,startRow,rowLimit)
+           function queryLog(startDate,endDate,startTime,endTime,type,type1)
 		   {
-			   		lognum = 0;
-					logget = 0;
 					//设置按钮不可点击
 					$("#submit").attr("disabled", "disabled");
 					var  content={};
@@ -546,12 +748,116 @@
 					content.MinorType=type1;
 					content.StartTime=startDate + " "+startTime;//"2013-12-18 00:00:00";
 					content.StopTime=endDate + " "+endTime;//"2013-12-18 18:00:00";
-					content.Offset="0";
+					content.Offset=logget;
 					content.MaxNum="20";
+					
+					//alert("当前偏移量："+logget);
 					
 					contentstr=jsonToString(content);
 					GetAndSet("SysGetLogInfo","json",contentstr, sucess_QueryLog);	
 		   }
+					//获取日志主类型
+					function GetType1(type1,type2)
+					{
+						var returntype = ["",""];
+								if(type1 == "0"){
+									returntype[0] = "全部类型";
+									switch(type2)
+									{
+										case "0":
+											returntype[1] = "全部类型";
+										break;
+										default:
+										break;
+									}
+								}
+								else if(type1 == "1"){
+									returntype[0] = "告警日志";
+									switch(type2)
+									{
+										case "1":returntype[1] = "告警输入";break;
+										case "2":returntype[1] = "告警输出";break;
+										case "3":returntype[1] = "启动移动侦测";break;
+										case "4":returntype[1] = "关闭移动侦测";break;
+										case "5":returntype[1] = "启动视频遮挡";break;
+										case "6":returntype[1] = "关闭视频遮挡";break;
+										case "7":returntype[1] = "用户自定义";break;
+										case "8":returntype[1] = "扩展IO报警";break;
+										case "10":returntype[1] = "PIR";break;
+										default:
+											returntype[1] = "ERROR";
+										break;
+									}
+								}
+								else if(type1 == "2"){
+									returntype[0] = "异常日志";
+									switch(type2)
+									{
+										case "33":returntype[1] = "视频丢失";break;
+										case "34":returntype[1] = "非法访问";break;
+										case "35":returntype[1] = "磁盘满";break;
+										case "36":returntype[1] = "磁盘错误";break;
+										case "37":returntype[1] = "IP冲突";break;
+										case "38":returntype[1] = "网络掉线";break;
+										case "39":returntype[1] = "录像错误";break;
+										default:
+											returntype[1] = "ERROR";
+										break;
+									}
+								}
+								else if(type1 == "3"){
+									returntype[0] = "操作日志";
+									switch(type2)
+									{
+										case "65":returntype[1] = "登陆";break;
+										case "66":returntype[1] = "登出";break;
+										case "67":returntype[1] = "启动录像";break;
+										case "68":returntype[1] = "停止录像";break;
+										case "69":returntype[1] = "启动视频通道传输";break;
+										case "70":returntype[1] = "停止视频通道传输";break;
+										case "71":returntype[1] = "获取参数";break;
+										case "72":returntype[1] = "配置参数";break;
+										case "73":returntype[1] = "获取状态";break;
+										case "74":returntype[1] = "布防使能";break;
+										case "75":returntype[1] = "布防禁止";break;
+										case "76":returntype[1] = "重启";break;
+										case "77":returntype[1] = "启动语音对讲";break;
+										case "78":returntype[1] = "停止语音对讲";break;
+										case "79":returntype[1] = "升级";break;
+										case "80":returntype[1] = "根据文件类型，播放或下载文件";break;
+										case "81":returntype[1] = "根据时间类型，播放或下载文件";break;
+										case "82":returntype[1] = "格式化磁盘";break;
+										case "83":returntype[1] = "云台控制";break;
+										case "84":returntype[1] = "关机";break;
+										case "85":returntype[1] = "锁定文件";break;
+										case "86":returntype[1] = "解锁文件";break;
+										case "87":returntype[1] = "配置文件导出";break;
+										case "88":returntype[1] = "配置文件导入";break;
+										case "89":returntype[1] = "录像文件导出";break;
+										case "90":returntype[1] = "手动清除报警";break;
+										default:
+											returntype[1] = "ERROR";
+										break;
+									}
+								}
+								else if(type1 == "4"){
+									returntype[0] = "信息日志";
+									switch(type2)
+									{
+										case "161":returntype[1] = "磁盘信息";break;
+										case "162":returntype[1] = "智能信息";break;
+										default:
+											returntype[1] = "ERROR";
+										break;
+									}
+								}
+								else{
+									returntype[0] == "ERROR";
+									returntype[1] == "ERROR";
+									}
+						return returntype;
+									
+					}
 		   //查询日志毁掉函数
 		   function sucess_QueryLog(data)
 		   {
@@ -562,322 +868,330 @@
 					{
 						//日志总数
 						lognum = PackDate.Content.Total;
-						//当前日志数
-						var numtmp = PackDate.Content.Count;
-						numtmp = parseInt(numtmp,10);
-						logget += numtmp;
+						//总偏移量
+						logost = parseInt(lognum/20,10);
+						//判断是否有余数
+						if(parseInt(lognum,10)-parseInt((logost*20),10)>0)
+						{
+							logost++;	
+						}
+						
+
+						
+						//类型数组
+						var typedata = ["",""];
 						
 						//添加到列表
+						//var logtmp = parseInt((logget*20),10);
 						for(var i=1;i<=PackDate.Content.Count;i++)
 						{
 							//序号 日期-时间 主类型 次类型 本地用户 远程用户 摘要
 							var type = "";	//主类型
-							var type1 = "全部类型";	//次类型
+							var type1 = "";	//次类型
 							switch(i)
 							{
 								case 1:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType0,PackDate.Content.MinorType0);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime0,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName0,
-									pc:PackDate.Content.RemoteHostIp0,
+									//pc:PackDate.Content.RemoteHostIp0,
 									brief:PackDate.Content.LogData0
 									});
 								break;
 								case 2:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType1,PackDate.Content.MinorType1);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime1,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName1,
-									pc:PackDate.Content.RemoteHostIp1,
+									//pc:PackDate.Content.RemoteHostIp1,
 									brief:PackDate.Content.LogData1
 									});
 								break;
 								case 3:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType2,PackDate.Content.MinorType2);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime2,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName2,
-									pc:PackDate.Content.RemoteHostIp2,
+									//pc:PackDate.Content.RemoteHostIp2,
 									brief:PackDate.Content.LogData2
 									});
 								break;
 								case 4:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType3,PackDate.Content.MinorType3);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime3,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName3,
-									pc:PackDate.Content.RemoteHostIp3,
+									//pc:PackDate.Content.RemoteHostIp3,
 									brief:PackDate.Content.LogData3
 									});
 								break;
 								case 5:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType4,PackDate.Content.MinorType4);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime4,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName4,
-									pc:PackDate.Content.RemoteHostIp4,
+									//pc:PackDate.Content.RemoteHostIp4,
 									brief:PackDate.Content.LogData4
 									});
 								break;
 								case 6:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType5,PackDate.Content.MinorType5);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime5,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName5,
-									pc:PackDate.Content.RemoteHostIp5,
+									//pc:PackDate.Content.RemoteHostIp5,
 									brief:PackDate.Content.LogData5
 									});
 								break;
 								case 7:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType6,PackDate.Content.MinorType6);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime6,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName6,
-									pc:PackDate.Content.RemoteHostIp6,
+									//pc:PackDate.Content.RemoteHostIp6,
 									brief:PackDate.Content.LogData6
 									});
 								break;
 								case 8:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType7,PackDate.Content.MinorType7);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime7,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName7,
-									pc:PackDate.Content.RemoteHostIp7,
+									//pc:PackDate.Content.RemoteHostIp7,
 									brief:PackDate.Content.LogData7
 									});
 								break;
 								case 9:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType8,PackDate.Content.MinorType8);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime8,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName8,
-									pc:PackDate.Content.RemoteHostIp8,
+									//pc:PackDate.Content.RemoteHostIp8,
 									brief:PackDate.Content.LogData8
 									});
 								break;
 								case 10:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType9,PackDate.Content.MinorType9);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime9,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName9,
-									pc:PackDate.Content.RemoteHostIp9,
+									//pc:PackDate.Content.RemoteHostIp9,
 									brief:PackDate.Content.LogData9
 									});
 								break;
 								case 11:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType10,PackDate.Content.MinorType10);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime10,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName10,
-									pc:PackDate.Content.RemoteHostIp10,
+									//pc:PackDate.Content.RemoteHostIp10,
 									brief:PackDate.Content.LogData10
 									});
 								break;
 								case 12:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType11,PackDate.Content.MinorType11);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime11,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName11,
-									pc:PackDate.Content.RemoteHostIp11,
+									//pc:PackDate.Content.RemoteHostIp11,
 									brief:PackDate.Content.LogData11
 									});
 								break;
 								case 13:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType12,PackDate.Content.MinorType12);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime12,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName12,
-									pc:PackDate.Content.RemoteHostIp12,
+									//pc:PackDate.Content.RemoteHostIp12,
 									brief:PackDate.Content.LogData12
 									});
 								break;
 								case 14:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType13,PackDate.Content.MinorType13);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime13,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName13,
-									pc:PackDate.Content.RemoteHostIp13,
+									//pc:PackDate.Content.RemoteHostIp13,
 									brief:PackDate.Content.LogData13
 									});
 								break;
 								case 15:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType14,PackDate.Content.MinorType14);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime14,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName14,
-									pc:PackDate.Content.RemoteHostIp14,
+									//pc:PackDate.Content.RemoteHostIp14,
 									brief:PackDate.Content.LogData14
 									});
 								break;
 								case 16:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType15,PackDate.Content.MinorType15);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime15,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName15,
-									pc:PackDate.Content.RemoteHostIp15,
+									//pc:PackDate.Content.RemoteHostIp15,
 									brief:PackDate.Content.LogData15
 									});
 								break;
 								case 17:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType16,PackDate.Content.MinorType16);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime16,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName16,
-									pc:PackDate.Content.RemoteHostIp16,
+									//pc:PackDate.Content.RemoteHostIp16,
 									brief:PackDate.Content.LogData16
 									});
 								break;
 								case 18:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType17,PackDate.Content.MinorType17);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime17,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName17,
-									pc:PackDate.Content.RemoteHostIp17,
+									//pc:PackDate.Content.RemoteHostIp17,
 									brief:PackDate.Content.LogData17
 									});
 								break;
 								case 19:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType18,PackDate.Content.MinorType18);
+									type = typedata[0];
+									type1 = typedata[1];
+									
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime18,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName18,
-									pc:PackDate.Content.RemoteHostIp18,
+									//pc:PackDate.Content.RemoteHostIp18,
 									brief:PackDate.Content.LogData18
 									});
 								break;
 								case 20:
-								if(PackDate.Content.MajorType0 == "0"){type = "全部类型"}
-								else if(PackDate.Content.MajorType0 == "1"){type = "登录日志"}
-								else if(PackDate.Content.MajorType0 == "2"){type = "报警日志"}
-								else if(PackDate.Content.MajorType0 == "3"){type = "系统日志"}
-									jQuery("#list4").jqGrid('addRowData',i+1, {
+									typedata = GetType1(PackDate.Content.MajorType19,PackDate.Content.MinorType19);
+									type = typedata[0];
+									type1 = typedata[1];
+
+									jQuery("#list4").jqGrid('addRowData',i, {
 									id:i,
 									date:PackDate.Content.LogTime19,
 									type:type,
 									type1:type1,
 									user:PackDate.Content.UserName19,
-									pc:PackDate.Content.RemoteHostIp19,
+									//pc:PackDate.Content.RemoteHostIp19,
 									brief:PackDate.Content.LogData19
 									});
 								break;
 							}
-						}
-						
+						}				
 						
 					}
 					else
@@ -902,12 +1216,12 @@
 					}
 					else
 					{
-			   			var startDate=$("#startDate").val()||0;
-						var endDate=$("#endDate").val()||0;
-						var startTime=returnTimer("startTime")||0;
-						var endTime=returnTimer("endTime")||0;
-						var type=$("#typethis").val()||0;
-						var type1 =$("#typeother").val()||0;
+			   			startDate=$("#startDate").val()||0;
+						endDate=$("#endDate").val()||0;
+						startTime=returnTimer("startTime")||0;
+						endTime=returnTimer("endTime")||0;
+						type=$("#typethis").val()||0;
+						type1 =$("#typeother").val()||0;
 //					if(startDate!="0")
 //					{
 //						startDate=startDate.replace(new RegExp(/(-)/g),'');
@@ -935,9 +1249,25 @@
 //					
 					//queryLog(startDate,endDate,startTime,endTime,type,0,500);
 					//setTimeout("queryLog("+startDate+","+endDate+","+startTime+","+endTime+","+type+","+type1+","+0+","+limitMax+")",0);
-						queryLog(startDate,endDate,startTime,endTime,type,type1,0,limitMax);
+			   			lognum = 0;
+						logget = 0;
+						logost = 0;
+						document.getElementById("prepage").className = "pageNO";
+						document.getElementById("firstpage").className = "pageNO";
+						queryLog(startDate,endDate,startTime,endTime,type,type1);
+						
+						if(lognum<=20)
+						{
+							document.getElementById("nextpage").className = "pageNO";
+							document.getElementById("lastpage").className = "pageNO";	
+						}
+						$("#pageindex").val(logget+1);
 					}
+					
+
+
 		   }
+
         </script>
     </head>
     
@@ -980,9 +1310,9 @@
                             	<div class="motion_det_list_inner_lmt" style="width:80px;">
                             		<input type="button" class="btn22" style="float:left; "  value="查找" id="submit" />
                                     </div>
-            				<div class="motion_det_list_inner_lmt" style="width:80px;">
+            				<!--<div class="motion_det_list_inner_lmt" style="width:80px;">
            		 				<input type="button" class="btn22" style="float:left"  value="清空日志" id="cleanLog" />
-                 				</div>
+                 				</div>-->
             				<div class="motion_det_list_inner_lmt" style="width:80px;">
            		 				<input type="button" class="btn22" style="float:left"  value="保存日志" id="SaveLog" />
                  				</div>
@@ -998,7 +1328,34 @@
                 <table id="list4">
                 </table>
                 <div id="logListPager">
-                </div>   
+                </div>
+                <div class="int_pro_main_list" >
+                	<div class="motion_det_list_inner_lmt" style="width:480px;text-align: center;">
+                	</div>
+                	<div class="motion_det_list_inner_lmt" style="width:60px;text-align: center;">
+                		<u class="pageOK" id="firstpage">
+                    	首页
+                    	</u>
+                    </div>
+                	<div class="motion_det_list_inner_lmt" style="width:60px;text-align: center;">
+                		<u class="pageOK" id="prepage">
+                    	上一页
+                    	</u>
+                    </div>
+                	<div class="motion_det_list_inner_lmt" style="width:60px;text-align: center;padding-left:5px;" id="pageindexpre">
+					<input  style="width:40px;" id="pageindex" />
+                    </div>
+                    <div class="motion_det_list_inner_lmt" style="width:60px;text-align: center;">
+                		<u class="pageOK"  id="nextpage">
+                    	下一页
+                    	</u>
+                    </div>
+                	<div class="motion_det_list_inner_lmt" style="width:60px;text-align: center;">
+                		<u class="pageOK" id="lastpage">
+                    	尾页
+                    	</u>
+                    </div>
+                  </div>
                                   </div>
                   
   

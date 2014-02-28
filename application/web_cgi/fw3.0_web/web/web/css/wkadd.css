@@ -23,4 +23,28 @@
 	text-align : center;
 	cursor : hand;
 }
+/*图表CSS*/
+.Table{
+/*	border-style : solid;
+	border-color:#000;
+	border-width : 1px;*/
+	width:550px;
+	height:230px;
+	}
+.title{text-align:right;line-height:40px;font-size:16px;font-weight:bold;
+color:#C00;}
+.ll1{width:80px;overflow:hidden;float:left;text-align:right;}
+.ll2{width:3px;border:solid 1px #000;border-width:1px 1px 0 0;float:left;}
+.ll3{float:left;padding-top:0px;
+height:20px;
+width:440px;}
+.ll3 div{width:13px;height:19px;background:blue;float:left;/*border-style:solid;border-color:#999;border-width:1px;*/}
+.ll3table{width:13px;height:19px;background:blue;float:left;border-style:solid;border-color:#999;border-width:1px;}
 
+.clbt{height:30px;}
+.clbtl1{width:80px;overflow:hidden;float:left;height:6px;text-align:right;}
+.clbtl2{width:3px;height:5px;border:solid 1px #000;border-width:1px 1px 0 0;float:left;}
+.clbtl3{border-top:solid 1px #000;float:left;height:5px;}
+.clbtl3 div{width:29px;height:5px;border-right:solid 1px #000;float:left;}
+.clbtl4{width:68px;float:left;height:20px;clear:left;}
+.clbtl5{float:left;width:30px;text-align:center;font-size:10px;}

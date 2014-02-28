@@ -96,12 +96,22 @@
                 try {
                     var activex = document.getElementById("GMIIPCmrWebPlugIn1");
                     if (activex != null && activex != 'null') {
-                        if (activex) activex.Stop();
+                        if (activex) 
+						{
+							activex.StopPlay();
+							alert("unload!");
+						}
                     }
                 } catch(e) {
-                    // alert(e.message);
+                    return;
                 }
             });*/
+			function f1(callback)
+			{
+				setTimeout(function(){
+					callback();
+					},5);
+			}
 			$(window).bind('unload',function(){
 	 			try
 	 			{
@@ -118,20 +128,6 @@
 				{
 					return;
 				}
-// 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						if(!fso.FileExists("d:\\web.txt"))
-//						{
-//							fso.CreateTextFile("d:\\web.txt", true);
-//						}
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("【相机设置界面已关闭】close---" + h+":"+m+":"+s+":"+ss);
-//						f.WriteBlankLines(1);
-//						f.Close(); 
 			});
 //  			  $(window).bind('beforeunload',function()
 //			  { 
@@ -156,84 +152,7 @@
             var isvalid = new Array(); //数据无效的数组。每个不合法项的ID 组成的数组。
             $(document).ready(function() {
 
-// 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						if(!fso.FileExists("d:\\web.txt"))
-//						{
-//							fso.CreateTextFile("d:\\web.txt", true);
-//						}
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("【相机设置界面开始】star---" + h+":"+m+":"+s+":"+ss);
-//						f.WriteBlankLines(1);
-//						f.Close(); 		
-			if(parent.ip == "")
-			{
-				parent.getip();
-			}	
-		   if(parent.port==""|| parent.port == "undefined")
-		   {
-			   alert("getCookie(SdkPort)");
-			   parent.port = getCookie("SdkPort");
-			   if(parent.port == "" || parent.port == "undefined")
-			   {
-				   if(parent.id == "" || parent.id == "undefined")
-				   {
-					  parent.id = getQueryString("id"); 
-				   }
-					GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", getportsuccessfunc);   
-			   }
-			   else
-			   {
-					LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);   
-			   }
-			   
-			   function getportsuccessfunc(data)
-				{
-					var PackDate=new UnPackData(data);
-					if(PackDate.Content!=null)
-					{
-						if(PackDate.Content.RetCode=="0")
-						{
-							
-//						var fso = new ActiveXObject("Scripting.FileSystemObject");
-//						
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("相机设置：LoadImg camera begin(cgi)---" + h+":"+m+":"+s + ":" +ss);
-//						f.WriteBlankLines(1);
-//						f.Close();  
-
-								parent.port=PackDate.Content.SDK_Port;
-								LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
-						}
-					}
-				}
-				delete PackDate;
-		   }
-		   else
-		   {
-//			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
-//																
-//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
-//						var Day = new Date();
-//						var h = Day.getHours();
-//						var m = Day.getMinutes();
-//						var s = Day.getSeconds();
-//						var ss = Day.getMilliseconds();
-//						f.WriteLine("相机设置：LoadImg camera begin(no cgi)---" + h+":"+m+":"+s + ":" +ss);
-//						f.WriteBlankLines(1);
-//						f.Close();
-						  
-		   		LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
-		   }		
+		
 
 		   
 //			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
@@ -246,7 +165,8 @@
 //						var ss = Day.getMilliseconds();
 //						f.WriteLine("相机设置：init begin---"+ h+":"+m+":"+s + ":" +ss);
 //						f.WriteBlankLines(1);
-//						f.Close(); 
+//						f.Close();
+				f1(loadfirstimg); 
 				//初始化
 				init();	
 //			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
@@ -509,7 +429,7 @@
                 $("#bdefault").bind("click",
                 function() {
 						//判断权限
-						parent.StartimeVideo();
+						//parent.StartimeVideo();
 						if(parent.shipinAuth == false)
 						{
 							alert("没有权限！");
@@ -636,7 +556,7 @@
                 $("#brightnessadd").bind("click",
                 function(e) {
 				//判断是否有视频调节权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -657,7 +577,7 @@
                 $("#brightnesssub").bind("click",
                 function(e) {
 				//判断是否有视频调节权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -679,7 +599,7 @@
                 $("#contrastadd").bind("click",
                 function(e) {
 				//判断是否有视频调节权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -699,7 +619,7 @@
                 $("#contrastsub").bind("click",
                 function(e) {
 				//判断是否有视频调节权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -719,7 +639,7 @@
                 $("#sharpnesssub").bind("click",
                 function(e) {
 				//判断是否有视频调节权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -739,7 +659,7 @@
                 $("#sharpnessadd").bind("click",
                 function(e) {
 				//判断是否有视频调节权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -759,7 +679,7 @@
                 $("#huesub").bind("click",
                 function(e) {
 				//判断是否有视频调节权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -779,7 +699,7 @@
                 $("#hueadd").bind("click",
                 function(e) {
 				//判断是否有视频调节权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -799,7 +719,7 @@
                 $("#saturationadd").bind("click",
                 function(e) {
 				//判断是否有视频调节权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -818,7 +738,7 @@
                 $("#saturationsub").bind("click",
                 function(e) {
 				//判断是否有视频调节权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -973,7 +893,7 @@
                 function(e) {
 
 				//判断权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -1082,6 +1002,22 @@
 				alert("设置成功！");
 				
 });
+
+// 			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+//						if(!fso.FileExists("d:\\web.txt"))
+//						{
+//							fso.CreateTextFile("d:\\web.txt", true);
+//						}
+//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+//						var Day = new Date();
+//						var h = Day.getHours();
+//						var m = Day.getMinutes();
+//						var s = Day.getSeconds();
+//						var ss = Day.getMilliseconds();
+//						f.WriteLine("【相机设置界面开始】star---" + h+":"+m+":"+s+":"+ss);
+//						f.WriteBlankLines(1);
+//						f.Close(); 		
+
             });
             function closemodal() {
                 $.modal.close();
@@ -1091,7 +1027,7 @@
             var request;
             function sliderFunction(e, ui, thisid) {
 				//判断是否有视频调节权限
-				parent.StartimeVideo();
+				//parent.StartimeVideo();
 				if(parent.shipinAuth == false)
 				{
 					alert("没有权限！");
@@ -1710,7 +1646,7 @@
 
 		while(true)
 		{
-//			parent.StartimeVideo();
+//			parent.StartimeVideo();!!!
 			if(parent.VideoAuth == 1)
 			{
 				break;
@@ -1724,7 +1660,7 @@
 			{
 				//alert("StartimeVideo");
 				parent.sleep(500);
-				//parent.StartimeVideo();
+				//parent.StartimeVideo();!!!
 				parent.StartimeVideo();	
 				//alert("获取视频预览权限失败！")
 				//return;		
@@ -1919,6 +1855,12 @@
 					break;
 					case "125":
 					$("#01shutter_min").val(125);
+					break;
+					case "110":
+					$("#01shutter_min").val(110);
+					break;
+					case "100":
+					$("#01shutter_min").val(100);
 					break;
 					default:
 					break;
@@ -2387,6 +2329,74 @@
 //					return;
 //				}
 //			}
+
+			function loadfirstimg()
+			{
+			if(parent.ip == "")
+			{
+				parent.getip();
+			}	
+		   if(parent.port==""|| parent.port == "undefined")
+		   {
+			   alert("getCookie(SdkPort)");
+			   parent.port = getCookie("SdkPort");
+			   if(parent.port == "" || parent.port == "undefined")
+			   {
+				   if(parent.id == "" || parent.id == "undefined")
+				   {
+					  parent.id = getQueryString("id"); 
+				   }
+					GetAndSet("GetNetworkPort","json","{SessionId:"+parent.id+",AuthValue:0}", getportsuccessfunc);   
+			   }
+			   else
+			   {
+					LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);   
+			   }
+			   
+			   function getportsuccessfunc(data)
+				{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							
+//						var fso = new ActiveXObject("Scripting.FileSystemObject");
+//						
+//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+//						var Day = new Date();
+//						var h = Day.getHours();
+//						var m = Day.getMinutes();
+//						var s = Day.getSeconds();
+//						var ss = Day.getMilliseconds();
+//						f.WriteLine("相机设置：LoadImg camera begin(cgi)---" + h+":"+m+":"+s + ":" +ss);
+//						f.WriteBlankLines(1);
+//						f.Close();  
+
+								parent.port=PackDate.Content.SDK_Port;
+								LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+						}
+					}
+				}
+				delete PackDate;
+		   }
+		   else
+		   {
+//			   			var fso = new ActiveXObject("Scripting.FileSystemObject");
+//																
+//						var f = fso.OpenTextFile("d:\\web.txt", 8,true,-1);
+//						var Day = new Date();
+//						var h = Day.getHours();
+//						var m = Day.getMinutes();
+//						var s = Day.getSeconds();
+//						var ss = Day.getMilliseconds();
+//						f.WriteLine("相机设置：LoadImg camera begin(no cgi)---" + h+":"+m+":"+s + ":" +ss);
+//						f.WriteBlankLines(1);
+//						f.Close();
+						  
+		   		LoadImg(getCookie("gmiwebusername"),getCookie("gmiwebpassword"),parent.ip,parent.port);
+		   }	
+			}
         </script>
     </head>
     
@@ -2603,6 +2613,12 @@
                         </div>
                         <div class="shuru">
                             <select id="01shutter_min">
+                                <option value='100'>
+                                    1/32000
+                                </option>
+                                <option value='110'>
+                                    1/16000
+                                </option>
                                 <option value='125'>
                                     1/8000
                                 </option>

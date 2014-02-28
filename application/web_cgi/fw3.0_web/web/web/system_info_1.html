@@ -205,7 +205,7 @@ else if(record == "1")//未录像
 		//配置设备编号
 		function SBBHBTNOK()
 		{
-			parent.StartimeVideo();
+			//parent.StartimeVideo();
 			if(parent.canspzAuth == false|| parent.UserLevel != 1)
 			{
 				alert("没有权限！");
@@ -267,7 +267,7 @@ else if(record == "1")//未录像
 		{
 			//如果是观察员
 			//if(parent.UserLevel == 3)
-			parent.StartimeVideo();
+			//parent.StartimeVideo();
 			if(parent.canspzAuth == false)
 			{
 				$("#SBBHNAME").attr("disabled", "disabled");
@@ -363,7 +363,7 @@ else if(record == "1")//未录像
                             </div>
                             <div class="video_top">
                             	<div class="system_ma_list">WEB版本</div>
-                                <div class="system_ma_list divinfo" id="webvision">W:3.0.3.2-A:1.0.0.9</div>
+                                <div class="system_ma_list divinfo" id="webvision">W:3.0.4.1-A:1.0.0.9</div>
                             </div>
 <!--                                <div class="video_top" id="DeviceIdbtnok">
                                 <input class="btn22" type="button" id="sbbhbtn" onclick="SBBHBTNOK()" value="保存">

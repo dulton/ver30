@@ -164,7 +164,7 @@ $(document).ready(function(){
 	$('#btn_ok').click(setDateTime);
 	$('#btn_cancel').click(function(){
 	//判断权限
-	parent.StartimeVideo();
+	//parent.StartimeVideo();
 	if(parent.canspzAuth == false)
 	{
 		alert("没有权限！");
@@ -329,7 +329,7 @@ function check_manual_time(){ //检查手动输入时间
 
 function setDateTime(){
 	//判断权限
-	parent.StartimeVideo();
+	//parent.StartimeVideo();
 	if(parent.canspzAuth == false)
 	{
 		alert("没有权限！");
@@ -434,13 +434,73 @@ function SetTime(cgiFncCmd, cgiContentType, Content,successfunc,TB)
         url: url,
 		data: "cgiFncCmd=" + cgiFncCmd + "&cgiContentType=" + cgiContentType + "&Content=" + Content,
         type: "post",
+		timeout: 1000,
         success: function(data) {
            if(successfunc && typeof successfunc === 'function')
 		   {
 			   successfunc(data);
 		   }
         },
+		error: function (xmlHttpRequest, error) {
+                            SetTimeOut();
+                        }
     });	
+}
+//set time out
+function SetTimeOut()
+{
+	GetAndSet("GetTime","json","{SessionId:"+parent.id+",AuthValue:0}", SetTimeOutData);
+}
+function SetTimeOutData(txt)
+{
+		var PackDate=new UnPackData(txt);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.cgiFncCmd=="GetTime")
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							//获取手动设置时间						
+							var Udate = $("#pc_date").val();
+							var UTime = $('#pc_time').val().split(":")[0]+":"+$('#pc_time').val().split(":")[1];
+							//time
+							var sHour =  PackDate.Content.Hour;
+							var sMinute = PackDate.Content.Minute;
+							var sSecond = PackDate.Content.Second;
+							sHour = CheckTimeRight(sHour);
+							sMinute = CheckTimeRight(sMinute);
+							sSecond = CheckTimeRight(sSecond);
+							
+							var datestr = CheckTimeRight(PackDate.Content.Year)+"-"+CheckTimeRight(PackDate.Content.Month)+"-"+CheckTimeRight(PackDate.Content.Day);
+							var timestr = sHour+":"+sMinute;
+
+							if(Udate == datestr && UTime == timestr)
+							{
+
+								alert("设置成功！");
+//								stopAutoTime(devTimehand);
+//								devTimehand = null;
+//								//getDevTime();
+//								$('#dev_date').val(datestr);
+//								timestr += ":"+sSecond;
+//								$('#dev_time').val(timestr);
+//								var d = parseTime(datestr, timestr);
+//								devTimehand = autoTime(d, 'dev_date', 'dev_time');
+								stopAutoTime(devTimehand);
+								devTimehand = null;
+								getDevTime();
+							}
+							else
+							{
+								alert("设置失败！");
+							}
+						}
+						else
+						{
+							alert("设置失败！");
+						}
+					}
+				}	
 }
 function setTimefunc(data)
 {

@@ -101,8 +101,9 @@
 			var Recordhf = true;	//录像回放 9
 			var AuthClock = 0;	//权限定时获取
 			var Clock;
-
-	
+			
+			var PrivateLens = "";	//是否支持自動聚焦
+			var PrivatePIR = "";	//是否支持PIR
 
 			//获取本地配置
 			function getLocalSet()
@@ -239,10 +240,36 @@
 				currentsrc="ylanzkai_1.html";
 			}
 			
+			function GetStream()
+			{
+				var  content={};
+				content.SessionId=id;
+				content.AuthValue=Authvalue;
 
+				contentstr=jsonToString(content);
+				GetAndSet("GetEncodeStreamNum","json",contentstr, sucess_GetStream,true);
+				
+			}
+			function sucess_GetStream(data)
+			{
+				var PackDate=new UnPackData(data);
+				if(PackDate.Content!=null)
+				{
+					if(PackDate.Content.RetCode=="0")
+					{
+						//提取码流数目
+						var num = PackDate.Content.StreamNum;
+						maxStreams = num;
+						StreamShow = num;
+					}
+				}	
+			}
 						
 			$(document).ready(function() {
 
+			//获取码流
+			GetStream();
+			
 			//设置权限
 			SetgmiAuthvalue();
 
@@ -301,6 +328,23 @@
 					}
 					StreamNum_NLJ = PackDate.Content.XmlBuf.capabilities.device.media.maxstreamnum;
 					StreamNum_NLJ = parseInt(parent.StreamNum_NLJ,10);
+					
+					//是否支持PIR
+					PrivatePIR = PackDate.Content.XmlBuf.capabilities.device.private.pir;
+					//PrivatePIR = 1;
+					
+					//是否支持自動聚焦
+					PrivateLens = PackDate.Content.XmlBuf.capabilities.device.private.lens;
+					//PrivateLens = "NONE";
+					if(PrivatePIR == "1")
+					{
+						//$("#avideoset").css("display", "none");
+					}
+					else if(PrivatePIR == "0" || PrivatePIR == "undefined"||PrivatePIR == "")
+					{
+						//$("#PIR").css("display", "none");
+						$("#PIR").remove();
+					}
 				}
 				delete PackDate;
 			}
@@ -313,14 +357,15 @@
 				
 			 $("#bview").bind("click",
                     function(e) {
-								deleteCookie(currenturlcookiename);//IE6 cookie 限制 。先删后加。
-                                setCookie(currenturlcookiename, "ylanzkai_1.html");
                         $("#sideNav").css("visibility", "hidden");
 						$("#bset").css("display","block");
 					    $("#bview").css("display","none");
 
 						
                         $("#iframe1").attr("src", "ylanzkai_1.html");
+								deleteCookie(currenturlcookiename);//IE6 cookie 限制 。先删后加。
+                                setCookie(currenturlcookiename, "ylanzkai_1.html");
+
                        
                     });
 
@@ -954,18 +999,23 @@
                                 </li>
                             </ul>
                         </li>
-                        <li class="level1"  style="display:none">
+                        <li class="level1"  >
                             <a href="#none" name="motion_detection_1.html" id="aeventset" level="1">
                                 事件设置
                             </a>
                             <ul class="level2">
-                                <li id="ydzc">
-                                    <a href="#none" name="motion_detection_1.html" id="adetection" level="2">
+                                <li id="ydzc" style="display:none">
+                                    <a href="#none" name="motion_detection_1.html" id="adetection" level="2" >
                                         移动侦测
                                     </a>
                                 </li>
-                                <li id="spyc">
-                                    <a href="#none" name="video_anomaly_1.html" id="aabnormal" level="2">
+                                <li id="PIR">
+                                    <a href="#none" name="PIR_detection_1.html" id="adetection" level="2">
+                                        PIR侦测
+                                    </a>
+                                </li>
+                                <li id="spyc" style="display:none">
+                                    <a href="#none" name="video_anomaly_1.html" id="aabnormal" level="2" >
                                         视频异常
                                     </a>
                                 </li>
@@ -979,8 +1029,8 @@
                                         报警输出
                                     </a>
                                 </li>
-                                 <li id="sbgz">
-                                    <a href="#none" name="devicefailure.html" level="2">
+                                 <li id="sbgz" style="display:none">
+                                    <a href="#none" name="devicefailure.html" level="2" >
                                         设备故障
                                     </a>
                                 </li>
