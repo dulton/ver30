@@ -1,0 +1,1634 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+            html, body { margin:0; padding:0; background-color:#242424; }
+        </style>
+        <link href="css/inner_frame.css" type="text/css" rel="stylesheet" />
+        <link href="css/wkadd.css" rel="stylesheet" type="text/css" />
+        <script type="text/javascript" src="js/jquery-1.7.1.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery.simplemodal.1.4.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/util.js">
+        </script>
+        <script type="text/javascript" src="js/SetAndGetValue.js">
+        </script>
+        <script type="text/javascript" src="js/js_lang.js">
+        </script>
+        <script type="text/javascript" src="js/js_cookie.js">
+        </script>
+        <script>
+		//每天四个时间段，总共1440分钟  每块平均205分钟， 总长度360px，每分钟长度是0.25
+		var InputData1 = ['0','0','0','0','0','0','0','0'];
+		var InputType1 = ['0','0','0','0','0','0','0','0'];
+		var InputData2 = ['0','0','0','0','0','0','0','0'];
+		var InputType2 = ['0','0','0','0','0','0','0','0'];
+		var InputData3 = ['0','0','0','0','0','0','0','0'];
+		var InputType3 = ['0','0','0','0','0','0','0','0'];
+		var InputData4 = ['0','0','0','0','0','0','0','0'];
+		var InputType4 = ['0','0','0','0','0','0','0','0'];
+		var InputData5 = ['0','0','0','0','0','0','0','0'];
+		var InputType5 = ['0','0','0','0','0','0','0','0'];
+		var InputData6 = ['0','0','0','0','0','0','0','0'];
+		var InputType6 = ['0','0','0','0','0','0','0','0'];
+		var InputData7 = ['0','0','0','0','0','0','0','0'];
+		var InputType7 = ['0','0','0','0','0','0','0','0'];
+		
+		var week1 = null;
+		var week2 = null;
+		var week3 = null;
+		var week4 = null;
+		var week5 = null;
+		var week6 = null;
+		var week7 = null;
+		
+		//week类
+		function  week (){
+			num=0,
+			
+			Hs1=0,
+			Ms1=0,
+			He1=0,
+			Me1=0,
+			
+			Hs2=0,
+			Ms2=0,
+			He2=0,
+			Me2=0,
+			
+			Hs3=0,
+			Ms3=0,
+			He3=0,
+			Me3=0,
+				
+			Hs4=0,
+			Ms4=0,
+			He4=0,
+			Me4=0
+		};
+            function changeLanguage(lang) {
+                TranslatePage(lang);
+            }
+			//qingkonng shijain
+			function clearTime()
+			{
+				InputData1 = ['0','0','0','0','0','0','0','0'];
+				InputType1 = ['0','0','0','0','0','0','0','0'];
+				InputData2 = ['0','0','0','0','0','0','0','0'];
+				InputType2 = ['0','0','0','0','0','0','0','0'];
+				InputData3 = ['0','0','0','0','0','0','0','0'];
+				InputType3 = ['0','0','0','0','0','0','0','0'];
+				InputData4 = ['0','0','0','0','0','0','0','0'];
+				InputType4 = ['0','0','0','0','0','0','0','0'];
+				InputData5 = ['0','0','0','0','0','0','0','0'];
+				InputType5 = ['0','0','0','0','0','0','0','0'];
+				InputData6 = ['0','0','0','0','0','0','0','0'];
+				InputType6 = ['0','0','0','0','0','0','0','0'];
+				InputData7 = ['0','0','0','0','0','0','0','0'];
+				InputType7 = ['0','0','0','0','0','0','0','0'];	
+			}
+		
+				//设置布防时间
+				function SetBFtime()
+				{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;
+					content.ScheduleId=2;	
+					content.Index=0;
+					content.StartTime00=ReturnLengh(parseInt(week7.Hs1,10),parseInt(week7.Ms1,10));
+					content.EndTime00=ReturnLengh(parseInt(week7.He1,10),parseInt(week7.Me1,10));
+					content.StartTime01=ReturnLengh(parseInt(week7.Hs2,10),parseInt(week7.Ms2,10));
+					content.EndTime01=ReturnLengh(parseInt(week7.He2,10),parseInt(week7.Me2,10));
+					content.StartTime02=ReturnLengh(parseInt(week7.Hs3,10),parseInt(week7.Ms3,10));
+					content.EndTime02=ReturnLengh(parseInt(week7.He3,10),parseInt(week7.Me3,10));
+					content.StartTime03=ReturnLengh(parseInt(week7.Hs4,10),parseInt(week7.Ms4,10));
+					content.EndTime03=ReturnLengh(parseInt(week7.He4,10),parseInt(week7.Me4,10));
+
+					content.StartTime10=ReturnLengh(parseInt(week1.Hs1,10),parseInt(week1.Ms1,10));
+					content.EndTime10=ReturnLengh(parseInt(week1.He1,10),parseInt(week1.Me1,10));
+					content.StartTime11=ReturnLengh(parseInt(week1.Hs2,10),parseInt(week1.Ms2,10));
+					content.EndTime11=ReturnLengh(parseInt(week1.He2,10),parseInt(week1.Me2,10));
+					content.StartTime12=ReturnLengh(parseInt(week1.Hs3,10),parseInt(week1.Ms3,10));
+					content.EndTime12=ReturnLengh(parseInt(week1.He3,10),parseInt(week1.Me3,10));
+					content.StartTime13=ReturnLengh(parseInt(week1.Hs4,10),parseInt(week1.Ms4,10));
+					content.EndTime13=ReturnLengh(parseInt(week1.He4,10),parseInt(week1.Me4,10));
+			
+					content.StartTime20=ReturnLengh(parseInt(week2.Hs1,10),parseInt(week2.Ms1,10));
+					content.EndTime20=ReturnLengh(parseInt(week2.He1,10),parseInt(week2.Me1,10));
+					content.StartTime21=ReturnLengh(parseInt(week2.Hs2,10),parseInt(week2.Ms2,10));
+					content.EndTime21=ReturnLengh(parseInt(week2.He2,10),parseInt(week2.Me2,10));
+					content.StartTime22=ReturnLengh(parseInt(week2.Hs3,10),parseInt(week2.Ms3,10));
+					content.EndTime22=ReturnLengh(parseInt(week2.He3,10),parseInt(week2.Me3,10));
+					content.StartTime23=ReturnLengh(parseInt(week2.Hs4,10),parseInt(week2.Ms4,10));
+					content.EndTime23=ReturnLengh(parseInt(week2.He4,10),parseInt(week2.Me4,10));
+					
+					content.StartTime30=ReturnLengh(parseInt(week3.Hs1,10),parseInt(week3.Ms1,10));
+					content.EndTime30=ReturnLengh(parseInt(week3.He1,10),parseInt(week3.Me1,10));
+					content.StartTime31=ReturnLengh(parseInt(week3.Hs2,10),parseInt(week3.Ms2,10));
+					content.EndTime31=ReturnLengh(parseInt(week3.He2,10),parseInt(week3.Me2,10));
+					content.StartTime32=ReturnLengh(parseInt(week3.Hs3,10),parseInt(week3.Ms3,10));
+					content.EndTime32=ReturnLengh(parseInt(week3.He3,10),parseInt(week3.Me3,10));
+					content.StartTime33=ReturnLengh(parseInt(week3.Hs4,10),parseInt(week3.Ms4,10));
+					content.EndTime33=ReturnLengh(parseInt(week3.He4,10),parseInt(week3.Me4,10));
+					
+					content.StartTime40=ReturnLengh(parseInt(week4.Hs1,10),parseInt(week4.Ms1,10));
+					content.EndTime40=ReturnLengh(parseInt(week4.He1,10),parseInt(week4.Me1,10));
+					content.StartTime41=ReturnLengh(parseInt(week4.Hs2,10),parseInt(week4.Ms2,10));
+					content.EndTime41=ReturnLengh(parseInt(week4.He2,10),parseInt(week4.Me2,10));
+					content.StartTime42=ReturnLengh(parseInt(week4.Hs3,10),parseInt(week4.Ms3,10));
+					content.EndTime42=ReturnLengh(parseInt(week4.He3,10),parseInt(week4.Me3,10));
+					content.StartTime43=ReturnLengh(parseInt(week4.Hs4,10),parseInt(week4.Ms4,10));
+					content.EndTime43=ReturnLengh(parseInt(week4.He4,10),parseInt(week4.Me4,10));
+					
+					content.StartTime50=ReturnLengh(parseInt(week5.Hs1,10),parseInt(week5.Ms1,10));
+					content.EndTime50=ReturnLengh(parseInt(week5.He1,10),parseInt(week5.Me1,10));
+					content.StartTime51=ReturnLengh(parseInt(week5.Hs2,10),parseInt(week5.Ms2,10));
+					content.EndTime51=ReturnLengh(parseInt(week5.He2,10),parseInt(week5.Me2,10));
+					content.StartTime52=ReturnLengh(parseInt(week5.Hs3,10),parseInt(week5.Ms3,10));
+					content.EndTime52=ReturnLengh(parseInt(week5.He3,10),parseInt(week5.Me3,10));
+					content.StartTime53=ReturnLengh(parseInt(week5.Hs4,10),parseInt(week5.Ms4,10));
+					content.EndTime53=ReturnLengh(parseInt(week5.He4,10),parseInt(week5.Me4,10));
+					
+					content.StartTime60=ReturnLengh(parseInt(week6.Hs1,10),parseInt(week6.Ms1,10));
+					content.EndTime60=ReturnLengh(parseInt(week6.He1,10),parseInt(week6.Me1,10));
+					content.StartTime61=ReturnLengh(parseInt(week6.Hs2,10),parseInt(week6.Ms2,10));
+					content.EndTime61=ReturnLengh(parseInt(week6.He2,10),parseInt(week6.Me2,10));
+					content.StartTime62=ReturnLengh(parseInt(week6.Hs3,10),parseInt(week6.Ms3,10));
+					content.EndTime62=ReturnLengh(parseInt(week6.He3,10),parseInt(week6.Me3,10));
+					content.StartTime63=ReturnLengh(parseInt(week6.Hs4,10),parseInt(week6.Ms4,10));
+					content.EndTime63=ReturnLengh(parseInt(week6.He4,10),parseInt(week6.Me4,10));
+					contentstr=jsonToString(content);
+					GetAndSet("SysSetAlmScheduleTime","json",contentstr, sucess_SysSetAlmScheduleTime);	
+					
+				}
+				function sucess_SysSetAlmScheduleTime(data)
+				{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							alert("设置布防时间成功！");
+							return;
+						}
+						else
+						{
+							alert("设置布防时间失败！");
+							return;
+						}
+					}
+					else
+					{
+						alert("设置布防时间失败！");
+						return;
+					}
+				}
+				//读取每天的布防时间
+				function GetProTime()
+				{
+					var stmp1 = "";
+					var stmp2 = "";
+					var stmp3 = "";
+					var stmp4 = "";
+					var stmp5 = "";
+					var stmp6 = "";
+					var stmp7 = "";	
+					var color = "";
+					var length = 0;
+					var stmp = 0;
+					
+					$(".weekdiv").remove();
+					//获取周一时间
+					for(var i=0;i<8;i++)
+					{
+						//获取数据类型 0无事件 1布防时间
+						if(InputType1[i] == 0)
+						{
+							color = "#fcf8f5";
+							length = InputData1[i];
+						}
+						else if(InputType1[i] == 1)
+						{
+							color = "#1fb4f2";
+							length = InputData1[i];
+						}
+						stmp1 += "<div style='background:"+color+"; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+						stmp += parseInt(length,10);
+
+					}
+					if(stmp < 360){
+						length = 360 - parseInt(stmp,10);
+					stmp1 += "<div style='background:#fcf8f5; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+					}
+					stmp=0;
+					//获取周2时间
+					for(var i=0;i<8;i++)
+					{
+						//获取数据类型 0无事件 1布防时间
+						if(InputType2[i] == 0)
+						{
+							color = "#fcf8f5";
+							length = InputData2[i];
+						}
+						else if(InputType2[i] == 1)
+						{
+							color = "#1fb4f2";
+							length = InputData2[i];
+						}
+						stmp2 += "<div style='background:"+color+"; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+						stmp += parseInt(length,10);
+					}
+					if(stmp < 360){
+						length = 360 - parseInt(stmp,10);
+					stmp2 += "<div style='background:#fcf8f5; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+					}
+					stmp=0;
+					//获取周3时间
+					for(var i=0;i<8;i++)
+					{
+						//获取数据类型 0无事件 1布防时间
+						if(InputType3[i] == 0)
+						{
+							color = "#fcf8f5";
+							length = InputData3[i];
+						}
+						else if(InputType3[i] == 1)
+						{
+							color = "#1fb4f2";
+							length = InputData3[i];
+						}
+						stmp3 += "<div style='background:"+color+"; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+						
+						stmp += parseInt(length,10);
+					}
+					if(stmp < 360){
+						length = 360 - parseInt(stmp,10);
+					stmp3 += "<div style='background:#fcf8f5; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+					}
+					stmp=0;
+					//获取周4时间
+					for(var i=0;i<8;i++)
+					{
+						//获取数据类型 0无事件 1布防时间
+						if(InputType4[i] == 0)
+						{
+							color = "#fcf8f5";
+							length = InputData4[i];
+						}
+						else if(InputType4[i] == 1)
+						{
+							color = "#1fb4f2";
+							length = InputData4[i];
+						}
+						stmp4 += "<div style='background:"+color+"; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+						stmp += parseInt(length,10);
+					}
+					if(stmp < 360){
+						length = 360 - parseInt(stmp,10);
+					stmp4 += "<div style='background:#fcf8f5; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+					}
+					stmp=0;
+					//获取周5时间
+					for(var i=0;i<8;i++)
+					{
+						//获取数据类型 0无事件 1布防时间
+						if(InputType5[i] == 0)
+						{
+							color = "#fcf8f5";
+							length = InputData5[i];
+						}
+						else if(InputType5[i] == 1)
+						{
+							color = "#1fb4f2";
+							length = InputData5[i];
+						}
+						stmp5 += "<div style='background:"+color+"; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+						stmp += parseInt(length,10);
+					}
+					if(stmp < 360){
+						length = 360 - parseInt(stmp,10);
+					stmp5 += "<div style='background:#fcf8f5; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+					}
+					stmp=0;
+					//获取周6时间
+					for(var i=0;i<8;i++)
+					{
+						//获取数据类型 0无事件 1布防时间
+						if(InputType6[i] == 0)
+						{
+							color = "#fcf8f5";
+							length = InputData6[i];
+						}
+						else if(InputType6[i] == 1)
+						{
+							color = "#1fb4f2";
+							length = InputData6[i];
+						}
+						stmp6 += "<div style='background:"+color+"; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+						stmp += parseInt(length,10);
+					}
+					if(stmp < 360){
+						length = 360 - parseInt(stmp,10);
+					stmp6 += "<div style='background:#fcf8f5;width:"+length+"px;' class='weekdiv'></div><span> </span>";
+					}
+					stmp=0;
+					//获取周日时间
+					for(var i=0;i<8;i++)
+					{
+						//获取数据类型 0无事件 1布防时间
+						if(InputType7[i] == 0)
+						{
+							color = "#fcf8f5";
+							length = InputData7[i];
+						}
+						else if(InputType7[i] == 1)
+						{
+							color = "#1fb4f2";
+							length = InputData7[i];
+						}
+						stmp7 += "<div style='background:"+color+"; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+						stmp += parseInt(length,10);
+					}
+					if(stmp < 360){
+						length = 360 - parseInt(stmp,10);
+					stmp7 += "<div style='background:#fcf8f5; width:"+length+"px;' class='weekdiv'></div><span> </span>";
+					}
+					stmp=0;
+					$("#week1").append(stmp1);
+					$("#week2").append(stmp2);
+					$("#week3").append(stmp3);
+					$("#week4").append(stmp4);
+					$("#week5").append(stmp5);
+					$("#week6").append(stmp6);
+					$("#week7").append(stmp7);					
+				}
+				//关闭布防函数
+				function closeframe()
+				{
+					$.modal.close();
+					return;
+				}
+				//CGI get time
+				function GetProTimeCGI()
+				{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;	
+					content.ScheduleId=2;
+					content.Index=0;
+					contentstr=jsonToString(content);
+					GetAndSet("SysGetAlmScheduleTime","json",contentstr, sucess_SysGetAlmScheduleTime);
+				}
+				function sucess_SysGetAlmScheduleTime(data)
+				{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							//周一
+							var Shourtmp = 0;
+							var Sminutmp = 0;
+							var Ehourtmp = 0;
+							var Eminutmp = 0;
+							var timetmp = [0,0];
+							week7.num = 0;
+							if(parseInt(PackDate.Content.EndTime00,10)>0){week7.num ++;}
+							if(parseInt(PackDate.Content.EndTime01,10)>0){week7.num ++;}
+							if(parseInt(PackDate.Content.EndTime02,10)>0){week7.num ++;}
+							if(parseInt(PackDate.Content.EndTime03,10)>0){week7.num ++;}
+							timetmp = ReturnTime(PackDate.Content.StartTime00);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime00);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week7.Hs1 = Shourtmp;week7.Ms1 = Sminutmp;week7.He1 = Ehourtmp;week7.Me1 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime01);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime01);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week7.Hs2 = Shourtmp;week7.Ms2 = Sminutmp;week7.He2 = Ehourtmp;week7.Me2 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime02);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime02);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week7.Hs3 = Shourtmp;week7.Ms3 = Sminutmp;week7.He3 = Ehourtmp;week7.Me3 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime03);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime03);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week7.Hs4 = Shourtmp;week7.Ms4 = Sminutmp;week7.He4 = Ehourtmp;week7.Me4 = Eminutmp;
+							
+							week1.num = 0;
+							if(parseInt(PackDate.Content.EndTime10,10)>0){week1.num ++;}
+							if(parseInt(PackDate.Content.EndTime11,10)>0){week1.num ++;}
+							if(parseInt(PackDate.Content.EndTime12,10)>0){week1.num ++;}
+							if(parseInt(PackDate.Content.EndTime13,10)>0){week1.num ++;}
+							timetmp = ReturnTime(PackDate.Content.StartTime10);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime10);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week1.Hs1 = Shourtmp;week1.Ms1 = Sminutmp;week1.He1 = Ehourtmp;week1.Me1 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime11);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime11);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week1.Hs2 = Shourtmp;week1.Ms2 = Sminutmp;week1.He2 = Ehourtmp;week1.Me2 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime12);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime12);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week1.Hs3 = Shourtmp;week1.Ms3 = Sminutmp;week1.He3 = Ehourtmp;week1.Me3 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime13);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime13);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week1.Hs4 = Shourtmp;week1.Ms4 = Sminutmp;week1.He4 = Ehourtmp;week1.Me4 = Eminutmp;
+							
+							week2.num = 0;
+							if(parseInt(PackDate.Content.EndTime20,10)>0){week2.num ++;}
+							if(parseInt(PackDate.Content.EndTime21,10)>0){week2.num ++;}
+							if(parseInt(PackDate.Content.EndTime22,10)>0){week2.num ++;}
+							if(parseInt(PackDate.Content.EndTime23,10)>0){week2.num ++;}
+							timetmp = ReturnTime(PackDate.Content.StartTime20);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime20);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week2.Hs1 = Shourtmp;week2.Ms1 = Sminutmp;week2.He1 = Ehourtmp;week2.Me1 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime21);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime21);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week2.Hs2 = Shourtmp;week2.Ms2 = Sminutmp;week2.He2 = Ehourtmp;week2.Me2 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime22);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime22);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week2.Hs3 = Shourtmp;week2.Ms3 = Sminutmp;week2.He3 = Ehourtmp;week2.Me3 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime23);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime23);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week2.Hs4 = Shourtmp;week2.Ms4 = Sminutmp;week2.He4 = Ehourtmp;week2.Me4 = Eminutmp;
+							
+							week3.num = 0;
+							if(parseInt(PackDate.Content.EndTime30,10)>0){week3.num ++;}
+							if(parseInt(PackDate.Content.EndTime31,10)>0){week3.num ++;}
+							if(parseInt(PackDate.Content.EndTime32,10)>0){week3.num ++;}
+							if(parseInt(PackDate.Content.EndTime33,10)>0){week3.num ++;}
+							timetmp = ReturnTime(PackDate.Content.StartTime30);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime30);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week3.Hs1 = Shourtmp;week3.Ms1 = Sminutmp;week3.He1 = Ehourtmp;week3.Me1 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime31);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime31);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week3.Hs2 = Shourtmp;week3.Ms2 = Sminutmp;week3.He2 = Ehourtmp;week3.Me2 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime32);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime32);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week3.Hs3 = Shourtmp;week3.Ms3 = Sminutmp;week3.He3 = Ehourtmp;week3.Me3 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime33);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime33);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week3.Hs4 = Shourtmp;week3.Ms4 = Sminutmp;week3.He4 = Ehourtmp;week3.Me4 = Eminutmp;
+
+							week4.num = 0;
+							if(parseInt(PackDate.Content.EndTime40,10)>0){week4.num ++;}
+							if(parseInt(PackDate.Content.EndTime41,10)>0){week4.num ++;}
+							if(parseInt(PackDate.Content.EndTime42,10)>0){week4.num ++;}
+							if(parseInt(PackDate.Content.EndTime43,10)>0){week4.num ++;}
+							timetmp = ReturnTime(PackDate.Content.StartTime40);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime40);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week4.Hs1 = Shourtmp;week4.Ms1 = Sminutmp;week4.He1 = Ehourtmp;week4.Me1 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime41);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime41);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week4.Hs2 = Shourtmp;week4.Ms2 = Sminutmp;week4.He2 = Ehourtmp;week4.Me2 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime42);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime42);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week4.Hs3 = Shourtmp;week4.Ms3 = Sminutmp;week4.He3 = Ehourtmp;week4.Me3 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime43);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime43);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week4.Hs4 = Shourtmp;week4.Ms4 = Sminutmp;week4.He4 = Ehourtmp;week4.Me4 = Eminutmp;
+							
+							week5.num = 0;
+							if(parseInt(PackDate.Content.EndTime50,10)>0){week5.num ++;}
+							if(parseInt(PackDate.Content.EndTime51,10)>0){week5.num ++;}
+							if(parseInt(PackDate.Content.EndTime52,10)>0){week5.num ++;}
+							if(parseInt(PackDate.Content.EndTime53,10)>0){week5.num ++;}
+							timetmp = ReturnTime(PackDate.Content.StartTime50);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime50);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week5.Hs1 = Shourtmp;week5.Ms1 = Sminutmp;week5.He1 = Ehourtmp;week5.Me1 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime51);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime51);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week5.Hs2 = Shourtmp;week5.Ms2 = Sminutmp;week5.He2 = Ehourtmp;week5.Me2 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime52);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime52);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week5.Hs3 = Shourtmp;week5.Ms3 = Sminutmp;week5.He3 = Ehourtmp;week5.Me3 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime53);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime53);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week5.Hs4 = Shourtmp;week5.Ms4 = Sminutmp;week5.He4 = Ehourtmp;week5.Me4 = Eminutmp;
+							
+							week6.num = 0;
+							if(parseInt(PackDate.Content.EndTime60,10)>0){week6.num ++;}
+							if(parseInt(PackDate.Content.EndTime61,10)>0){week6.num ++;}
+							if(parseInt(PackDate.Content.EndTime62,10)>0){week6.num ++;}
+							if(parseInt(PackDate.Content.EndTime63,10)>0){week6.num ++;}
+							timetmp = ReturnTime(PackDate.Content.StartTime60);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime60);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week6.Hs1 = Shourtmp;week6.Ms1 = Sminutmp;week6.He1 = Ehourtmp;week6.Me1 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime61);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime61);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week6.Hs2 = Shourtmp;week6.Ms2 = Sminutmp;week6.He2 = Ehourtmp;week6.Me2 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime62);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime62);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week6.Hs3 = Shourtmp;week6.Ms3 = Sminutmp;week6.He3 = Ehourtmp;week6.Me3 = Eminutmp;
+							timetmp = ReturnTime(PackDate.Content.StartTime63);
+							Shourtmp =  timetmp[0];
+							Sminutmp =  timetmp[1];
+							timetmp = ReturnTime(PackDate.Content.EndTime63);
+							Ehourtmp =  timetmp[0];
+							Eminutmp =  timetmp[1];
+							week6.Hs4 = Shourtmp;week6.Ms4 = Sminutmp;week6.He4 = Ehourtmp;week6.Me4 = Eminutmp;
+							
+							changeBFtime();
+						}
+						else
+						{
+							alert("获取布防时间失败！");
+							return;
+						}
+					}
+					return;
+				}
+				
+				//获取告警输入参数
+				function GetAlarmin()
+				{
+					var  content={};
+					content.SessionId=parent.id;
+					content.AuthValue=parent.Authvalue;
+					content.AlarmId=256;
+					content.Index=0;	
+					contentstr=jsonToString(content);
+					GetAndSet("SysGetAlarmConfig","json",contentstr, sucess_SysGetAlarmConfig);
+				}
+				function sucess_SysGetAlarmConfig(data)
+				{
+					var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							if(PackDate.Content.AlarmId == "256")
+							{
+								//开启or关闭
+								if(PackDate.Content.EnableFlag == "0")//关闭
+								{
+									$("#alarmoutput_close").attr("checked", "checked");
+								}
+								else if(PackDate.Content.EnableFlag == "1")
+								{
+									$("#alarmoutput_open").attr("checked", "checked");	
+								}
+								//输出序号
+								$("#alarmoutput_num").val(PackDate.Content.OutputNumber);
+								//报警名称
+								$("#alarmoutput_name").val(PackDate.Content.Name);
+								//输出类型
+								if(PackDate.Content.NormalStatus == "0")//关闭
+								{
+									$("#alarmoutput_type_close").attr("checked", "checked");
+								}
+								else if(PackDate.Content.NormalStatus == "1")
+								{
+									$("#alarmoutput_type_open").attr("checked", "checked");	
+								}
+								//持续时间
+								$("#alarmoutput_time").val(PackDate.Content.DelayTime);
+							}
+							else
+							{
+								alert("参数不符！");
+								delete PackDate;
+								return;								
+							}
+						}
+						else
+						{
+							alert("获取报警输入参数失败！");
+							delete PackDate;
+							return;
+						}	
+					}
+
+					delete PackDate;
+				}
+            $(document).ready(function() {
+				function init()
+				{
+					//初始化星期对象
+					week1 = new week();
+					week2 = new week();
+					week3 = new week();
+					week4 = new week();
+					week5 = new week();
+					week6 = new week();
+					week7 = new week();
+				
+				}
+				//初始化
+				init();
+                // 调用模版也方法
+                parent.innerCallMe(true);
+                //语言初始化
+                initLang();
+				
+				//获取侦测时间
+				GetProTimeCGI();
+				//获取告警输入参数
+				GetAlarmin();
+                //初始化 get
+//                var section = 'DIGITALIO';
+//                GetAndSet('get', section, '', "process", false, false, 1);
+//                var section2 = 'OUTPORT';
+//                GetAndSet('get', section2, '', "process", false, false, "1");
+				//点击编辑布防
+                $("#edit").bind("click",
+                function(e) {
+					
+						var src = "TableSet.html";
+						containerId: 'simplemodal-container1',
+						$.modal('<iframe src="' + src + '" height="440px" width="726px"  frameborder="0" scrolling="no"  style="">', {
+							closeHTML: "",
+							onClose: function() {
+								//alert("close");
+								$.modal.close();
+								//document.getElementById('GMIIPCmrWebPlugIn1').style.display="block";     
+							},
+							overlayCss: {
+                            //background: "none",
+                            backgroundColor: "#242424",
+                            filter: "progid:DXImageTransform.Microsoft.Alpha(opacity=0)"
+                        },
+							overlayClose: false
+						});			
+				}); 
+                $("#change").bind("click",
+                function(e) {});
+
+                $("#submit").bind("click",
+                function(e) {
+							//判断权限
+							//parent.StartimeVideo();
+							if(parent.canspzAuth == false)
+							{
+								alert("没有权限！");
+								return;
+							}
+							
+							//open or close
+							var openorclose = 0;
+							if(document.getElementById("alarmoutput_close").checked==true)
+							{
+								openorclose = 0;
+							}
+							else if(document.getElementById("alarmoutput_open").checked==true)
+							{
+								openorclose = 1;
+							}
+							
+							//alarm output number
+							var alarmoutputnumber = $("#alarmoutput_num").val();
+							//alarm name
+							var alarmname = $("#alarmoutput_name").val();
+							//output type
+							var outputtype = 0;
+							if(document.getElementById("alarmoutput_type_close").checked==true)
+							{
+								outputtype = 0;
+							}
+							else if(document.getElementById("alarmoutput_type_open").checked==true)
+							{
+								outputtype = 1;
+							}
+							//alarmtime
+							var alarmtime = $("#alarmoutput_time").val();
+							
+							var  content={};
+							content.SessionId=parent.id;
+							content.AuthValue=parent.Authvalue;
+							content.AlarmId=256;	
+							content.Index=0;
+							
+							content.EnableFlag=openorclose;	
+							content.OutputNumber=alarmoutputnumber;	
+							content.Name=alarmname;	
+							content.NormalStatus=outputtype;	
+							content.DelayTime=alarmtime;	
+
+							contentstr=jsonToString(content);
+							GetAndSet("SysSetAlarmOutConfig","json",contentstr, sucess_SysSetAlarmOutConfig);	
+							
+							//设置布防时间
+							SetBFtime();	
+				});
+				function sucess_SysSetAlarmOutConfig(data)
+				{
+                	var PackDate=new UnPackData(data);
+					if(PackDate.Content!=null)
+					{
+						if(PackDate.Content.RetCode=="0")
+						{
+							alert("报警输出设置成功!");
+						}
+						else
+						{
+							delete PackDate;
+							alert("报警输出设置失败！");
+						}
+					}
+					else
+					{
+							delete PackDate;
+							alert("报警输出设置失败！");	
+					}
+					
+				}
+				
+                //取消功能
+                $("#reset").bind("click",
+                function(e) {
+                   /* initStreamSelect();
+                    //初始化 get
+                    var section = 'EVENTRESPONSE';
+                    GetAndSet('get', section, "", "process", false, false, "4");
+                    var section2 = "DIGITALIO";
+                    GetAndSet('get', section2, "", "process");
+                    //StyleControl();*/
+					location.reload();
+                });
+
+            });
+			//转化时间
+			function ReturnTime(time)
+			{
+				var stmp = parseInt(time,10);
+				var returntime = [0,0];
+				
+				//获取小时
+				var hour = stmp/60;
+				//获取分钟
+				var minu = stmp - parseInt((hour*60),10);
+				
+				returntime[0] = hour;
+				returntime[1] = minu;
+				return returntime;
+			}
+			//转化长度
+			function ReturnLengh(hour,muni)
+			{
+				var stmp = parseInt((hour*60 + muni),10);
+				return stmp;
+			}
+				//转化布防时间
+				function changeBFtime()
+				{
+
+					//7段长度
+					var len1 = 0;
+					var len2 = 0;
+					var len3 = 0;
+					var len4 = 0;
+					var len5 = 0;
+					var len6 = 0;
+					var len7 = 0;
+					
+					var firsttypr = true;	//表示第一段为布防
+					var writetype = 0;
+					var datatype = 0;
+
+					clearTime();
+                    //取第一段时间
+					if(week1.num >= 1)
+					{
+						//第一段为空白
+						if(week1.Hs1>0 || week1.Ms1 >0)
+						{
+							firsttypr = false;
+							writetype = (parseInt((week1.Hs1)*60,10) + parseInt((week1.Ms1),10))*0.25;InputData1[0]=writetype;InputType1[0] = 0;
+							
+							datatype = (parseInt((week1.He1 - week1.Hs1)*60,10) + parseInt((week1.Me1-week1.Ms1),10))*0.25;InputData1[1]=datatype;InputType1[1] = 1;
+						}
+						else
+						{
+							firsttypr = true;
+							datatype = (parseInt((week1.He1 - week1.Hs1),10)*60 + parseInt((week1.Me1-week1.Ms1),10))*0.25;InputData1[0]=datatype;InputType1[0] = 1;
+						}	
+					}
+					//alert("week1.Hs1="+week1.Hs1+"/week1.Ms1="+week1.Ms1+"/week1.He1="+week1.He1+"/week1.Me1="+week1.Me1);
+                    //取第2段时间
+					if(week1.num >= 2)
+					{
+						//空白
+						writetype = (parseInt((week1.Hs2-week1.He1),10)*60+parseInt((week1.Ms2-week1.Me1),10))*0.25;
+						//数值
+						datatype = (parseInt((week1.He2-week1.Hs2),10)*60+parseInt((week1.Me2-week1.Ms2),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData1[1]=writetype;InputType1[1] = 0;
+							InputData1[2]=datatype;InputType1[2] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData1[2]=writetype;InputType1[2] = 0;
+							InputData1[3]=datatype;InputType1[3] = 1;
+						}
+					}
+
+					//alert("week1.Hs2="+week1.Hs2+"/week1.Ms2="+week1.Ms2+"/week1.He2="+week1.He2+"/week1.Me2="+week1.Me2);
+                   // 取第3段时间
+					if(week1.num >= 3)
+					{
+						//空白
+						writetype = (parseInt((week1.Hs3-week1.He2),10)*60+parseInt((week1.Ms3-week1.Me2),10))*0.25;
+						//数值
+						datatype = (parseInt((week1.He3-week1.Hs3),10)*60+parseInt((week1.Me3-week1.Ms3),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData1[3]=writetype;InputType1[3] = 0;
+							InputData1[4]=datatype;InputType1[4] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData1[4]=writetype;InputType1[4] = 0;
+							InputData1[5]=datatype;InputType1[5] = 1;
+						}
+					}
+					//alert("week1.Hs3="+week1.Hs3+"/week1.Ms3="+week1.Ms3+"/week1.He3="+week1.He3+"/week1.Me3="+week1.Me3);
+                    //取第4段时间
+					if(week1.num == 4)
+					{
+						//空白
+						writetype = (parseInt((week1.Hs4-week1.He3),10)*60+parseInt((week1.Me4-week1.Me3),10))*0.25;
+						//数值
+						datatype = (parseInt((week1.He4-week1.Hs4),10)*60+parseInt((week1.Me4-week1.Ms4),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData1[5]=writetype;InputType1[5] = 0;
+							InputData1[6]=datatype;InputType1[6] = 1;
+							writetype = ((23-week1.He4)*60+(60-week1.Me4))*0.25;
+							InputData1[7]=writetype;InputType1[7] = 0;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData1[6]=writetype;InputType1[6] = 0;
+							InputData1[7]=datatype;InputType1[7] = 1;
+						}
+					}
+					//alert("week1.Hs4="+week1.Hs4+"/week1.Ms4="+week1.Ms4+"/week1.He4="+week1.He4+"/week1.Me4="+week1.Me4);
+					//alert("InputData1="+InputData1+"/InputType1="+InputType1+"\r\nInputData2="+InputData2+"/InputType2="+InputType2+"\r\nInputData3="+InputData3+"/InputType3="+InputType3+"\r\nInputData4="+InputData4+"/InputType4="+InputType4+"\r\nInputData5="+InputData5+"/InputType5="+InputType5+"\r\nInputData6="+InputData6+"/InputType6="+InputType6+"\r\nInputData7="+InputData7+"/InputType7="+InputType7);
+//---------------------------------------------------------------------------------------------------
+                    //取第一段时间
+					if(week2.num >= 1)
+					{
+						//第一段为空白
+						if(week2.Hs1>0 || week2.Ms1 >0)
+						{
+							firsttypr = false;
+							writetype = (parseInt((week2.Hs1)*60,10) + parseInt((week2.Ms1),10))*0.25;InputData2[0]=writetype;InputType2[0] = 0;
+							
+							datatype = (parseInt((week2.He1 - week2.Hs1)*60,10) + parseInt((week2.Me1-week2.Ms1),10))*0.25;InputData2[1]=datatype;InputType2[1] = 1;
+						}
+						else
+						{
+							firsttypr = true;
+							datatype = (parseInt((week2.He1 - week2.Hs1),10)*60 + parseInt((week2.Me1-week2.Ms1),10))*0.25;InputData2[0]=datatype;InputType2[0] = 1;
+						}	
+					}
+					//alert("week1.Hs1="+week1.Hs1+"/week1.Ms1="+week1.Ms1+"/week1.He1="+week1.He1+"/week1.Me1="+week1.Me1);
+                    //取第2段时间
+					if(week2.num >= 2)
+					{
+						//空白
+						writetype = (parseInt((week2.Hs2-week2.He1),10)*60+parseInt((week2.Ms2-week2.Me1),10))*0.25;
+						//数值
+						datatype = (parseInt((week2.He2-week2.Hs2),10)*60+parseInt((week2.Me2-week2.Ms2),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData2[1]=writetype;InputType2[1] = 0;
+							InputData2[2]=datatype;InputType2[2] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData2[2]=writetype;InputType2[2] = 0;
+							InputData2[3]=datatype;InputType2[3] = 1;
+						}
+					}
+
+					//alert("week1.Hs2="+week1.Hs2+"/week1.Ms2="+week1.Ms2+"/week1.He2="+week1.He2+"/week1.Me2="+week1.Me2);
+                    //取第3段时间
+					if(week2.num >= 3)
+					{
+						//空白
+						writetype = (parseInt((week2.Hs3-week2.He2),10)*60+parseInt((week2.Ms3-week2.Me2),10))*0.25;
+						//数值
+						datatype = (parseInt((week2.He3-week2.Hs3),10)*60+parseInt((week2.Me3-week2.Ms3),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData2[3]=writetype;InputType2[3] = 0;
+							InputData2[4]=datatype;InputType2[4] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData2[4]=writetype;InputType2[4] = 0;
+							InputData2[5]=datatype;InputType2[5] = 1;
+						}
+					}
+					//alert("week1.Hs3="+week1.Hs3+"/week1.Ms3="+week1.Ms3+"/week1.He3="+week1.He3+"/week1.Me3="+week1.Me3);
+                    //取第4段时间
+					if(week2.num == 4)
+					{
+						//空白
+						writetype = (parseInt((week2.Hs4-week2.He3),10)*60+parseInt((week2.Me4-week2.Me3),10))*0.25;
+						//数值
+						datatype = (parseInt((week2.He4-week2.Hs4),10)*60+parseInt((week2.Me4-week2.Ms4),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData2[5]=writetype;InputType2[5] = 0;
+							InputData2[6]=datatype;InputType2[6] = 1;
+							writetype = ((23-week2.He4)*60+(60-week2.Me4))*0.25;
+							InputData2[7]=writetype;InputType2[7] = 0;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData2[6]=writetype;InputType2[6] = 0;
+							InputData2[7]=datatype;InputType2[7] = 1;
+						}
+					}					
+//---------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------
+                    ///取第一段时间
+					if(week3.num >= 1)
+					{
+						//第一段为空白
+						if(week3.Hs1>0 || week3.Ms1 >0)
+						{
+							firsttypr = false;
+							writetype = (parseInt((week3.Hs1)*60,10) + parseInt((week3.Ms1),10))*0.25;InputData3[0]=writetype;InputType3[0] = 0;
+							
+							datatype = (parseInt((week3.He1 - week3.Hs1)*60,10) + parseInt((week3.Me1-week3.Ms1),10))*0.25;InputData3[1]=datatype;InputType3[1] = 1;
+						}
+						else
+						{
+							firsttypr = true;
+							datatype = (parseInt((week3.He1 - week3.Hs1),10)*60 + parseInt((week3.Me1-week3.Ms1),10))*0.25;InputData3[0]=datatype;InputType3[0] = 1;
+						}	
+					}
+					//alert("week1.Hs1="+week1.Hs1+"/week1.Ms1="+week1.Ms1+"/week1.He1="+week1.He1+"/week1.Me1="+week1.Me1);
+                    //取第2段时间
+					if(week3.num >= 2)
+					{
+						//空白
+						writetype = (parseInt((week3.Hs2-week3.He1),10)*60+parseInt((week3.Ms2-week3.Me1),10))*0.25;
+						//数值
+						datatype = (parseInt((week3.He2-week3.Hs2),10)*60+parseInt((week3.Me2-week3.Ms2),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData3[1]=writetype;InputType3[1] = 0;
+							InputData3[2]=datatype;InputType3[2] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData3[2]=writetype;InputType3[2] = 0;
+							InputData3[3]=datatype;InputType3[3] = 1;
+						}
+					}
+
+					//alert("week1.Hs2="+week1.Hs2+"/week1.Ms2="+week1.Ms2+"/week1.He2="+week1.He2+"/week1.Me2="+week1.Me2);
+                    //取第3段时间
+					if(week3.num >= 3)
+					{
+						//空白
+						writetype = (parseInt((week3.Hs3-week3.He2),10)*60+parseInt((week3.Ms3-week3.Me2),10))*0.25;
+						//数值
+						datatype = (parseInt((week3.He3-week3.Hs3),10)*60+parseInt((week3.Me3-week3.Ms3),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData3[3]=writetype;InputType3[3] = 0;
+							InputData3[4]=datatype;InputType3[4] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData3[4]=writetype;InputType3[4] = 0;
+							InputData3[5]=datatype;InputType3[5] = 1;
+						}
+					}
+					//alert("week1.Hs3="+week1.Hs3+"/week1.Ms3="+week1.Ms3+"/week1.He3="+week1.He3+"/week1.Me3="+week1.Me3);
+                    //取第4段时间
+					if(week3.num == 4)
+					{
+						//空白
+						writetype = (parseInt((week3.Hs4-week3.He3),10)*60+parseInt((week3.Me4-week3.Me3),10))*0.25;
+						//数值
+						datatype = (parseInt((week3.He4-week3.Hs4),10)*60+parseInt((week3.Me4-week3.Ms4),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData3[5]=writetype;InputType3[5] = 0;
+							InputData3[6]=datatype;InputType3[6] = 1;
+							writetype = ((23-week3.He4)*60+(60-week3.Me4))*0.25;
+							InputData3[7]=writetype;InputType3[7] = 0;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData3[6]=writetype;InputType3[6] = 0;
+							InputData3[7]=datatype;InputType3[7] = 1;
+						}
+					}					
+//---------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------
+                    //取第一段时间
+					if(week4.num >= 1)
+					{
+						//第一段为空白
+						if(week4.Hs1>0 || week4.Ms1 >0)
+						{
+							firsttypr = false;
+							writetype = (parseInt((week4.Hs1)*60,10) + parseInt((week4.Ms1),10))*0.25;InputData4[0]=writetype;InputType4[0] = 0;
+							
+							datatype = (parseInt((week4.He1 - week4.Hs1)*60,10) + parseInt((week4.Me1-week4.Ms1),10))*0.25;InputData4[1]=datatype;InputType4[1] = 1;
+						}
+						else
+						{
+							firsttypr = true;
+							datatype = (parseInt((week4.He1 - week4.Hs1),10)*60 + parseInt((week4.Me1-week4.Ms1),10))*0.25;InputData4[0]=datatype;InputType4[0] = 1;
+						}	
+					}
+					//alert("week1.Hs1="+week1.Hs1+"/week1.Ms1="+week1.Ms1+"/week1.He1="+week1.He1+"/week1.Me1="+week1.Me1);
+                    //取第2段时间
+					if(week4.num >= 2)
+					{
+						//空白
+						writetype = (parseInt((week4.Hs2-week4.He1),10)*60+parseInt((week4.Ms2-week4.Me1),10))*0.25;
+						//数值
+						datatype = (parseInt((week4.He2-week4.Hs2),10)*60+parseInt((week4.Me2-week4.Ms2),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData4[1]=writetype;InputType4[1] = 0;
+							InputData4[2]=datatype;InputType4[2] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData4[2]=writetype;InputType4[2] = 0;
+							InputData4[3]=datatype;InputType4[3] = 1;
+						}
+					}
+
+					//alert("week1.Hs2="+week1.Hs2+"/week1.Ms2="+week1.Ms2+"/week1.He2="+week1.He2+"/week1.Me2="+week1.Me2);
+                    //取第3段时间
+					if(week4.num >= 3)
+					{
+						//空白
+						writetype = (parseInt((week4.Hs3-week4.He2),10)*60+parseInt((week4.Ms3-week4.Me2),10))*0.25;
+						//数值
+						datatype = (parseInt((week4.He3-week4.Hs3),10)*60+parseInt((week4.Me3-week4.Ms3),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData4[3]=writetype;InputType4[3] = 0;
+							InputData4[4]=datatype;InputType4[4] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData4[4]=writetype;InputType4[4] = 0;
+							InputData4[5]=datatype;InputType4[5] = 1;
+						}
+					}
+					//alert("week1.Hs3="+week1.Hs3+"/week1.Ms3="+week1.Ms3+"/week1.He3="+week1.He3+"/week1.Me3="+week1.Me3);
+                    //取第4段时间
+					if(week4.num == 4)
+					{
+						//空白
+						writetype = (parseInt((week4.Hs4-week4.He3),10)*60+parseInt((week4.Me4-week4.Me3),10))*0.25;
+						//数值
+						datatype = (parseInt((week4.He4-week4.Hs4),10)*60+parseInt((week4.Me4-week4.Ms4),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData4[5]=writetype;InputType4[5] = 0;
+							InputData4[6]=datatype;InputType4[6] = 1;
+							writetype = ((23-week4.He4)*60+(60-week4.Me4))*0.25;
+							InputData4[7]=writetype;InputType4[7] = 0;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData4[6]=writetype;InputType4[6] = 0;
+							InputData4[7]=datatype;InputType4[7] = 1;
+						}
+					}					
+//---------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------
+                    //取第一段时间
+					if(week5.num >= 1)
+					{
+						//第一段为空白
+						if(week5.Hs1>0 || week5.Ms1 >0)
+						{
+							firsttypr = false;
+							writetype = (parseInt((week5.Hs1)*60,10) + parseInt((week5.Ms1),10))*0.25;InputData5[0]=writetype;InputType5[0] = 0;
+							
+							datatype = (parseInt((week5.He1 - week5.Hs1)*60,10) + parseInt((week5.Me1-week5.Ms1),10))*0.25;InputData5[1]=datatype;InputType5[1] = 1;
+						}
+						else
+						{
+							firsttypr = true;
+							datatype = (parseInt((week5.He1 - week5.Hs1),10)*60 + parseInt((week5.Me1-week5.Ms1),10))*0.25;InputData5[0]=datatype;InputType5[0] = 1;
+						}	
+					}
+					//alert("week1.Hs1="+week1.Hs1+"/week1.Ms1="+week1.Ms1+"/week1.He1="+week1.He1+"/week1.Me1="+week1.Me1);
+                    //取第2段时间
+					if(week5.num >= 2)
+					{
+						//空白
+						writetype = (parseInt((week5.Hs2-week5.He1),10)*60+parseInt((week5.Ms2-week5.Me1),10))*0.25;
+						//数值
+						datatype = (parseInt((week5.He2-week5.Hs2),10)*60+parseInt((week5.Me2-week5.Ms2),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData5[1]=writetype;InputType5[1] = 0;
+							InputData5[2]=datatype;InputType5[2] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData5[2]=writetype;InputType5[2] = 0;
+							InputData5[3]=datatype;InputType5[3] = 1;
+						}
+					}
+
+					//alert("week1.Hs2="+week1.Hs2+"/week1.Ms2="+week1.Ms2+"/week1.He2="+week1.He2+"/week1.Me2="+week1.Me2);
+                    //取第3段时间
+					if(week5.num >= 3)
+					{
+						//空白
+						writetype = (parseInt((week5.Hs3-week5.He2),10)*60+parseInt((week5.Ms3-week5.Me2),10))*0.25;
+						//数值
+						datatype = (parseInt((week5.He3-week5.Hs3),10)*60+parseInt((week5.Me3-week5.Ms3),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData5[3]=writetype;InputType5[3] = 0;
+							InputData5[4]=datatype;InputType5[4] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData5[4]=writetype;InputType5[4] = 0;
+							InputData5[5]=datatype;InputType5[5] = 1;
+						}
+					}
+					//alert("week1.Hs3="+week1.Hs3+"/week1.Ms3="+week1.Ms3+"/week1.He3="+week1.He3+"/week1.Me3="+week1.Me3);
+                    //取第4段时间
+					if(week5.num == 4)
+					{
+						//空白
+						writetype = (parseInt((week5.Hs4-week5.He3),10)*60+parseInt((week5.Me4-week5.Me3),10))*0.25;
+						//数值
+						datatype = (parseInt((week5.He4-week5.Hs4),10)*60+parseInt((week5.Me4-week5.Ms4),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData5[5]=writetype;InputType5[5] = 0;
+							InputData5[6]=datatype;InputType5[6] = 1;
+							writetype = ((23-week5.He4)*60+(60-week5.Me4))*0.25;
+							InputData5[7]=writetype;InputType5[7] = 0;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData5[6]=writetype;InputType5[6] = 0;
+							InputData5[7]=datatype;InputType5[7] = 1;
+						}
+					}					
+//---------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------
+                    //取第一段时间
+					if(week6.num >= 1)
+					{
+						//第一段为空白
+						if(week6.Hs1>0 || week6.Ms1 >0)
+						{
+							firsttypr = false;
+							writetype = (parseInt((week6.Hs1)*60,10) + parseInt((week6.Ms1),10))*0.25;InputData6[0]=writetype;InputType6[0] = 0;
+							
+							datatype = (parseInt((week6.He1 - week6.Hs1)*60,10) + parseInt((week6.Me1-week6.Ms1),10))*0.25;InputData6[1]=datatype;InputType6[1] = 1;
+						}
+						else
+						{
+							firsttypr = true;
+							datatype = (parseInt((week6.He1 - week6.Hs1),10)*60 + parseInt((week6.Me1-week6.Ms1),10))*0.25;InputData6[0]=datatype;InputType6[0] = 1;
+						}	
+					}
+					//alert("week1.Hs1="+week1.Hs1+"/week1.Ms1="+week1.Ms1+"/week1.He1="+week1.He1+"/week1.Me1="+week1.Me1);
+                    //取第2段时间
+					if(week6.num >= 2)
+					{
+						//空白
+						writetype = (parseInt((week6.Hs2-week6.He1),10)*60+parseInt((week6.Ms2-week6.Me1),10))*0.25;
+						//数值
+						datatype = (parseInt((week6.He2-week6.Hs2),10)*60+parseInt((week6.Me2-week6.Ms2),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData6[1]=writetype;InputType6[1] = 0;
+							InputData6[2]=datatype;InputType6[2] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData6[2]=writetype;InputType6[2] = 0;
+							InputData6[3]=datatype;InputType6[3] = 1;
+						}
+					}
+
+					//alert("week1.Hs2="+week1.Hs2+"/week1.Ms2="+week1.Ms2+"/week1.He2="+week1.He2+"/week1.Me2="+week1.Me2);
+                    //取第3段时间
+					if(week6.num >= 3)
+					{
+						//空白
+						writetype = (parseInt((week6.Hs3-week6.He2),10)*60+parseInt((week6.Ms3-week6.Me2),10))*0.25;
+						//数值
+						datatype = (parseInt((week6.He3-week6.Hs3),10)*60+parseInt((week6.Me3-week6.Ms3),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData6[3]=writetype;InputType6[3] = 0;
+							InputData6[4]=datatype;InputType6[4] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData6[4]=writetype;InputType6[4] = 0;
+							InputData6[5]=datatype;InputType6[5] = 1;
+						}
+					}
+					//alert("week1.Hs3="+week1.Hs3+"/week1.Ms3="+week1.Ms3+"/week1.He3="+week1.He3+"/week1.Me3="+week1.Me3);
+                    //取第4段时间
+					if(week6.num == 4)
+					{
+						//空白
+						writetype = (parseInt((week6.Hs4-week6.He3),10)*60+parseInt((week6.Me4-week6.Me3),10))*0.25;
+						//数值
+						datatype = (parseInt((week6.He4-week6.Hs4),10)*60+parseInt((week6.Me4-week6.Ms4),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData6[5]=writetype;InputType6[5] = 0;
+							InputData6[6]=datatype;InputType6[6] = 1;
+							writetype = ((23-week6.He4)*60+(60-week6.Me4))*0.25;
+							InputData6[7]=writetype;InputType6[7] = 0;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData6[6]=writetype;InputType6[6] = 0;
+							InputData6[7]=datatype;InputType6[7] = 1;
+						}
+					}					
+//---------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------
+                    //取第一段时间
+					if(week7.num >= 1)
+					{
+						//第一段为空白
+						if(week7.Hs1>0 || week7.Ms1 >0)
+						{
+							firsttypr = false;
+							writetype = (parseInt((week7.Hs1)*60,10) + parseInt((week7.Ms1),10))*0.25;InputData7[0]=writetype;InputType7[0] = 0;
+							
+							datatype = (parseInt((week7.He1 - week7.Hs1)*60,10) + parseInt((week7.Me1-week7.Ms1),10))*0.25;InputData7[1]=datatype;InputType7[1] = 1;
+						}
+						else
+						{
+							firsttypr = true;
+							datatype = (parseInt((week7.He1 - week7.Hs1),10)*60 + parseInt((week7.Me1-week7.Ms1),10))*0.25;InputData7[0]=datatype;InputType7[0] = 1;
+						}	
+					}
+					//alert("week1.Hs1="+week1.Hs1+"/week1.Ms1="+week1.Ms1+"/week1.He1="+week1.He1+"/week1.Me1="+week1.Me1);
+                    //取第2段时间
+					if(week7.num >= 2)
+					{
+						//空白
+						writetype = (parseInt((week7.Hs2-week7.He1),10)*60+parseInt((week7.Ms2-week7.Me1),10))*0.25;
+						//数值
+						datatype = (parseInt((week7.He2-week7.Hs2),10)*60+parseInt((week7.Me2-week7.Ms2),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData7[1]=writetype;InputType7[1] = 0;
+							InputData7[2]=datatype;InputType7[2] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData7[2]=writetype;InputType7[2] = 0;
+							InputData7[3]=datatype;InputType7[3] = 1;
+						}
+					}
+
+					//alert("week1.Hs2="+week1.Hs2+"/week1.Ms2="+week1.Ms2+"/week1.He2="+week1.He2+"/week1.Me2="+week1.Me2);
+                    //取第3段时间
+					if(week7.num >= 3)
+					{
+						//空白
+						writetype = (parseInt((week7.Hs3-week7.He2),10)*60+parseInt((week7.Ms3-week7.Me2),10))*0.25;
+						//数值
+						datatype = (parseInt((week7.He3-week7.Hs3),10)*60+parseInt((week7.Me3-week7.Ms3),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData7[3]=writetype;InputType7[3] = 0;
+							InputData7[4]=datatype;InputType7[4] = 1;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData7[4]=writetype;InputType7[4] = 0;
+							InputData7[5]=datatype;InputType7[5] = 1;
+						}
+					}
+					//alert("week1.Hs3="+week1.Hs3+"/week1.Ms3="+week1.Ms3+"/week1.He3="+week1.He3+"/week1.Me3="+week1.Me3);
+                    //取第4段时间
+					if(week7.num == 4)
+					{
+						//空白
+						writetype = (parseInt((week7.Hs4-week7.He3),10)*60+parseInt((week7.Me4-week7.Me3),10))*0.25;
+						//数值
+						datatype = (parseInt((week7.He4-week7.Hs4),10)*60+parseInt((week7.Me4-week7.Ms4),10))*0.25;	
+						if(firsttypr == true)//第一段为布防
+						{
+							InputData7[5]=writetype;InputType7[5] = 0;
+							InputData7[6]=datatype;InputType7[6] = 1;
+							writetype = ((23-week7.He4)*60+(60-week7.Me4))*0.25;
+							InputData7[7]=writetype;InputType7[7] = 0;
+						}
+						else if(firsttypr == false)	//第一段为空白
+						{
+							InputData7[6]=writetype;InputType7[6] = 0;
+							InputData7[7]=datatype;InputType7[7] = 1;
+						}
+					}	
+
+					
+					GetProTime();
+                
+				}
+        </script>
+    </head>
+    
+    <body>
+<div class="bit-stream">
+            <h3>
+                报警输出
+            </h3>
+     	<div class="video_top">
+            <div class="video_top_list">
+                         报警输出
+                    </div>
+                    <div class="video_top_list">
+                        <input type="radio" id="alarmoutput_open" name="alarmout" value="1" checked="checked" />
+                        开启
+                    </div>
+                    <div class="video_top_list">
+                        <input type="radio" id="alarmoutput_close" name="alarmout" value="0"/>
+                        关闭
+                    </div>
+     	</div>
+     	<div class="video_top">
+            <div class="video_top_list">
+                         输出序号
+                    </div>
+            <div class="video_top_list">
+               <select class="video_top_list_select" id="alarmoutput_num" style="width:200px;">
+                  <option value='0'>
+                      1
+                  </option>
+                  <option value='1'>
+                      2
+                  </option>
+               </select>
+            </div>
+     	</div>
+        <div class="video_top">
+           <div class="video_top_list">
+             报警名称
+           </div>
+           <div class="video_top_list" style="width:200px;">
+			 <input id="alarmoutput_name" style="width:195px; height:15px;"/>
+           </div>
+        </div>
+        <div class="video_top">
+          <div class="video_top_list">
+             输出类型
+          </div>
+          <div class="video_top_list" style="width:200px;">
+             <div class="video_top_list" >
+                <input type="radio" id="alarmoutput_type_close" name="alarmtype" value="1" checked="checked" />
+                   断开
+             </div>
+             <div class="video_top_list" >
+                <input type="radio" id="alarmoutput_type_open" name="alarmtype" value="0"/>
+                  闭合
+              </div>
+          </div>
+        </div>
+        <div class="video_top">
+           <div class="video_top_list">
+              持续时间
+           </div>
+           <div class="video_top_list" style="width:250px;">
+				<input id="alarmoutput_time" style="width:195px; height:15px;"/>
+                   秒
+           </div>
+        </div>
+   </div>
+
+<fieldset class="motion_det_fil_1">
+                	<legend>
+                    	布防设置
+                    </legend>
+					<div class="Table">
+						<div class="title">
+ 									<div class="motion_det_list_inner_lmt" style="width:500px;text-align:right; float:right;">
+                            		<input type="button" class="btn22" style="float:right; "  value="编辑" id="edit" />
+                                    </div>
+						</div>
+    					<div style="width:550px;">
+    						<div class="ll1" style="height:20px;line-height:20px;">
+        						周一
+    						</div>
+    					<div class="ll2" style="height:19px;">
+    					</div>
+    					<div class="ll3" id="week1">
+    					</div>
+    
+    					<div class="ll1" style="height:20px;line-height:20px;">
+        						周二
+   	 					</div>
+    					<div class="ll2" style="height:19px;">
+    					</div>
+    					<div class="ll3" id="week2">
+    					</div>
+    
+    					<div class="ll1" style="height:20px;line-height:20px;">
+        						周三
+   						</div>
+    					<div class="ll2" style="height:19px;">
+    					</div>
+    					<div class="ll3" id="week3">
+    					</div>
+    
+    					<div class="ll1" style="height:20px;line-height:20px;">
+        						周四
+    					</div>
+    					<div class="ll2" style="height:19px;">
+    					</div>
+    					<div class="ll3" id="week4">
+    					</div>
+    
+    					<div class="ll1" style="height:20px;line-height:20px;">
+        						周五
+    					</div>
+    					<div class="ll2" style="height:19px;">
+    					</div>
+    					<div class="ll3" id="week5">
+    					</div>
+    
+    					<div class="ll1" style="height:20px;line-height:20px;color:#C93">
+        						周六
+    					</div>
+    					<div class="ll2" style="height:19px;">
+    					</div>
+    					<div class="ll3" id="week6">
+    					</div>
+    
+    					<div class="ll1" style="height:20px;line-height:20px;color:#C93">
+        						周日
+    					</div>
+    					<div class="ll2" style="height:19px;">
+    					</div>
+    					<div class="ll3" id="week7">
+    					</div>
+
+    					<!--纵坐标-->
+					<div class="clbt" style="width:530px;">
+    					<div class="clbtl1">
+    					</div>
+    					<div class="clbtl2">
+    					</div>
+    					<div class="clbtl3" style="width:380px;">
+       						<div></div>
+        					<div></div>
+        					<div></div>
+        					<div></div>
+        					<div></div>
+        					<div></div>
+        					<div></div>
+        					<div></div>
+        					<div></div>
+        					<div></div>
+        					<div></div>
+        					<div></div>
+    					</div>
+    					<div class="clbtl4">
+    					</div>
+    					<div class="clbtl5">0</div>
+    					<div class="clbtl5">2</div>
+    					<div class="clbtl5">4</div>
+    					<div class="clbtl5">6</div>
+    					<div class="clbtl5">8</div>
+    					<div class="clbtl5">10</div>
+    					<div class="clbtl5">12</div>
+    					<div class="clbtl5">14</div>
+    					<div class="clbtl5">16</div>
+    					<div class="clbtl5">18</div>
+    					<div class="clbtl5">20</div>
+    					<div class="clbtl5">22</div>
+    					<div class="clbtl5">24(H)</div>
+					</div>
+				</div>
+			</div>
+                </fieldset>
+        <div class="bottom-action">
+            <input type="button" class="btn3" id="submit" value="确定" />
+            <input type="reset" class="btn3" value="取消" id="reset" />
+        </div>
+    </body>
+
+</html>
