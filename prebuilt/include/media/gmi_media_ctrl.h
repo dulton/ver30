@@ -140,6 +140,7 @@ extern "C"
 		E_ZOOM_LENS_NONE = 0,
 		E_ZOOM_LENS_DF003,
 		E_ZOOM_LENS_YB22,
+		E_ZOOM_LENS_ICRJZ9,
 	} SysLensIdType;
 //
 
