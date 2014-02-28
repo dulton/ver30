@@ -4150,7 +4150,7 @@ GMI_RESULT CgiConfigToolGetSystemInfo(const char_t *FncCmd)
 
     	RetFormat = "%s={\"RetCode\":\"%d\",\"CpuInfo\":\"%s\",\"Sensor\":\"%s\",\"IRcut\":\"%s\",\"Shield\":\"%s\",\"Width\":\"%d\","
                              "\"Height\":\"%d\",\"StreamNum\":\"%d\",\"SoftwareVersion\":\"%s\",\"HardwareVersion\":\"%s\",\"AlarmEnabled\":\"%d\","
-                             "\"Language\":\"%s\",\"GbEnabled\":\"%d\",\"PIRSupport\",\"%d\",\"Lens\",\"%s\"}";
+                             "\"Language\":\"%s\",\"GbEnabled\":\"%d\",\"PIRSupport\":\"%d\",\"Lens\":\"%s\"}";
     	fprintf(stdout, RetFormat, Cmd, RetCode, CpuInfo, Sensor, IRcut, Shield, Width, Height, StreamNum, SoftwareVersion, HardwareVersion
                             , AlarmEnabled, Language, GbEnabled, PIRSupport, Lens);
     	return GMI_SUCCESS;
