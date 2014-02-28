@@ -105,10 +105,7 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 							m_OperationLock.Unlock();
 			                return Result;
 			            }
-			           // if ( NULL != m_Callback )
-			            {
-			                //m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
-			            }
+			          
 
 						if(e_EventType_Start == Type)
 						{
@@ -120,23 +117,29 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 						}
 					}
 					break;
-				case EVENT_DETECTOR_ID_HUMAN_DETECT:
-					#if 0
+					
+				case EVENT_DETECTOR_ID_HUMAN_DETECT:					
 					printf("EventId=%d, s_IoNum=%d, GetOutputNumber=%d\n", EventId, g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmExtInfo.s_IoNum, GetOutputNumber());
 					if(0 < (g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmStrategy & (1<<(EVENT_PROCESSOR_ID_ALARM_OUTPUT-1)))
-						&& (g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmExtInfo.s_IoNum == GetOutputNumber()))
+						&& ((g_CurStartedEvent[EventId-1].s_AlarmEventConfigInfo.s_LinkAlarmExtInfo.s_IoNum & (1<<GetOutputNumber())) > 0))
 			        {
-			            Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, (e_EventType_Start == Type) ? 1 : 0 );
+						if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_AlarmOutputInfo.s_NormalStatus)
+						{
+							fprintf(stderr, "EVENT_DETECTOR_ID_HUMAN_DETECT trigger alarmout %d, normael status %d, need change status to %d\n",
+								GetOutputNumber(), e_AlarmOutputStatus_Opened, e_AlarmOutputStatus_Closed);
+							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, GetOutputNumber(), (e_EventType_Start == Type) ? (uint8_t)e_AlarmOutputStatus_Closed: (uint8_t)e_AlarmOutputStatus_Opened );
+						}
+						else
+						{
+							fprintf(stderr, "EVENT_DETECTOR_ID_HUMAN_DETECT trigger alarmout %d, normael status %d, need change status to %d\n",
+								GetOutputNumber(), e_AlarmOutputStatus_Closed, e_AlarmOutputStatus_Opened);
+							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, GetOutputNumber(), (e_EventType_Start == Type) ? (uint8_t)e_AlarmOutputStatus_Opened: (uint8_t)e_AlarmOutputStatus_Closed);
+						}
 						if ( FAILED( Result ) )
 			            {	            	
 							m_OperationLock.Unlock();
 			                return Result;
-			            }
-						printf("GMI_ALARM_MODE_LIGHT open\n");
-			            //if ( NULL != m_Callback )
-			            {
-			                //m_Callback( m_UserData, EventId, Type, Parameter, ParameterLength );
-			            }
+			            }			            
 
 						if(e_EventType_Start == Type)
 						{
@@ -147,8 +150,6 @@ GMI_RESULT  AlarmOutput::Notify( uint32_t EventId, uint32_t Index, enum EventTyp
 							BreakFlag = 2;
 						}
 			        }
-					#endif
-					fprintf(stderr, "AlarmOutput::Notify EVENT_DETECTOR_ID_HUMAN_DETECT no need process.\n");
 					break;
 				default:
 					fprintf(stderr, "AlarmOutput::Notify EventId %d error.\n", EventId);
@@ -257,24 +258,19 @@ void_t* AlarmOutput::TimerEntry()
 				switch(i)
 				{
 					case EVENT_DETECTOR_ID_HUMAN_DETECT:
-						#if 0
-						printf("GMI_ALARM_MODE_LIGHT close[%u]\n", (uint32_t)CurrTime);
-			            Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, 0 );
-						if ( FAILED( Result ) )
-			            {	            	
-						    fprintf(stderr, "GMI_BrdSetAlarmOutput GMI_ALARM_MODE_LIGHT fail\n");
-			            }
-						#endif
-						break;
 					case EVENT_DETECTOR_ID_ALARM_INPUT:
 						printf("GMI_ALARM_MODE_GPIO recover[%u]\n", (uint32_t)CurrTime);
 			            //Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, 0 );
 						if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_AlarmOutputInfo.s_NormalStatus)
 						{
+							fprintf(stderr, "recover trigger alarmout %d, normael status %d, need recover status to %d\n",
+								GetOutputNumber(), e_AlarmOutputStatus_Opened, e_AlarmOutputStatus_Opened);
 							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, GetOutputNumber(), (uint8_t)e_AlarmOutputStatus_Opened );
 						}
 						else
 						{
+							fprintf(stderr, "recover trigger alarmout %d, normael status %d, need recover status to %d\n",
+								GetOutputNumber(), e_AlarmOutputStatus_Closed, e_AlarmOutputStatus_Closed);
 							Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_GPIO, GetOutputNumber(), (uint8_t)e_AlarmOutputStatus_Closed );
 						}
 						if ( FAILED( Result ) )

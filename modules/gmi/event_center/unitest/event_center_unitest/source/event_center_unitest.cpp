@@ -140,7 +140,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 		return -1;
 	}
 
-	#if 0
+	#if 1
 	AlarmOutputInfo TmpIoOutParam;
 	memset(&TmpIoOutParam, 0, sizeof(TmpIoOutParam));
 	TmpIoOutParam.s_EnableFlag = 1;
@@ -154,7 +154,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 	{
 		TmpIoOutParam.s_DelayTime = 5; //s
 	}
-	TmpIoOutParam.s_NormalStatus = e_AlarmOutputStatus_Closed;
+	TmpIoOutParam.s_NormalStatus = (atoi(argv[4]) > 0)?e_AlarmOutputStatus_Closed : e_AlarmOutputStatus_Opened;
 	#if 0
 	TmpIoOutParam.s_ScheduleTime[0].s_StartTime = 0;
 	TmpIoOutParam.s_ScheduleTime[0].s_EndTime = 24*60;
@@ -175,7 +175,7 @@ int32_t main( int32_t argc, char_t* argv[] )
 	
 	#endif
 
-	#if 0
+	#if 1
 	AlarmInputInfo TmpIoParam;
 	memset(&TmpIoParam, 0, sizeof(TmpIoParam));
 	TmpIoParam.s_EnableFlag = 1;
@@ -268,8 +268,8 @@ int32_t main( int32_t argc, char_t* argv[] )
 	TmpParam.s_ExtData.s_HumanDetectExInfo.s_MaxSensVal = 0;
 	TmpParam.s_ExtData.s_HumanDetectExInfo.s_Sensitivity = 50;
 	
-	TmpParam.s_LinkAlarmStrategy = 0x100;
-	TmpParam.s_LinkAlarmExtInfo.s_IoNum = 0;
+	TmpParam.s_LinkAlarmStrategy = 0x101;
+	TmpParam.s_LinkAlarmExtInfo.s_IoNum = 0x1;
 
 	#if 0
 	TmpParam.s_ScheduleTime[0].s_StartTime = 0;
@@ -325,15 +325,11 @@ int32_t main( int32_t argc, char_t* argv[] )
 		GMI_Sleep(1000);
 	}
 	printf("continue...\n");
-	#if 0
+	#if 1
 	memset(&TmpIoParam, 0, sizeof(TmpIoParam));
 	TmpIoParam.s_EnableFlag = 0;
 	TmpIoParam.s_InputNumber = 0;
 	strcpy(TmpIoParam.s_Name, "Io input 0");
-	TmpIoParam.s_ScheduleTime[1].s_StartTime = 15*60;
-	TmpIoParam.s_ScheduleTime[1].s_EndTime = 18*60;
-	TmpIoParam.s_ScheduleTime[3].s_StartTime = 5*60;
-	TmpIoParam.s_ScheduleTime[3].s_EndTime = 18*60;
 	TmpIoParam.s_LinkAlarmStrategy = 3;
 	Center.ConfigureGPIOAlarmInput((void_t*)(&TmpIoParam),sizeof(TmpIoParam));
 	printf("stop alarm input 0\n");
