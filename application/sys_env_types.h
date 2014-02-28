@@ -1562,9 +1562,9 @@ typedef struct tagLinkAlarmExtInfo
 	uint8_t  s_IoNum;//bit: 0-alarm port 0, 1-alarm port 1, 2-alarm port 2, 3-alarm port 3
 	uint8_t  s_OperateCmd;//when link ptz:0--none, 1--preset ,2--cruise, 3--scan
 	uint16_t s_OperateSeqNum;//when link ptz: seqno: 0(home),1,2,3...
-	uint8_t  s_PtzDelayTime;//unit:s  ptz delay time
-	uint8_t  s_DelayTime;//unit:s white light delay time
-	uint8_t  s_Reserved[6];	
+	uint16_t  s_PtzDelayTime;//unit:s  ptz delay time
+	uint16_t  s_DelayTime;//unit:s white light delay time
+	uint16_t  s_Reserved[6];	
 }SysPkgLinkAlarmExtInfo;
 
 

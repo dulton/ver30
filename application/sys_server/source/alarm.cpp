@@ -186,6 +186,12 @@ GMI_RESULT Alarm::CheckConfig(int32_t AlarmId, int32_t Index, const void_t *Para
 			SYS_ERROR("s_Sensitive %d error\n", SysAlarmPIRConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);
 			return GMI_INVALID_PARAMETER;
 		}
+
+		if (SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_DelayTime > 65535)
+		{
+			SYS_ERROR("SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_DelayTime %d error\n", SysAlarmPIRConfig.s_LinkAlarmExtInfo.s_DelayTime);
+			return GMI_INVALID_PARAMETER;
+		}
 		break;
 	case SYS_PROCESSOR_ID_ALARM_OUTPUT:
 		SysPkgAlarmOutConfig SysAlarmOutConfig;
@@ -219,7 +225,13 @@ GMI_RESULT Alarm::CheckConfig(int32_t AlarmId, int32_t Index, const void_t *Para
 		{
 			SYS_ERROR("SysAlarmOutConfig.s_NormalStatus %d error\n", SysAlarmOutConfig.s_NormalStatus);
 			return GMI_INVALID_PARAMETER;
-		}				
+		}	
+
+		if (SysAlarmOutConfig.s_DelayTime > 65535)
+		{
+			SYS_ERROR("SysAlarmOutConfig.s_DelayTime %d error\n", SysAlarmOutConfig.s_DelayTime);
+			return GMI_INVALID_PARAMETER;
+		}
 		break;
 	default:
 		return GMI_NOT_SUPPORT;
@@ -383,6 +395,18 @@ GMI_RESULT Alarm::CheckSchedule(int32_t ScheduleId, int32_t Index, const void_t 
 			{
 				SYS_ERROR("s_EndTime[%d][%d] = %d is less than s_StartTime[%d][%d]  = %d\n", i, j, SysAlarmScheduleTime.s_ScheduleTime[i][j].s_EndTime, i, j, SysAlarmScheduleTime.s_ScheduleTime[i][j].s_StartTime);
 				return GMI_INVALID_PARAMETER;
+			}
+
+			for (int32_t k = j+1; k < TIME_SEGMENT_OF_DAY; k++)
+			{
+				if (SysAlarmScheduleTime.s_ScheduleTime[i][k].s_EndTime != SysAlarmScheduleTime.s_ScheduleTime[i][k].s_StartTime)
+				{
+					if (SysAlarmScheduleTime.s_ScheduleTime[i][k].s_StartTime < SysAlarmScheduleTime.s_ScheduleTime[i][j].s_EndTime)
+					{
+						SYS_ERROR("s_StartTime[%d][%d] = %d is less than s_StartTime[%d][%d]  = %d\n", i, k, SysAlarmScheduleTime.s_ScheduleTime[i][k].s_StartTime, i, j, SysAlarmScheduleTime.s_ScheduleTime[i][j].s_EndTime);
+						return GMI_INVALID_PARAMETER;
+					}
+				}								
 			}
 		}
 	}

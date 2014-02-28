@@ -2675,7 +2675,7 @@ GMI_RESULT ConfigFileManager::GetAlarmConfig(int32_t AlarmId, int32_t Index, voi
 		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_ALARM_OUT_NO_KEY,  ALARM_IN_LINK_ALARM_OUT_NO,  &SysAlarmInConfig.s_LinkAlarmExtInfo.s_IoNum,  GMI_CONFIG_READ_WRITE);
 		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_FUNC_KEY,  ALARM_IN_LINK_PTZ_FUNC,  &SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateCmd,  GMI_CONFIG_READ_WRITE);
 		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_SEQ_KEY,  ALARM_IN_LINK_PTZ_SEQ,  (uint16_t*)&SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum,  GMI_CONFIG_READ_WRITE);		
-		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_DELAY_TIME_KEY,  ALARM_IN_LINK_PTZ_DELAY_TIME,  (uint8_t*)&SysAlarmInConfig.s_LinkAlarmExtInfo.s_PtzDelayTime,  GMI_CONFIG_READ_WRITE);		
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_DELAY_TIME_KEY,  ALARM_IN_LINK_PTZ_DELAY_TIME,  (uint16_t*)&SysAlarmInConfig.s_LinkAlarmExtInfo.s_PtzDelayTime,  GMI_CONFIG_READ_WRITE);		
 		if (FAILED(Result))
 		{
 			GMI_XmlFileSave(Handle);
@@ -2698,7 +2698,7 @@ GMI_RESULT ConfigFileManager::GetAlarmConfig(int32_t AlarmId, int32_t Index, voi
 		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_STARTEGY_KEY,  ALARM_PIR_LINK_STARTEGY,  (int32_t*)&SysAlarmEventConfig.s_LinkAlarmStrategy,  GMI_CONFIG_READ_WRITE);
 		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_SENSITIVE_KEY,  ALARM_PIR_SENSITIVE,  (int32_t*)&SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive,  GMI_CONFIG_READ_WRITE);
 		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_ALARM_OUT_NO_KEY,  ALARM_PIR_LINK_ALARM_OUT_NO,  &SysAlarmEventConfig.s_LinkAlarmExtInfo.s_IoNum,  GMI_CONFIG_READ_WRITE);
-		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_WHITE_LIGHT_DELAY_TIME_KEY,  ALARM_PIR_LINK_WHITE_LIGHT_DELAY_TIME,  (uint8_t*)&SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime,  GMI_CONFIG_READ_WRITE);		
+		Result = GMI_XmlRead(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_WHITE_LIGHT_DELAY_TIME_KEY,  ALARM_PIR_LINK_WHITE_LIGHT_DELAY_TIME,  (uint16_t*)&SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime,  GMI_CONFIG_READ_WRITE);		
 		if (FAILED(Result))
 		{
 			GMI_XmlFileSave(Handle);
@@ -2777,7 +2777,7 @@ GMI_RESULT ConfigFileManager::SetAlarmConfig(int32_t AlarmId, int32_t Index, voi
 		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_ALARM_OUT_NO_KEY,  SysAlarmInConfig.s_LinkAlarmExtInfo.s_IoNum);
 		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_FUNC_KEY,  SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateCmd);
 		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_SEQ_KEY,  (const uint16_t)SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);
-		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_DELAY_TIME_KEY,  (const uint8_t)SysAlarmInConfig.s_LinkAlarmExtInfo.s_PtzDelayTime);
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmInPath, ALARM_IN_LINK_PTZ_DELAY_TIME_KEY,  (const uint16_t)SysAlarmInConfig.s_LinkAlarmExtInfo.s_PtzDelayTime);
 		if (FAILED(Result))
 		{
 			GMI_XmlFileSave(Handle);
@@ -2798,7 +2798,7 @@ GMI_RESULT ConfigFileManager::SetAlarmConfig(int32_t AlarmId, int32_t Index, voi
 		Result = GMI_XmlWrite(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_STARTEGY_KEY,  (const int32_t)SysAlarmEventConfig.s_LinkAlarmStrategy);
 		Result = GMI_XmlWrite(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_SENSITIVE_KEY,  (const int32_t)SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);
 		Result = GMI_XmlWrite(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_ALARM_OUT_NO_KEY,  SysAlarmEventConfig.s_LinkAlarmExtInfo.s_IoNum);
-		Result = GMI_XmlWrite(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_WHITE_LIGHT_DELAY_TIME_KEY,  (const uint8_t)SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime);		
+		Result = GMI_XmlWrite(Handle, (const char_t*)AlmPIRPath, ALARM_PIR_LINK_WHITE_LIGHT_DELAY_TIME_KEY,  (const uint16_t)SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime);		
 		if (FAILED(Result))
 		{
 			GMI_XmlFileSave(Handle);

@@ -6076,12 +6076,22 @@ GMI_RESULT SystemServiceManager::SvrGetAlarmConfig(int32_t AlarmId,  int32_t Ind
 	switch (AlarmId)
 	{
 	case SYS_DETECTOR_ID_ALARM_INPUT:
+		if (Index >= MAX_ALARM_IN_PORT)
+		{
+			SYS_ERROR("Index %d exceed, but Max Port num %d\n", Index, MAX_ALARM_IN_PORT);
+			return GMI_INVALID_PARAMETER;
+		} 
 		memcpy(Parameter, &m_SysAlarmInCfg[Index], sizeof(SysPkgAlarmInConfig));
 		break;
 	case SYS_DETECTOR_ID_PIR:
 		memcpy(Parameter, &m_SysAlarmPIRCfg, sizeof(SysPkgAlarmEventConfig));
 		break;
 	case SYS_PROCESSOR_ID_ALARM_OUTPUT:
+		if (Index >= MAX_ALARM_OUT_PORT)
+		{
+			SYS_ERROR("Index %d exceed, but Max Port num %d\n", Index, MAX_ALARM_OUT_PORT);
+			return GMI_INVALID_PARAMETER;
+		}
 		memcpy(Parameter, &m_SysAlarmOutCfg[Index], sizeof(SysPkgAlarmOutConfig));
 		break;
 	default:
@@ -6136,12 +6146,22 @@ GMI_RESULT SystemServiceManager::SvrGetAlmScheduleTime(int32_t ScheduleId, int32
 	switch (ScheduleId)
 	{
 	case SYS_SCHEDULE_TIME_ID_ALARM_IN:
+		if (Index >= MAX_ALARM_IN_PORT)
+		{
+			SYS_ERROR("Index %d exceed, but Max Port num %d\n", Index, MAX_ALARM_IN_PORT);
+			return GMI_INVALID_PARAMETER;
+		} 
 		memcpy(Parameter, &m_SysAlarmInScheduleTime[Index], sizeof(SysPkgAlarmScheduleTime));		
 		break;
 	case SYS_SCHEDULE_TIME_ID_PIR_DETECT:
 		memcpy(Parameter, &m_SysAlarmPIRScheduleTime, sizeof(SysPkgAlarmScheduleTime));
 		break;
 	case SYS_SCHEDULE_TIME_ID_ALARM_OUT:
+		if (Index >= MAX_ALARM_OUT_PORT)
+		{
+			SYS_ERROR("Index %d exceed, but Max Port num %d\n", Index, MAX_ALARM_OUT_PORT);
+			return GMI_INVALID_PARAMETER;
+		}
 		memcpy(Parameter, &m_SysAlarmOutScheduleTime[Index], sizeof(SysPkgAlarmScheduleTime));
 		break;
 	default:

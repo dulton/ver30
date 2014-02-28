@@ -66,7 +66,9 @@ GMI_RESULT  SysSetAlarmConfigCommandExecutor::Execute()
 	    	SysAlarmInConfigPtr->s_CheckTime    = NETWORK_TO_HOST_UINT(SysAlarmInConfigPtr->s_CheckTime);
 	    	SysAlarmInConfigPtr->s_NormalStatus = NETWORK_TO_HOST_UINT(SysAlarmInConfigPtr->s_NormalStatus);
 	    	SysAlarmInConfigPtr->s_LinkAlarmStrategy = NETWORK_TO_HOST_UINT(SysAlarmInConfigPtr->s_LinkAlarmStrategy);
-	    	SysAlarmInConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum = NETWORK_TO_HOST_USHORT(SysAlarmInConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum);	    	
+	    	SysAlarmInConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum = NETWORK_TO_HOST_USHORT(SysAlarmInConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum);	 
+	    	SysAlarmInConfigPtr->s_LinkAlarmExtInfo.s_DelayTime     = NETWORK_TO_HOST_USHORT(SysAlarmInConfigPtr->s_LinkAlarmExtInfo.s_DelayTime);
+	    	SysAlarmInConfigPtr->s_LinkAlarmExtInfo.s_PtzDelayTime  = NETWORK_TO_HOST_USHORT(SysAlarmInConfigPtr->s_LinkAlarmExtInfo.s_PtzDelayTime);
 	        Result = m_SystemServiceManager->SvrSetAlarmConfig(SYS_DETECTOR_ID_ALARM_INPUT, SysAlarmInConfigPtr->s_InputNumber, SysAlarmInConfigPtr, sizeof(SysPkgAlarmInConfig));
 	        if (FAILED(Result))
 	        {
@@ -100,7 +102,9 @@ GMI_RESULT  SysSetAlarmConfigCommandExecutor::Execute()
 		    	SysAlarmEventConfigPtr->s_CheckTime  = NETWORK_TO_HOST_UINT(SysAlarmEventConfigPtr->s_CheckTime);
 		    	SysAlarmEventConfigPtr->s_LinkAlarmStrategy = NETWORK_TO_HOST_UINT(SysAlarmEventConfigPtr->s_LinkAlarmStrategy);
 		    	SysAlarmEventConfigPtr->s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive = NETWORK_TO_HOST_UINT(SysAlarmEventConfigPtr->s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);	    	
-		    	SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum = NETWORK_TO_HOST_USHORT(SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum);    	
+		    	SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum = NETWORK_TO_HOST_USHORT(SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_OperateSeqNum); 
+		    	SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_DelayTime     = NETWORK_TO_HOST_USHORT(SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_DelayTime);
+		    	SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_PtzDelayTime  = NETWORK_TO_HOST_USHORT(SysAlarmEventConfigPtr->s_LinkAlarmExtInfo.s_PtzDelayTime);
 		    	Result = m_SystemServiceManager->SvrSetAlarmConfig(SYS_DETECTOR_ID_PIR, 0, SysAlarmEventConfigPtr, sizeof(SysPkgAlarmEventConfig));
 		        if (FAILED(Result))
 		        {

@@ -98,7 +98,9 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
 	    	SysAlarmInConfig.s_CheckTime    = HOST_TO_NETWORK_UINT(SysAlarmInConfig.s_CheckTime);
 	    	SysAlarmInConfig.s_NormalStatus = HOST_TO_NETWORK_UINT(SysAlarmInConfig.s_NormalStatus);
 	    	SysAlarmInConfig.s_LinkAlarmStrategy = HOST_TO_NETWORK_UINT(SysAlarmInConfig.s_LinkAlarmStrategy);
-	    	SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = HOST_TO_NETWORK_USHORT(SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);	    	
+	    	SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = HOST_TO_NETWORK_USHORT(SysAlarmInConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);	
+	    	SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime     = HOST_TO_NETWORK_USHORT(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime);
+	    	SysAlarmEventConfig.s_LinkAlarmExtInfo.s_PtzDelayTime  = HOST_TO_NETWORK_USHORT(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_PtzDelayTime);
 			ToGetAttr = (uint8_t*)&SysAlarmInConfig;
 			ToGetAttrLength = sizeof(SysPkgAlarmInConfig);
 			break;
@@ -117,7 +119,9 @@ GMI_RESULT	SysGetAlarmConfigCommandExecutor::Execute()
 			SysAlarmEventConfig.s_CheckTime  = HOST_TO_NETWORK_UINT(SysAlarmEventConfig.s_CheckTime);
 			SysAlarmEventConfig.s_LinkAlarmStrategy = HOST_TO_NETWORK_UINT(SysAlarmEventConfig.s_LinkAlarmStrategy);
 			SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive = HOST_TO_NETWORK_UINT(SysAlarmEventConfig.s_AlarmUnionExtData.s_PIRDetectInfo.s_Sensitive);	    	
-			SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = HOST_TO_NETWORK_USHORT(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);    			    				
+			SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum = HOST_TO_NETWORK_USHORT(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_OperateSeqNum);  
+			SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime     = HOST_TO_NETWORK_USHORT(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_DelayTime);
+			SysAlarmEventConfig.s_LinkAlarmExtInfo.s_PtzDelayTime  = HOST_TO_NETWORK_USHORT(SysAlarmEventConfig.s_LinkAlarmExtInfo.s_PtzDelayTime);
 			ToGetAttr = (uint8_t*)&SysAlarmEventConfig;
 			ToGetAttrLength = sizeof(SysPkgAlarmEventConfig);
 			break;		
