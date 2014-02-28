@@ -252,7 +252,7 @@ void_t* AlarmOutput::TimerEntry()
 		for(i=1; i <= MAX_NUM_EVENT_TYPE; i++)
 		{
 			if((GetTriggedTime(i) > 0)
-				&&((CurrTime > (GetTriggedTime(i)+GetDelayTime())) || (GetTriggedTime(i)> CurrTime)))
+				&&((CurrTime > (GetTriggedTime(i)+GetDelayTime())) || (GetTriggedTime(i)> (uint32_t)CurrTime)))
 			{
 				switch(i)
 				{
@@ -308,7 +308,6 @@ void_t* AlarmOutput::TimerEntry()
 					#endif
 					break;
 				case EVENT_DETECTOR_ID_ALARM_INPUT:
-					printf("GMI_ALARM_MODE_GPIO recover[%u]\n", (uint32_t)CurrTime);
 		            //Result = GMI_BrdSetAlarmOutput( GMI_ALARM_MODE_LIGHT, 0, 0 );
 					if(e_AlarmOutputStatus_Opened == g_CurStartedAlarmOut[GetOutputNumber()].s_AlarmOutputInfo.s_NormalStatus)
 					{
