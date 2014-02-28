@@ -3973,6 +3973,26 @@ GMI_RESULT CgiConfigToolGetSystemInfo(const char_t *FncCmd)
 		break;
 	}
 
+
+	//read sensor name
+	char_t AutlLenName[32] = "0";
+	Result = SysInfoRead(Handle, HW_AUTO_DETECT_INFO_PATH, HW_LENS_KEY, HW_LENS, AutlLenName);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+     
+	boolean_t AutoLens = 0;
+        if(0 == strcmp(AutlLenName, HW_LENS))
+        {
+	       AutoLens = 0;
+        }
+        else
+        {
+	       AutoLens = 1;
+        }
+
         SysInfoClose(Handle);
 	
 	Result = SysInfoOpen(GMI_SETTING_CONFIG_FILE_NAME, &Handle);
@@ -4071,9 +4091,34 @@ GMI_RESULT CgiConfigToolGetSystemInfo(const char_t *FncCmd)
 		SysInfoClose(Handle);
 		break;
 	}
+#if 1
+	//read PIR support
+	int32_t PIRSupport = 0;
+	Result = SysInfoRead(Handle, CAPABILITY_SW_PRIVATE_PATH, CONFIG_PIR_KEY, 0, &PIRSupport);
+	if (FAILED(Result))
+	{
+		SysInfoClose(Handle);
+		break;
+	}
+ 
+        char_t Lens[32] = "0";
+        if (0 == AutoLens)
+        {
+            Result = SysInfoRead(Handle, CAPABILITY_SW_PRIVATE_PATH, CONFIG_LENS_KEY, HW_LENS, Lens);
+            if (FAILED(Result))
+            {
+                 SysInfoClose(Handle);
+                 break;
+            }
+        }
+        else if (1 == AutoLens)
+        {
+               strcpy(Lens, AutlLenName);
+        }
+
+#endif
 
 	SysInfoClose(Handle);
-
 
 	Result = SysInfoOpen(GMI_FACTORY_SETTING_CONFIG_FILE_NAME, &Handle);
 	if (FAILED(Result))
@@ -4103,8 +4148,11 @@ GMI_RESULT CgiConfigToolGetSystemInfo(const char_t *FncCmd)
 
 	SysInfoReadDeinitialize();
 
-    	RetFormat = "%s={\"RetCode\":\"%d\",\"CpuInfo\":\"%s\",\"Sensor\":\"%s\",\"IRcut\":\"%s\",\"Shield\":\"%s\",\"Width\":\"%d\",\"Height\":\"%d\",\"StreamNum\":\"%d\",\"SoftwareVersion\":\"%s\",\"HardwareVersion\":\"%s\",\"AlarmEnabled\":\"%d\",\"Language\":\"%s\",\"GbEnabled\":\"%d\"}";
-    	fprintf(stdout, RetFormat, Cmd, RetCode, CpuInfo, Sensor, IRcut, Shield, Width, Height, StreamNum, SoftwareVersion, HardwareVersion, AlarmEnabled, Language, GbEnabled);
+    	RetFormat = "%s={\"RetCode\":\"%d\",\"CpuInfo\":\"%s\",\"Sensor\":\"%s\",\"IRcut\":\"%s\",\"Shield\":\"%s\",\"Width\":\"%d\","
+                             "\"Height\":\"%d\",\"StreamNum\":\"%d\",\"SoftwareVersion\":\"%s\",\"HardwareVersion\":\"%s\",\"AlarmEnabled\":\"%d\","
+                             "\"Language\":\"%s\",\"GbEnabled\":\"%d\",\"PIRSupport\",\"%d\",\"Lens\",\"%s\"}";
+    	fprintf(stdout, RetFormat, Cmd, RetCode, CpuInfo, Sensor, IRcut, Shield, Width, Height, StreamNum, SoftwareVersion, HardwareVersion
+                            , AlarmEnabled, Language, GbEnabled, PIRSupport, Lens);
     	return GMI_SUCCESS;
     
     } while(0);
@@ -4379,6 +4427,8 @@ GMI_RESULT CgiSysGetAlarmConfig(const char_t *FncCmd)
              break;
          }
 
+	 CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
+
          switch(atoi(AlarmId))
         {
         case SYS_DETECTOR_ID_ALARM_INPUT:
@@ -4419,6 +4469,7 @@ GMI_RESULT CgiSysGetAlarmConfig(const char_t *FncCmd)
                                 ",\"NormalStatus\":\"%u\",\"DelayTime\":\"%u\"}";
             fprintf(stdout, RetFormat, Cmd, RetCode,atoi(AlarmId),atoi(Index),PkgAlarmOutConfig->s_EnableFlag,PkgAlarmOutConfig->s_OutputNumber,
                               PkgAlarmOutConfig->s_Name,PkgAlarmOutConfig->s_NormalStatus,PkgAlarmOutConfig->s_DelayTime);
+	    CGI_ERROR("Call CgiSysGetAlarmConfig Error LINE = [%d]\n",__LINE__);
 	    break;
         default:
             break;
@@ -5078,6 +5129,7 @@ GMI_RESULT CgiSysSetAlmScheduleTime(const char_t *FncCmd)
             SysAlarmSchTime->s_ScheduleTime[6][3].s_StartTime = atoi(StartTime63);
 	if (NULL != EndTime63)
             SysAlarmSchTime->s_ScheduleTime[6][3].s_EndTime = atoi(EndTime63);
+
 	CGI_ERROR("Call SysGetAlmScheduleTime  OK LINE = [%d]\n",__LINE__);
 
         Result = SysSetAlmScheduleTime(atoi(SessionId), atoi(AuthValue), atoi(ScheduleId), atoi(Index),SysAlarmSchTime);
