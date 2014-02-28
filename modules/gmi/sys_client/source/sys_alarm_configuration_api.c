@@ -92,7 +92,7 @@ GMI_RESULT SysGetAlarmConfig(uint16_t SessionId, uint32_t AuthValue, int32_t Ala
 	    	    SysAlarmOutConfig.s_OutputNumber = ntohl(SysAlarmOutConfig.s_OutputNumber);
 	    	    SysAlarmOutConfig.s_NormalStatus = ntohl(SysAlarmOutConfig.s_NormalStatus);
 	    	    SysAlarmOutConfig.s_DelayTime    = ntohl(SysAlarmOutConfig.s_DelayTime);  
-	    	    memcpy(Parameter, &SysAlarmOutConfig, sizeof(SysPkgAlarmEventConfig));  
+	    	    memcpy(Parameter, &SysAlarmOutConfig, sizeof(SysPkgAlarmOutConfig));  
 	    	    Exist = true;            
             }
             break;
