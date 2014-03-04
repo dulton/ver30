@@ -134,7 +134,13 @@ boolean_t ServiceSetConfig::ParseXML(TiXmlDocument & XmlDoc)
         m_UsingSupper = false;
     }
 
-   // Get device information
+    // Clear the orignal data
+    m_DeviceInfo.SetName(std::string());
+    m_DeviceInfo.SetSerialNumber(std::string());
+    m_NetworkInfo.ClearInterfaceList();
+    m_NetworkInfo.ClearDNSServerList();
+
+    // Get device information
     TiXmlElement * XmlDevInfo = GetXmlElement(XmlRootElement, "DeviceInfo");
     if (XmlDevInfo != NULL)
     {

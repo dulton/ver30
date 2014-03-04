@@ -285,7 +285,7 @@ extern "C"
 	#define MIN_IMAGE_DN_MODE        0
 	#define MAX_IMAGE_DN_MODE        3
 	#define MIN_IMAGE_DN_DURTIME     3    //unit: s
-	#define MAX_IMAGE_DN_DURTIME     30
+	#define MAX_IMAGE_DN_DURTIME     300
 	#define MIN_IMAGE_DN_NTOD        0
 	#define MAX_IMAGE_DN_NTOD        100
 	#define MIN_IMAGE_DN_DTON        0
@@ -523,7 +523,7 @@ extern "C"
 	typedef struct
 	{
 	    int8_t s_DnMode;         //0-day mode,1-night mode, 2-auto ,3- timing mode, default-0                               
-        int8_t s_DnDurtime;       //valid range is 3~30s, default-5
+        int8_t s_DnDurtime;       //valid range is 3~300s, default-5
         int8_t s_NightToDayThr;   //valid range is 0~100,default-60
         int8_t s_DayToNightThr;   //valid range is 0~100,default-40
         DayNightSchedule s_DnSchedule;

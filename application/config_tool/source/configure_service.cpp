@@ -374,10 +374,13 @@ GMI_RESULT ConfigureService::SetDeviceInfo(const DeviceInfo & DevInfo, boolean_t
         return RetVal;
     }
 
-    snprintf(PkgDevInfo.s_DeviceName, sizeof(PkgDevInfo.s_DeviceName), "%s", DevInfo.GetName().c_str());
-    PRINT_LOG(VERBOSE, "Set device name: %s", PkgDevInfo.s_DeviceName);
+    if (DevInfo.GetName().length() > 0)
+    {
+        snprintf(PkgDevInfo.s_DeviceName, sizeof(PkgDevInfo.s_DeviceName), "%s", DevInfo.GetName().c_str());
+        PRINT_LOG(VERBOSE, "Set device name: %s", PkgDevInfo.s_DeviceName);
+    }
 
-    if (UsingSupper)
+    if (UsingSupper && DevInfo.GetSerialNumber().length() > 0)
     {
         snprintf(PkgDevInfo.s_DeviceSerialNum, sizeof(PkgDevInfo.s_DeviceSerialNum), "%s", DevInfo.GetSerialNumber().c_str());
         PRINT_LOG(VERBOSE, "Set device serial number: %s", PkgDevInfo.s_DeviceSerialNum);
