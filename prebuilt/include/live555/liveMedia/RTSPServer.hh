@@ -243,12 +243,13 @@ public: // should be protected, but some old compilers complain otherwise
     Authenticator fCurrentAuthenticator; // used if access control is needed
     char* fOurSessionCookie; // used for optional RTSP-over-HTTP tunneling
     unsigned fBase64RemainderCount; // used for optional RTSP-over-HTTP tunneling (possible values: 0,1,2,3)
+    u_int32_t fOurSessionId;
   };
 
   // The state of an individual client session (using one or more sequential TCP connections) handled by a RTSP server:
   class RTSPClientSession {
   public:
-    RTSPClientSession(RTSPServer& ourServer, u_int32_t sessionId);
+    RTSPClientSession(RTSPServer& ourServer, RTSPClientConnection& ourConnection, u_int32_t sessionId);
     virtual ~RTSPClientSession();
   protected:
     friend class RTSPServer;
@@ -286,6 +287,7 @@ public: // should be protected, but some old compilers complain otherwise
 
   protected:
     RTSPServer& fOurServer;
+    RTSPClientConnection& fOurConnection;
     u_int32_t fOurSessionId;
     ServerMediaSession* fOurServerMediaSession;
     Boolean fIsMulticast, fStreamAfterSETUP;
@@ -308,7 +310,7 @@ protected:
   // If you subclass "RTSPClientSession", then you must also redefine this virtual function in order
   // to create new objects of your subclass:
   virtual RTSPClientSession*
-  createNewClientSession(u_int32_t sessionId);
+  createNewClientSession(RTSPClientConnection& ourConnection, u_int32_t sessionId);
 
   // An iterator over our "ServerMediaSession" objects:
   class ServerMediaSessionIterator {
