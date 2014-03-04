@@ -500,34 +500,17 @@ GMI_RESULT BoardManager::PacketNtpTime(uint32_t *data)
 
 GMI_RESULT BoardManager::ParseNtpData(uint32_t *data)
 {
-    //int li, vn, mode, stratum, poll, prec;
-    //int delay, disp, refid;
-    NTPTIME /*reftime,*/ orgtime, rectime, xmttime;
+    NTPTIME orgtime, rectime, xmttime;
     NTPTIME	localtime;
     struct timeval tv, now;
     long long time1, time2, time3, time4;
-    long long intertime/*, delaytime*/;
-    long long interSec, interUsec/*, delaySec, delayUsec*/;
+    long long intertime;
+    long long interSec, interUsec;
 
     gettimeofday(&now, NULL);
     localtime.coarse = now.tv_sec + JAN_1970;
     localtime.fine = NTPFRAC(now.tv_usec);
-
-    //li 	   	= Data(0) >> 30 & 0x03;
-    //vn	   	= Data(0) >> 27 & 0x07;
-    //mode    = Data(0) >> 24 & 0x07;
-    //stratum = Data(0) >> 16 & 0xff;
-    //poll    = Data(0) >>  8 & 0xff;
-    //prec    = Data(0)	   & 0xff;
-    //if (prec & 0x80)
-    //{
-    //    prec|=0xffffff00;
-    //}
-    //delay   = Data(1);
-    //disp    = Data(2);
-    //refid   = Data(3);
-    //reftime.coarse = Data(4);
-    //reftime.fine   = Data(5);
+ 
     orgtime.coarse = Data(6);
     orgtime.fine   = Data(7);
     rectime.coarse = Data(8);
@@ -540,13 +523,10 @@ GMI_RESULT BoardManager::ParseNtpData(uint32_t *data)
     time3 = TTLUSEC(MKSEC(xmttime), MKUSEC(xmttime));
     time4 = TTLUSEC(MKSEC(localtime), MKUSEC(localtime));
 
-    intertime = ((time2 - time1) + (time3 - time4))/2;
-    //delaytime = (time4 - time1) - (time3 - time2);
+    intertime = ((time2 - time1) + (time3 - time4))/2; 
 
     interSec  = GETSEC(intertime);
     interUsec = GETUSEC(intertime);
-    //delaySec  = GETSEC(delaytime);
-    //delayUsec = GETUSEC(delaytime);
 
     tv.tv_sec  = MKSEC(localtime) + interSec;
     tv.tv_usec = MKUSEC(localtime) + interUsec;

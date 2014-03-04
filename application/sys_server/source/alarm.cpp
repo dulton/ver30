@@ -30,7 +30,7 @@ GMI_RESULT Alarm::Initialize()
     	return Result;
     }
 
-    Result = m_EventCenter.Start(NULL, 0, EventProcess, this);
+    Result = m_EventCenter.Start(NULL, 0, EventProcessCallBack, this);
     if (FAILED(Result))
     {
     	m_AlarmSession->Deinitialize();
@@ -66,18 +66,40 @@ GMI_RESULT Alarm::Report(SysPkgAlarmInfor *SysAlarmInfor)
 }
 
 
-void Alarm::EventProcess(void_t *UserData, uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength)
+void Alarm::EventProcessCallBack(void_t * UserData,uint32_t EventId,enum EventType Type,void_t * Parameter, size_t ParameterLength)
 {
-	struct timeval CurrentTime;
-    gettimeofday( &CurrentTime, NULL );
-    SYS_INFO( "EventProcess: UserData=%p, EventId=%d, Type=%d, Parameter=%p, ParameterLength=%d, current time=%ld:%06ld \n", UserData, EventId, Type, Parameter, ParameterLength, CurrentTime.tv_sec, CurrentTime.tv_usec );
+	Alarm *AlarmPtr = reinterpret_cast<Alarm*> (UserData);
 
+	return AlarmPtr->EventProcess(EventId, Type, Parameter, ParameterLength);
+}
+
+
+void Alarm::EventProcess(uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength)
+{
+   //struct timeval CurrentTime;
+   //gettimeofday( &CurrentTime, NULL );
+   // SYS_INFO( "EventProcess: UserData=%p, EventId=%d, Type=%d, Parameter=%p, ParameterLength=%d, current time=%ld:%06ld \n", UserData, EventId, Type, Parameter, ParameterLength, CurrentTime.tv_sec, CurrentTime.tv_usec );
 	struct AlarmUploadInf AlmUploadInf;
+	SysPkgAlarmInfor      SysAlarmInfo;
 	memcpy(&AlmUploadInf, Parameter, sizeof(struct AlarmUploadInf)); 
-		
+	memset(&SysAlarmInfo, 0, sizeof(SysPkgAlarmInfor));
+
+	time_t tTime;
+    struct tm *ptToday;
+    tTime = time(NULL);
+    ptToday = localtime(&tTime);   
+    
     switch (EventId)
     {
-    case EVENT_DETECTOR_ID_ALARM_INPUT:    	   	
+    case EVENT_DETECTOR_ID_ALARM_INPUT:    
+		SysAlarmInfo.s_WaringId          = AlmUploadInf.s_AlarmId;
+		SysAlarmInfo.s_WaringType        = AlmUploadInf.s_AlarmType;
+		SysAlarmInfo.s_OnOff             = AlmUploadInf.s_OnOff;
+		SysAlarmInfo.s_ExtraInfo.s_IoNum = AlmUploadInf.s_ExtraInfo.s_IoNum;
+		
+		sprintf((char_t*)SysAlarmInfo.s_Time, "%d-%d-%d %d:%d:%d", ptToday->tm_year+1900, ptToday->tm_mon+1, ptToday->tm_mday, ptToday->tm_hour, ptToday->tm_min, ptToday->tm_sec);
+    	strcpy((char_t*)SysAlarmInfo.s_Description, AlmUploadInf.s_Description);    	
+    	
     	if (e_EventType_Start == Type)
     	{
     		char_t UserData[64] = {0};
@@ -89,9 +111,17 @@ void Alarm::EventProcess(void_t *UserData, uint32_t EventId, enum EventType Type
     		char_t UserData[64] = {0};
     		sprintf(UserData, "GPIO Alarm Off:Input Port%d Description %s", AlmUploadInf.s_ExtraInfo.s_IoNum, AlmUploadInf.s_Description);
     		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_ALRAM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
-    	}    	
+    	}      
+		Report(&SysAlarmInfo);    		
     	break;
-    case EVENT_DETECTOR_ID_HUMAN_DETECT:    	 	
+    case EVENT_DETECTOR_ID_HUMAN_DETECT:  
+    	SysAlarmInfo.s_WaringId          = AlmUploadInf.s_AlarmId;
+		SysAlarmInfo.s_WaringType        = AlmUploadInf.s_AlarmType;
+		SysAlarmInfo.s_OnOff             = AlmUploadInf.s_OnOff;
+		SysAlarmInfo.s_ExtraInfo.s_IoNum = AlmUploadInf.s_ExtraInfo.s_IoNum;
+		sprintf((char_t*)SysAlarmInfo.s_Time, "%d-%d-%d %d:%d:%d", ptToday->tm_year+1900, ptToday->tm_mon+1, ptToday->tm_mday, ptToday->tm_hour, ptToday->tm_min, ptToday->tm_sec);
+    	strcpy((char_t*)SysAlarmInfo.s_Description, AlmUploadInf.s_Description);    
+    	
     	if (e_EventType_Start == Type)
     	{
     		char_t UserData[64] = {0};
@@ -103,12 +133,12 @@ void Alarm::EventProcess(void_t *UserData, uint32_t EventId, enum EventType Type
     		char_t UserData[64] = {0};
     		sprintf(UserData, "PIR Alarm Off:Description %s", AlmUploadInf.s_Description);
     		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_PIR_ALARM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
-    	}    	
+    	}   
+    	Report(&SysAlarmInfo); 
     	break;
     default:
     	break;
-    }
-    
+    }    
     
 	return;
 }

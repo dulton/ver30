@@ -17,12 +17,13 @@ public:
     GMI_RESULT Schedule(int32_t ScheduleId, int32_t Index, const void_t *Parameter, size_t ParameterLength);
 private:
 	GMI_RESULT Report(SysPkgAlarmInfor *SysAlarmInfor);
-	static void EventProcess(void_t *UserData, uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength);
+   	static void EventProcessCallBack(void_t *UserData, uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength);
+   	void_t EventProcess(uint32_t EventId, enum EventType Type, void_t *Parameter, size_t ParameterLength);
 	GMI_RESULT CheckConfig(int32_t AlarmId, int32_t Index, const void_t *Parameter, size_t ParameterLength);
 	GMI_RESULT CheckSchedule(int32_t ScheduleId, int32_t Index, const void_t *Parameter, size_t ParameterLength);
 private:
 	ReferrencePtr<AlarmSession>    m_AlarmSession;
-	EventTransactionCenter         m_EventCenter;
+	EventTransactionCenter         m_EventCenter;	
 };
 
 
