@@ -1,8 +1,8 @@
 #include <BasicUsageEnvironment.hh>
-#include <RTSPServer.hh>
 #include <H264RealTimeStreamServerMediaSubsession.hh>
 #include <G711RealTimeStreamServerMediaSubsession.hh>
 
+#include "RTSPServerEx.hh"
 #include "GMITaskScheduler.hh"
 
 #include "configure.h"
@@ -41,7 +41,6 @@ protected:
     boolean_t                    m_Initialized;
     TaskScheduler              * m_TaskScheduler;
     UsageEnvironment           * m_UsageEnvironment;
-    UserAuthenticationDatabase * m_UserAuthDatabase;
     RTSPServer                 * m_RTSPServer;
 };
 
@@ -66,7 +65,6 @@ RtspServiceImpl::RtspServiceImpl()
     , m_Initialized(false)
     , m_TaskScheduler(NULL)
     , m_UsageEnvironment(NULL)
-    , m_UserAuthDatabase(NULL)
     , m_RTSPServer(NULL)
 {
     OutPacketBuffer::maxSize = MAX_BYTES_PER_FRAME;
@@ -111,11 +109,8 @@ GMI_RESULT RtspServiceImpl::Initialize()
             break;
         }
 
-        // TODO: Create user auth database
-        m_UserAuthDatabase = NULL;
-
         // Create RTSP server
-        m_RTSPServer = RTSPServer::createNew(*m_UsageEnvironment, Configure::GetInstance().GetRtspServicePort(), m_UserAuthDatabase);
+        m_RTSPServer = RTSPServerEx::createNew(*m_UsageEnvironment, Configure::GetInstance().GetRtspServicePort(), "RTSP Server");
         if (NULL == m_RTSPServer)
         {
             PRINT_LOG(ERROR, "Failed to create RTSPServer");

@@ -24,13 +24,12 @@ public:
     uint32_t GetStreamApplicationId() const;
     uint16_t GetRtspServicePort() const;
 
+    uint16_t GetAuthLocalPort() const;
+    uint8_t GetAuthLocalModuleId() const;
+
 private:
     Configure();
     ~Configure();
-
-    // Get resources
-    uint16_t GetAuthLocalPort() const;
-    uint8_t GetAuthLocalModuleId() const;
 
     boolean_t m_Initialized;
 

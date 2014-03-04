@@ -2,6 +2,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#include <auth_center_api.h>
+
 #include "application.h"
 #include "heartbeat.h"
 #include "media_capture.h"
@@ -74,6 +76,11 @@ GMI_RESULT Application::Start()
         {
             PRINT_LOG(ERROR, "Failed to initialize configure");
             break;
+        }
+
+        if (GMI_SUCCESS != GMI_UserLogInDataReset(Configure::GetInstance().GetAuthLocalModuleId(), Configure::GetInstance().GetAuthLocalPort()))
+        {
+            PRINT_LOG(WARNING, "Failed to reset user login data");
         }
 
         m_RtspService = RtspService::CreateInstance();
