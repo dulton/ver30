@@ -46,7 +46,7 @@ private:
 	GMI_RESULT GetMaxResByHwInfo(int32_t *MaxWidthPtr, int32_t *MaxHeightPtr);
 	GMI_RESULT CheckCapabilitySwFile(const char_t *FilePath);
 	GMI_RESULT GenerateSoftwareCapabilityByHwInfo(void);
-	GMI_RESULT GetCapabilitySwConfigLens(char_t ConfigLens[64]);
+	GMI_RESULT GetCapabilitySwConfig(SysPkgComponents *SysComponents);
 	GMI_RESULT Lock();
 	GMI_RESULT Unlock();
 private:

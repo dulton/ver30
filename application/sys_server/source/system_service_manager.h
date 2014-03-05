@@ -224,6 +224,8 @@ private:
     SysPkgNtpServerInfo                m_SysNtpServerInfo;
 	//set vidin blocked flag
 	boolean_t                          m_VidInBlocked;
+	//hardware info
+	SysPkgComponents                   m_SysComponents;
 	//alarm 	
 	SysPkgAlarmInConfig                m_SysAlarmInCfg[MAX_ALARM_IN_PORT];
 	SysPkgAlarmOutConfig               m_SysAlarmOutCfg[MAX_ALARM_OUT_PORT];

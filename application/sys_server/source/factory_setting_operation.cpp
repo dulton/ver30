@@ -918,9 +918,11 @@ GMI_RESULT FactorySettingOperation::GetSensorName(char_t SensorName[64])
 }
 
 
-GMI_RESULT FactorySettingOperation::GetCapabilitySwConfigLens(char_t ConfigLens[64])
+GMI_RESULT FactorySettingOperation::GetCapabilitySwConfig(SysPkgComponents *SysComponents)
 {
 	FD_HANDLE  Handle;
+	char_t     Lens[64];
+	uint8_t    PIRSupport;
 	char_t     CapabiltiySwPrivatePath[128] = {0};
 	
 	m_CapabilitySwFileLock.Lock();
@@ -933,7 +935,8 @@ GMI_RESULT FactorySettingOperation::GetCapabilitySwConfigLens(char_t ConfigLens[
 
 	memset(CapabiltiySwPrivatePath, 0, sizeof(CapabiltiySwPrivatePath));
     strcpy(CapabiltiySwPrivatePath, CAPABILITY_SW_PRIVATE_PATH);
-    Result = GMI_XmlRead(Handle, (const char_t*)CapabiltiySwPrivatePath, CONFIG_LENS_KEY, HW_LENS, ConfigLens, GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)CapabiltiySwPrivatePath, CONFIG_LENS_KEY, HW_LENS, Lens, GMI_CONFIG_READ_ONLY);
+    Result = GMI_XmlRead(Handle, (const char_t*)CapabiltiySwPrivatePath, CONFIG_PIR_KEY, 0, (uint8_t*)&PIRSupport, GMI_CONFIG_READ_ONLY);
     if (FAILED(Result))
     {
         GMI_XmlFileSave(Handle);
@@ -949,7 +952,25 @@ GMI_RESULT FactorySettingOperation::GetCapabilitySwConfigLens(char_t ConfigLens[
     }
     m_CapabilitySwFileLock.Unlock();
 
-    SYS_INFO("config lens is %s\n", ConfigLens);
+	if (strcmp(Lens, LENS_ICRJZ9) == 0)
+	{
+		SysComponents->s_ZoomLensId = e_ZOOM_LENS_ICRJZ9;
+	}
+	else
+	{
+		SysComponents->s_ZoomLensId = e_ZOOM_LENS_NONE;
+	}
+
+	if (PIRSupport)
+	{
+		SysComponents->s_PIR = 1;
+	}
+	else
+	{
+		SysComponents->s_PIR = 0;
+	}
+		
+    SYS_INFO("config lens is %s\n", Lens);
 
     return GMI_SUCCESS;
 }
@@ -1041,11 +1062,7 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
     if (strcmp(Lens, LENS_DF003) == 0)
     {
         SysComponents->s_ZoomLensId = e_ZOOM_LENS_DF003;
-    }
-    else if (strcmp(Lens, LENS_YB22) == 0)
-    {
-        SysComponents->s_ZoomLensId = e_ZOOM_LENS_YB22;
-    }    
+    }  
     else
     {
         SysComponents->s_ZoomLensId = e_ZOOM_LENS_NONE;
@@ -1061,25 +1078,23 @@ GMI_RESULT FactorySettingOperation::GetHwAutoDetectInfo(SysPkgComponents *SysCom
     	SysComponents->s_BoardId = e_BOARD_LARK;
     }
 
-    if (SysComponents->s_ZoomLensId == e_ZOOM_LENS_NONE)
-    {
-    	char_t ConfigLens[128] = {0};
-    	Result = GetCapabilitySwConfigLens(ConfigLens);
-    	if (FAILED(Result))
-    	{
-    		SYS_ERROR("get config lens fail, Result = 0x%lx\n", Result);
-    		return Result;
-    	}
+	//get config capability
+	SysPkgComponents SysComponentsConfig;
+	memset(&SysComponentsConfig, 0, sizeof(SysPkgComponents));
+	Result = GetCapabilitySwConfig(&SysComponentsConfig);
+	if (FAILED(Result))
+	{
+		SYS_ERROR("GetCapabilitySwConfig fail, Result = 0x%lx\n", Result);
+		return Result;	
+	} 
 
-    	if (strcmp(ConfigLens, LENS_ICRJZ9) == 0)
-    	{
-    		SysComponents->s_ZoomLensId = e_ZOOM_LENS_ICRJZ9;
-    	}
-		else
-		{
-			SysComponents->s_ZoomLensId = e_ZOOM_LENS_NONE;
-		}
-    }
+	//get config lens priority
+	if (e_ZOOM_LENS_NONE != SysComponentsConfig.s_ZoomLensId)
+	{
+		SysComponents->s_ZoomLensId = SysComponentsConfig.s_ZoomLensId;
+	}
+	
+	SysComponents->s_PIR = SysComponentsConfig.s_PIR;      
     
     return GMI_SUCCESS;
 }

@@ -185,27 +185,6 @@ GMI_RESULT SystemServiceManager::AlarmInitial()
 		}
 	}
 
-	//get alarm out config
-	for (int32_t i = 0; i < MAX_ALARM_OUT_PORT; i++)
-	{
-		Result = m_ConfigFileManagerPtr->GetAlarmConfig(SYS_PROCESSOR_ID_ALARM_OUTPUT, i, &m_SysAlarmOutCfg[i], sizeof(SysPkgAlarmOutConfig));
-		if (FAILED(Result))
-		{		
-			SYS_ERROR("GetAlarmOutConfig from file fail, Result = 0x%lx\n", Result);
-			m_AlarmPtr->Deinitialize();
-			return Result;
-		}
-	}
-
-	//get PIR config
-	Result = m_ConfigFileManagerPtr->GetAlarmConfig(SYS_DETECTOR_ID_PIR, 0, &m_SysAlarmPIRCfg, sizeof(SysPkgAlarmEventConfig));
-	if (FAILED(Result))
-	{		
-		SYS_ERROR("GetAlarmPIRConfig from file fail, Result = 0x%lx\n", Result);
-		m_AlarmPtr->Deinitialize();
-		return Result;
-	}
-
 	//get alarm in schedule 
 	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
 	{		
@@ -218,6 +197,43 @@ GMI_RESULT SystemServiceManager::AlarmInitial()
 		}		
 	}
 
+	//set alarm in schedule
+	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
+	{
+		Result = m_AlarmPtr->Schedule(SYS_SCHEDULE_TIME_ID_ALARM_IN, i, &m_SysAlarmInScheduleTime[i], sizeof(SysPkgAlarmScheduleTime));
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("SetAlarmInSchedule to event module fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}
+	}
+	
+	//set alarm in config 
+	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
+	{
+		Result = m_AlarmPtr->Config(SYS_DETECTOR_ID_ALARM_INPUT, i, &m_SysAlarmInCfg[i], sizeof(SysPkgAlarmInConfig));
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("SetAlarmInConfig to event module fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}
+	}
+
+	//get alarm out config
+	for (int32_t i = 0; i < MAX_ALARM_OUT_PORT; i++)
+	{
+		Result = m_ConfigFileManagerPtr->GetAlarmConfig(SYS_PROCESSOR_ID_ALARM_OUTPUT, i, &m_SysAlarmOutCfg[i], sizeof(SysPkgAlarmOutConfig));
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("GetAlarmOutConfig from file fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}
+	}	
+	
+
 	//get alarm out schedule
 	for (int32_t i = 0; i < MAX_ALARM_OUT_PORT; i++)
 	{		
@@ -228,25 +244,15 @@ GMI_RESULT SystemServiceManager::AlarmInitial()
 			m_AlarmPtr->Deinitialize();
 			return Result;
 		}		
-	}
+	}	 	
 
-	//get PIR schedule 
-	Result = m_ConfigFileManagerPtr->GetAlarmSchedule(SYS_SCHEDULE_TIME_ID_PIR_DETECT, 0, &m_SysAlarmPIRScheduleTime);
-	if (FAILED(Result))
-	{		
-		SYS_ERROR("GetAlarmPIRSchedule from file fail, Result = 0x%lx\n", Result);
-		m_AlarmPtr->Deinitialize();
-		return Result;
-	}	
-
- 	////Set To Alarm
-	//set alarm in config 
-	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
+	//set alarm out schedule
+	for (int32_t i = 0; i < MAX_ALARM_OUT_PORT; i++)
 	{
-		Result = m_AlarmPtr->Config(SYS_DETECTOR_ID_ALARM_INPUT, i, &m_SysAlarmInCfg[i], sizeof(SysPkgAlarmInConfig));
+		Result = m_AlarmPtr->Schedule(SYS_SCHEDULE_TIME_ID_ALARM_OUT, i, &m_SysAlarmOutScheduleTime[i], sizeof(SysPkgAlarmScheduleTime));
 		if (FAILED(Result))
 		{		
-			SYS_ERROR("SetAlarmInConfig to event module fail, Result = 0x%lx\n", Result);
+			SYS_ERROR("SetAlarmOutSchedule to event module fail, Result = 0x%lx\n", Result);
 			m_AlarmPtr->Deinitialize();
 			return Result;
 		}
@@ -262,49 +268,47 @@ GMI_RESULT SystemServiceManager::AlarmInitial()
 			m_AlarmPtr->Deinitialize();
 			return Result;
 		}
-	}	
+	}					
 
-	//set PIR config
-	Result = m_AlarmPtr->Config(SYS_DETECTOR_ID_PIR, 0, &m_SysAlarmPIRCfg, sizeof(SysPkgAlarmEventConfig));
-	if (FAILED(Result))
-	{		
-		SYS_ERROR("SetAlarmPIRConfig to event module fail, Result = 0x%lx\n", Result);
-		m_AlarmPtr->Deinitialize();
-		return Result;
-	}
 	
-	//set alarm in schedule
-	for (int32_t i = 0; i < MAX_ALARM_IN_PORT; i++)
+	if (m_SysComponents.s_PIR)
 	{
-		Result = m_AlarmPtr->Schedule(SYS_SCHEDULE_TIME_ID_ALARM_IN, i, &m_SysAlarmInScheduleTime[i], sizeof(SysPkgAlarmScheduleTime));
+		//get PIR config
+		Result = m_ConfigFileManagerPtr->GetAlarmConfig(SYS_DETECTOR_ID_PIR, 0, &m_SysAlarmPIRCfg, sizeof(SysPkgAlarmEventConfig));
 		if (FAILED(Result))
 		{		
-			SYS_ERROR("SetAlarmInSchedule to event module fail, Result = 0x%lx\n", Result);
+			SYS_ERROR("GetAlarmPIRConfig from file fail, Result = 0x%lx\n", Result);
 			m_AlarmPtr->Deinitialize();
 			return Result;
 		}
-	}
 
-	//set alarm out schedule
-	for (int32_t i = 0; i < MAX_ALARM_OUT_PORT; i++)
-	{
-		Result = m_AlarmPtr->Schedule(SYS_SCHEDULE_TIME_ID_ALARM_OUT, i, &m_SysAlarmOutScheduleTime[i], sizeof(SysPkgAlarmScheduleTime));
+		//get PIR schedule 
+		Result = m_ConfigFileManagerPtr->GetAlarmSchedule(SYS_SCHEDULE_TIME_ID_PIR_DETECT, 0, &m_SysAlarmPIRScheduleTime);
 		if (FAILED(Result))
 		{		
-			SYS_ERROR("SetAlarmOutSchedule to event module fail, Result = 0x%lx\n", Result);
+			SYS_ERROR("GetAlarmPIRSchedule from file fail, Result = 0x%lx\n", Result);
 			m_AlarmPtr->Deinitialize();
 			return Result;
-		}
+		}	
+
+		//set PIR schedule
+		Result = m_AlarmPtr->Schedule(SYS_SCHEDULE_TIME_ID_PIR_DETECT, 0, &m_SysAlarmPIRScheduleTime, sizeof(SysPkgAlarmScheduleTime));
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("SetAlarmPIRSchedule to event module fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}	
+		
+		//set PIR config
+		Result = m_AlarmPtr->Config(SYS_DETECTOR_ID_PIR, 0, &m_SysAlarmPIRCfg, sizeof(SysPkgAlarmEventConfig));
+		if (FAILED(Result))
+		{		
+			SYS_ERROR("SetAlarmPIRConfig to event module fail, Result = 0x%lx\n", Result);
+			m_AlarmPtr->Deinitialize();
+			return Result;
+		}		
 	}
-	
-	//set PIR schedule
-	Result = m_AlarmPtr->Schedule(SYS_SCHEDULE_TIME_ID_PIR_DETECT, 0, &m_SysAlarmPIRScheduleTime, sizeof(SysPkgAlarmScheduleTime));
-	if (FAILED(Result))
-	{		
-		SYS_ERROR("SetAlarmPIRSchedule to event module fail, Result = 0x%lx\n", Result);
-		m_AlarmPtr->Deinitialize();
-		return Result;
-	}	
 	
 	return GMI_SUCCESS;
 }
@@ -850,10 +854,9 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
         return Result;
     }
 
-    //set general param;
-    SysPkgComponents SysComponents;
-    memset(&SysComponents, 0, sizeof(SysPkgComponents));
-    Result = m_ConfigFileManagerPtr->GetHwAutoDetectInfo(&SysComponents);
+    //set general param;    
+    memset(&m_SysComponents, 0, sizeof(SysPkgComponents));
+    Result = m_ConfigFileManagerPtr->GetHwAutoDetectInfo(&m_SysComponents);
     if (FAILED(Result))
     {
     	SYS_ERROR("GetHwAutoDetectInfo fail, Result = 0x%lx\n", Result);
@@ -865,7 +868,7 @@ GMI_RESULT SystemServiceManager::MediaInitial(void)
         return Result;
     }    
     
-    Result = m_StreamCenterClientPtr->GeneralParamSet(GEN_PARAM_AUTO, (void_t*)&SysComponents);
+    Result = m_StreamCenterClientPtr->GeneralParamSet(GEN_PARAM_AUTO, (void_t*)&m_SysComponents);
     if (FAILED(Result))
     {
     	SYS_ERROR("GeneralParamSet GEN_PARAM_AUTO fail, Result = 0x%lx\n", Result);
@@ -1744,20 +1747,10 @@ void SystemServiceManager::AudVidStreamIsExis(boolean_t *Exit)
 GMI_RESULT SystemServiceManager::PTZ_Initial()
 {
     SYS_INFO("##%s in..........\n", __func__);
-    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "##%s in..........\n", __func__);
-
-    SysPkgComponents SysComponents;
-
-    GMI_RESULT Result = m_ConfigFileManagerPtr->GetHwAutoDetectInfo(&SysComponents);
-    if (FAILED(Result))
-    {
-        SYS_ERROR("GetHwAutoDetectInfo fail, Result = 0x%lx\n", Result);
-        DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "GetHwAutoDetectInfo fail, Result = 0x%lx\n", Result);
-        return Result;
-    }
+    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Info, "##%s in..........\n", __func__);    
 
     //dome
-    if (SysComponents.s_ZoomLensId != e_ZOOM_LENS_NONE)
+    if (m_SysComponents.s_ZoomLensId != e_ZOOM_LENS_NONE)
     {
         m_SupportPtz = true;
     }
@@ -1777,7 +1770,7 @@ GMI_RESULT SystemServiceManager::PTZ_Initial()
         memset(m_PresetsInfo_InnerPtr.GetPtr(), 0, sizeof(SysPkgPresetInfo_Inner)*MAX_PRESETS);
 
         //get presets info
-        Result = m_ConfigFileManagerPtr->GetPresetsInfo(m_PresetsInfo_InnerPtr.GetPtr());
+        GMI_RESULT Result = m_ConfigFileManagerPtr->GetPresetsInfo(m_PresetsInfo_InnerPtr.GetPtr());
         if (FAILED(Result))
         {
             SYS_ERROR("GetPresetsInfo new fail\n");
@@ -1824,7 +1817,7 @@ GMI_RESULT SystemServiceManager::PTZ_Initial()
         }
 
 		//particular lens, particular process
-		if (e_ZOOM_LENS_ICRJZ9 == SysComponents.s_ZoomLensId)
+		if (e_ZOOM_LENS_ICRJZ9 == m_SysComponents.s_ZoomLensId)
 		{
 			//zoom
 	        Result = m_StreamCenterClientPtr->OpenZoomDevice(0, &m_ZoomHandle);
@@ -4471,13 +4464,13 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
 
             memset(&Z_CtlCmd, 0, sizeof(ZoomCmd));
             Z_CtlCmd.s_ZoomMode = ((SYS_PTZCMD_ZOOM_TELE == PtzCtrlTmp.s_PtzCmd) ? ZOOM_MODE_IN : ZOOM_MODE_OUT);
-            Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, true);
-            if (FAILED(Result))
-            {
-                SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
-                return Result;
-            }
+            //Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, true);
+            //if (FAILED(Result))
+            //{
+            //    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
+            //    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
+            //    return Result;
+            //}
 
             Result = m_StreamCenterClientPtr->ControlZoom(m_ZoomHandle, Z_CtlCmd.s_ZoomMode);
             if (FAILED(Result))
@@ -4635,7 +4628,15 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
                     SYS_ERROR("PTZ Control fail, Result = 0x%lx\n", Result);
                     DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PTZ Control fail, Result = 0x%lx\n", Result);
                     return Result;
-                }                
+                }   
+
+                Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, false);
+				if (FAILED(Result))
+				{
+				    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
+				    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
+				    return Result;
+				}
             }
             else if (SYS_PTZCMD_ZOOM_TELE == LastPtzCmd
                      || SYS_PTZCMD_ZOOM_WIDE == LastPtzCmd)
@@ -4663,15 +4664,7 @@ GMI_RESULT SystemServiceManager::SvrPtzControl(SysPkgPtzCtrl *PtzCtrl )
                         return Result;
                     }
                 }               
-            }
-
-			Result = m_StreamCenterClientPtr->PauseAutoFocus(m_AutoFocusHandle, false);
-			if (FAILED(Result))
-			{
-			    SYS_ERROR("PauseAutoFocus fail, Result = 0x%lx\n", Result);
-			    DEBUG_LOG(g_DefaultLogClient, e_DebugLogLevel_Exception, "PauseAutoFocus fail, Result = 0x%lx\n", Result);
-			    return Result;
-			}
+            }			
         }
         else
         {
