@@ -1885,32 +1885,32 @@ GMI_RESULT GMI_DeviceInfoPacket(char_t *Buf, uint16_t *BufLen)
         DAEMON_PRINT_LOG(INFO,"SysInfoOpen is Fail ! ! ");
     }
     
-    int32_t RTSP_Port = 554;
-    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_RTSP_SERVER_TCP_PORT_KEY, 554, &RTSP_Port);
+    int32_t RTSP_Port = GMI_RTSP_SERVER_TCP_PORT;
+    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_RTSP_SERVER_TCP_PORT_KEY, GMI_RTSP_SERVER_TCP_PORT, &RTSP_Port);
     if (FAILED(Result))
     {
-	RTSP_Port = 554;
+	RTSP_Port = GMI_RTSP_SERVER_TCP_PORT;
     }
 
-    int32_t HTTP_Port = 80;
-    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_HTTP_SERVER_PORT_KEY, 80, &HTTP_Port);
+    int32_t HTTP_Port = GMI_HTTP_SERVER_PORT;
+    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_HTTP_SERVER_PORT_KEY, GMI_HTTP_SERVER_PORT, &HTTP_Port);
     if (FAILED(Result))
     {
-	HTTP_Port = 80;
+	HTTP_Port = GMI_HTTP_SERVER_PORT;
     }
 
-    int32_t SDK_Port = 30000;
-    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_SDK_SERVER_PORT_KEY, 30000, &SDK_Port);
+    int32_t SDK_Port = GMI_SDK_SERVER_PORT;
+    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_SDK_SERVER_PORT_KEY, GMI_SDK_SERVER_PORT, &SDK_Port);
     if (FAILED(Result))
     {
-	SDK_Port = 30000;
+	SDK_Port = GMI_SDK_SERVER_PORT;
     }
 
-    int32_t Upgrade_Port = 8000;
-    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_DAEMON_UPDATE_SERVER_PORT_KEY, 8000, &Upgrade_Port);
+    int32_t Upgrade_Port = GMI_DAEMON_UPDATE_SERVER_PORT;
+    Result = SysInfoRead(Handle, GMI_EXTERN_NETWORK_PORT_PATH, GMI_DAEMON_UPDATE_SERVER_PORT_KEY, GMI_DAEMON_UPDATE_SERVER_PORT, &Upgrade_Port);
     if (FAILED(Result))
     {
-	Upgrade_Port = 8000;
+	Upgrade_Port = GMI_DAEMON_UPDATE_SERVER_PORT;
     }
 
     char_t Name[64];

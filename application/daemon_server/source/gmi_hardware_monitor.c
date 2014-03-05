@@ -764,11 +764,6 @@ GMI_RESULT GMI_CheckLenType(HardwareConfig *Hardware)
         DAEMON_PRINT_LOG(INFO,"LENS  is DF003 !");
         strcpy(Hardware->s_Len,"DF003");
     }
-    else if ((0==l_Value) && (1 ==l_Value2))
-    {
-        DAEMON_PRINT_LOG(INFO,"LENS  is YB22 !");
-        strcpy(Hardware->s_Len,"YB22");
-    }
     else
     {
         DAEMON_PRINT_LOG(INFO,"LENS  is NONE !");

@@ -18,6 +18,7 @@
 #define GMI_HTTP_SERVER_PORT_KEY                    "HTTP_ServerPort"
 #define GMI_SDK_SERVER_PORT_KEY                     "SDK_ServerPort"
 #define GMI_ONVIF_SERVER_PORT_KEY                   "ONVIF_Port"
+#define GMI_SNMP_SERVER_PORT_KEY                    "SNMP_ServerPort"
 
 /********************** unix socket ***********************/
 
@@ -173,6 +174,9 @@
 
 //daemon update server port
 #define GMI_DAEMON_UPDATE_SERVER_PORT               8000
+
+//SNMP_SERVER_PORT
+#define GMI_SNMP_SERVER_PORT                              161 
 
 /************************ mutex id ************************/
 

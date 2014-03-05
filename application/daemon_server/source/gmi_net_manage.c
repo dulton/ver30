@@ -175,6 +175,7 @@ GMI_RESULT GMI_SetSystemDefaultIp(IpInfo *IpInfoConfig)
     return GMI_SUCCESS;
 }
 
+#if 0
 /*============================================================================
 name				:	GMI_ReadIpConfig
 function			:  Read system config file, if no config file.
@@ -241,7 +242,7 @@ GMI_RESULT  GMI_NetActive(const IpInfo *IpInfoConfig)
 
     return Result;
 }
-
+#endif
 /*============================================================================
 name				:	GMI_NetManageInit
 function			:  Read System config file ,if no config file.
