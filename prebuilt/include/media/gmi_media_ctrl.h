@@ -248,9 +248,9 @@ extern "C"
 	//base
 	#define MIN_IMAGE_BASE_EXPMODE         0
 	#define MAX_IMAGE_BASE_EXPMODE         2
-	#define MIN_IMAGE_BASE_EXPVALUEMIN    125    //unit:us
+	#define MIN_IMAGE_BASE_EXPVALUEMIN    31    //unit:us
 	#define MAX_IMAGE_BASE_EXPVALUEMIN    40000
-	#define MIN_IMAGE_BASE_EXPVALUEMAX    125    //unit:us
+	#define MIN_IMAGE_BASE_EXPVALUEMAX    31    //unit:us
 	#define MAX_IMAGE_BASE_EXPVALUEMAX    133333
 	#define MIN_IMAGE_BASE_GAINMAX         0
 	#define MAX_IMAGE_BASE_GAINMAX         60
