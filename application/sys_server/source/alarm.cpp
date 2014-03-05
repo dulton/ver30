@@ -15,25 +15,25 @@ Alarm::~Alarm()
 
 
 GMI_RESULT Alarm::Initialize()
-{	
-	m_AlarmSession = BaseMemoryManager::Instance().New<AlarmSession>(GMI_SYS_SERVER_C_WARING_PORT, GMI_SDK_S_WARING_PORT);
-    if (NULL == m_AlarmSession.GetPtr())
+{				
+	m_AlarmInfoReport = BaseMemoryManager::Instance().New<SysAlarmInfoReport>();
+    if (NULL == m_AlarmInfoReport.GetPtr())
     {
-    	SYS_ERROR("m_AlarmSession new fail\n");
+    	SYS_ERROR("m_AlarmInfoReport new fail\n");
     	return GMI_OUT_OF_MEMORY;
     }
 
-    GMI_RESULT Result = m_AlarmSession->Initialize();
+    GMI_RESULT Result = m_AlarmInfoReport->Initialize();
     if (FAILED(Result))
     {
-    	SYS_ERROR("Alarm Session Initialize fail, Result = 0x%lx\n", Result);
+    	SYS_ERROR("Alarm info report command Initialize fail, Result = 0x%lx\n", Result);
     	return Result;
-    }
+    }    
 
     Result = m_EventCenter.Start(NULL, 0, EventProcessCallBack, this);
     if (FAILED(Result))
     {
-    	m_AlarmSession->Deinitialize();
+    	m_AlarmInfoReport->Deinitialize();
     	SYS_ERROR("event center start fail, Result = 0x%lx\n", Result);
     	return Result;
     }
@@ -45,22 +45,8 @@ GMI_RESULT Alarm::Initialize()
 GMI_RESULT Alarm::Deinitialize()
 {
 	m_EventCenter.Stop();
-	m_AlarmSession->Deinitialize();
-	m_AlarmSession = NULL;
-
-	return GMI_SUCCESS;
-}
-
-
-GMI_RESULT Alarm::Report(SysPkgAlarmInfor *SysAlarmInfor)
-{	
-	size_t Transfered;
-	GMI_RESULT Result = m_AlarmSession->Send((uint8_t*)SysAlarmInfor, sizeof(SysPkgAlarmInfor), &Transfered);
-	if (FAILED(Result))
-	{
-		SYS_ERROR("send alarm info to sdk fail, Result = 0x%lx\n", Result);
-		return Result;
-	}
+	m_AlarmInfoReport->Deinitialize();
+	m_AlarmInfoReport = NULL;
 
 	return GMI_SUCCESS;
 }
@@ -112,7 +98,7 @@ void Alarm::EventProcess(uint32_t EventId, enum EventType Type, void_t *Paramete
     		sprintf(UserData, "GPIO Alarm Off:Input Port%d Description %s", AlmUploadInf.s_ExtraInfo.s_IoNum, AlmUploadInf.s_Description);
     		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_ALRAM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
     	}      
-		Report(&SysAlarmInfo);    		
+		m_AlarmInfoReport->Report(&SysAlarmInfo);    		
     	break;
     case EVENT_DETECTOR_ID_HUMAN_DETECT:  
     	SysAlarmInfo.s_WaringId          = AlmUploadInf.s_AlarmId;
@@ -134,7 +120,7 @@ void Alarm::EventProcess(uint32_t EventId, enum EventType Type, void_t *Paramete
     		sprintf(UserData, "PIR Alarm Off:Description %s", AlmUploadInf.s_Description);
     		USER_LOG(g_DefaultLogClient, SYS_LOGMAJOR_ALARM, SYS_LOGMINOR_PIR_ALARM_IN, USER_NAME, strlen(USER_NAME), UserData, strlen(UserData));
     	}   
-    	Report(&SysAlarmInfo); 
+    	m_AlarmInfoReport->Report(&SysAlarmInfo); 
     	break;
     default:
     	break;

@@ -21,6 +21,7 @@ public:
 	{
 	    return (((unsigned long long )htonl((int)((val << 32) >> 32))) << 32) | (unsigned int)htonl((int)(val >> 32));    
 	}
+
 protected:
     ReferrencePtr<SystemServiceManager> m_SystemServiceManager;
     void_t *m_Argument;

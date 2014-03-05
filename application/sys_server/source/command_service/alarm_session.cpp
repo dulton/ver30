@@ -1,4 +1,5 @@
 #include "alarm_session.h"
+#include "auth_center_api.h"
 #include "log.h"
 #include "gmi_rudp_api.h"
 
@@ -60,6 +61,8 @@ GMI_RESULT AlarmSession::Send(const uint8_t *Buffer, size_t BufferSize, size_t *
     RudpSendInput.s_Buffer = (uint8_t*)Buffer;
     RudpSendInput.s_SendLength = BufferSize;
     RudpSendInput.s_TimeoutMS = 5000;   
+    RudpSendInput.s_SequenceNum = 1;
+    RudpSendInput.s_SessionId = ID_SESSIONID_INTER_SDK;
    
     GMI_RESULT Result = GMI_RudpSend(m_RUDP_Socket, &RudpSendInput, &RudpSendOutput);
     if (FAILED(Result))
