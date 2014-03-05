@@ -1732,6 +1732,9 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 				s = m.group(1)
 				if s == sid:
 					matchid = 1
+				else:
+					#logging.error('s (%s) sid(%s)'%(s,sid))
+					pass
 			elif matchid and matchtype == 0:
 				self.assertTrue(l.startswith('warningtype'))
 				m = pat.match(l)
@@ -1739,6 +1742,7 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 				if s == stype:
 					matchtype = 1
 				else:
+					logging.error('s(%s) stype(%s)'%(s,stype))
 					matchid = 0
 					matchtype = 0
 					matchlevel = 0
@@ -1753,6 +1757,7 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 				if s == slevel:
 					matchlevel = 1
 				else:
+					logging.error('s(%s) slevel(%s)'%(s,slevel))
 					matchid = 0
 					matchtype = 0
 					matchlevel = 0
@@ -1767,6 +1772,7 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 				if s == sonoff:
 					matchonoff = 1
 				else:
+					logging.error('s(%s) sonoff'%(s,sonoff))
 					matchid = 0
 					matchtype = 0
 					matchlevel = 0
@@ -1781,6 +1787,7 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 				if s == stime:
 					matchtime = 1
 				else:
+					logging.error('s(%s) stime(%s)'%(s,stime))
 					matchid = 0
 					matchtype = 0
 					matchlevel = 0
@@ -1795,6 +1802,7 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 				if s == sdevid:
 					matchdevid = 1
 				else:
+					logging.error('s(%s) sdevid(%s)'%(s,sdevid))
 					matchid = 0
 					matchtype = 0
 					matchlevel = 0
@@ -1810,6 +1818,7 @@ class BaseSdkStreamUnit(SdkLoginUnit):
 					matchdesc = 1
 					break
 				else:
+					logging.error('s(%s) sdesc(%s)'%(s,sdesc))
 					matchid = 0
 					matchtype = 0
 					matchlevel = 0

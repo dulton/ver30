@@ -52,6 +52,7 @@ GMI_MODULE_INCLUDE_DIR  = ../include ${GMI_TOPDIR}/prebuilt/include/
 GMI_MODULE_INCLUDE_DIR += ${GMI_TOPDIR}/prebuilt/include/osal ${GMI_TOPDIR}/prebuilt/include/ipc_media_data_dispatch/
 GMI_MODULE_INCLUDE_DIR += ${GMI_TOPDIR}/prebuilt/include/command_pipeline/ ${GMI_TOPDIR}/prebuilt/include/media/
 GMI_MODULE_INCLUDE_DIR += ${GMI_TOPDIR}/prebuilt/include/config/ ${GMI_TOPDIR}/application/ ${GMI_TOPDIR}/modules/gmi/auth_center/include
+GMI_MODULE_INCLUDE_DIR += ${GMI_TOPDIR}/application/auth_server/include/
 
 # Set other header file path
 GMI_INCLUDE_DIR         = ../../

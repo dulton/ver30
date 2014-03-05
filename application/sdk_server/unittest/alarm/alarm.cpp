@@ -5,6 +5,7 @@
 #include <memory>
 #include <rudp/gmi_rudp_api.h>
 #include <sys_env_types.h>
+#include <ipc_fw_v3.x_resource.h>
 
 #include <assert.h>
 #define SDK_ASSERT  assert
@@ -311,7 +312,7 @@ fail:
     return -ret;
 }
 
-#define RPORT_DEFAULT   57024
+#define RPORT_DEFAULT   GMI_SDK_S_WARING_PORT
 #define LPORT_DEFAULT   30112
 #define SES_DEFAULT     100
 #define SEQNUM_DEFAULT  130

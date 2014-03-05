@@ -4,6 +4,8 @@
 
 
 #include <osal/gmi_system_headers.h>
+#include <sys_env_types.h>
+#include <user_auth_api.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -106,7 +108,7 @@ static __inline__ uint64_t INNER_PROTO_TO_HOST64(uint64_t val)
 #define  GSSP_HEADER_VERSION_MAJOR      (1 )
 #define  GSSP_HEADER_VERSION_MINOR      (0 << 4)
 
-#define  SDK_SERVER_PRIVATE_SESID       65101
+#define  SDK_SERVER_PRIVATE_SESID       ID_SESSIONID_INTER_SDK
 
 
 typedef struct

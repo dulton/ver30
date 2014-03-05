@@ -43,6 +43,8 @@ def __PlayStream(ssock,opts):
 	afile = None
 	lastaudiotime=None
 	curaudiotime=None
+	lastvideotime=None
+	curvideotime=None
 	if OptsHasName(opts,'audiodump'):
 		afile = open(opts.audiodump,'w+b')
 	if OptsHasName(opts,'videodump'):
@@ -64,10 +66,11 @@ def __PlayStream(ssock,opts):
 						logging.error('audio frame lastidx %d curidx %d'%(lastaidx,curidx))
 				lastaidx = curidx
 				curaudiotime = time.time()
-				sys.stdout.write('audio[%d] %f\n'%(lastaidx,curaudiotime))
+				#sys.stdout.write('audio[%d] %f\n'%(lastaidx,curaudiotime))
 				if lastaudiotime is not None:
 					if (curaudiotime - lastaudiotime) > 0.15:
-						logging.info('[%d]audio time (%s) (%s) %s'%(curidx,curaudiotime,lastaudiotime,(curaudiotime - lastaudiotime)))
+						#logging.info('[%d]audio time (%s) (%s) %s'%(curidx,curaudiotime,lastaudiotime,(curaudiotime - lastaudiotime)))
+						pass
 					
 					if (curaudiotime - lastaudiotime) > 1.0:
 						#logging.info('[%d]audio time (%s) (%s) %s'%(curidx,curaudiotime,lastaudiotime,(curaudiotime - lastaudiotime)))
@@ -80,6 +83,7 @@ def __PlayStream(ssock,opts):
 					afile.write(ssock.GetStreamData())
 			elif frametype == 'I' or frametype == 'P':
 				curidx = ssock.GetStreamIdx()
+				curvideotime =time.time()
 				if lastvidx is not None:
 					if lastvidx == 0xffffffff and curidx != 0 and frametype == 'P':
 						raise Exception('lastidx 0x%x curidx 0x%x'%(lastvidx,ssock.GetStreamIdx()))
@@ -90,6 +94,9 @@ def __PlayStream(ssock,opts):
 					#time.sleep(1.5)
 				if lastvidx is not None and (lastvidx % 100) == 0:
 					logging.info('receive video [%d]'%(lastvidx))
+				if lastvideotime is not None and (curvideotime - lastvideotime) > 0.08:
+					logging.info('video(%d) lasttime(%s) curtime(%s)'%(curidx,lastvideotime,curvideotime))
+				lastvideotime=curvideotime
 				lastvidx = curidx
 				cpackets += 1
 				if sleeptime is not None:

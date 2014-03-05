@@ -141,12 +141,12 @@ void SdkServerAlarm::__StopWriteTimer()
 
 int SdkServerAlarm::__GetLPort()
 {
-    return 57024;
+    return GMI_SDK_S_WARING_PORT;
 }
 
 int SdkServerAlarm::__GetRPort()
 {
-    return 57026;
+    return GMI_SYS_SERVER_C_WARING_PORT;
 }
 
 

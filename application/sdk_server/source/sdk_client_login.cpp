@@ -1,6 +1,6 @@
 
 #include <sdk_client_login.h>
-#include <auth_center_api.h>
+//#include <auth_center_api.h>
 #include <sdk_server_mgmt.h>
 #include <sys/time.h>
 #include <sys/types.h>

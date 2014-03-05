@@ -45,6 +45,7 @@ GMI_MODULE_INCLUDE_DIR=
 # Set other header file pathm
 GMI_INCLUDE_DIR         = $(GMI_TOPDIR)/application/sdk_server/include/ $(GMI_TOPDIR)/prebuilt/include/  $(GMI_TOPDIR)/prebuilt/include/osal/ $(GMI_TOPDIR)/application/
 GMI_INCLUDE_DIR         += $(GMI_TOPDIR)/prebuilt/include/command_pipeline/ $(GMI_TOPDIR)/application/sdk_server/source/
+GMI_INCLUDE_DIR         += ${GMI_TOPDIR}/application/auth_server/include/
 
 
 # Include rules.mk
