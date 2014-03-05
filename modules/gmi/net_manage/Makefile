@@ -13,16 +13,8 @@ export GMI_TOPDIR
 export GMI_MAKE_VERBOSE
 
 # Sub item list that need to be compiled
-# To facilitate reading and compiling system can work, please keep module compiling sequence, principle as follows:
-# 1 module dependency
-# 2 alplabet sequence
-GMI_ITEMS               = amba_rtsp
-GMI_ITEMS              += media_center
-GMI_ITEMS              += auth_center
-GMI_ITEMS              += stream_control
-GMI_ITEMS              += event_center
-GMI_ITEMS              += sys_info_readonly
-GMI_ITEMS              += net_manage
+GMI_ITEMS               = source unitest
+
 # Include item_rules.mk
 include $(GMI_TOPDIR)/build/item_rules.mk
 
