@@ -78,6 +78,7 @@ def __SetModifyUsers(userinfos,passkey ,opts,delone=0):
 			cuser.UserName(opts.username[i])
 			cuser.UserPass(opts.userpass[i])
 			cuser.UserFlag(opts.userflag[i])
+			cuser.UserLevel(opts.userlevel[i])
 		newusers.append(cuser)
 		i += 1
 	return newusers
